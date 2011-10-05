@@ -2,7 +2,7 @@
 /*
 Plugin Name: WPtouch
 Plugin URI: http://wordpress.org/extend/plugins/wptouch/
-Version: 1.9.31
+Version: 1.9.34
 Description: A plugin which formats your site with a mobile theme for visitors on Apple <a href="http://www.apple.com/iphone/">iPhone</a> / <a href="http://www.apple.com/ipodtouch/">iPod touch</a>, <a href="http://www.android.com/">Google Android</a>, <a href="http://www.blackberry.com/">Blackberry Storm and Torch</a>, <a href="http://www.palm.com/us/products/phones/pre/">Palm Pre</a> and other touch-based smartphones.
 Author: BraveNewCode Inc.
 Author URI: http://www.bravenewcode.com
@@ -28,12 +28,13 @@ License: GNU General Public License 2.0 (GPL) http://www.gnu.org/licenses/gpl.ht
 load_plugin_textdomain( 'wptouch', false, dirname( plugin_basename( __FILE__ ) ) );
 
 global $bnc_wptouch_version;
-$bnc_wptouch_version = '1.9.31';
+$bnc_wptouch_version = '1.9.34';
 
 require_once( 'include/plugin.php' );
 require_once( 'include/compat.php' );
 
 define( 'WPTOUCH_PROWL_APPNAME', 'WPtouch');
+define( 'WPTOUCH_ATOM', 1 );
 
 //The WPtouch Settings Defaults
 global $wptouch_defaults;
@@ -83,7 +84,8 @@ $wptouch_defaults = array(
 	'enable-show-tweets' => false,
 	'enable-gigpress-button' => false,
 	'enable-flat-icon' => false,
-	'wptouch-language' => 'auto'
+	'wptouch-language' => 'auto',
+	'enable-twenty-eleven-footer' => 0
 );
 
 function wptouch_get_plugin_dir_name() {
@@ -92,15 +94,18 @@ function wptouch_get_plugin_dir_name() {
 }
 
 function wptouch_delete_icon( $icon ) {
-	if ( !current_user_can( 'upload_files' ) ) {
-		// don't allow users to delete who don't have access to upload (security feature)
+	if ( !current_user_can( 'manage_options' ) ) {
+		// don't allow users non administrators to delete files (security check)
 		return;	
 	}
 			
 	$dir = explode( 'wptouch', $icon );
 	$loc = compat_get_upload_dir() . "/wptouch/" . ltrim( $dir[1], '/' );
 
-	unlink( $loc );
+	$real_location = realpath( $loc );
+	if ( strpos( $real_location, WP_CONTENT_DIR ) !== false ) {
+		unlink( $loc );
+	}
 }
 
 add_action( 'wptouch_load_locale', 'load_wptouch_languages' );
@@ -131,9 +136,14 @@ function load_wptouch_languages() {
 
 function wptouch_init() {	
 	if ( isset( $_GET['delete_icon'] ) ) {
-		wptouch_delete_icon( $_GET['delete_icon'] );
-		header( 'Location: ' . get_bloginfo('wpurl') . '/wp-admin/options-general.php?page=wptouch/wptouch.php#available_icons' );
-		die;
+		$nonce = $_GET['nonce'];
+		if ( !wp_verify_nonce( $nonce, 'wptouch_delete_nonce' )  ) {
+			die( 'Security Failure' );
+		} else {
+			wptouch_delete_icon( $_GET['delete_icon'] );
+			header( 'Location: ' . get_bloginfo('wpurl') . '/wp-admin/options-general.php?page=wptouch/wptouch.php#available_icons' );
+			die;
+		}
 	}
 	
 	if ( !is_admin() ) {
@@ -189,7 +199,7 @@ function wp_touch_get_comment_count() {
 	}
 }
 	
-// WPtouch WP Thumbnail Support
+	// WPtouch WP Thumbnail Support
 	if ( function_exists( 'add_theme_support' ) ) { // Added in 2.9
 		add_theme_support( 'post-thumbnails' ); // Add it for posts
 }
@@ -345,6 +355,16 @@ class WPtouchPlugin {
 		return $msg;	
 	}
 	
+	function wptouch_output_supports_in_footer( $content ) {
+		$mobile_string = sprintf( __( 'Mobile site by %s', 'wptouch' ), '<a href="http://www.bravenewcode.com/wptouch" title="Mobile iPhone and iPad Plugin for WordPress">WPtouch</a>' );
+		$content = str_replace( 'WordPress</a>', 'WordPress</a><br />' . $mobile_string, $content );
+		return $content;
+	}
+	
+	function wptouch_show_supports_in_footer() {
+		ob_start( array( &$this, 'wptouch_output_supports_in_footer' ) );	
+	}
+	
 	function wptouch_send_prowl_message( $title, $message ) {
 		require_once( 'include/class.prowl.php' );		
 		
@@ -490,7 +510,7 @@ class WPtouchPlugin {
 		$time = time()+60*60*24*365; // one year
 		$url_path = '/';
 
-	   if ( isset( $_GET[ 'wptouch_view'] ) ) {
+	   	if ( isset( $_GET[ 'wptouch_view'] ) ) {
 	  		if ( $_GET[ 'wptouch_view' ] == 'mobile' ) {
 				setcookie( $key, 'mobile', $time, $url_path ); 
 			} elseif ( $_GET[ 'wptouch_view' ] == 'normal') {
@@ -523,8 +543,28 @@ class WPtouchPlugin {
 			} else {
 		  		$this->desired_view = 'mobile';
 			}
+		}
+
+		if ( isset( $settings['enable-twenty-eleven-footer'] ) && $settings['enable-twenty-eleven-footer'] ) {
+			if ( function_exists( 'twentyeleven_setup' ) ) {
+				add_action( 'twentyeleven_credits', array( &$this, 'handle_footer' ) );
+			} else if ( function_exists( 'twentyten_setup' ) ) {
+				add_action( 'twentyten_credits', array( &$this, 'handle_footer' ) );
+			}
 		}		
 	}
+
+	function handle_footer() {
+		ob_start( array( &$this, 'handle_footer_done') );
+	}
+
+	function handle_footer_done( $content ) {
+		if ( function_exists( 'twentyeleven_setup' ) ) { 
+			return str_replace( "WordPress</a>", "WordPress</a> <a href='http://www.wordpress.org/extend/plugins/wptouch'>" . sprintf( __( 'and %s', 'wptouch' ), "WPtouch" ) . "</a>", $content );
+		} else if ( function_exists( 'twentyten_setup' ) ) {
+			return str_replace( "WordPress.				</a>", "WordPress</a> <a style='background-image: none;' href='http://www.wordpress.org/extend/plugins/wptouch'>" . sprintf( __( 'and %s', 'wptouch' ), "WPtouch" ) . "</a>", $content );		
+		}
+	}	
 	
 	function detectAppleMobile($query = '') {
 		$container = $_SERVER['HTTP_USER_AGENT'];

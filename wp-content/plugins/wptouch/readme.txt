@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=paypa
 Tags: wptouch, iphone, ipod, theme, apple, mac, bravenewcode, ajax, mobile, android, blackberry, smartphone, 
 Requires at least: 3.0
 Tested up to: 3.2
-Stable tag: 1.9.31
+Stable tag: 1.9.34
 
 WPtouch: A simple, powerful and elegant mobile theme for your website.
 
@@ -37,6 +37,19 @@ For more information visit http://www.bravenewcode.com/wptouch-pro
 'WPtouch' and 'WPtouch Pro' are trademarks of BraveNewCode Inc.
 
 == Changelog ==
+
+= Version 1.9.34 =
+
+* Changed: Default settings
+
+= Version 1.9.33 =
+
+* Added: Ability to add WPtouch info in Twenty Ten & Eleven themes
+* Changed: Minor layout adjustment in admin panel
+
+= Version 1.9.32 =
+
+* Updated: Added nonces and extra security check for icon deletion (thanks Julio POTIER from BLOG.boiteaweb.fr)
 
 = Version 1.9.31 =
 
