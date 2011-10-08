@@ -1,0 +1,263 @@
+/* Represents list items the consists of text and block elements. It's necessary to
+   wrap the texts in <p> tags but they should not have a bottom margin. */
+li p.no-margin, dd p.no-margin, dt p.no-margin {
+  margin-bottom: 0 !important;
+}
+
+span.strike {
+  text-decoration: line-through;
+}
+
+span.underline {
+  text-decoration: underline;
+}
+
+p.table-caption {
+  text-align: center;
+  font-size: 80%;
+  font-weight: bold;
+  margin-top: -20px;
+}
+
+p.indented {
+  padding-left: 2em;
+}
+
+/*
+ * Link icons
+ */
+a.attachment {
+  background: url(common-icons/attachment.gif) no-repeat left center transparent;
+  padding-left: 19px;
+}
+
+a.external-file {
+  background: url(fileicons/file.png) no-repeat left center transparent;
+  padding-left: 19px;
+}
+
+a.external {
+  background: url(common-icons/link-external.png) no-repeat left center transparent;
+  padding-left: 19px;
+}
+
+a.external-https {
+  background-image: url(common-icons/link-https.gif) !important;
+}
+
+a.external-wiki {
+  background-image: url(common-icons/wikipedia.png) !important;
+}
+
+a.external-search {
+  background-image: url(common-icons/search.png) !important;
+}
+
+a.not-found, a.section-link-not-existing {
+  background: url(common-icons/link-error.gif) no-repeat left center transparent !important;
+  padding-left: 19px;
+}
+
+a.section-link-above {
+  background: url(common-icons/section-above.png) no-repeat left center transparent !important;
+  padding-left: 11px;
+}
+
+a.section-link-below {
+  background: url(common-icons/section-below.png) no-repeat left center transparent !important;
+  padding-left: 11px;
+}
+
+/*
+ * Alignment
+ */
+.align-left {
+  float: left;
+  clear: left; /* prevents floats from stacking */
+  margin: 0 10px 10px 0;
+}
+
+.align-right {
+  float: right;
+  clear: right; /* prevents floats from stacking */
+  margin: 0 0 10px 10px;
+}
+
+.align-center {
+  margin: 0 auto 1em auto;
+  text-align: center;
+}
+
+  .align-center > .image-caption {
+    text-align: left;
+  }
+
+/*
+ * Image frame
+ */
+div.image-frame {
+  -moz-box-shadow: 0 1px 2px #999;
+  border: 1px solid #aaa;
+  background-color: #ddd;
+}
+
+  div.image-frame .image img {
+    -moz-box-shadow: 0 1px 2px #999;
+  }
+
+  /* Prevent margins/paddings/border from screwing the layout */
+  div.image-frame .image, div.image-frame .image img {
+    margin: 0 !important;
+    padding: 0 !important;
+    border-width: 0 !important;
+  }
+
+  div.image-frame .image-caption {
+    margin: 0;
+    padding: 0.05em 0.5em 0.3em 0.5em;
+    font-size: 80%;
+    line-height: 110%;
+  }
+
+/*
+ * TOC
+ */
+.toc {
+  /*display: table; /* Make the TOC as small as it needs to be. */
+  max-width: 200px;
+  float: right;
+
+	border: 1px solid #AAA;
+	background-color: #F9F9F9;
+
+	padding: 5px 25px;
+	margin: 5px 10px;
+
+	font-size: 80%;
+}
+
+.toc .toc-title {
+  font-size: 1.2em;
+  border-bottom: 1px solid #ccc;
+  margin-bottom: 0.5em;
+}
+
+  .toc .toc-toggle {
+    font-size: 75%;
+    text-decoration: none;
+
+    display: block;
+    float: right;
+    margin-left: 5px;
+  }
+
+.toc ul {
+	list-style-type: none;
+	list-style-image: none;
+	margin-left: 0;
+  margin-bottom: 0 !important;
+	padding-left: 0;
+	text-align: left;
+}
+
+.toc ul ul {
+	margin: 0 0 0 1.5em;
+}
+
+/*
+ * Heading anchor
+ */
+a.heading-link:link, a.heading-link:visited {
+  color: #D7D7D7;
+  text-decoration: none;
+}
+
+* > a.heading-link:link, * > a.heading-link:visited {
+    visibility: hidden;
+}
+
+h1:hover a.heading-link,
+h2:hover a.heading-link,
+h3:hover a.heading-link,
+h4:hover a.heading-link,
+h5:hover a.heading-link,
+h6:hover a.heading-link {
+    visibility: visible;
+}
+
+/*
+ * Code blocks
+ */
+pre, .code {
+  white-space: pre;
+  padding: 5px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+
+  /* See: http://www.codestyle.org/css/font-family/sampler-Monospace.shtml */
+  font-family: Monaco, Consolas, "Lucidia Console", "Lucidia Sans Typewriter", "Courier New", Courier, monospace;
+  font-size: 9pt;
+  line-height: 1.2em;
+}
+
+  .code table pre {
+    /* necessary to hide additional scrollbars, since Geshi places <pre> tags inside of <pre> tags (when line
+       numbering is enabled) */
+    overflow: visible;
+  }
+
+div.code-linenum {
+  white-space: normal;
+}
+
+/* For line numbering */
+.code table, .code tr, .code td, .code td pre {
+  margin: 0 !important;
+  padding: 0 !important;
+  background: none !important;
+  border-width: 0 !important;
+}
+
+.code td {
+  vertical-align: baseline;
+}
+
+.code td.ln { /* cell containing the line numbers */
+  padding-right: 4px !important;
+  width: 0; /* prevent the line column from becoming too wide */
+  overflow-x: visible;
+}
+
+.code td.de1 { /* cell containing the code */
+  padding-left: 6px !important;
+}
+
+/*
+ * errors (either as <span> or <div>)
+ */
+.error {
+  -moz-border-radius: 3px 3px 3px 3px;
+  background-color: #FFEBE8;
+  border: 1px solid #CC0000;
+  padding: 0 0.6em;
+}
+
+div.error {
+  margin: 5px 15px 2px;
+}
+
+div.error p, div.error pre.stack-trace {
+  line-height: 1.2 !important;
+  margin: 0.5em 0 !important;
+  padding: 2px !important;
+  font-size: 12px !important;
+}
+
+div.error pre.stack-trace {
+  background-color: #FFEBE8;
+  overflow-x: scroll;
+}
+
+div.error pre.stack-trace .func-name {
+  font-weight: bold;
+}
