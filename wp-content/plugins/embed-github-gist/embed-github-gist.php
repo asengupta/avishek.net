@@ -28,7 +28,7 @@ if ( !defined('EMBED_GISTHUB_INLINE_HTML') ) {
 }
 
 if ( !defined('EMBED_GISTHUB_BYPASS_CACHE') ) {
-	define('EMBED_GISTHUB_BYPASS_CACHE', false);
+	define('EMBED_GISTHUB_BYPASS_CACHE', true);
 }
 
 /**
