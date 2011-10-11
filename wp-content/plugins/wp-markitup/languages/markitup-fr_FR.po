@@ -1,0 +1,347 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: MarkItUp! for Wordpress\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2008-08-15 08:54+0100\n"
+"PO-Revision-Date: \n"
+"Last-Translator: Jay Salvat <jay.salvat@gmail.com>\n"
+"Language-Team: Stefano Verna <stefano.verna@gmail.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-KeywordsList: __;_e\n"
+"X-Poedit-Basepath: /Users/stefanoverna/Sites/steffoz-wp/wp-content/plugins/wp_markitup/\n"
+"X-Poedit-Language: Italian\n"
+"X-Poedit-Country: ITALY\n"
+"X-Poedit-SourceCharset: utf-8\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: markitup_class.php:144
+msgid "Configuration updated!"
+msgstr "Configuration mise à jour"
+
+#: markitup_class.php:149
+msgid "markItUp! for Wordpress"
+msgstr "markItUp! pour Wordpress"
+
+#: markitup_class.php:154
+#: markitup_class.php:157
+msgid "Tag set to use:"
+msgstr "Jeu de tags à utiliser :"
+
+#: markitup_class.php:187
+#: markitup_class.php:190
+msgid "Skin:"
+msgstr "Skin:"
+
+#: markitup_class.php:206
+#: markitup_class.php:209
+msgid "Editor Default Height:"
+msgstr "Hauteur par défaut de l'éditeur :"
+
+#: markitup_class.php:219
+msgid "Save Changes"
+msgstr "Enregistrer les modifications"
+
+#: markitup_class.php:289
+#, php-format
+msgid "<strong>Warning:</strong> To correctly use the WP MarkItUp! tagset %s, <strong>you need to activate the <a href='%s' target='_blank'>%s</a></strong> plugin, which seems to be already present in the plugins directory of your Wordpress installation. WP MarkItUp! is just an advanced text editor. It doesn't manage the conversion from the %s syntax to XHTML of your posts. <strong><a href='%s'>Go to the Plugins page &raquo;</a></strong>"
+msgstr "<strong>Attention :</strong> Pour correctement utiliser le jeu de tags %s de WP MarkItUp!, <strong>il est nécessaire d'activer le plugin <a href='%s' target='_blank'>%s</a></strong> qui semble être déjà présent dans le répertoire de plugins de votre installation Wordpress. WP MarkItUp! est un éditeur de texte avancé, il ne fait pas la convertion de vos postes %s vers XHTML. <strong><a href='%s'>Aller à la page des Plugins &raquo;</a></strong>"
+
+#: markitup_class.php:291
+#, php-format
+msgid "<strong>Warning:</strong> To correctly use the WP MarkItUp! tagset %s, <strong>you need to install and activate the <a href='%s' target='_blank'>%s</a></strong> plugin. WP MarkItUp! is just an advanced text editor. It doesn't manage the conversion from the %s syntax to XHTML of your posts."
+msgstr "<strong>Attention :</strong> Pour correctement utiliser le jeu de tags %s de WP MarkItUp!, <strong>il est nécessaire d'activer le plugin <a href='%s' target='_blank'>%s</a></strong>. WP MarkItUp! est un éditeur de texte avancé, il ne fait pas la convertion de vos postes %s vers XHTML."
+
+#: markitup/sets/bbCode/set.php:7
+#: markitup/sets/MarkDown/set.php:16
+#: markitup/sets/MediaWiki/set.php:13
+#: markitup/sets/Textile/set.php:18
+#: markitup/sets/XHTML/set.php:19
+msgid "Bold"
+msgstr "Gras"
+
+#: markitup/sets/bbCode/set.php:8
+#: markitup/sets/MarkDown/set.php:17
+#: markitup/sets/MediaWiki/set.php:14
+#: markitup/sets/Textile/set.php:19
+#: markitup/sets/XHTML/set.php:20
+msgid "Italic"
+msgstr "Italic"
+
+#: markitup/sets/bbCode/set.php:9
+msgid "Underline"
+msgstr "Souligné"
+
+#: markitup/sets/bbCode/set.php:11
+#: markitup/sets/MarkDown/set.php:26
+#: markitup/sets/MediaWiki/set.php:20
+#: markitup/sets/Textile/set.php:25
+#: markitup/sets/XHTML/set.php:27
+msgid "Image"
+msgstr "Image"
+
+#: markitup/sets/bbCode/set.php:11
+#: markitup/sets/bbCode/set.php:12
+#: markitup/sets/MarkDown/set.php:26
+#: markitup/sets/MarkDown/set.php:27
+#: markitup/sets/MediaWiki/set.php:20
+#: markitup/sets/MediaWiki/set.php:21
+#: markitup/sets/Textile/set.php:25
+#: markitup/sets/XHTML/set.php:27
+msgid "URL"
+msgstr "URL"
+
+#: markitup/sets/bbCode/set.php:12
+#: markitup/sets/MarkDown/set.php:27
+#: markitup/sets/MediaWiki/set.php:21
+#: markitup/sets/Textile/set.php:26
+#: markitup/sets/XHTML/set.php:28
+msgid "Link"
+msgstr "Lien"
+
+#: markitup/sets/bbCode/set.php:12
+#: markitup/sets/MediaWiki/set.php:21
+#: markitup/sets/Textile/set.php:26
+msgid "Your text to link here..."
+msgstr "Votre texte à lier ici..."
+
+#: markitup/sets/bbCode/set.php:14
+msgid "Size"
+msgstr "Taille"
+
+#: markitup/sets/bbCode/set.php:14
+msgid "Text size"
+msgstr "Taille de texte"
+
+#: markitup/sets/bbCode/set.php:16
+msgid "Big"
+msgstr "Grand"
+
+#: markitup/sets/bbCode/set.php:17
+msgid "Normal"
+msgstr "Normal"
+
+#: markitup/sets/bbCode/set.php:18
+msgid "Small"
+msgstr "Petit"
+
+#: markitup/sets/bbCode/set.php:21
+#: markitup/sets/MarkDown/set.php:19
+#: markitup/sets/MediaWiki/set.php:17
+#: markitup/sets/Textile/set.php:22
+msgid "Bulleted list"
+msgstr "Liste à puce"
+
+#: markitup/sets/bbCode/set.php:22
+#: markitup/sets/MarkDown/set.php:20
+#: markitup/sets/MediaWiki/set.php:18
+#: markitup/sets/Textile/set.php:23
+msgid "Numeric list"
+msgstr "Liste numérique"
+
+#: markitup/sets/bbCode/set.php:22
+msgid "Starting number"
+msgstr "Commencer par le chiffre"
+
+#: markitup/sets/bbCode/set.php:23
+#: markitup/sets/XHTML/set.php:25
+msgid "List item"
+msgstr "Elément de liste"
+
+#: markitup/sets/bbCode/set.php:25
+#: markitup/sets/MarkDown/set.php:29
+#: markitup/sets/MediaWiki/set.php:23
+#: markitup/sets/Textile/set.php:28
+#: markitup/sets/XHTML/set.php:30
+msgid "Quote block"
+msgstr "Citation"
+
+#: markitup/sets/bbCode/set.php:26
+#: markitup/sets/MarkDown/set.php:30
+#: markitup/sets/MediaWiki/set.php:24
+#: markitup/sets/Textile/set.php:29
+#: markitup/sets/XHTML/set.php:31
+msgid "Code block"
+msgstr "Code"
+
+#: markitup/sets/bbCode/set.php:28
+#: markitup/sets/MarkDown/set.php:37
+#: markitup/sets/MediaWiki/set.php:26
+#: markitup/sets/Textile/set.php:31
+#: markitup/sets/XHTML/set.php:33
+msgid "Wordpress More... tag"
+msgstr "Plus de tags Wordpress..."
+
+#: markitup/sets/bbCode/set.php:30
+#: markitup/sets/XHTML/set.php:35
+msgid "Clean"
+msgstr "Nettoyer les tags"
+
+#: markitup/sets/MarkDown/set.php:9
+#: markitup/sets/MediaWiki/set.php:7
+#: markitup/sets/Textile/set.php:10
+#: markitup/sets/XHTML/set.php:11
+msgid "First level heading"
+msgstr "Titre de premier niveau"
+
+#: markitup/sets/MarkDown/set.php:9
+#: markitup/sets/MarkDown/set.php:10
+#: markitup/sets/MarkDown/set.php:11
+#: markitup/sets/MarkDown/set.php:12
+#: markitup/sets/MarkDown/set.php:13
+#: markitup/sets/MarkDown/set.php:14
+#: markitup/sets/MediaWiki/set.php:7
+#: markitup/sets/MediaWiki/set.php:8
+#: markitup/sets/MediaWiki/set.php:9
+#: markitup/sets/MediaWiki/set.php:10
+#: markitup/sets/MediaWiki/set.php:11
+#: markitup/sets/Textile/set.php:10
+#: markitup/sets/Textile/set.php:11
+#: markitup/sets/Textile/set.php:12
+#: markitup/sets/Textile/set.php:13
+#: markitup/sets/Textile/set.php:14
+#: markitup/sets/Textile/set.php:15
+#: markitup/sets/XHTML/set.php:11
+#: markitup/sets/XHTML/set.php:12
+#: markitup/sets/XHTML/set.php:13
+#: markitup/sets/XHTML/set.php:14
+#: markitup/sets/XHTML/set.php:15
+#: markitup/sets/XHTML/set.php:16
+msgid "Your title here..."
+msgstr "Votre titre ici..."
+
+#: markitup/sets/MarkDown/set.php:10
+#: markitup/sets/MediaWiki/set.php:8
+#: markitup/sets/Textile/set.php:11
+#: markitup/sets/XHTML/set.php:12
+msgid "Second level heading"
+msgstr "Titre de second niveau"
+
+#: markitup/sets/MarkDown/set.php:11
+#: markitup/sets/MediaWiki/set.php:9
+#: markitup/sets/Textile/set.php:12
+#: markitup/sets/XHTML/set.php:13
+msgid "Heading 3"
+msgstr "Titre 3"
+
+#: markitup/sets/MarkDown/set.php:12
+#: markitup/sets/MediaWiki/set.php:10
+#: markitup/sets/XHTML/set.php:14
+msgid "Heading 4"
+msgstr "Titre 4"
+
+#: markitup/sets/MarkDown/set.php:13
+#: markitup/sets/MediaWiki/set.php:11
+#: markitup/sets/Textile/set.php:14
+#: markitup/sets/XHTML/set.php:15
+msgid "Heading 5"
+msgstr "Titre 5"
+
+#: markitup/sets/MarkDown/set.php:14
+#: markitup/sets/Textile/set.php:15
+#: markitup/sets/XHTML/set.php:16
+msgid "Heading 6"
+msgstr "Titre 6"
+
+#: markitup/sets/MarkDown/set.php:19
+#: markitup/sets/MarkDown/set.php:20
+#: markitup/sets/MarkDown/set.php:27
+#: markitup/sets/MarkDown/set.php:29
+#: markitup/sets/MarkDown/set.php:35
+msgid "Insert your text here..."
+msgstr "Votre texte ici..."
+
+#: markitup/sets/MarkDown/set.php:26
+msgid "Alternative Text"
+msgstr "Texte alternatif"
+
+#: markitup/sets/MarkDown/set.php:26
+#: markitup/sets/MarkDown/set.php:27
+#: markitup/sets/Textile/set.php:26
+#: markitup/sets/XHTML/set.php:28
+msgid "Title"
+msgstr "Titre"
+
+#: markitup/sets/MediaWiki/set.php:15
+#: markitup/sets/Textile/set.php:20
+#: markitup/sets/XHTML/set.php:21
+msgid "Stroke through"
+msgstr "Barré"
+
+#: markitup/sets/MediaWiki/set.php:20
+#: markitup/sets/Textile/set.php:25
+#: markitup/sets/XHTML/set.php:27
+msgid "Alternative text"
+msgstr "Titre alternatif"
+
+#: markitup/sets/MediaWiki/set.php:24
+msgid "Language"
+msgstr "Langage"
+
+#: markitup/sets/Textile/set.php:10
+#: markitup/sets/Textile/set.php:11
+#: markitup/sets/Textile/set.php:12
+#: markitup/sets/Textile/set.php:13
+#: markitup/sets/Textile/set.php:14
+#: markitup/sets/Textile/set.php:15
+#: markitup/sets/Textile/set.php:16
+#: markitup/sets/Textile/set.php:28
+#: markitup/sets/XHTML/set.php:11
+#: markitup/sets/XHTML/set.php:12
+#: markitup/sets/XHTML/set.php:13
+#: markitup/sets/XHTML/set.php:14
+#: markitup/sets/XHTML/set.php:15
+#: markitup/sets/XHTML/set.php:16
+#: markitup/sets/XHTML/set.php:17
+msgid "Class"
+msgstr "Classe"
+
+#: markitup/sets/Textile/set.php:13
+msgid "Heading "
+msgstr "Titre"
+
+#: markitup/sets/Textile/set.php:16
+#: markitup/sets/XHTML/set.php:17
+msgid "Paragraph"
+msgstr "Paragraphe"
+
+#: markitup/sets/XHTML/set.php:23
+msgid "Unordered List"
+msgstr "Liste non ordonnée"
+
+#: markitup/sets/XHTML/set.php:24
+msgid "Ordered List"
+msgstr "Liste ordonnée"
+
+#: markitup/sets/XHTML/set.php:28
+msgid "Your text to link..."
+msgstr "Votre texte à lier ici..."
+
+#~ msgid "Wordpress \\\"More\\\" tag"
+#~ msgstr "Tag \\\"More\\\" di Wordpress"
+#~ msgid "Quotes"
+#~ msgstr "Citazione"
+#~ msgid "Code"
+#~ msgstr "Codice"
+#~ msgid "Source"
+#~ msgstr "Codice sorgente"
+#~ msgid "Picture"
+#~ msgstr "Immagine"
+#~ msgid "Heading 1"
+#~ msgstr "Titolo 1"
+#~ msgid "Heading 2"
+#~ msgstr "Titolo 2"
+#~ msgid "Unordered list"
+#~ msgstr "Lista non ordinata"
+#~ msgid "Ordered list"
+#~ msgstr "Lista numerata"
+#~ msgid "Url"
+#~ msgstr "URL"
+
+#, fuzzy
+#~ msgid "Wordpress \"More\" tag \"More\" tag"
+#~ msgstr "Tag \"More...\" di Wordpress"
+#~ msgid "Wordpress \"More\" Tag"
+#~ msgstr "Tag Wordpress \"More\" "
+
