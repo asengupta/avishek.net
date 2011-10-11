@@ -296,7 +296,7 @@ class markitup {
 
     function add_option_page()
     {
-		add_options_page('WP MarkItUp!', 'WP MarkItUp!', 8, 'WP MarkItUp!', array(&$this, 'option_page'));
+		add_options_page('WP MarkItUp!', 'WP MarkItUp!', 'manage_options', 'markitup', array(&$this, 'option_page'));
     }
 
 }
