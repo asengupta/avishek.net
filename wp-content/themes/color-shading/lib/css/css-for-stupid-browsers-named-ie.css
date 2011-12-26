@@ -1,0 +1,4 @@
+* html #accordian li a {zoom:1;}
+*:first-child+html #top-nav li {width:10em;}
+*:first-child+html #accordian li a {zoom:1;}
+* html #top-nav li {zoom:1;width:1em;}	
