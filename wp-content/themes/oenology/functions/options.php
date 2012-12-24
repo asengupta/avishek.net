@@ -494,6 +494,33 @@ function oenology_get_option_parameters() {
 			'since' => '2.3',
 			'default' => 'two-column-left'			
 			),
+        'default_front_page_layout' => array(
+			'name' => 'default_front_page_layout',
+			'title' => __( 'Default Static Front Page Layout', 'oenology' ),
+			'type' => 'radio',
+			'valid_options' => array(
+				'one-column' => array(
+					'name' => 'one-column',
+					'title' => __( '1-Column', 'oenology' ),
+					'description' => __( 'One column (full-width content)', 'oenology' )
+				),
+				'two-column' => array(
+					'name' => 'two-column',
+					'title' => __( '2-Column', 'oenology' ),
+					'description' => __( 'Two columns (menu on left, content on right)', 'oenology' )
+				),
+				'three-column' => array(
+					'name' => 'three-column',
+					'title' => __( '3-Column', 'oenology' ),
+					'description' => __( 'Three columns (menu on left, sidebar on right, content in the center)', 'oenology' )
+				),
+			),
+			'description' => __( 'Select the layout to be used as the default for a static front page.', 'oenology' ),
+			'section' => 'default_layouts',
+			'tab' => 'layout',
+			'since' => '3.0',
+			'default' => 'one-column'			
+			),
         'static_page_submenu_display' => array(
 			'name' => 'static_page_submenu_display',
 			'title' => __( 'Static Page Submenu Display', 'oenology' ),
@@ -518,38 +545,28 @@ function oenology_get_option_parameters() {
 			'since' => '2.5',
 			'default' => 'always'
 		),
-        'default_options_tab' => array(
-			'name' => 'default_options_tab',
-			'title' => 'Default Options Page Tab',
-			'type' => 'internal',
-			'description' => '',
-			'section' => false,
-			'tab' => false,
-			'since' => '2.3',
-			'default' => 'varietals'
+        'widget_display_default_state' => array(
+			'name' => 'widget_display_default_state',
+			'title' => __( 'Default Widget Display State', 'oenology' ),
+			'type' => 'select',
+			'valid_options' => array(
+				'block' => array(
+					'name' => 'block',
+					'title' => __( 'Display Content', 'oenology' )
+				),
+				'none' => array(
+					'name' => 'none',
+					'title' => __( 'Hide Content', 'oenology' )
+				),
+			),
+			'description' => __( 'The content of each Widget can be displayed or hidden via the "Show/Hide" link. Should Widget content be displayed or hidden by default?', 'oenology' ),
+			'section' => 'widgets',
+			'tab' => 'general',
+			'since' => '3.0',
+			'default' => 'none'
 		),
-        'default_reference_tab' => array(
-			'name' => 'default_reference_tab',
-			'title' => 'Default Reference Page Tab',
-			'type' => 'internal',
-			'description' => '',
-			'section' => false,
-			'tab' => false,
-			'since' => '2.3',
-			'default' => 'general'
-		),
-        'theme_version' => array(
-			'name' => 'theme_version',
-			'title' => 'Theme Version',
-			'type' => 'internal',
-			'description' => '',
-			'section' => false,
-			'tab' => false,
-			'since' => '1.2',
-			'default' => '2.3'
-		)
     );
-    return $options;
+    return apply_filters( 'oenology_get_option_parameters', $options );
 }
 
 /**
@@ -610,15 +627,13 @@ function oenology_get_settings_by_tab() {
 	// Loop through the option parameters
 	// array
 	foreach ( $option_parameters as $option_parameter ) {
-		// Ignore "internal" type options
-		if ( 'internal' != $option_parameter['type'] ) {
-			$optiontab = $option_parameter['tab'];
-			$optionname = $option_parameter['name'];
-			// Add an indexed array key to the 
-			// settings-by-tab array for each
-			// setting associated with each tab
-			$settingsbytab[$optiontab][] = $optionname;
-		}
+		$optiontab = $option_parameter['tab'];
+		$optionname = $option_parameter['name'];
+		// Add an indexed array key to the 
+		// settings-by-tab array for each
+		// setting associated with each tab
+		$settingsbytab[$optiontab][] = $optionname;
+		$settingsbytab['all'][] = $optionname;
 	}
 	// Return the settings-by-tab
 	// array
@@ -682,6 +697,11 @@ function oenology_get_settings_page_tabs() {
 					'title' => __( 'Social Network Profile Options', 'oenology' ),
 					'description' => __( 'Manage Social Network Profile options for the Oenology Theme. Refer to the contextual help screen for descriptions and help regarding each theme option.', 'oenology' )
 				),
+				'widgets' => array(
+					'name' => 'widgets',
+					'title' => __( 'Widget Display Options', 'oenology' ),
+					'description' => __( 'Manage Widget options for the Oenology Theme. Refer to the contextual help screen for descriptions and help regarding each theme option.', 'oenology' )
+				),
 				'footer' => array(
 					'name' => 'footer',
 					'title' => __( 'Footer Options', 'oenology' ),
@@ -690,6 +710,27 @@ function oenology_get_settings_page_tabs() {
 			)
 		),
     );
-	return $tabs;
+	return apply_filters( 'oenology_get_settings_page_tabs', $tabs );
+}
+
+/**
+ * Add Section Text for the Varietal Settings Section
+ */
+function oenology_get_varietal_text() {
+
+	$oenology_options = oenology_get_options();
+	$option_parameters = oenology_get_option_parameters();
+	$oenology_varietals = $option_parameters['varietal']['valid_options'];
+	foreach ( $oenology_varietals as $varietal ) {
+		if ( $varietal['name'] == $oenology_options['varietal'] ) {
+		      $oenology_current_varietal = $varietal;
+		}
+	}
+	$text = '';
+	$text .= '<p>"Varietal" refers to wine made from exclusively or predominantly one variety of grape. Each varietal has unique flavor and aromatic characteristics. Refer to the contextual help screen for descriptions and help regarding each theme option.</p>';
+	$text .= '<img class="oenology-varietal-thumb" src="' . get_template_directory_uri() . '/varietals/' . $oenology_options['varietal'] . '.png' . '" width="150px" height="110px" alt="' . $oenology_options['varietal'] . '" />';
+	$text .= '<h4>Current Varietal</h4>';
+	$text .= '<dl><dt><strong>' . $oenology_current_varietal['title'] . '</strong></dt><dd>' . $oenology_current_varietal['description'] . '</dd></dl>';
+	return $text;
 }
 ?>

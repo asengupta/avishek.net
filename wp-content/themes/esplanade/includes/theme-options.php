@@ -448,6 +448,7 @@ function esplanade_dimensions() {
 
 function esplanade_header_image_height() { ?>
 	<input name="esplanade_theme_options[header_image_height]" type="text" value="<?php echo esplanade_get_option( 'header_image_height' ); ?>" size="4" /> <span class="description">px</span>
+	<p class="description">Note that header image height has been deprecated in favor of flexible header images introduced with WordPress 3.4 and may be removed in a future version.</p>
 <?php
 }
 

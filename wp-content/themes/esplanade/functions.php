@@ -46,19 +46,36 @@ function esplanade_theme_setup() {
 	add_image_size( 'video-thumb', 640, 395, 1 );
 	add_image_size( 'attachment-thumb', 700, 9999 ); // no crop flag, unlimited height
 	
-	// Allows users to set a custom background
-	add_custom_background();
+	if( esplanade_is_wp_version( '3.4' ) ) {
+		// Allows users to set a custom background
+		add_theme_support( 'custom-background' );
+		
+		// Allows users to set a custom header image
+		add_theme_support( 'custom-header', array(
+			'width' => 1082,
+			'height' => esplanade_get_option( 'header_image_height' ),
+			'default-text-color' => '333',
+			'flex-height' => true,
+			'wp-head-callback' => 'esplanade_header_style',
+			'admin-head-callback' => 'esplanade_admin_header_style',
+			'admin-preview-callback' => 'esplanade_admin_header_image'
+		) );
+	} else {
+		// Allows users to set a custom background
+		add_custom_background();
+		
+		// Allows users to set a custom header image
+		if ( ! defined( 'HEADER_TEXTCOLOR' ) )
+			define( 'HEADER_TEXTCOLOR', '333' );
+		// The height and width of your custom header.
+		if ( ! defined( 'HEADER_IMAGE_WIDTH' ) )
+			define( 'HEADER_IMAGE_WIDTH', 1082 );
+		if ( ! defined( 'HEADER_IMAGE_HEIGHT' ) )
+			define( 'HEADER_IMAGE_HEIGHT', esplanade_get_option( 'header_image_height' ) );
+		// Add a way for the custom header to be styled in the admin panel
+		add_custom_image_header( 'esplanade_header_style', 'esplanade_admin_header_style', 'esplanade_admin_header_image' );
+	}
 	
-	// Allows users to set a custom header image
-	if ( ! defined( 'HEADER_TEXTCOLOR' ) )
-		define( 'HEADER_TEXTCOLOR', '333' );
-	// The height and width of your custom header.
-	if ( ! defined( 'HEADER_IMAGE_WIDTH' ) )
-		define( 'HEADER_IMAGE_WIDTH', 1082 );
-	if ( ! defined( 'HEADER_IMAGE_HEIGHT' ) )
-		define( 'HEADER_IMAGE_HEIGHT', esplanade_get_option( 'header_image_height' ) );
-	// Add a way for the custom header to be styled in the admin panel
-	add_custom_image_header( 'esplanade_header_style', 'esplanade_admin_header_style', 'esplanade_admin_header_image' );
 	
 	// Styles the post editor
 	add_editor_style();
@@ -162,7 +179,7 @@ if ( ! function_exists( 'esplanade_header_style' ) ) :
  * @since Esplanade 1.0
  */
 function esplanade_header_style() {
-	if ( HEADER_TEXTCOLOR == get_header_textcolor() )
+	if ( '333' == get_header_textcolor() )
 		return; ?>
 <style type="text/css">
 <?php if ( 'blank' == get_header_textcolor() ) : ?>
@@ -197,7 +214,7 @@ function esplanade_admin_header_style() {
 <style type="text/css">
 	@import url("http://fonts.googleapis.com/css?family=Droid+Sans:regular,bold|Droid+Serif:regular,italic,bold,bolditalic&subset=latin");
 	.appearance_page_custom-header #headimg {
-		width:<?php echo HEADER_IMAGE_WIDTH; ?>px;
+		width:<?php echo get_custom_header()->width; ?>px;
 		border:none;
 	}
 	#headimg {
@@ -233,7 +250,7 @@ function esplanade_admin_header_style() {
 		box-shadow:0 0 3px #999;
 		background:#fff;
 	}
-<?php if ( HEADER_TEXTCOLOR != get_header_textcolor() ) : ?>
+<?php if ( '333' != get_header_textcolor() ) : ?>
 	#headimg h1 a,
 	#desc {
 		color:#<?php header_textcolor() ?>;
@@ -251,10 +268,10 @@ if ( ! function_exists( 'esplanade_admin_header_image' ) ) :
  * @since Esplanade 1.0
  */
 function esplanade_admin_header_image() {
-	if ( 'blank' == get_theme_mod( 'header_textcolor', HEADER_TEXTCOLOR ) || '' == get_theme_mod( 'header_textcolor', HEADER_TEXTCOLOR ) )
+	if ( 'blank' == get_theme_mod( 'header_textcolor', '333' ) || '' == get_theme_mod( 'header_textcolor', '333' ) )
 		$style = ' style="display:none;"';
 	else
-		$style = ' style="color:#' . get_theme_mod( 'header_textcolor', HEADER_TEXTCOLOR ) . ';"';
+		$style = ' style="color:#' . get_theme_mod( 'header_textcolor', '333' ) . ';"';
 		$header_image = get_header_image(); ?>
 <div id="headimg">
 	<h1><a id="name"<?php echo $style; ?> onclick="return false;" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php bloginfo( 'name' ); ?></a></h1>
@@ -1708,7 +1725,7 @@ function esplanade_file_types( $types ) {
 }
 endif;
 
-add_filter( 'ext2type', 'esplanade_mime_types' );
+add_filter( 'ext2type', 'esplanade_file_types' );
 
 if ( ! function_exists( 'esplanade_mime_types' ) ) :
 /**
@@ -2102,3 +2119,14 @@ endif;
 
 add_action( 'personal_options_update', 'esplanade_save_extra_profile_fields' );
 add_action( 'edit_user_profile_update', 'esplanade_save_extra_profile_fields' );
+
+// checks is WP is at least a certain version (makes sure it has sufficient comparison decimals
+function esplanade_is_wp_version( $is_ver ) {
+	$wp_ver = explode( '.', get_bloginfo( 'version' ) );
+	$is_ver = explode( '.', $is_ver );
+	for( $i=0; $i<=count( $is_ver ); $i++ )
+		if( !isset( $wp_ver[$i] ) ) array_push( $wp_ver, 0 );
+	foreach( $is_ver as $i => $is_val )
+		if( $wp_ver[$i] < $is_val ) return false;
+	return true;
+}

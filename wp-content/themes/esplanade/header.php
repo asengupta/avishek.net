@@ -23,7 +23,7 @@
 			<div class="clear"></div>
 			<?php if ( ( '' != get_header_image() ) ||  ( false != get_header_image() ) ) : ?>
 				<a href="<?php echo home_url( '/' ); ?>" rel="home">
-					<img id="header-image" src="<?php header_image(); ?>" alt="<?php bloginfo( 'name' ); ?>" width="<?php echo HEADER_IMAGE_WIDTH; ?>" height="<?php echo HEADER_IMAGE_HEIGHT; ?>" />
+					<img id="header-image" src="<?php header_image(); ?>" alt="<?php bloginfo( 'name' ); ?>" width="<?php echo get_custom_header()->width; ?>" height="<?php echo get_custom_header()->height; ?>" />
 				</a>
 			<?php endif; ?>
 			<nav id="access">

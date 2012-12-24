@@ -15,16 +15,31 @@
 /**
  * Add Layout Meta Box
  * 
- * @uses	add_meta_box()
+ * @link	http://codex.wordpress.org/Function_Reference/_2			__()
+ * @link	http://codex.wordpress.org/Function_Reference/add_meta_box	add_meta_box()
  */
 function oenology_add_layout_meta_box( $post ) {
     global $wp_meta_boxes;
 	
-	$context = 'side'; // 'normal', 'side', 'advanced'
-	$priority = 'default'; // 'high', 'core', 'low', 'default'
+	$context = apply_filters( 'oenology_layout_meta_box_context', 'side' ); // 'normal', 'side', 'advanced'
+	$priority = apply_filters( 'oenology_layout_meta_box_priority', 'default' ); // 'high', 'core', 'low', 'default'
 
-    add_meta_box( 'oenology_layout', __( 'Single Post Layout', 'oenology' ), 'oenology_layout_meta_box', 'post', $context, $priority );
-    add_meta_box( 'oenology_layout', __( 'Static Page Layout', 'oenology' ), 'oenology_layout_meta_box', 'page', $context, $priority );
+    add_meta_box( 
+		'oenology_layout', 
+		__( 'Single Post Layout', 'oenology' ), 
+		'oenology_layout_meta_box', 
+		'post', 
+		$context, 
+		$priority 
+	);
+    add_meta_box( 
+		'oenology_layout', 
+		__( 'Static Page Layout', 'oenology' ), 
+		'oenology_layout_meta_box', 
+		'page', 
+		$context, 
+		$priority 
+	);
 	
 }
 // Hook meta boxes into 'add_meta_boxes'
@@ -43,6 +58,7 @@ add_action( 'add_meta_boxes', 'oenology_add_layout_meta_box' );
  * context.
  * 
  * @uses	oenology_get_option_parameters()	Defined in \functions\options.php
+ * @uses	checked()
  * @uses	get_post_custom()
  */
 function oenology_layout_meta_box() {
@@ -59,7 +75,7 @@ function oenology_layout_meta_box() {
 	?>
 	<p>
 	<input type="radio" name="_oenology_layout" <?php checked( 'default' == $layout ); ?> value="default" /> 
-	<label>Default</label><br />
+	<label><?php _e( 'Default', 'oenology' ); ?></label><br />
 	<?php foreach ( $valid_layouts as $valid_layout ) { ?>
 		<input type="radio" name="_oenology_layout" <?php checked( $valid_layout['name'] == $layout ); ?> value="<?php echo $valid_layout['name']; ?>" /> 
 		<label><?php echo $valid_layout['title']; ?> <span style="padding-left:5px;"><em><?php echo $valid_layout['description']; ?></em></span></label><br />
@@ -76,9 +92,11 @@ function oenology_layout_meta_box() {
  * option is in the array of valid layout 
  * options; otherwise, it returns 'default'.
  * 
+ * @link	http://codex.wordpress.org/Function_Reference/update_post_meta	update_post_meta()
+ * 
+ * @link	http://php.net/manual/en/function.array-key-exists.php			array_key_exists()
+ * 
  * @uses	oenology_get_option_parameters()	Defined in \functions\options.php
- * @uses	array_key_exists()
- * @uses	update_post_meta()
  */
 function oenology_save_layout_post_metadata(){
 	global $post;

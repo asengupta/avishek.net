@@ -3,7 +3,7 @@
 Theme Name: Esplanade
 Theme URI: http://www.onedesigns.com/wordpress-themes/esplanade-free-wordpress-theme
 Description: A stylish, modern and flexible theme with responsive layout. Includes several custom templates, layouts and color schemes to choose from, 5 widget-ready areas and a user friendly options page to keep everything in control.
-Version: 1.0.7
+Version: 1.0.9
 Author: One Designs
 Author URI: http://www.onedesigns.com/
 Tags: blue, brown, gray, green, tan, white, light, one-column, two-columns, three-columns, four-columns, left-sidebar, right-sidebar, fixed-width, flexible-width, custom-background, custom-colors, custom-header, custom-menu, editor-style, featured-images, full-width-template, microformats, post-formats, sticky-post, theme-options, threaded-comments, translation-ready
@@ -1515,6 +1515,11 @@ textarea#comment:focus {
 	box-shadow:none;
 	background:none;
 	border-top:#eee 1px solid;
+}
+
+.page-template-template-no-sidebars-php.paged #posts-nav,
+.page-template-template-no-sidebars-php.archive #posts-nav {
+	padding:20px 0;
 }
 
 .nav-prev {

@@ -106,30 +106,29 @@ add_action( 'wp_head', 'oenology_set_content_width', 0 );
  * Add Theme support for and configure various core WordPress 
  * functionality, define the Theme's content width, etc.
  * 
- * @link	Codex reference: add_custom_background()
- * @link	Codex reference: add_custom_image_header()
- * @link	Codex reference: add_editor_style()
- * @link	Codex reference: add_image_size()
- * @link	Codex reference: add_theme_support()
- * @link	Codex reference: apply_filters()
- * @link	Codex reference: get_header_image()
- * @link	Codex reference: get_header_textcolor()
- * @link	Codex reference: get_locale()
- * @link	Codex reference: get_option()
- * @link	Codex reference: get_template_directory()
- * @link	Codex reference: get_template_directory_uri()
- * @link	Codex reference: get_theme_root()
- * @link	Codex reference: is_readable()
- * @link	Codex reference: load_theme_textdomain()
- * @link	Codex reference: register_default_headers()
- * @link	Codex reference: register_nav_menus()
- * @link	Codex reference: set_post_thumbnail_size()
- * @link	PHP reference: file_exists()
+ * @link	http://codex.wordpress.org/Function_Reference/add_editor_style				add_editor_style()
+ * @link	http://codex.wordpress.org/Function_Reference/add_image_size				add_image_size()
+ * @link	http://codex.wordpress.org/Function_Reference/add_theme_support				add_theme_support()
+ * @link	http://codex.wordpress.org/Function_Reference/apply_filters					apply_filters()
+ * @link	http://codex.wordpress.org/Function_Reference/apply_filters					get_header_image()
+ * @link	http://codex.wordpress.org/Function_Reference/get_header_textcolor			get_header_textcolor()
+ * @link	http://codex.wordpress.org/Function_Reference/get_locale					get_locale()
+ * @link	http://codex.wordpress.org/Function_Reference/get_option					get_option()
+ * @link	http://codex.wordpress.org/Function_Reference/get_template_directory		get_template_directory()
+ * @link	http://codex.wordpress.org/Function_Reference/get_template_directory_uri	get_template_directory_uri()
+ * @link	http://codex.wordpress.org/Function_Reference/get_theme_root				get_theme_root()
+ * @link	http://codex.wordpress.org/Function_Reference/is_readable					is_readable()
+ * @link	http://codex.wordpress.org/Function_Reference/load_theme_textdomain			load_theme_textdomain()
+ * @link	http://codex.wordpress.org/Function_Reference/register_default_headers		register_default_headers()
+ * @link	http://codex.wordpress.org/Function_Reference/register_nav_menus			register_nav_menus()
+ * @link	http://codex.wordpress.org/Function_Reference/set_post_thumbnail_size		set_post_thumbnail_size()
+ * 
+ * @link	http://php.net/manual/en/function.file-exists.php							PHP reference: file_exists()
  * 
  * @uses	oenology_admin_header_style()	Defined in \functions\theme-setup.php
- * @uses	oenology_get_post_formats()	Defined in \functions\custom.php
- * @uses	oenology_get_color_scheme()	Defined in \functions\dynamic-css.php
- * @uses	oenology_header_style()	Defined in \functions\theme-setup.php
+ * @uses	oenology_get_post_formats()		Defined in \functions\custom.php
+ * @uses	oenology_get_color_scheme()		Defined in \functions\dynamic-css.php
+ * @uses	oenology_header_style()			Defined in \functions\theme-setup.php
  */
 function oenology_setup() {
 	
@@ -145,12 +144,6 @@ function oenology_setup() {
 	 * @since	Oenology 2.2
 	 */
 	load_theme_textdomain( 'oenology', get_template_directory() . '/languages' );
-	
-	$locale = get_locale();
-	$locale_file = get_template_directory() . "/languages/$locale.php";
-	if ( is_readable( $locale_file ) ) {
-		require_once( $locale_file );
-	}
 
 	/*
 	 * Add Theme support for Automatic Feed Links
@@ -182,24 +175,49 @@ function oenology_setup() {
 	 * Allow users to specify a custom background image
 	 * or color.
 	 * 
-	 * Child Themes can remove support for this feature via
-	 * remove_custom_background().
+	 * Note: as of WordPress 3.4, add_custom_background() is 
+	 * deprecated, in favor of 
+	 * add_theme_support( 'custom-background' ). Child Themes 
+	 * can remove support for this feature via
+	 * remove_theme_support( 'custom-background' ).
 	 * 
 	 * @since	WordPress 3.0.0
 	 */
-	add_custom_background();
+	add_theme_support( 'custom-background' );
 
 	/*
 	 * Add Theme support for Custom Header Images
 	 * 
 	 * Allow users to specify a custom header image.
 	 * 
-	 * Child Themes can remove support for this feature via
-	 * remove_custom_image_header().
+	 * Note: as of WordPress 3.4, add_custom_image_header() is 
+	 * deprecated, in favor of 
+	 * add_theme_support( 'custom-header' ). Child Themes 
+	 * can remove support for this feature via
+	 * remove_theme_support( 'custom-header' ).
 	 * 
 	 * @since	WordPress 3.0.0
 	 */
-	add_custom_image_header( 'oenology_header_style', 'oenology_admin_header_style' );
+	//add_custom_image_header( 'oenology_header_style', 'oenology_admin_header_style' );
+	add_theme_support( 'custom-header', array( 
+		// Header image default
+		'default-image'			=> get_template_directory_uri() . '/images/headers/pxwhite.jpg',
+		// Header text display default
+		'header-text'			=> false,
+		// Header text color default
+		'default-text-color'	=> oenology_get_header_textcolor(),
+		// Header image width (in pixels)
+		'width'					=> apply_filters( 'oenology_header_image_width', 1000 ),
+		// Header image height (in pixels)
+		'height'				=> apply_filters( 'oenology_header_image_height', 198 ),
+		// Header image random rotation default
+		'random-default'		=> false,
+		// Template header style callback
+		'wp-head-callback'		=> 'oenology_header_style',
+		// Admin header style callback
+		'admin-head-callback'	=> 'oenology_admin_header_style'
+	) );
+
 
 	/*
 	 * Add Theme support for Custom Editor Style
@@ -314,52 +332,6 @@ function oenology_setup() {
 	 * via add_image_size().
 	 */
 	add_image_size( 'attachment-nav-thumbnail', 45, 45, true );
-
-
-	/*
-	 * Define Custom Headers (since WordPress 3.0)
-	 */
-	
-	/**
-	 * Define HEADER_IMAGE_WIDTH
-	 * 
-	 * HEADER_IMAGE is the default header image to use
-	 * as the custom image header
-	 */
-	$default_header_image = get_template_directory_uri() . '/images/headers/pxwhite.jpg';
-	define( 'HEADER_IMAGE', $default_header_image ); 
-	/**
-	 * Define HEADER_IMAGE_WIDTH
-	 * 
-	 * HEADER_IMAGE_WIDTH is the width to which WordPress will 
-	 * crop uploaded header images
-	 */
-	define( 'HEADER_IMAGE_WIDTH', apply_filters( 'oenology_header_image_width', 1000 ) ); 
-	/**
-	 * Define HEADER_IMAGE_HEIGHT
-	 * 
-	 * HEADER_IMAGE_HEIGHT is the height to which WordPress will 
-	 * crop uploaded header images
-	 */
-	define( 'HEADER_IMAGE_HEIGHT', apply_filters( 'oenology_header_image_height', 198 ) ); 
-	/**
-	 * Define NO_HEADER_TEXT
-	 * 
-	 * NO_HEADER_TEXT is a Boolean constant that determines
-	 * whether the Header Text Color form field is enabled
-	 * in the Appearance -> Headers administration screen
-	 */
-	define( 'NO_HEADER_TEXT', false );
-	/**
-	 * Define HEADER_TEXTCOLOR
-	 * 
-	 * HEADER_TEXTCOLOR is the header text color, expressed
-	 * as a Hexadecimal value, without the leading octothorpe
-	 *(#).
-	 * 
-	 * @uses	oenology_get_header_textcolor()	defined in \functions\custom.php
-	 */
-	define( 'HEADER_TEXTCOLOR', oenology_get_header_textcolor() );
 
 	// Add a way for the custom header to be styled in the admin panel that controls
 	// custom headers. See oenology_admin_header_style(), below.

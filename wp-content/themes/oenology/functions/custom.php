@@ -34,7 +34,7 @@
  */
 function oenology_get_context() {
 
-	$context = 'index';
+	$context = apply_filters( 'oenology_default_context', 'index' );
 	
 	if ( is_front_page() ) {
 		// Front Page
@@ -66,32 +66,49 @@ function oenology_get_context() {
 	} else if ( is_attachment() ) {
 		// Attachment Page
 		$context = 'attachment';
-	} else if ( is_single() ) {
+	} else if ( is_singular( 'post' ) ) {
 		// Single Blog Post
 		$context = 'single';
 	} else if ( is_page() ) {
 		// Static Page
 		$context = 'page';
+	} else if ( is_singular() ) {
+		// Single Custom Post
+		$context = get_post_type();
 	} else if ( is_home() ) {
 		// Blog Posts Index
 		$context = 'home';
 	}
 	
-	return $context;
+	return apply_filters( 'oenology_get_context', $context );
 }
 
 /**
  * Get Current Page Layout
  */
 function oenology_get_current_page_layout() {
+	
+	// Use default layout for 404 pages
+	if ( is_404() ) {
+		return 'default';
+	}
+	
+	// Otherwise, determine appropriate layout
+	$layout = '';
 	global $post;
 	global $oenology_options;
 	$custom = ( get_post_custom( $post->ID ) ? get_post_custom( $post->ID ) : false );
 	$custom_layout = ( isset( $custom['_oenology_layout'][0] ) ? $custom['_oenology_layout'][0] : 'default' );	
-	$layout = '';
 	if ( ! is_admin() ) {
 		if ( is_attachment() ) {
 			$layout .= 'attachment';
+		} 
+		else if ( is_front_page() && ! is_home() ) {
+			if ( 'default' == $custom_layout ) {
+				$layout .= $oenology_options['default_front_page_layout'];
+			} else {
+				$layout .= $custom_layout;
+			}
 		} 
 		else if ( is_page() ) {
 			if ( 'default' == $custom_layout ) {
@@ -100,7 +117,7 @@ function oenology_get_current_page_layout() {
 				$layout .= $custom_layout;
 			}
 		} 
-		else if ( is_single() ) {
+		else if ( is_singular( 'post' ) ) {
 			if ( 'gallery' == get_post_format() || 'image' == get_post_format() || 'video' == get_post_format() ) {
 				$layout .= 'full';
 			} 
@@ -139,7 +156,7 @@ function oenology_get_current_page_layout() {
 			}
 		}
 	}
-	return $layout;
+	return apply_filters( 'oenology_get_current_page_layout', $layout );
 }
 
 /**
@@ -161,7 +178,55 @@ function oenology_get_current_tab() {
 			$current = $oenology_options['default_reference_tab'];
 		}
     }	
-	return $current;
+	return apply_filters( 'oenology_get_current_tab', $current );
+}
+
+
+/**
+ * Get custom category list
+ */
+function oenology_get_custom_category_list() {
+	$catrssurl = includes_url() . '/images/rss.png';
+	$customcatlist ='';
+	$customcats=  get_categories();
+	foreach( $customcats as $customcat ) {
+		$customcathref = get_category_link( $customcat->term_id );
+		$customcatfeedlink = get_category_feed_link( $customcat->term_id );
+		$customcatlist .= '<li><a title="' . esc_attr( sprintf( _x( 'Subscribe to the %s news feed', 'Category Name', 'oenology' ), $customcat->name ) ) . '" href="' . $customcatfeedlink . '"><img src="' . $catrssurl . '" alt="feed" /></a><a href="' . $customcathref . '">' . $customcat->name . '</a> (' . $customcat->count . ')</li>';
+	}
+	return apply_filters( 'oenology_get_custom_category_list', $customcatlist );
+}
+
+
+/**
+ * Get custom post format list
+ */
+function oenology_get_custom_post_format_list() {
+	$postformatrssurl = includes_url() . '/images/rss.png';
+	$postformatterms = get_terms( 'post_format' );
+	$postformatlist = '';
+	foreach( $postformatterms as $term ) {
+		$termslug = substr( $term->slug, 12 );
+		$termlink = get_post_format_link( $termslug );
+		$postformatlist .= '<li><a title="' . esc_attr( sprintf( _x( 'Subscribe to the %s news feed', 'Post Format', 'oenology' ), $term->name ) ) . '" href="' . $termlink .'feed/"><img src="'.$postformatrssurl.'" alt="feed" /></a><a href="'. $termlink .'">' . $term->name . '</a> (' . $term->count . ')</li>';
+	}
+	return apply_filters( 'oenology_get_custom_post_format_list', $postformatlist );
+}
+
+
+/**
+ * Get custom tag list
+ */
+function oenology_get_custom_tag_list() {
+	$tagrssurl = includes_url() . '/images/rss.png';
+	$customtaglist ='';
+	$customtags =  get_tags();
+	foreach( $customtags as $customtag ) {
+		$customtaghref = get_tag_link( $customtag->term_id );
+		$customtagfeedlink = get_tag_feed_link( $customtag->term_id );
+		$customtaglist .= '<li><a title="' . esc_attr( sprintf( _x( 'Subscribe to the %s feed', 'Tag Name', 'oenology' ), $customtag->name ) ) . '" href="' . $customtagfeedlink . '"><img src="' . $tagrssurl . '" alt="feed" /></a><a href="' . $customtaghref . '">' . $customtag->name . '</a> (' . $customtag->count . ')</li>';
+	} 
+	return apply_filters( 'oenology_get_custom_tag_list', $customtaglist );
 }
 
 /**
@@ -183,7 +248,7 @@ function oenology_get_current_tab() {
  * 
  * @return	string	table of formatted API data
  */
-function oenology_get_github_api_data( $context = 'commits', $status = 'open', $milestone = '7', $roadmap = false, $currentrelease = '2.6', $releasedate = '2011-12-16', $user = 'chipbennett', $repo = 'oenology' ) {
+function oenology_get_github_api_data( $context = 'commits', $status = 'open', $milestone = '9', $roadmap = false, $currentrelease = '3.0', $releasedate = '2012-12-22', $user = 'chipbennett', $repo = 'oenology' ) {
 
 	$capability = 'read';
 
@@ -299,13 +364,13 @@ function oenology_get_github_api_data( $context = 'commits', $status = 'open', $
 			$reportid = $object->number;
 			$message = $object->title;
 			$label = $object->labels;
-			$label = $label[0];
-				$labelname = $label->name;
-				$labelcolor = $label->color;
+			$label = ( isset( $label[0] ) ? $label[0] : 'n/a' );
+				$labelname = ( isset( $label->name ) ? $label->name : 'n/a' );
+				$labelcolor = ( isset( $label->color ) ? $label->color : 'n/a' );
 			$objecttime = $object->$reportobject;
 			$milestoneobj = $object->milestone;
-			$milestonetitle = $milestoneobj->title;
-			$milestonenumber = $milestoneobj->number;
+			$milestonetitle = ( isset( $milestoneobj->title ) ? $milestoneobj->title : 'n/a' );
+			$milestonenumber = ( isset( $milestoneobj->number ) ? $milestoneobj->number : 'n/a' );
 		} else if ( 'commits' == $context ) {				
 			$url = 'https://github.com/' . $branch . '/commit/' . $object->sha;
 			$reportid = substr( $object->sha, 0, 6 );
@@ -391,9 +456,9 @@ function oenology_get_header_textcolor() {
 		$colorscheme = oenology_get_color_scheme();
 		
 		if ( 'light' == $colorscheme ) {
-			$headertextcolor = '666666';
+			$headertextcolor = apply_filters( 'oenology_light_color_scheme_header_textcolor', '666666' );
 		} elseif ( 'dark' == $colorscheme ) {
-			$headertextcolor = 'dddddd';
+			$headertextcolor = apply_filters( 'oenology_light_color_scheme_header_textcolor', 'dddddd' );
 		}
 	}
 	return $headertextcolor;
@@ -448,7 +513,7 @@ function oenology_get_post_formats() {
 			'description' => __('A recording of both visual and audible components; Electronically capturing, recording, processing, storing, transmitting, and reconstructing a sequence of still images representing scenes in motion.', 'oenology' )
 		)
 	);
-	return $postformats;
+	return apply_filters( 'oenology_get_post_formats', $postformats );
 }
 
 /**
@@ -461,21 +526,11 @@ function oenology_get_post_formats() {
  */
 function oenology_get_page_tab_markup() {
 
-	$page = 'oenology-settings';	
-	
-	if ( isset( $_GET['page'] ) && 'oenology-reference' == $_GET['page'] ) {
-		$page = 'oenology-reference';
-	}
+	$page = 'oenology-settings';
 
     $current = oenology_get_current_tab();
 	
-	$tabs = array();
-	
-	if ( 'oenology-settings' == $page ) {
-        $tabs = oenology_get_settings_page_tabs();
-	} else if ( 'oenology-reference' == $page ) {
-        $tabs = oenology_get_reference_page_tabs();
-	}
+	$tabs = oenology_get_settings_page_tabs();
     
     $links = array();
     
@@ -539,7 +594,7 @@ function oenology_get_social_networks() {
         	'baseurl' => 'http://www.twitter.com'
         )
     );
-	return $socialnetworks;
+	return apply_filters( 'oenology_get_social_networks', $socialnetworks );
 }
 
 /**
@@ -571,7 +626,7 @@ function oenology_gallery_links() {
 		$links['nextthumb'] = wp_get_attachment_link($attachments[$k-1]->ID, 'attachment-nav-thumbnail', true);
 	}
 
-	return $links;
+	return apply_filters( 'oenology_gallery_links', $links );
 }
 
 /**
@@ -634,7 +689,7 @@ function oenology_gallery_image_meta() {
 	} else if ( is_object( $attachmentimage ) && $attachmentimage->post_excerpt ) {
 		$image_meta['caption'] = $attachmentimage->post_excerpt;
 	}
-	return $image_meta;
+	return apply_filters( 'oenology_gallery_image_meta', $image_meta );
 }
 
 
@@ -649,9 +704,17 @@ function oenology_get_404_content() {
 	// Variable to hold function output
 	$oenology_404 = '';
 	
+	// Variables to hold contextual output parts
+	$oenology_404_intro = '';
+	$oenology_404_posts = '';
+	$oenology_404_pages = '';
+	$oenology_404_category = '';
+	$oenology_404_tag = '';
+	$oenology_404_results = '';
+	$oenology_404_noresults = '';
+	
 	// Intro text
 	
-	$oenology_404_intro = '';
 	$oenology_404_intro .= '<p>';
 	$oenology_404_intro .= __( 'Oh no, not again.', 'oenology' );
 	$oenology_404_intro .= '</p>';
@@ -699,7 +762,6 @@ function oenology_get_404_content() {
 		$oenology404nopostsorpages = false;
 		
 		// Display list of post suggestions
-		$oenology_404_posts = '';
 		$suggestedposts = $oenology404postsuggestions;
 		if ( $suggestedposts > 0 ) {
 		
@@ -730,7 +792,6 @@ function oenology_get_404_content() {
 		}
 		
 		// Display list of page suggestions
-		$oenology_404_pages = '';
 		$suggestedpages = $oenology404pagesuggestions;
 		if ( $suggestedpages > 0 ) {
 			
@@ -762,7 +823,6 @@ function oenology_get_404_content() {
 	}
 		
 	// See if we've matched a category
-	$oenology_404_category = '';
 	$oenology404nocategories = true;
 	$categories = get_categories( array ( "name__like" => $search ) );
 	if ( count( $categories ) > 0 ) { 
@@ -777,7 +837,6 @@ function oenology_get_404_content() {
 		$oenology_404_category .= '</ul>';
 	}
 	// See if we've matched a tag
-	$oenology_404_tag = '';
 	$oenology404notags = true;
 	$tags = get_tags( array ( "name__like" => $search ) );
 	if ( count( $tags ) > 0 ) { 
@@ -785,80 +844,73 @@ function oenology_get_404_content() {
 		$oenology404notags = false;		
 		
 		$oenology_404_tag = '<p>' . __( 'Perhaps you were looking for something with one of the following tags?', 'oenology' ) . '</p>';
-		$oenology_404_tag = '<ul class="oenology404_suggestions">';
+		$oenology_404_tag .= '<ul class="oenology404_suggestions">';
 		foreach ( $tags as $tag ) {
-			$oenology_404_tag = '<li><a href="' . get_tag_link($tag->term_id) . '">' . $tag->name . '</a></li>';
+			$oenology_404_tag .= '<li><a href="' . get_tag_link($tag->term_id) . '">' . $tag->name . '</a></li>';
 		}
-		$oenology_404_tag = '</ul>';
+		$oenology_404_tag .= '</ul>';
 	}
 
-	$oenology_404_noresults = '';
+	// Define "no results" output
 	$oenology_404_noresults .= '<p>';
 	$oenology_404_noresults .= __( 'I apologize.', 'oenology' ) . ' ';
 	$oenology_404_noresults .= __( 'For the life of me, I am unable to figure out what you were trying to find.', 'oenology' ) . ' ';
 	$oenology_404_noresults .= __( 'Perhaps try searching, using the search form in the upper right-hand corner?', 'oenology' );
 	$oenology_404_noresults .= '</p>';
-	$oenology_404_results = $oenology_404_intro . $oenology_404_posts . $oenology_404_pages . $oenology_404_category . $oenology_404_tag;
+	
+	// Concatenate "results" output
+	$oenology_404_results = apply_filters( 'oenology_404_intro', $oenology_404_intro ) . apply_filters( 'oenology_404_posts', $oenology_404_posts ) . apply_filters( 'oenology_404_pages', $oenology_404_pages ) . apply_filters( 'oenology_404_category', $oenology_404_category ) . apply_filters( 'oenology_404_tag', $oenology_404_tag );
 	
 	$oenology404noresults = false;
 
 	if ( $oenology404nopostsorpages && $oenology404nocategories && $oenology404notags ) {
 		$oenology404noresults = true;
 	}	
-	$oenology_404 = ( $oenology404noresults ? $oenology_404_noresults : $oenology_404_results );
+	$oenology_404 = ( $oenology404noresults ? apply_filters( 'oenology_404_noresults', $oenology_404_noresults ) : apply_filters( 'oenology_404_results', $oenology_404_results ) );
 	
-	return $oenology_404;
+	return apply_filters( 'oenology_404', $oenology_404 );
 }
 
 
 /**
  * Add navigation breadcrumb function
+ * 
+ * Derived from Dimox breadcrumb code
+ * 
+ * @link 	http://dimox.net/wordpress-breadcrumbs-without-a-plugin/	Dimox
  */
-
-/* Credit: Dimox
-*	http://dimox.net/wordpress-breadcrumbs-without-a-plugin/
-*/
 function oenology_breadcrumb() {
  
-	$containerBefore = '<li id="breadcrumbs">';
-	$containerAfter = '</li>';
-	$containerCrumb = '<div class="crumbs">';
-	$containerCrumbEnd = '</div>';
-	$delimiter = ' &raquo; ';
-	$name = 'Home'; //text for the 'Home' link
-	$blogname = 'Blog'; //text for the 'Blog' link
+	$containerBefore = apply_filters( 'oenology_breadcrumb_container_before', '<li id="breadcrumbs">' );
+	$containerAfter = apply_filters( 'oenology_breadcrumb_container_after', '</li>' );
+	$containerCrumb = apply_filters( 'oenology_breadcrumb_container_open', '<div class="crumbs">' );
+	$containerCrumbEnd = apply_filters( 'oenology_breadcrumb_container_close', '</div>' );
+	$delimiter = apply_filters( 'oenology_breadcrumb_delimiter', ' &raquo; ' );
+	$name = apply_filters( 'oenology_breadcrumb_home_text', 'Home' ); //text for the 'Home' link
+	$blogname = apply_filters( 'oenology_breadcrumb_blog_text', 'Blog' ); //text for the 'Blog' link
+	$currentBefore = apply_filters( 'oenology_breadcrumb_current_before', '<strong>' );
+	$currentAfter = apply_filters( 'oenology_breadcrumb_current_after', '</strong>' );
 	$baseLink = '';
 	$hierarchy = '';
 	$currentLocation = '';
-	$currentBefore = '<strong>';
-	$currentAfter = '</strong>';
 	$currentLocationLink = '';
 	$crumbPagination = '';
+	$home = home_url('/');
 
 	global $post;
- 
-	// Start of Container
-    echo $containerBefore;
-	// Start of Breadcrumbs
-	echo $containerCrumb;
 
-	// Output the Base Link	
-	if ( is_front_page() ) {
-		echo '<strong>' . $name . '</strong>';
-	} else {
-		$home = home_url('/');
-		$baseLink =  '<a href="' . $home . '">' . $name . '</a>';
-		echo $baseLink; 
-	}
+	// Base Link
+	$baselink = ( is_front_page() ? '<strong>' . $name . '</strong>' : '<a href="' . $home . '">' . $name . '</a>' );
+
 	// If static Page as Front Page, and on Blog Posts Index
 	if ( is_home() && ( 'page' == get_option( 'show_on_front' ) ) ) {
-		echo $delimiter . '<strong>' . $blogname . '</strong>';
+		$hierarchy = $delimiter;
+		$currentLocation = $blogname;
 	}
 	// If static Page as Front Page, and on Blog, output Blog link
 	if ( ! is_home() && ! is_page() && ! is_front_page() && ( 'page' == get_option( 'show_on_front' ) ) ) {
-		$blogpageid = get_option( 'page_for_posts' );
-		$bloglink = '<a href="' . get_permalink( $blogpageid ) . '">' . $blogname . '</a>';
-		echo $delimiter . $bloglink;
+		$hierarchy = $delimiter;
+		$currentLocation = '<a href="' . get_permalink( get_option( 'page_for_posts' ) ) . '">' . $blogname . '</a>';
 	} 
     // Define Category Hierarchy Crumbs for Category Archive
 	if ( is_category() ) { 
@@ -897,10 +949,31 @@ function oenology_breadcrumb() {
 		$hierarchy = $delimiter . sprintf( __( 'Posts Published in: %s', 'oenology' ), $date_string ); 
     } 
 	// Define Category Hierarchy Crumbs for Single Posts
-	elseif ( is_single() && !is_attachment() ) { 
-		$cat = get_the_category(); 
-		$cat = $cat[0];
-		$hierarchy = $delimiter . get_category_parents( $cat, TRUE, $delimiter );
+	elseif ( is_singular( 'post' ) ) { 
+		$cats = get_the_category(); 
+		// Assume the first category is current
+		$current_cat = ( $cats ? $cats[0] : '' );
+		// Determine if category is hierarchical
+		$cat_is_hierarchical = false;
+		foreach ( $cats as $cat ) {
+			if ( '0' != $cat->parent ) {
+				$cat_is_hierarchical = true;
+				break;
+			}
+		}
+		// If category is hierarchical,
+		// ensure we have the correct child category
+		if ( $cat_is_hierarchical ) {
+			foreach ( $cats as $cat ) {
+				$children = get_categories( array( 'parent' => $cat->term_id ) );
+				if ( 0 == count( $children ) ) {
+					$current_cat = $cat;
+					break;
+				}
+			}
+		}
+		// Get the hierarchical list of category links
+		$hierarchy = $delimiter . get_category_parents( $current_cat, TRUE, $delimiter );
 		// Note: get_the_title() is filtered to output a
 		// default title if none is specified
 		$currentLocation = get_the_title();	  
@@ -918,7 +991,20 @@ function oenology_breadcrumb() {
 		// Note: Titles are forced for attachments; the
 		// filename will be used if none is specified
 		$currentLocation = get_the_title();  
-    } 
+    }
+	// Define Taxonomy Crumbs for Custom Post Types
+	elseif ( is_singular( get_post_type() ) && ! is_singular( 'post' ) && ! is_page() && ! is_attachment() ) {
+		global $post;
+		$post_type_object = get_post_type_object( get_post_type() );
+		$post_type_name = $post_type_object->labels->name;
+		$post_type_slug = $post_type_object->name;
+		$taxonomies = get_object_taxonomies( get_post_type() );
+		$taxonomy = ( ! empty( $taxonomies ) ? $taxonomies[0] : false );
+		$terms = ( $taxonomy ? get_the_term_list( $post->ID, $taxonomy ) : false );
+		$hierarchy = $delimiter . '<a href="' . get_post_type_archive_link( $post_type_slug ) . '">' . $post_type_name . '</a>';
+		$hierarchy .= ( $terms ? $delimiter . $terms . $delimiter : $delimiter );
+		$currentLocation = get_the_title();
+	}
 	// Define Current Location for Parent Pages
 	elseif ( ! is_front_page() && is_page() && ! $post->post_parent ) { 
 		$hierarchy = $delimiter;
@@ -930,14 +1016,14 @@ function oenology_breadcrumb() {
 	elseif ( ! is_front_page() && is_page() && $post->post_parent ) { 
 		$parent_id  = $post->post_parent;
 		$breadcrumbs = array();
-		while ($parent_id) {
-		$page = get_page($parent_id);
-		$breadcrumbs[] = '<a href="' . get_permalink($page->ID) . '">' . get_the_title($page->ID) . '</a>';
-		$parent_id  = $page->post_parent;
+		while ( $parent_id ) {
+			$page = get_page($parent_id);
+			$breadcrumbs[] = '<a href="' . get_permalink($page->ID) . '">' . get_the_title($page->ID) . '</a>';
+			$parent_id  = $page->post_parent;
 		}
-		$breadcrumbs = array_reverse($breadcrumbs);
-		foreach ($breadcrumbs as $crumb) {
-		$hierarchy = $hierarchy . $delimiter . $crumb;
+		$breadcrumbs = array_reverse( $breadcrumbs );
+		foreach ( $breadcrumbs as $crumb ) {
+			$hierarchy .= $delimiter . $crumb;
 		}
 		$hierarchy = $hierarchy . $delimiter;
 		// Note: get_the_title() is filtered to output a
@@ -954,6 +1040,18 @@ function oenology_breadcrumb() {
 		$hierarchy = $delimiter . __( 'Tag Archive:', 'oenology' ) . ' ';
 		$currentLocation = single_tag_title( '' , FALSE );  
     } 
+	// Define current location for Custom Taxonomy Archives
+	elseif ( is_tax() ) {
+		$post_type_object = get_post_type_object( get_post_type() );
+		$post_type_name = $post_type_object->labels->name;
+		$post_type_slug = $post_type_object->name;
+		global $wp_query;
+		$custom_tax = $wp_query->query_vars['taxonomy'];
+		$custom_tax_object = get_taxonomy( $custom_tax );
+		$hierarchy = $delimiter . '<a href="' . get_post_type_archive_link( $post_type_slug ) . '">' . $post_type_name . '</a>';
+		$hierarchy .= $delimiter .__( 'Archive for:', 'oenology' ) . ' ';
+		$currentLocation = single_term_title( '', false ); 
+	}
 	// Define current location for Author Archives
 	elseif ( is_author() ) { 
 		$hierarchy = $delimiter . __( 'Posts Written by:', 'oenology' ) . ' ';
@@ -968,6 +1066,13 @@ function oenology_breadcrumb() {
 	elseif ( get_post_format() && ! is_home() ) { 
 		$hierarchy = $delimiter . __( 'Post Format Archive:', 'oenology' ) . ' ';
 		$currentLocation = get_post_format_string( get_post_format() ) . 's';
+	}
+	// Define current location for Custom Post Type Archives
+	elseif ( is_post_type_archive( get_post_type() ) ) {
+		$hierarchy = $delimiter . __( 'Archive Index for:', 'oenology' ) . ' ';
+		$post_type_object = get_post_type_object( get_post_type() );
+		$post_type_name = $post_type_object->labels->name;
+		$currentLocation = $post_type_name;
 	}
 
 // Build the Current Location Link markup
@@ -985,14 +1090,11 @@ function oenology_breadcrumb() {
       $crumbPagination = ' (Page ' . get_query_var('page') . ') ';
     }
 
-// Output the resulting Breadcrumbs
-	
-	echo $hierarchy; // Output Hierarchy	
-	echo $currentLocationLink; // Output Current Location	
-	echo $crumbPagination; // Output page number, if Post or Page is paginated	
-	echo $containerCrumbEnd; // End of BreadCrumbs
- 
-    echo $containerAfter; // End of Container
+	// Build the resulting Breadcrumbs
+	$breadcrumb = $containerBefore . $containerCrumb . $baselink . $hierarchy . $currentLocationLink . $crumbPagination . $containerCrumbEnd . $containerAfter;
+
+	// Output the result
+	echo apply_filters( 'oenology_breadcrumb', $breadcrumb );
 
 }
 
@@ -1011,7 +1113,7 @@ function oenology_infobar_navigation() {
 		}
 	}
 	
-	if ( is_single() && ! is_attachment() ) {
+	if ( is_singular( 'post' ) && ! is_attachment() ) {
 		echo '<div class="prevnextpostlinks">';
 		next_post_link( '%link', '&lArr; ' );
 		previous_post_link( '%link', ' &rArr;' );

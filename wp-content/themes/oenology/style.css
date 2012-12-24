@@ -1,8 +1,8 @@
 /*  
 Theme Name: 	Oenology
 Theme URI: 		http://www.chipbennett.net/themes/oenology
-Description: 	Oenology is designed to be a simple, minimalist, yet feature-complete and fully documented Theme intended to serve as a base for child Themes and as an educational reference for Theme development using WordPress functions, action/filter hooks, and template tags. The Theme includes built-in breadcrumb navigation, and supports Post Formats, Navigation Menus, Post Thumbnails, Custom Backgrounds, Custom Image Headers, and Custom Editor Style. The Theme includes plug-and-play support for the WP-Paginate and Yoast Breadcrumbs plugins. <strong>Requires WordPress 3.3, and is compatible up to WordPress 3.3.</strong>
-Version: 		2.5
+Description: 	Oenology is designed to be a simple, minimalist, yet feature-complete and fully documented Theme intended to serve as a base for child Themes and as an educational reference for Theme development using WordPress functions, action/filter hooks, and template tags. The Theme includes built-in breadcrumb navigation, and supports the Theme Customizer, Contextual Help, Post Formats, Navigation Menus, Post Thumbnails, Custom Backgrounds, Custom Image Headers, and Custom Editor Style. The Theme includes plug-and-play support for the WP-Paginate and Yoast Breadcrumbs plugins. <strong>Requires WordPress 3.5, and is compatible up to WordPress 3.5.</strong>
+Version: 		3.0
 Author: 		Chip Bennett
 Author URI: 	http://www.chipbennett.net/
 Tags: 			fixed-width, white, black, tan, green, one-column, two-columns, three-columns, custom-header, custom-background, custom-menu, editor-style, featured-images, full-width-template, left-sidebar, post-formats, right-sidebar, sticky-post, theme-options, threaded-comments, translation-ready
@@ -469,7 +469,8 @@ pre {
 }
 #leftcol {
   display:inline;
-  width:165px;
+  width:160px;
+  margin-bottom: 20px;
   padding:0px;
   padding-left:10px;
   float:left;
@@ -494,22 +495,21 @@ pre {
 .layout-two-column-right #leftcol {
 	padding-left:5px;
 }
+#sidebar-doublecol {
+	float: right;
+	width: 335px;
+}
 #doublecoltop,
 #doublecolbottom {
   display:inline;
   width:325px;
   margin-bottom: 20px;
+  margin-left: 0px;
   padding:0px;
   padding-left:10px;
   float:right;
   text-align:left;
   vertical-align:top;
-}
-#doublecolbottom {
-	margin-left: 660px;
-}
-#home #doublecolbottom {
-	margin-left:0;
 }
 #main {
   display:inline;
@@ -555,6 +555,7 @@ body.layout-full #main,
 #rightcol {
   display:inline;
   width:160px;
+  margin-bottom: 20px;
   padding-left: 5px;
   float:right;
   vertical-align:top;
@@ -741,12 +742,6 @@ ul.page-numbers li {
 .postsnavlinks,
 .prevnextpostlinks {
 	display: inline;
-	float: right;
-	font-size: 16pt;
-}
-.postsnavlinks,
-.prevnextpostlinks {
-	display: inline;
 	float: none;
 	font-size: 16pt;
 }
@@ -884,11 +879,12 @@ ul.page-numbers li {
 }
 
 .leftcolcatlist li {
+  display:block;
   clear:both;
   padding:0px;
   margin:0px;
   margin-bottom:0px;
-  height:1.5em;
+  min-height:1.5em;
   line-height:1.5em;
   border:0px solid black;
 }
@@ -904,7 +900,6 @@ ul.page-numbers li {
   margin:0px;
   padding:0px;
   padding-right:5px;
-  height:1.5em;
   line-height:1em;
 }
 .listarchives li {

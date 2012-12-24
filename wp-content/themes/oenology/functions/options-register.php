@@ -33,8 +33,9 @@ register_setting(
 	'oenology_options_validate' 
 );
 
+
 /**
- * Theme register_settin() sanitize callback
+ * Theme register_setting() sanitize callback
  * 
  * Validate and whitelist user-input data before updating Theme 
  * Options in the database. Only whitelisted options are passed
@@ -76,8 +77,9 @@ function oenology_options_validate( $input ) {
 			$submittab = $tab['name'];
 		}
 	}
+	global $wp_customize;
 	// Get settings by tab
-	$tabsettings = $settingsbytab[$submittab];
+	$tabsettings = ( isset ( $wp_customize ) ? $settingsbytab['all'] : $settingsbytab[$submittab] );
 	// Loop through each tab setting
 	foreach ( $tabsettings as $setting ) {
 		// If no option is selected, set the default
@@ -206,27 +208,6 @@ function oenology_sections_callback( $section_passed ) {
 }
 
 /**
- * Add Section Text for the Varietal Settings Section
- */
-function oenology_get_varietal_text() {
-
-	$oenology_options = oenology_get_options();
-	$option_parameters = oenology_get_option_parameters();
-	$oenology_varietals = $option_parameters['varietal']['valid_options'];
-	foreach ( $oenology_varietals as $varietal ) {
-		if ( $varietal['name'] == $oenology_options['varietal'] ) {
-		      $oenology_current_varietal = $varietal;
-		}
-	}
-	$text = '';
-	$text .= '<p>"Varietal" refers to wine made from exclusively or predominantly one variety of grape. Each varietal has unique flavor and aromatic characteristics. Refer to the contextual help screen for descriptions and help regarding each theme option.</p>';
-	$text .= '<img class="oenology-varietal-thumb" src="' . get_template_directory_uri() . '/varietals/' . $oenology_options['varietal'] . '.png' . '" width="150px" height="110px" alt="' . $oenology_options['varietal'] . '" />';
-	$text .= '<h4>Current Varietal</h4>';
-	$text .= '<dl><dt><strong>' . $oenology_current_varietal['title'] . '</strong></dt><dd>' . $oenology_current_varietal['description'] . '</dd></dl>';
-	return $text;
-}
-
-/**
  * Globalize the variable that holds 
  * all the Theme option parameters
  * 
@@ -256,7 +237,7 @@ foreach ( $option_parameters as $option ) {
 	$optiontab = $option['tab'];
 	$optionsection = $option['section'];
 	$optiontype = $option['type'];
-	if ( 'internal' != $optiontype && 'custom' != $optiontype ) {
+	if ( 'custom' != $optiontype ) {
 		add_settings_field(
 			// $settingid
 			'oenology_setting_' . $optionname,
@@ -370,7 +351,7 @@ function oenology_setting_varietal() {
 	<?php
 	} 
 	?>
-	<h4 style="display:block;clear:both;">White (Light)</h4>
+	<h4 style="display:block;clear:both;"><?php _e( 'White (Light)', 'oenology' ); ?></h4>
 	<?php 
 	foreach ( $oenology_varietals as $varietal ) {
 		if ( 'light' == $varietal['scheme'] ) {
@@ -378,7 +359,7 @@ function oenology_setting_varietal() {
 		}
 	} 
 	?>
-	<h4 style="display:block;clear:both;">Red (Dark)</h4>
+	<h4 style="display:block;clear:both;"><?php _e( 'Red (Dark)', 'oenology' ); ?></h4>
 	<?php 
 	foreach ( $oenology_varietals as $varietal ) {
 		if ( 'dark' == $varietal['scheme'] ) {

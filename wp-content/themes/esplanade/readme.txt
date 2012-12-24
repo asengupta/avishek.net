@@ -190,6 +190,16 @@ The theme is offered free of charge. If someone asked money for it, someone just
 
 == Changelog ==
 
+= 1.0.9 =
+
+Fixed warning sometimes thrown when updating a post
+
+= 1.0.8 =
+
+* Fixed padding on post navigation with template No Sidebars
+* Added new WordPress 3.4 custom headers and backgrounds method
+* Deprecated custom image width option
+
 = 1.0.7 =
 
 * Fixed embedded media not displaying in slider

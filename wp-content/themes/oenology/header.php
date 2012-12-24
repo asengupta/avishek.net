@@ -127,9 +127,17 @@ language_attributes();
 	 * 
 	 * Codex reference: {@link http://codex.wordpress.org/Template_Tags/wp_title wp_title}
 	 * 
-	 * Outputs HTML <title> tag content, including the site name and context-specific content, 
+	 * Outputs HTML <title> tag content, including context-specific content, 
 	 * such as the Post Title for single posts, the Date for date-based archive, 
 	 * Category for category archive, etc.
+	 * 
+	 * This content can be filtered, via the 'wp_title' filter. Modifying output via this filter 
+	 * rather than hard-coding output inside the <title> tags is the best-practice approach, as 
+	 * this approach facilitates modification of the title content by Plugins (or by future core 
+	 * changes). Oenology applies custom content using this filter, via the oenology_filter_wp_title() 
+	 * function in \functions\wordpress-hooks.php.
+	 * 
+	 * @see		oenology_filter_wp_title()
 	 * 
 	 * @param	string	$sep			separator to use before/after Post Title; default: '&raquo;'
 	 * @param	bool	$echo			whether to echo or return output; default: true
@@ -204,15 +212,25 @@ language_attributes();
 ?>
 <div id="extent"> 
 
-<?php 
-/**
- * Fire the 'oenology_hook_extent_before' custom action hook
- * 
- * @param	null
- * @return	mixed	any output hooked into 'oenology_hook_extent_before'
- */
-oenology_hook_extent_before(); 
-?>
+	<?php 
+	/**
+	* Fire the 'oenology_hook_extent_before' custom action hook
+	* 
+	* @param	null
+	* @return	mixed	any output hooked into 'oenology_hook_extent_before'
+	*/
+	oenology_hook_extent_before(); 
+	?>
+
+	<?php 
+	/**
+	 * Fire the 'oenology_hook_site_header_before' custom action hook
+	 * 
+	 * @param	null
+	 * @return	mixed	any output hooked into 'oenology_hook_site_header_before'
+	 */
+	oenology_hook_site_header_before(); 
+	?>
 
 	<!-- Begin Header  (div#header)-->
 	<?php
@@ -251,6 +269,16 @@ oenology_hook_extent_before();
 		
 	</div>
 	<!-- End Header (div#header) -->
+
+	<?php 
+	/**
+	 * Fire the 'oenology_hook_site_header_after' custom action hook
+	 * 
+	 * @param	null
+	 * @return	mixed	any output hooked into 'oenology_hook_site_header_after'
+	 */
+	oenology_hook_site_header_after(); 
+	?>
 	
 	<!-- Begin Infobar (div#infobar) -->
 	<?php
@@ -285,6 +313,16 @@ oenology_hook_extent_before();
 		?>
 	</div>
 	<!-- End Infobar (div#infobar) -->
+
+	<?php 
+	/**
+	 * Fire the 'oenology_hook_content_before' custom action hook
+	 * 
+	 * @param	null
+	 * @return	mixed	any output hooked into 'oenology_hook_content_before'
+	 */
+	oenology_hook_content_before(); 
+	?>
 
 	<!-- Begin Content (div#content) -->
 	<?php 
