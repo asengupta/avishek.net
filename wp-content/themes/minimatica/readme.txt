@@ -4,8 +4,8 @@ Tags:white, light, two-columns, fixed-width, custom-menu,
 editor-style, theme-options, threaded-comments, sticky-post,
 microformats, translation-ready, photoblogging
 Requires at least: 3.1
-Tested up to: 3.2-beta2
-Stable tag: 1.0.8
+Tested up to: 3.6 Beta 3
+Stable tag: 1.0.9
 
 Description: A stylish and modern minimalist theme
 with a beautiful image gallery slider and an optional blog view.
@@ -163,6 +163,11 @@ If you see any, they've been injected by somebody mean.
 You may safely remove them or download the theme from the original location.
 
 == Changelog ==
+
+= 1.0.9 =
+* Fixed coreect hook for enqueueing scripts
+* Fixed file type issues with WP 3.5 media uploader
+* Updated Vegur font
 
 = 1.0.8 =
 * Fixed line-height for 2nd level menu items

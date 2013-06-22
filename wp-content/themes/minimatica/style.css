@@ -3,7 +3,7 @@
 Theme Name: Minimatica
 Theme URI: http://www.onedesigns.com/wordpress-themes/minimatica
 Description: A stylish and modern minimalist theme with a beautiful image gallery slider and an optional blog view. With support for post formats, audio and video playback, ideal for showcasing photography portfolios or podcasting but also great for your everyday blogging.
-Version: 1.0.8
+Version: 1.0.9
 Author: One Designs
 Author URI: http://www.onedesigns.com/
 Tags: white, light, two-columns, fixed-width, custom-background, custom-header, custom-menu, editor-style, featured-images, theme-options, threaded-comments, sticky-post, microformats, post-formats, translation-ready, photoblogging
@@ -97,9 +97,7 @@ table {
     src: url('fonts/vegur-light.eot');
     src: url('fonts/vegur-light.eot?#iefix') format('embedded-opentype'),
          url('fonts/vegur-light.woff') format('woff'),
-         url('fonts/vegur-light.ttf') format('truetype'),
-         url('fonts/vegur-light.otf') format('opentype'),
-         url('fonts/vegur-light.svg#VegurLight') format('svg');
+         url('fonts/vegur-light.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 }
@@ -109,9 +107,7 @@ table {
     src: url('fonts/vegur-bold.eot');
     src: url('fonts/vegur-bold.eot?#iefix') format('embedded-opentype'),
          url('fonts/vegur-bold.woff') format('woff'),
-         url('fonts/vegur-bold.ttf') format('truetype'),
-         url('fonts/vegur-bold.otf') format('opentype'),
-         url('fonts/vegur-bold.svg#VegurBold') format('svg');
+         url('fonts/vegur-bold.ttf') format('truetype');
     font-weight: bold;
     font-style: normal;
 }

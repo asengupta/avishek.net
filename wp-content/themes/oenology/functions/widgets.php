@@ -21,28 +21,12 @@
  * @since 		Oenology 1.0
  */
 
-/**
- * Define default Widget arguments
- */
-
-function oenology_get_widget_args() {
-	$widget_args = array(	
-		// Widget container opening tag, with classes
-		'before_widget' => '<div id="%1$s" class="widget %2$s">',
-		// Widget container closing tag
-		'after_widget' => '</div>' . oenology_showhide_widget_content_close(),
-		// Widget Title container opening tag, with classes
-		'before_title' => '<div class="title widgettitle">',
-		// Widget Title container closing tag
-		'after_title' => '</div>' . oenology_showhide_widget_content_open()
-	);
-	return $widget_args;
-}
-
 add_action( 'after_setup_theme', 'oenology_setup_widgets', 11 );
 
 /**
  * Register all widget areas (sidebars)
+ * 
+ * @uses	oenology_get_widget_args()	Defined in functions/custom.php
  * 
  * @since	WordPress 2.8
  */
@@ -98,21 +82,6 @@ register_sidebar( array_merge(
 ) );
 
 } // function oenology_widget_setup()
-
-function oenology_showhide_widget_content_open() {
-	$options = oenology_get_options();
-    $showhide = '<span class="showhide">';
-    $showhide .= 'Click to ';
-    $showhide .= '<span style="color:#5588aa;" onclick="d=this.parentElement.nextElementSibling; d.style.display==\'none\' ? d.style.display=\'block\' : d.style.display=\'none\';">view/hide</span>';
-    $showhide .= '<br /></span>';
-    $showhide .= '<div style="display:' . $options['widget_display_default_state'] . ';">';
-
-    return $showhide;
-}
-
-function oenology_showhide_widget_content_close() {
-	return '</div>';
-}
 
 
 /**
@@ -263,6 +232,55 @@ class oenology_widget_post_formats extends WP_Widget {
     }
 } 
 
+/**
+ * Define Social Icons Custom Widget 
+ * 
+ * @uses	oenology_get_custom_post_format_list()	Defined in /functions/custom.php
+ * 
+ * @since	WordPress 2.8
+ */
+class oenology_widget_social_icons extends WP_Widget {
+
+    function oenology_widget_social_icons() {
+        $widget_ops = array('classname' => 'oenology-widget-social-icons', 'description' => __( 'Oenology theme widget to display social network icons', 'oenology' ) );
+        $this->WP_Widget('oenology_social_icons', __( 'Oenology Social Icons', 'oenology' ), $widget_ops);
+    }
+
+    function widget( $args, $instance ) {
+        extract($args);
+        $title = apply_filters('widget_title', empty($instance['title']) ? __( 'Social Networks', 'oenology' ) : $instance['title']);
+
+        echo $before_widget;
+        if ( $title )
+            echo $before_title . $title . $after_title;
+?>
+
+<!-- Begin Social Icons -->
+<ul class="leftcolcatlist">
+	<?php echo oenology_social_icons(); ?>
+</ul>
+<!-- End Social Icons -->
+
+<?php
+        echo $after_widget;
+    }
+
+    function update( $new_instance, $old_instance ) {
+        $instance = $old_instance;
+        $instance['title'] = strip_tags($new_instance['title']);
+
+        return $instance;
+    }
+
+    function form( $instance ) {
+        $instance = wp_parse_args( (array) $instance, array( 'title' => '' ) );
+        $title = strip_tags($instance['title']);
+?>
+            <p><label for="<?php echo $this->get_field_id('title'); ?>"><?php _e( 'Title', 'oenology' ); ?>:</label> <input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo esc_attr($title); ?>" /></p>
+<?php
+    }
+} 
+
 
 /* Add our function to the widgets_init hook. */
 add_action( 'widgets_init', 'oenology_load_widgets' );
@@ -276,5 +294,6 @@ function oenology_load_widgets() {
 	register_widget( 'oenology_widget_categories' );
 	register_widget( 'oenology_widget_tags' );
 	register_widget( 'oenology_widget_post_formats' );
+	register_widget( 'oenology_widget_social_icons' );
 }
 ?>

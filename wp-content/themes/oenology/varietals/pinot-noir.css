@@ -1,0 +1,134 @@
+/* Body Main Color #4C0009
+  -------------------------------------------- */
+  
+body {
+	color: #ccc;
+	background-color: #4C0009;
+}
+#tinymce,
+#bbpress-forums #bbp-single-user-details #bbp-user-navigation li.current a {
+	color: #ccc;
+}
+
+
+/* Main accent color #360202 */
+
+#infobar,
+#footer,
+th,
+pre,
+code,
+body.blog .post.sticky,
+#commentform p code,
+.nav-header li,
+.nav-header ul,
+.nav-header ul li,
+.post-date .post-date-year,
+.showhide span:hover,
+#wp-calendar th,
+#bbpress-forums .bbp-topics-front ul.super-sticky,
+#bbpress-forums .bbp-topics ul.super-sticky,
+#bbpress-forums .bbp-topics ul.sticky,
+#bbpress-forums .bbp-forum-content ul.sticky,
+#bbpress-forums div.bbp-topic-header,
+#bbpress-forums li.bbp-header,
+#bbpress-forums .bbp-lead-topic,
+body.page .bbp-reply-form code,
+body.page .bbp-topic-form code,
+body.single-topic .bbp-reply-form code,
+body.single-forum .bbp-topic-form code,
+body.topic-edit .bbp-topic-form code,
+body.reply-edit .bbp-reply-form code {
+	background-color: #360202;
+}
+
+#infobar,
+#footer {
+	border-bottom-color:#360202;
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#555555', endColorstr='#360202');
+	background: -webkit-linear-gradient( top, #555555, #360202 );
+	background: -moz-linear-gradient( top, #555555, #360202 );
+	background: -ms-linear-gradient( top, #555555, #360202 );
+}
+.nav-header li a,
+.nav-header li a:link,
+.nav-header li a:visited,
+.nav-header li a:hover,
+.nav-header li a:active,
+.nav-header li:hover li a,
+.nav-header li:hover li:hover li a,
+.subnavmenu .current_page_item li a,
+.subnavmenu .current_page_parent li a,
+.subnavmenu .current_page_parent .current_page_item li a,
+.subnavmenu .current_page_ancestor li a,
+#leftcol #subnav li a {
+     background: #360202;
+     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#360202', endColorstr='#555555');
+     background: -webkit-linear-gradient( bottom, #555555, #360202 );
+     background: -moz-linear-gradient( bottom, #555555, #360202 );
+     background: -ms-linear-gradient( bottom, #555555, #360202 );
+} 
+.nav-header li:hover a,
+.nav-header li:hover li:hover a,
+.nav-header li:hover li:hover li:hover a {
+     background: -webkit-radial-gradient( circle, #360202, #555555 );
+     background: -moz-radial-gradient( circle, #360202, #555555 );
+     background: -ms-radial-gradient( circle, #360202, #555555 );
+}
+
+/* Secondary accent color #751E1E */
+
+#loop-footer li#bottompostnav,
+.subnavmenu .current_page_ancestor .current_page_parent .current_page_item li a,
+.subnavmenu .current_page_ancestor .current_page_ancestor .current_page_parent li a,
+.subnavmenu .current_page_ancestor .current_page_ancestor .current_page_ancestor li a,
+.gallery-meta,
+.audiovideo-meta,
+.post.format-chat .post-entry p:nth-child(odd),
+input,
+textarea,
+select,
+#commentform input,
+#commentform textarea {
+	background-color:#751E1E;
+}
+
+
+/* Tertiary accent color #63000C */
+
+.post-entry blockquote,
+dd,
+tr:nth-child(even),
+#infobar-search input#searchsubmit,
+.post-date .post-date-weekday,
+.post-date .post-date-day,
+.post-date .post-date-month,
+/*#bbpress-forums div.even,*/
+#bbpress-forums ul.even,
+#bbpress-forums div.bbp-reply-header,
+#bbpress-forums .bbp-lead-topic div.bbp-topic-header {
+	background-color:#63000C;
+}
+
+
+/* Fourth accent color - #595757 */
+/* Comment meta color, Bypostauthor base color */
+
+.commentlist li.comment .comment-author,
+.commentlist li.comment .comment-meta {
+	background-color: #595757;
+}
+.commentlist li.comment {
+	border-color: #595757;
+}
+
+
+/* Fifth accent color - #785050 */
+/* Bypostauthor meta color */
+
+.commentlist li.comment.bypostauthor,
+.commentlist li.comment.bypostauthor,
+div.bbp-template-notice,
+div.indicator-hint {
+  background-color:#785050;
+}

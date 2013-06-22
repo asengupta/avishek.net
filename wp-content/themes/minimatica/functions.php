@@ -222,7 +222,7 @@ function minimatica_register_styles() {
 }
 endif;
 
-add_action('init', 'minimatica_register_styles');
+add_action('wp_enqueue_scripts', 'minimatica_register_styles');
 
 if ( ! function_exists( 'minimatica_enqueue_styles' ) ) :
 /**
@@ -434,7 +434,7 @@ function minimatica_file_types( $types ) {
 }
 endif;
 
-add_filter( 'ext2type', 'minimatica_mime_types' );
+add_filter( 'ext2type', 'minimatica_file_types' );
 
 if ( ! function_exists( 'minimatica_mime_types' ) ) :
 /**

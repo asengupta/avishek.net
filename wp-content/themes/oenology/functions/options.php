@@ -139,8 +139,17 @@ function oenology_get_option_defaults() {
 		$option_defaults[$name] = $option_parameter['default'];
 	}
 	// Return the defaults array
-	return $option_defaults;
+	return apply_filters( 'oenology_option_defaults', $option_defaults );
 }
+
+/**
+ * Define default options tab
+ */
+function oenology_define_default_options_tab( $options ) {
+	$options['default_options_tab'] = 'varietals';
+	return $options;
+}
+add_filter( 'oenology_option_defaults', 'oenology_define_default_options_tab' );
 
 /**
  * Oenology Theme Option Parameters
@@ -252,12 +261,6 @@ function oenology_get_option_parameters() {
 			'title' => __( 'Varietal', 'oenology' ),
 			'type' => 'custom',
 			'valid_options' => array(
-				'cuvee' => array(
-				  'name' => 'cuvee',
-				  'title' => __( 'Cuvee', 'oenology' ),
-				  'description' => __( 'Cuvee is a term often used by wineries to describe a particularly high-quality batch of wine. Cuvee is suitable for Child-theming.', 'oenology' ),
-				  'scheme' => 'light'
-				  ),
 				'chardonnay' => array(
 				  'name' => 'chardonnay',
 				  'title' => __( 'Chardonnay', 'oenology' ),
@@ -276,6 +279,12 @@ function oenology_get_option_parameters() {
 				  'description' => __( 'Muscat is a white grape with a pronounced flavor of grapes and spice, that produces a versatile wine from dry to sweet.', 'oenology' ),
 				  'scheme' => 'light'
 				  ),
+				'solarized-light' => array(
+				  'name' => 'solarized-light',
+				  'title' => __( 'Solarized Light', 'oenology' ),
+				  'description' => __( 'DESCRIPTION GOES HERE.', 'oenology' ),
+				  'scheme' => 'light'
+				  ),
 				'syrah' => array(
 				  'name' => 'syrah',
 				  'title' => __( 'Syrah', 'oenology' ),
@@ -287,7 +296,31 @@ function oenology_get_option_parameters() {
 				  'title' => __( 'Malbec', 'oenology' ),
 				  'description' => __( 'Malbec is a red grape that produces exceedingly dark, inky red-violet wins with intense flavors.', 'oenology' ),
 				  'scheme' => 'dark'
-				  )
+				  ),
+				'pinot-noir' => array(
+				  'name' => 'pinot-noir',
+				  'title' => __( 'Pinot Noir', 'oenology' ),
+				  'description' => __( 'Pinot Noir is an extremely fickle yet versatile red grape from Burgundy.', 'oenology' ),
+				  'scheme' => 'dark'
+				  ),
+				'zinfandel' => array(
+				  'name' => 'zinfandel',
+				  'title' => __( 'Zinfandel', 'oenology' ),
+				  'description' => __( 'Zinfandel is a red grape known for its spicy, peppery, and berry characteristics.', 'oenology' ),
+				  'scheme' => 'dark'
+				  ),
+				'solarized-dark' => array(
+				  'name' => 'solarized-dark',
+				  'title' => __( 'Solarized Dark', 'oenology' ),
+				  'description' => __( 'DESCRIPTION GOES HERE.', 'oenology' ),
+				  'scheme' => 'dark'
+				  ),
+				'cuvee' => array(
+				  'name' => 'cuvee',
+				  'title' => __( 'Cuvee', 'oenology' ),
+				  'description' => __( 'Cuvee is a term often used by wineries to describe a particularly high-quality batch of wine. Cuvee is suitable for Child-theming.', 'oenology' ),
+				  'scheme' => 'cuvee'
+				  ),
 			),
 			'description' => '',
 			'section' => 'varietal',
@@ -305,37 +338,16 @@ function oenology_get_option_parameters() {
 			'since' => '1.2',
 			'default' => true
 		),
-		'rss_feed' => array(
-			'name' => 'rss_feed',
-			'title' => __( 'RSS Feed', 'oenology' ),
-			'type' => 'select',
-			'valid_options' => array( 
-				'none' => array(
-					'name' => 'none',
-					'title' => __( 'Do Not Display', 'oenology' )
-				),
-				'rdf' => array(
-					'name' => 'rdf',
-					'title' => 'RDF/RSS 1.0'
-				),
-				'rss' => array(
-					'name' => 'rss',
-					'title' => 'RSS 0.92,'
-				),
-				'rss2' => array(
-					'name' => 'rss2',
-					'title' => 'RSS 2.0'
-				),
-				'atom' => array(
-					'name' => 'atom',
-					'title' => 'Atom'
-				)
-			),
-			'description' => __( 'RSS Feed', 'oenology' ),
+		'dribbble_profile' => array(
+			'name' => 'dribbble_profile',
+			'title' => __( 'Dribbble Profile', 'oenology' ),
+			'type' => 'text',
+			'sanitize' => 'nohtml',
+			'description' => __( 'Dribbble Username', 'oenology' ),
 			'section' => 'social',
 			'tab' => 'general',
-			'since' => '1.2',
-			'default' => 'rss2'
+			'since' => '3.2',
+			'default' => ''
 		),
 		'facebook_profile' => array(
 			'name' => 'facebook_profile',
@@ -359,6 +371,28 @@ function oenology_get_option_parameters() {
 			'since' => '1.2',
 			'default' => ''
 		),
+		'github_profile' => array(
+			'name' => 'github_profile',
+			'title' => __( 'GitHub Profile', 'oenology' ),
+			'type' => 'text',
+			'sanitize' => 'nohtml',
+			'description' => __( 'GitHub Username', 'oenology' ),
+			'section' => 'social',
+			'tab' => 'general',
+			'since' => '3.2',
+			'default' => ''
+		),
+		'googleplus_profile' => array(
+			'name' => 'googleplus_profile',
+			'title' => __( 'Google+ Profile', 'oenology' ),
+			'type' => 'text',
+			'sanitize' => 'nohtml',
+			'description' => __( 'Google+ Username', 'oenology' ),
+			'section' => 'social',
+			'tab' => 'general',
+			'since' => '3.2',
+			'default' => ''
+		),
 		'linkedin_profile' => array(
 			'name' => 'linkedin_profile',
 			'title' => __( 'Linked-In Profile', 'oenology' ),
@@ -370,15 +404,26 @@ function oenology_get_option_parameters() {
 			'since' => '1.2',
 			'default' => ''
 		),
-		'myspace_profile' => array(
-			'name' => 'myspace_profile',
-			'title' => __( 'MySpace Profile', 'oenology' ),
+		'pinterest_profile' => array(
+			'name' => 'pinterest_profile',
+			'title' => __( 'Pinterest Profile', 'oenology' ),
 			'type' => 'text',
 			'sanitize' => 'nohtml',
-			'description' => __( 'MySpace Username', 'oenology' ),
+			'description' => __( 'Pinterest Username', 'oenology' ),
 			'section' => 'social',
 			'tab' => 'general',
-			'since' => '1.2',
+			'since' => '3.2',
+			'default' => ''
+		),
+		'tumblr_profile' => array(
+			'name' => 'tumblr_profile',
+			'title' => __( 'Tumblr Profile', 'oenology' ),
+			'type' => 'text',
+			'sanitize' => 'nohtml',
+			'description' => __( 'Tumblr Username', 'oenology' ),
+			'section' => 'social',
+			'tab' => 'general',
+			'since' => '3.2',
 			'default' => ''
 		),
 		'twitter_profile' => array(
@@ -390,6 +435,28 @@ function oenology_get_option_parameters() {
 			'section' => 'social',
 			'tab' => 'general',
 			'since' => '1.2',
+			'default' => ''
+		),
+		'vimeo_profile' => array(
+			'name' => 'vimeo_profile',
+			'title' => __( 'Vimeo Profile', 'oenology' ),
+			'type' => 'text',
+			'sanitize' => 'nohtml',
+			'description' => __( 'Vimeo Username', 'oenology' ),
+			'section' => 'social',
+			'tab' => 'general',
+			'since' => '3.2',
+			'default' => ''
+		),
+		'wordpress_profile' => array(
+			'name' => 'wordpress_profile',
+			'title' => __( 'WordPress Profile', 'oenology' ),
+			'type' => 'text',
+			'sanitize' => 'nohtml',
+			'description' => __( 'WordPress Username', 'oenology' ),
+			'section' => 'social',
+			'tab' => 'general',
+			'since' => '3.2',
 			'default' => ''
 		),
 		'youtube_profile' => array(
@@ -726,9 +793,10 @@ function oenology_get_varietal_text() {
 		      $oenology_current_varietal = $varietal;
 		}
 	}
+	$varietal_thumbnail_url = oenology_locate_template_uri( array( 'varietals/' . $oenology_options['varietal'] . '.png' ), false, false ); 
 	$text = '';
 	$text .= '<p>"Varietal" refers to wine made from exclusively or predominantly one variety of grape. Each varietal has unique flavor and aromatic characteristics. Refer to the contextual help screen for descriptions and help regarding each theme option.</p>';
-	$text .= '<img class="oenology-varietal-thumb" src="' . get_template_directory_uri() . '/varietals/' . $oenology_options['varietal'] . '.png' . '" width="150px" height="110px" alt="' . $oenology_options['varietal'] . '" />';
+	$text .= '<img class="oenology-varietal-thumb" src="' . $varietal_thumbnail_url . '" width="150px" height="110px" alt="' . $oenology_options['varietal'] . '" />';
 	$text .= '<h4>Current Varietal</h4>';
 	$text .= '<dl><dt><strong>' . $oenology_current_varietal['title'] . '</strong></dt><dd>' . $oenology_current_varietal['description'] . '</dd></dl>';
 	return $text;

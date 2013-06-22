@@ -6,9 +6,9 @@ left-sidebar, right-sidebar, fixed-width, flexible-width,
 custom-background, custom-colors, custom-header, custom-menu,
 editor-style, featured-images, full-width-template, microformats,
 post-formats, sticky-post, theme-options, threaded-comments, translation-ready
-Requires at least: 3.1
-Tested up to: 3.3.2
-Stable tag: 1.0.7
+Requires at least: 3.5
+Tested up to: 3.6 Beta 3
+Stable tag: 1.1.2
 
 Description: A stylish, modern and flexible theme with responsive layout. Includes several custom templates, layouts and color schemes to choose from, 5 widget-ready areas and a user friendly options page to keep everything in control.
 
@@ -190,9 +190,29 @@ The theme is offered free of charge. If someone asked money for it, someone just
 
 == Changelog ==
 
+= 1.1.2 =
+
+* Bundled jquery-migrate script
+* Added version_compare() check for jquery-migrate
+
+= 1.1.1 =
+
+* Added styles for .current-menu-item class
+
+= 1.1.0 =
+
+* Added jQuery compatibility code
+* Sanitize CSS to avoid XSS but allow the '>' selector
+* Updated jQuery Layout script
+* Fixed script dependencies for jQuery Layout
+* Removed header_image_height option
+* Removed deprecated custom header functionality
+* Replaced Farbtastic with WP-Color-Picker
+* Updated screenshot for retina displays
+
 = 1.0.9 =
 
-Fixed warning sometimes thrown when updating a post
+* Fixed warning sometimes thrown when updating a post
 
 = 1.0.8 =
 

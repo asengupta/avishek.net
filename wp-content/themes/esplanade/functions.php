@@ -46,36 +46,19 @@ function esplanade_theme_setup() {
 	add_image_size( 'video-thumb', 640, 395, 1 );
 	add_image_size( 'attachment-thumb', 700, 9999 ); // no crop flag, unlimited height
 	
-	if( esplanade_is_wp_version( '3.4' ) ) {
-		// Allows users to set a custom background
-		add_theme_support( 'custom-background' );
-		
-		// Allows users to set a custom header image
-		add_theme_support( 'custom-header', array(
-			'width' => 1082,
-			'height' => esplanade_get_option( 'header_image_height' ),
-			'default-text-color' => '333',
-			'flex-height' => true,
-			'wp-head-callback' => 'esplanade_header_style',
-			'admin-head-callback' => 'esplanade_admin_header_style',
-			'admin-preview-callback' => 'esplanade_admin_header_image'
-		) );
-	} else {
-		// Allows users to set a custom background
-		add_custom_background();
-		
-		// Allows users to set a custom header image
-		if ( ! defined( 'HEADER_TEXTCOLOR' ) )
-			define( 'HEADER_TEXTCOLOR', '333' );
-		// The height and width of your custom header.
-		if ( ! defined( 'HEADER_IMAGE_WIDTH' ) )
-			define( 'HEADER_IMAGE_WIDTH', 1082 );
-		if ( ! defined( 'HEADER_IMAGE_HEIGHT' ) )
-			define( 'HEADER_IMAGE_HEIGHT', esplanade_get_option( 'header_image_height' ) );
-		// Add a way for the custom header to be styled in the admin panel
-		add_custom_image_header( 'esplanade_header_style', 'esplanade_admin_header_style', 'esplanade_admin_header_image' );
-	}
+	// Allows users to set a custom background
+	add_theme_support( 'custom-background' );
 	
+	// Allows users to set a custom header image
+	add_theme_support( 'custom-header', array(
+		'width' => 1082,
+		'height' => 280,
+		'default-text-color' => '333',
+		'flex-height' => true,
+		'wp-head-callback' => 'esplanade_header_style',
+		'admin-head-callback' => 'esplanade_admin_header_style',
+		'admin-preview-callback' => 'esplanade_admin_header_image'
+	) );
 	
 	// Styles the post editor
 	add_editor_style();
@@ -317,7 +300,6 @@ function esplanade_default_options() {
 		'sidebar_right_size' => '"29.48%"',
 		'sidebar_left_size' => '"17.4%"',
 		'sidebar_right_size' => '"12.75%"',
-		'header_image_height' =>280,
 		'color_scheme' => 'neutral',
 		'user_css' => '',
 		'body_font' => 'droid-sans',
@@ -524,7 +506,10 @@ if ( ! function_exists( 'esplanade_register_scripts' ) ) :
  */
 function esplanade_register_scripts() {
 	wp_register_script( 'flexslider', get_template_directory_uri() . '/scripts/jquery.flexslider-min.js', array( 'jquery' ), null );
-	wp_register_script( 'colorbox', get_template_directory_uri() . '/scripts/colorbox.js', array( 'jquery' ), null );
+	global $wp_version;
+	if ( version_compare( $wp_version, '3.6-beta1', '<' ) )
+		wp_register_script( 'jquery-migrate', get_template_directory_uri() . '/scripts/jquery-migrate.js', array( 'jquery' ), null );
+	wp_register_script( 'colorbox', get_template_directory_uri() . '/scripts/colorbox.js', array( 'jquery-migrate' ), null );
 	wp_register_script( 'fitvids', get_template_directory_uri() . '/scripts/fitvids.js', array( 'jquery' ), null );
 	wp_register_script( 'audio-player', get_template_directory_uri() . '/scripts/audio-player.js', array( 'swfobject' ), null );
 }

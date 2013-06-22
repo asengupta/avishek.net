@@ -340,12 +340,13 @@ function oenology_setting_varietal() {
 
 	function oenology_output_varietal( $varietal ) {
 		$oenology_options = oenology_get_options();
+		$varietal_thumbnail = oenology_locate_template_uri( array( '/varietals/' . $varietal['name'] . '.png' ), false, false );
 		$currentvarietal = ( $varietal['name'] == $oenology_options['varietal'] ? true : false );
 		$dlclass = ( $currentvarietal ? 'oenology-varietal oenology-varietal-current' : 'oenology-varietal' );
 		?>
 		<dl class="<?php echo $dlclass; ?>">
 		<dt><strong><?php echo $varietal['title']; ?></strong></dt>
-		<dd><img src="<?php echo get_template_directory_uri() . '/varietals/' . $varietal['name'] . '.png'; ?>" width="150px" height="110px" alt="<?php echo $varietal['title']; ?>" title="<?php echo $varietal['description']; ?>" /></dd>
+		<dd><img src="<?php echo $varietal_thumbnail; ?>" width="150px" height="110px" alt="<?php echo $varietal['title']; ?>" title="<?php echo $varietal['description']; ?>" /></dd>
 		<dd><input type="radio" name="theme_oenology_options[varietal]" <?php checked( $currentvarietal ); ?> value="<?php echo $varietal['name']; ?>" /></dd>
 		</dl>
 	<?php
@@ -363,6 +364,14 @@ function oenology_setting_varietal() {
 	<?php 
 	foreach ( $oenology_varietals as $varietal ) {
 		if ( 'dark' == $varietal['scheme'] ) {
+			oenology_output_varietal( $varietal );
+		}
+	}
+	?>
+	<h4 style="display:block;clear:both;"><?php _e( 'Cuvee (unstyled)', 'oenology' ); ?></h4>
+	<?php 
+	foreach ( $oenology_varietals as $varietal ) {
+		if ( 'cuvee' == $varietal['scheme'] ) {
 			oenology_output_varietal( $varietal );
 		}
 	}

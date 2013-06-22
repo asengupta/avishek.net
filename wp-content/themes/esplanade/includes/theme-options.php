@@ -16,13 +16,13 @@ function esplanade_admin_scripts( $page_hook ) {
 	if( 'appearance_page_esplanade_options' == $page_hook ) {
 		wp_enqueue_style( 'esplanade_admin_style', get_template_directory_uri() . '/styles/admin.css' );
 		wp_enqueue_style( 'jquery-layout', get_template_directory_uri() . '/styles/jquery.layout.css' );
-		wp_enqueue_style( 'farbtastic' );
+		wp_enqueue_style( 'wp-color-picker' );
 		wp_enqueue_script( 'jquery-ui-core' );
 		wp_enqueue_script( 'jquery-ui-draggable' );
-		wp_enqueue_script( 'jquery-layout', get_template_directory_uri() . '/scripts/jquery.layout.js' );
+		wp_enqueue_script( 'jquery-layout', get_template_directory_uri() . '/scripts/jquery.layout.js', array( 'jquery', 'jquery-ui-core', 'jquery-ui-draggable' ), null );
 		wp_enqueue_script( 'jquery-layout-state', get_template_directory_uri() . '/scripts/jquery.layout.state.js' );
 		wp_enqueue_script( 'json2' );
-		wp_enqueue_script( 'farbtastic' );
+		wp_enqueue_script( 'wp-color-picker' );
 	}
 }
 
@@ -41,6 +41,11 @@ function esplanade_admin_options_page() { ?>
 			<?php $tab = ( isset( $_GET['tab'] ) ? $_GET['tab'] : 'general' ); ?>
 			<input name="esplanade_theme_options[submit-<?php echo $tab; ?>]" type="submit" class="button-primary" value="<?php _e( 'Save Settings', 'esplanade' ); ?>" />
 			<input name="esplanade_theme_options[reset-<?php echo $tab; ?>]" type="submit" class="button-secondary" value="<?php _e( 'Reset Defaults', 'esplanade' ); ?>" />
+			<script> 
+				jQuery(document).ready(function($) { 
+					$('.wp-color-picker').wpColorPicker(); 
+				}); 
+			</script>
 		</form>
 	</div>
 <?php
@@ -327,7 +332,6 @@ function esplanade_layout() {
 
 function esplanade_layout_dimensions() {
 	add_settings_field( 'esplanade_dimensions', __( 'Select Layout Dimensions', 'esplanade' ), 'esplanade_dimensions', 'esplanade_options', 'esplanade_layout_dimensions' );
-	add_settings_field( 'esplanade_header_image_height', __( 'Header Image Height', 'esplanade' ), 'esplanade_header_image_height', 'esplanade_options', 'esplanade_layout_dimensions' );
 }
 
 function esplanade_layout_template() {
@@ -443,12 +447,6 @@ function esplanade_dimensions() {
 	<input name="esplanade_theme_options[sidebar_size]" id="sidebar_size" value='<?php echo esplanade_get_option( 'sidebar_size' ); ?>' type="hidden" />
 	<input name="esplanade_theme_options[sidebar_right_size]" id="sidebar_right_size" value='<?php echo esplanade_get_option( 'sidebar_right_size' ); ?>' type="hidden" />
 	<input name="esplanade_theme_options[sidebar_left_size]" id="sidebar_left_size" value='<?php echo esplanade_get_option( 'sidebar_left_size' ); ?>' type="hidden" />
-<?php
-}
-
-function esplanade_header_image_height() { ?>
-	<input name="esplanade_theme_options[header_image_height]" type="text" value="<?php echo esplanade_get_option( 'header_image_height' ); ?>" size="4" /> <span class="description">px</span>
-	<p class="description">Note that header image height has been deprecated in favor of flexible header images introduced with WordPress 3.4 and may be removed in a future version.</p>
 <?php
 }
 
@@ -647,354 +645,75 @@ function esplanade_colors() {
 }
 
 function esplanade_body_color() { ?>
-	<div style="position:relative;">
-		<input name="esplanade_theme_options[body_color]" type="text" id="body_color" value="<?php echo esplanade_get_option( 'body_color' ); ?>" style="color:#fff" />
-		<div id="color_picker_body_color" style="display:none; position:absolute; top:-85px; left:172px;"></div>
-	</div>
-	<script>
-		function bodypickerUpdate(color) {
-			jQuery('#body_color').css("background-color", color);
-			jQuery('#body_color').val(color);
-		}
-		jQuery(document).ready(function($) {
-			$('#body_color').focus(function() {
-				$('#color_picker_body_color').show();
-			});
-			$('#body_color').blur(function() {
-				$('#color_picker_body_color').hide();
-			});
-			var body_color = $.farbtastic('#color_picker_body_color', bodypickerUpdate);	
-			body_color.setColor('<?php echo esplanade_get_option( 'body_color' ); ?>');
-			body_color.linkTo(bodypickerUpdate);         
-		});
-	</script>
+	<input name="esplanade_theme_options[body_color]" type="text" id="body_color" class="wp-color-picker" value="<?php echo esplanade_get_option( 'body_color' ); ?>" />
 <?php
 }
 
 function esplanade_headings_color() { ?>
-	<div style="position:relative;">
-		<input name="esplanade_theme_options[headings_color]" type="text" id="headings_color" value="<?php echo esplanade_get_option( 'headings_color' ); ?>" style="color:#fff" />
-		<div id="color_picker_headings_color" style="display:none; position:absolute; top:-85px; left:172px;"></div>
-	</div>
-	<script>
-		function headingspickerUpdate(color) {
-			jQuery('#headings_color').css("background-color", color);
-			jQuery('#headings_color').val(color);
-		}
-		jQuery(document).ready(function($) {
-			$('#headings_color').focus(function() {
-				$('#color_picker_headings_color').show();
-			});
-			$('#headings_color').blur(function() {
-				$('#color_picker_headings_color').hide();
-			});
-			var headings_color = $.farbtastic('#color_picker_headings_color', headingspickerUpdate);	
-			headings_color.setColor('<?php echo esplanade_get_option( 'headings_color' ); ?>');
-			headings_color.linkTo(headingspickerUpdate);         
-		});
-	</script>
+	<input name="esplanade_theme_options[headings_color]" type="text" id="headings_color" class="wp-color-picker" value="<?php echo esplanade_get_option( 'headings_color' ); ?>" />
 <?php
 }
 
 function esplanade_content_color() { ?>
-	<div style="position:relative;">
-		<input name="esplanade_theme_options[content_color]" type="text" id="content_color" value="<?php echo esplanade_get_option( 'content_color' ); ?>" style="color:#fff" />
-		<div id="color_picker_content_color" style="display:none; position:absolute; top:-85px; left:172px;"></div>
-	</div>
-	<script>
-		function contentpickerUpdate(color) {
-			jQuery('#content_color').css("background-color", color);
-			jQuery('#content_color').val(color);
-		}
-		jQuery(document).ready(function($) {
-			$('#content_color').focus(function() {
-				$('#color_picker_content_color').show();
-			});
-			$('#content_color').blur(function() {
-				$('#color_picker_content_color').hide();
-			});
-			var content_color = $.farbtastic('#color_picker_content_color', contentpickerUpdate);	
-			content_color.setColor('<?php echo esplanade_get_option( 'content_color' ); ?>');
-			content_color.linkTo(contentpickerUpdate);         
-		});
-	</script>
+	<input name="esplanade_theme_options[content_color]" type="text" id="content_color" class="wp-color-picker" value="<?php echo esplanade_get_option( 'content_color' ); ?>" />
 <?php
 }
 
 function esplanade_links_color() { ?>
-	<div style="position:relative;">
-		<input name="esplanade_theme_options[links_color]" type="text" id="links_color" value="<?php echo esplanade_get_option( 'links_color' ); ?>" style="color:#fff" />
-		<div id="color_picker_links_color" style="display:none; position:absolute; top:-85px; left:172px;"></div>
-	</div>
-	<script>
-		function linkspickerUpdate(color) {
-			jQuery('#links_color').css("background-color", color);
-			jQuery('#links_color').val(color);
-		}
-		jQuery(document).ready(function($) {
-			$('#links_color').focus(function() {
-				$('#color_picker_links_color').show();
-			});
-			$('#links_color').blur(function() {
-				$('#color_picker_links_color').hide();
-			});
-			var links_color = $.farbtastic('#color_picker_links_color', linkspickerUpdate);	
-			links_color.setColor('<?php echo esplanade_get_option( 'links_color' ); ?>');
-			links_color.linkTo(linkspickerUpdate);         
-		});
-	</script>
+	<input name="esplanade_theme_options[links_color]" type="text" id="links_color" class="wp-color-picker" value="<?php echo esplanade_get_option( 'links_color' ); ?>" />
 <?php
 }
 
 function esplanade_links_hover_color() { ?>
-	<div style="position:relative;">
-		<input name="esplanade_theme_options[links_hover_color]" type="text" id="links_hover_color" value="<?php echo esplanade_get_option( 'links_hover_color' ); ?>" style="color:#fff" />
-		<div id="color_picker_links_hover_color" style="display:none; position:absolute; top:-85px; left:172px;"></div>
-	</div>
-	<script>
-		function hoverpickerUpdate(color) {
-			jQuery('#links_hover_color').css("background-color", color);
-			jQuery('#links_hover_color').val(color);
-		}
-		jQuery(document).ready(function($) {
-			$('#links_hover_color').focus(function() {
-				$('#color_picker_links_hover_color').show();
-			});
-			$('#links_hover_color').blur(function() {
-				$('#color_picker_links_hover_color').hide();
-			});
-			var links_hover_color = $.farbtastic('#color_picker_links_hover_color', hoverpickerUpdate);	
-			links_hover_color.setColor('<?php echo esplanade_get_option( 'links_hover_color' ); ?>');
-			links_hover_color.linkTo(hoverpickerUpdate);         
-		});
-	</script>
+	<input name="esplanade_theme_options[links_hover_color]" type="text" id="links_hover_color" class="wp-color-picker" value="<?php echo esplanade_get_option( 'links_hover_color' ); ?>" />
 <?php
 }
 
 function esplanade_menu_color() { ?>
-	<div style="position:relative;">
-		<input name="esplanade_theme_options[menu_color]" type="text" id="menu_color" value="<?php echo esplanade_get_option( 'menu_color' ); ?>" />
-		<div id="color_picker_menu_color" style="display:none; position:absolute; top:-85px; left:172px;"></div>
-	</div>
-	<script>
-		function menupickerUpdate(color) {
-			jQuery('#menu_color').css("background-color", color);
-			jQuery('#menu_color').val(color);
-		}
-		jQuery(document).ready(function($) {
-			$('#menu_color').focus(function() {
-				$('#color_picker_menu_color').show();
-			});
-			$('#menu_color').blur(function() {
-				$('#color_picker_menu_color').hide();
-			});
-			var menu_color = $.farbtastic('#color_picker_menu_color', menupickerUpdate);	
-			menu_color.setColor('<?php echo esplanade_get_option( 'menu_color' ); ?>');
-			menu_color.linkTo(menupickerUpdate);         
-		});
-	</script>
+	<input name="esplanade_theme_options[menu_color]" type="text" id="menu_color" class="wp-color-picker" value="<?php echo esplanade_get_option( 'menu_color' ); ?>" />
 <?php
 }
 
 function esplanade_menu_hover_color() { ?>
-	<div style="position:relative;">
-		<input name="esplanade_theme_options[menu_hover_color]" type="text" id="menu_hover_color" value="<?php echo esplanade_get_option( 'menu_hover_color' ); ?>" />
-		<div id="color_picker_menu_hover_color" style="display:none; position:absolute; top:-85px; left:172px;"></div>
-	</div>
-	<script>
-		function menuhpickerUpdate(color) {
-			jQuery('#menu_hover_color').css("background-color", color);
-			jQuery('#menu_hover_color').val(color);
-		}
-		jQuery(document).ready(function($) {
-			$('#menu_hover_color').focus(function() {
-				$('#color_picker_menu_hover_color').show();
-			});
-			$('#menu_hover_color').blur(function() {
-				$('#color_picker_menu_hover_color').hide();
-			});
-			var menu_hover_color = $.farbtastic('#color_picker_menu_hover_color', menuhpickerUpdate);	
-			menu_hover_color.setColor('<?php echo esplanade_get_option( 'menu_hover_color' ); ?>');
-			menu_hover_color.linkTo(menuhpickerUpdate);         
-		});
-	</script>
+	<input name="esplanade_theme_options[menu_hover_color]" type="text" id="menu_hover_color" class="wp-color-picker" value="<?php echo esplanade_get_option( 'menu_hover_color' ); ?>" />
 <?php
 }
 
 function esplanade_sidebar_color() { ?>
-	<div style="position:relative;">
-		<input name="esplanade_theme_options[sidebar_color]" type="text" id="sidebar_color" value="<?php echo esplanade_get_option( 'sidebar_color' ); ?>" style="color:#fff" />
-		<div id="color_picker_sidebar_color" style="display:none; position:absolute; top:-85px; left:172px;"></div>
-	</div>
-	<script>
-		function sidebarpickerUpdate(color) {
-			jQuery('#sidebar_color').css("background-color", color);
-			jQuery('#sidebar_color').val(color);
-		}
-		jQuery(document).ready(function($) {
-			$('#sidebar_color').focus(function() {
-				$('#color_picker_sidebar_color').show();
-			});
-			$('#sidebar_color').blur(function() {
-				$('#color_picker_sidebar_color').hide();
-			});
-			var sidebar_color = $.farbtastic('#color_picker_sidebar_color', sidebarpickerUpdate);	
-			sidebar_color.setColor('<?php echo esplanade_get_option( 'sidebar_color' ); ?>');
-			sidebar_color.linkTo(sidebarpickerUpdate);         
-		});
-	</script>
+	<input name="esplanade_theme_options[sidebar_color]" type="text" id="sidebar_color" class="wp-color-picker" value="<?php echo esplanade_get_option( 'sidebar_color' ); ?>" />
 <?php
 }
 
 function esplanade_sidebar_title_color() { ?>
-	<div style="position:relative;">
-		<input name="esplanade_theme_options[sidebar_title_color]" type="text" id="sidebar_title_color" value="<?php echo esplanade_get_option( 'sidebar_title_color' ); ?>" style="color:#fff" />
-		<div id="color_picker_sidebar_title_color" style="display:none; position:absolute; top:-85px; left:172px;"></div>
-	</div>
-	<script>
-		function sidebartitlepickerUpdate(color) {
-			jQuery('#sidebar_title_color').css("background-color", color);
-			jQuery('#sidebar_title_color').val(color);
-		}
-		jQuery(document).ready(function($) {
-			$('#sidebar_title_color').focus(function() {
-				$('#color_picker_sidebar_title_color').show();
-			});
-			$('#sidebar_title_color').blur(function() {
-				$('#color_picker_sidebar_title_color').hide();
-			});
-			var sidebar_title_color = $.farbtastic('#color_picker_sidebar_title_color', sidebartitlepickerUpdate);	
-			sidebar_title_color.setColor('<?php echo esplanade_get_option( 'sidebar_title_color' ); ?>');
-			sidebar_title_color.linkTo(sidebartitlepickerUpdate);         
-		});
-	</script>
+	<input name="esplanade_theme_options[sidebar_title_color]" type="text" id="sidebar_title_color" class="wp-color-picker" value="<?php echo esplanade_get_option( 'sidebar_title_color' ); ?>" />
 <?php
 }
 
 function esplanade_sidebar_links_color() { ?>
-	<div style="position:relative;">
-		<input name="esplanade_theme_options[sidebar_links_color]" type="text" id="sidebar_links_color" value="<?php echo esplanade_get_option( 'sidebar_links_color' ); ?>" style="color:#fff" />
-		<div id="color_picker_sidebar_links_color" style="display:none; position:absolute; top:-85px; left:172px;"></div>
-	</div>
-	<script>
-		function sidebar_linkspickerUpdate(color) {
-			jQuery('#sidebar_links_color').css("background-color", color);
-			jQuery('#sidebar_links_color').val(color);
-		}
-		jQuery(document).ready(function($) {
-			$('#sidebar_links_color').focus(function() {
-				$('#color_picker_sidebar_links_color').show();
-			});
-			$('#sidebar_links_color').blur(function() {
-				$('#color_picker_sidebar_links_color').hide();
-			});
-			var sidebar_links_color = $.farbtastic('#color_picker_sidebar_links_color', sidebar_linkspickerUpdate);	
-			sidebar_links_color.setColor('<?php echo esplanade_get_option( 'sidebar_links_color' ); ?>');
-			sidebar_links_color.linkTo(sidebar_linkspickerUpdate);         
-		});
-	</script>
+	<input name="esplanade_theme_options[sidebar_links_color]" type="text" id="sidebar_links_color" class="wp-color-picker" value="<?php echo esplanade_get_option( 'sidebar_links_color' ); ?>" />
 <?php
 }
 
 function esplanade_footer_color() { ?>
-	<div style="position:relative;">
-		<input name="esplanade_theme_options[footer_color]" type="text" id="footer_color" value="<?php echo esplanade_get_option( 'footer_color' ); ?>" />
-		<div id="color_picker_footer_color" style="display:none; position:absolute; top:-85px; left:172px;"></div>
-	</div>
-	<script>
-		function footerpickerUpdate(color) {
-			jQuery('#footer_color').css("background-color", color);
-			jQuery('#footer_color').val(color);
-		}
-		jQuery(document).ready(function($) {
-			$('#footer_color').focus(function() {
-				$('#color_picker_footer_color').show();
-			});
-			$('#footer_color').blur(function() {
-				$('#color_picker_footer_color').hide();
-			});
-			var footer_color = $.farbtastic('#color_picker_footer_color', footerpickerUpdate);	
-			footer_color.setColor('<?php echo esplanade_get_option( 'footer_color' ); ?>');
-			footer_color.linkTo(footerpickerUpdate);         
-		});
-	</script>
+	<input name="esplanade_theme_options[footer_color]" type="text" id="footer_color" class="wp-color-picker" value="<?php echo esplanade_get_option( 'footer_color' ); ?>" />
 <?php
 }
 
 function esplanade_footer_title_color() { ?>
-	<div style="position:relative;">
-		<input name="esplanade_theme_options[footer_title_color]" type="text" id="footer_title_color" value="<?php echo esplanade_get_option( 'footer_title_color' ); ?>" />
-		<div id="color_picker_footer_title_color" style="display:none; position:absolute; top:-85px; left:172px;"></div>
-	</div>
-	<script>
-		function footertitlepickerUpdate(color) {
-			jQuery('#footer_title_color').css("background-color", color);
-			jQuery('#footer_title_color').val(color);
-		}
-		jQuery(document).ready(function($) {
-			$('#footer_title_color').focus(function() {
-				$('#color_picker_footer_title_color').show();
-			});
-			$('#footer_title_color').blur(function() {
-				$('#color_picker_footer_title_color').hide();
-			});
-			var footer_title_color = $.farbtastic('#color_picker_footer_title_color', footertitlepickerUpdate);	
-			footer_title_color.setColor('<?php echo esplanade_get_option( 'footer_title_color' ); ?>');
-			footer_title_color.linkTo(footertitlepickerUpdate);         
-		});
-	</script>
+	<input name="esplanade_theme_options[footer_title_color]" type="text" id="footer_title_color" class="wp-color-picker" value="<?php echo esplanade_get_option( 'footer_title_color' ); ?>" />
 <?php
 }
 
 function esplanade_copyright_color() { ?>
-	<div style="position:relative;">
-		<input name="esplanade_theme_options[copyright_color]" type="text" id="copyright_color" value="<?php echo esplanade_get_option( 'copyright_color' ); ?>" style="color:#fff" />
-		<div id="color_picker_copyright_color" style="display:none; position:absolute; top:-85px; left:172px;"></div>
-	</div>
-	<script>
-		function copyrightpickerUpdate(color) {
-			jQuery('#copyright_color').css("background-color", color);
-			jQuery('#copyright_color').val(color);
-		}
-		jQuery(document).ready(function($) {
-			$('#copyright_color').focus(function() {
-				$('#color_picker_copyright_color').show();
-			});
-			$('#copyright_color').blur(function() {
-				$('#color_picker_copyright_color').hide();
-			});
-			var copyright_color = $.farbtastic('#color_picker_copyright_color', copyrightpickerUpdate);	
-			copyright_color.setColor('<?php echo esplanade_get_option( 'copyright_color' ); ?>');
-			copyright_color.linkTo(copyrightpickerUpdate);         
-		});
-	</script>
+	<input name="esplanade_theme_options[copyright_color]" type="text" id="copyright_color" class="wp-color-picker" value="<?php echo esplanade_get_option( 'copyright_color' ); ?>" />
 <?php
 }
 
 function esplanade_copyright_links_color() { ?>
-	<div style="position:relative;">
-		<input name="esplanade_theme_options[copyright_links_color]" type="text" id="copyright_links_color" value="<?php echo esplanade_get_option( 'copyright_links_color' ); ?>" style="color:#fff" />
-		<div id="color_picker_copyright_links_color" style="display:none; position:absolute; top:-85px; left:172px;"></div>
-	</div>
-	<script>
-		function copyrightlpickerUpdate(color) {
-			jQuery('#copyright_links_color').css("background-color", color);
-			jQuery('#copyright_links_color').val(color);
-		}
-		jQuery(document).ready(function($) {
-			$('#copyright_links_color').focus(function() {
-				$('#color_picker_copyright_links_color').show();
-			});
-			$('#copyright_links_color').blur(function() {
-				$('#color_picker_copyright_links_color').hide();
-			});
-			var copyright_links_color = $.farbtastic('#color_picker_copyright_links_color', copyrightlpickerUpdate);	
-			copyright_links_color.setColor('<?php echo esplanade_get_option( 'copyright_links_color' ); ?>');
-			copyright_links_color.linkTo(copyrightlpickerUpdate);         
-		});
-	</script>
+	<input name="esplanade_theme_options[copyright_links_color]" type="text" id="copyright_links_color" class="wp-color-picker" value="<?php echo esplanade_get_option( 'copyright_links_color' ); ?>" />
 <?php
 }
+
 function esplanade_seo_settings_sections() {
 	add_settings_section( 'esplanade_home_tags', __( 'Home Page', 'esplanade' ), 'esplanade_home_tags', 'esplanade_options' );
 	add_settings_section( 'esplanade_archive_tags', __( 'Archive Pages', 'esplanade' ), 'esplanade_archive_tags', 'esplanade_options' );
@@ -1195,11 +914,14 @@ function esplanade_validate_theme_options( $input ) {
 		$input['sidebar_right_size'] = str_replace( '"', '', $input['sidebar_right_size'] );
 		$input['sidebar_right_size'] = str_replace( '%', '', $input['sidebar_right_size'] );
 		$input['sidebar_right_size'] = '"' . filter_var( $input['sidebar_right_size'], FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION ) . '%"';
-		$input['header_image_height'] = absint( $input['header_image_height'] );
 	} elseif( isset( $input['submit-design'] ) || isset( $input['reset-general'] ) ) {
 		if( ! in_array( $input['color_scheme'], array( 'neutral', 'sand', 'nature', 'earth' ) ) )
 			$input['color_scheme'] = esplanade_get_option( 'color_scheme' );
-		$input['user_css'] = esc_html( $input['user_css'] );
+		$input['user_css'] = strip_tags( $input['user_css'] );
+		$input['user_css'] = str_replace( 'behavior', '', $input['user_css'] );
+		$input['user_css'] = str_replace( 'expression', '', $input['user_css'] );
+		$input['user_css'] = str_replace( 'binding', '', $input['user_css'] );
+		$input['user_css'] = str_replace( '@import', '', $input['user_css'] );
 	} elseif( isset( $input['submit-typography'] ) || isset( $input['reset-typography'] ) ) {
 		$fonts = esplanade_available_fonts();
 		$units = array( 'px', 'pt', 'em', '%' );

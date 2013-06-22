@@ -296,6 +296,32 @@ function oenology_hook_post_entry_before() {
 	do_action( 'oenology_hook_post_entry_before' );
 }
 
+
+
+/**
+ * Add Post-Entry container for Post Format icon
+ * 
+ * @uses	oenology_get_post_formats()	Defined in functions/custom.php
+ */
+function oenology_post_format_entry_icon_container() {
+	if ( 'post' != get_post_type() ) {
+		return;
+	}
+	$postformat = ( get_post_format() ? get_post_format() : 'standard' );
+	$iconformats = oenology_get_post_formats();
+	
+	foreach ( $iconformats as $format ) {
+		if ( $postformat == $format['slug'] ) {
+			if ( 'entry' == $format['location'] || ( ! is_single() && 'both' == $format['location'] ) ) {
+				?>
+				<div class="post-format-icon-container genericon"><span class="genericon-<?php echo $format['slug']; ?>"></span></div>
+				<?php
+			}
+		}
+	}
+}
+add_action( 'oenology_hook_post_entry_before', 'oenology_post_format_entry_icon_container' );
+
 /**
  * Action hook after content within div.post-footer
  * 
@@ -343,6 +369,30 @@ function oenology_hook_post_footer_before() {
 function oenology_hook_post_header_after() {
 	do_action( 'oenology_hook_post_header_after' );
 }
+
+/**
+ * Add Post-Title container for Post Format icon
+ * 
+ * @uses	oenology_get_post_formats()	Defined in functions/custom.php
+ */
+function oenology_post_format_title_icon_container() {
+	if ( 'post' != get_post_type() ) {
+		return;
+	}
+	$postformat = ( get_post_format() ? get_post_format() : 'standard' );
+	$iconformats = oenology_get_post_formats();
+	
+	foreach ( $iconformats as $format ) {
+		if ( $postformat == $format['slug'] ) {
+			if ( 'title' == $format['location'] || 'both' == $format['location'] ) {
+				?>
+				<div class="post-format-icon-container genericon"><span class="genericon-<?php echo $format['slug']; ?>"></span></div>
+				<?php
+			}
+		}
+	}
+}
+add_action( 'oenology_hook_post_header_before', 'oenology_post_format_title_icon_container' );
 
 /**
  * Action hook before content within div.post-header
@@ -608,7 +658,6 @@ function oenology_hook_loop_footer() {
  * @uses is_tag()
  * @uses is_tax()
  * @uses is_search()
- * @uses oenology_get_color_scheme()
  * @uses tag_description()
  * 
  * @since Oenology 2.0
@@ -655,14 +704,9 @@ function oenology_hook_loop_header() {
 				$taxfeedlink = get_term_link( $term, $tax ) . '/feed/';
 				$taxdescription = $termobject->description;
 			}
-			$colorscheme = oenology_get_color_scheme();
-			$rssiconcolor = ( 'light' == $colorscheme ? 'original' : 'gray' );
-			$rssimageurl = get_template_directory_uri() . '/images/iconsweets2/' . $rssiconcolor . '/rss16.png';
-			$rssimagealt = 'Subscribe to the ' . $taxtitle . ' feed';
 			
 			$loop_header .= '<div class="cat-subscribe-feed">';
-			$loop_header .= '<a href="' . $taxfeedlink .'">';
-			$loop_header .= '<img src="' . $rssimageurl . '" width="16px" height="16px" alt="' . $rssimagealt . '" />';
+			$loop_header .= '<a href="' . $taxfeedlink .'"><span class="genericon genericon-feed"></span>';
 			$loop_header .= '<br />' . $taxtitle . ' feed</a>';
 			$loop_header .= '</div>';
 			$loop_header .= '<h2 class="pagetitle">' . $taxtitle . '</h2>';
@@ -843,7 +887,7 @@ function oenology_hook_post_footer_metadata() {
 function oenology_hook_post_header_date() {	
 	global $post;
 	// don't display timestamp on Pages
-	if ( ! is_page() && ! is_attachment() && 'page' != $post->post_type ) {
+	if ( 'post' == get_post_type() ) {
 		$post_header_date = array();
 		// Post Date: Year
 		$post_header_date_year = get_the_time('Y');
@@ -896,7 +940,7 @@ function oenology_hook_post_header_metadata() {
 	
 	// Post Metadata Links
 	global $post;
-	if ( ! is_page() && 'page' != $post->post_type ) {
+	if ( in_array( get_post_type(), array( 'post', 'attachment' ) ) ) {
 		if ( ! is_attachment() ) {
 			// Shortlink
 			$shortlink = '<span id="post-' . get_the_ID() . '-shortlink"><a href="' . wp_get_shortlink() . '">' . __( 'Shortlink', 'oenology' ) . '</a></span>';
@@ -945,7 +989,7 @@ function oenology_hook_post_header_taxonomies() {
 	
 	// Post Taxonomies
 	global $post;
-	if ( ! is_page() && 'page' != $post->post_type ) {
+	if ( 'post' == get_post_type() ) {
 		// Category List
 		$post_header_taxonomies['categorylist'] = '<span class="post-title-category">';
 		$post_header_taxonomies['categorylist'] .= sprintf( __( 'Filed in %s', 'oenology' ), get_the_category_list( ', ' ) );
@@ -959,6 +1003,7 @@ function oenology_hook_post_header_taxonomies() {
 	}
 	echo '<span class="post-title-taxonomies">' . implode( '', apply_filters( 'oenology_hook_post_header_taxonomies', $post_header_taxonomies ) ) . '</span>';
 }
+
 
 /**
  * Hook to filter Post Header Title
@@ -1067,13 +1112,16 @@ function oenology_hook_site_footer() {
 		$site_footer['copyright'] .= '&copy; ' . date('Y');
 	}
 	
-	$site_footer['wordpress'] = sprintf( __( 'Powered by %s', 'oenology' ), '<a href="' . esc_url( 'http://wordpress.org' ) . '" target="_new">WordPress ' . get_bloginfo( 'version' ) . ' <img src="' . get_template_directory_uri() . '/images/iconsweets2/original/wordpress16.png" width="18px" height="17px" alt="WordPress" style="vertical-align:middle;" /></a>' );
+	$site_footer['wordpress'] = sprintf( __( 'Powered by %s', 'oenology' ), '<a href="' . esc_url( 'http://wordpress.org' ) . '" target="_new" class="footer-wordpress-link"><span class="genericon genericon-wordpress"></span>WordPress ' . get_bloginfo( 'version' ) . '</a>' );
 	
 	global $oenology_options;
 	if ( 'true' == $oenology_options['display_footer_credit'] ) { 
 		// Disabled by default 
 		$site_footer['themecredit'] = '<a href="http://www.chipbennett.net/themes/oenology">Oenology Theme</a>';  
 	}
+
+	$site_footer['feed'] = '<a class="footer-feed-link genericon" href="' . get_bloginfo( 'rss2_url' ) . '" title="RSS"><span class="genericon-feed"></span></a>';
+
 	echo implode( ' | ', apply_filters( 'oenology_hook_site_footer', $site_footer ) );
 }
 
@@ -1105,5 +1153,5 @@ function oenology_hook_site_header() {
 	// Displays the blog description, as defined on the General Settings page in the administration panel
 	$site_header .= '<p>' . $site_header_description . '</p>';
 
-	echo apply_filters( 'oenology_hook_site_header', $site_header );
+	echo apply_filters( 'oenology_hook_site_header', $site_header, $site_header_name, $site_header_description );
 } 
