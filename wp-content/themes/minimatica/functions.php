@@ -63,17 +63,15 @@ function minimatica_theme_setup() {
 	add_image_size( 'single-thumb', 460, 348 );
 	add_image_size( 'attachment-thumb', 688, 9999 ); // no crop flag, unlimited height
 	// Allows users to set a custom background
-	add_custom_background();
+	add_theme_support( 'custom-background' );
 	// Allows users to set a custom header image
-	if ( ! defined( 'HEADER_TEXTCOLOR' ) )
-		define( 'HEADER_TEXTCOLOR', '151515' );
-	// The height and width of your custom header.
-	if ( ! defined( 'HEADER_IMAGE_WIDTH' ) )
-		define( 'HEADER_IMAGE_WIDTH', 940 );
-	if ( ! defined( 'HEADER_IMAGE_HEIGHT' ) )
-		define( 'HEADER_IMAGE_HEIGHT', 100 );
-	// Add a way for the custom header to be styled in the admin panel
-	add_custom_image_header( 'minimatica_header_style', 'minimatica_admin_header_style' );
+	add_theme_support( 'custom-header', array(
+		'width' => 940,
+		'height' => 100,
+		'default-text-color' => '151515',
+		'wp-head-callback' => 'minimatica_header_style',
+		'admin-head-callback' => 'minimatica_admin_header_style',
+	) );
 	// Styles the post editor
 	add_editor_style();
 	// Makes theme translation ready
@@ -128,13 +126,14 @@ if ( ! function_exists( 'minimatica_paged_posts' ) ) :
  * @since Minimatica 1.0
  */
 function minimatica_paged_posts( $query ) {
-	if( (
+	global $wp_the_query;
+	if( ( $query === $wp_the_query ) && (
 		( $query->is_home() && 'gallery' == minimatica_get_option( 'homepage_view' ) ) ||
 		( $query->is_category() && 'gallery' == minimatica_get_option( 'category_view' ) ) ||
 		( $query->is_tag() && 'gallery' == minimatica_get_option( 'tag_view' ) ) ||
 		( $query->is_author() && 'gallery' == minimatica_get_option( 'author_view' ) ) ||
 		( $query->is_archive() && 'gallery' == minimatica_get_option( 'archive_view' ) )
-		) && ( ! is_single() )
+		)
 	)
 		$query->set( 'posts_per_page', '4' );
 }

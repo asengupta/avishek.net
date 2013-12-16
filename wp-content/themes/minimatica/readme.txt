@@ -4,8 +4,8 @@ Tags:white, light, two-columns, fixed-width, custom-menu,
 editor-style, theme-options, threaded-comments, sticky-post,
 microformats, translation-ready, photoblogging
 Requires at least: 3.1
-Tested up to: 3.6 Beta 3
-Stable tag: 1.0.9
+Tested up to: 3.6 RC 1
+Stable tag: 1.1.0
 
 Description: A stylish and modern minimalist theme
 with a beautiful image gallery slider and an optional blog view.
@@ -163,6 +163,10 @@ If you see any, they've been injected by somebody mean.
 You may safely remove them or download the theme from the original location.
 
 == Changelog ==
+
+= 1.1.0 =
+* Fixed query filter sometimes not recognizing default query
+* Added new methods for custom header and background registration
 
 = 1.0.9 =
 * Fixed coreect hook for enqueueing scripts
