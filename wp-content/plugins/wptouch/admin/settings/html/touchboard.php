@@ -31,7 +31,7 @@
 			<!-- ajaxed news here -->
 		</span>
 		<h3>
-			<?php _e( 'WPtouch Updates', 'wptouch-pro' ); ?>:
+			WPtouch Updates:
 			<a href="https://www.google.com/+BraveNewCode" target="_blank"><i class="icon-google-plus-sign"></i></a>
 			<a href="//www.facebook.com/bravenewcode" target="_blank"><i class="icon-facebook-sign"></i></a>
 			<a href="//www.twitter.com/bravenewcode" target="_blank"><i class="icon-twitter-sign"></i></a>
@@ -58,7 +58,7 @@
 
 	<div class="modal hide" id="modal-updates" tabindex="-1" role="dialog" aria-hidden="true">
 		<div class="modal-header">
-			<p><?php echo sprintf( __( '%s Change Log', 'wptouch-pro' ), WPTOUCH_PRODUCT_NAME ); ?></p>
+			<h3><?php echo sprintf( __( '%s Change Log', 'wptouch-pro' ), WPTOUCH_PRODUCT_NAME ); ?></h3>
 		</div>
 		<div class="modal-body" id="change-log">
 		</div>

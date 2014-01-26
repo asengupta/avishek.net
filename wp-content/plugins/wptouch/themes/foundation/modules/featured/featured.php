@@ -210,12 +210,13 @@ function foundation_featured_get_slider_classes() {
 	return $featured_classes;
 }
 
-function foundation_featured_slider() {
+function foundation_featured_slider( $manual = false, $manual_html = false ) {
 	global $foundation_featured_data;
+
 	$args = foundation_featured_get_args();
 	$settings = foundation_get_settings();
 
-	if ( ( count( $foundation_featured_data ) >= FOUNDATION_FEATURED_MIN_NUM ) && $settings->featured_enabled ) {
+	if ( $manual == false && ( count( $foundation_featured_data ) >= FOUNDATION_FEATURED_MIN_NUM ) && $settings->featured_enabled ) {
 		echo $args['before'];
 
 		echo "<div id='slider' class='" . implode( ' ', foundation_featured_get_slider_classes() ) . "'>\n";
@@ -233,6 +234,18 @@ function foundation_featured_slider() {
 			echo "</a>";
 			echo "</div>";
 		}
+
+		echo "</div>\n";
+		echo "</div>\n";
+		echo $args['after'];
+	// Private for now, we'll improve manual mode for customer use in 3.2
+	} elseif ( $manual == true ) {
+		echo $args['before'];
+
+		echo "<div id='slider' class='" . implode( ' ', foundation_featured_get_slider_classes() ) . "'>\n";
+		echo "<div class='swipe-wrap'>\n";
+
+		echo $manual_html;
 
 		echo "</div>\n";
 		echo "</div>\n";

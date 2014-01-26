@@ -2,7 +2,7 @@
 Contributors: bravenewcode, duanestorey, dalemugford
 Tags: wptouch, iphone, ipod, bravenewcode, mobile, android, blackberry, smartphone, responsive, design, mobile plugin, ios, mobile theme
 Requires at least: 3.6
-Stable tag: 3.1.3
+Stable tag: 3.1.5
 Tested up to: 3.8
 License: GPLv2
 
@@ -39,6 +39,21 @@ For more information visit the [WPtouch Pro 3 Product Page](http://www.bravenewc
 11. WPtouch admin - Menu Setup
 
 == Changelog ==
+
+= Version 3.1.5 (Dec 21st, 2013) =
+
+* Fixed: Style issues in Bauhaus (1.0.7)
+* Fixed: WordPress smileys alignments
+* Fixed: Excluded entries from categories still appearing in posts navigation
+* Fixed: Added meta charset html tag for better compatibility with non-english sites
+
+= Version 3.1.4 (Dec 17th, 2013) =
+
+* Fixed: Issues running WPtouch correctly on Windows servers
+* Fixed: Memory issues on sites with huge taxonomies
+* Fixed: An issue which could cause Sharing Links not to display
+* Changed: More admin styling improvements for WordPress 3.8
+* Changed: Optimizations and file cleanup
 
 = Version 3.1.3 (Dec 13th, 2013) =
 

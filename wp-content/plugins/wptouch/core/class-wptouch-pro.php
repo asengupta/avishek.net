@@ -220,6 +220,11 @@ class WPtouchProThree {
 		// Check to see if the mobile theme should be shown - if so, initialize it
 		if ( $this->is_showing_mobile_theme_on_mobile_device() ) {
 			$this->setup_mobile_theme_for_viewing();
+
+			/*
+			For Google Best Practices, leaving off for now due to reports of slowing down
+			header( 'Vary: User-Agent' );
+			*/
 		} else {
 			add_action( 'wp_footer', array( &$this, 'handle_desktop_footer' ) );
 		}
@@ -2331,31 +2336,11 @@ class WPtouchProThree {
 		// Add the default stylesheet to the end, use min if available
 		$dependencies = array();
 		if ( $this->has_parent_theme() ) {
-			$dependencies = array( 'wptouch-parent' );
 			$parent_info = $this->get_parent_theme_info();
+			$css_file = $this->check_and_use_css_file( '/themes/foundation/' . $this->get_active_device_class() . '/style.css' );
 
-			$css_file = $this->check_and_use_css_file(
-				$parent_info->location . '/' . $this->get_active_device_class() . '/style.css',
-				WP_CONTENT_DIR,
-				WP_CONTENT_URL
-			);
-
-			wp_enqueue_style( 'wptouch-parent', wptouch_check_url_ssl( $css_file ), false, WPTOUCH_VERSION );
+			wp_enqueue_style( 'wptouch-parent-theme-css', wptouch_check_url_ssl( $css_file ), false, WPTOUCH_VERSION );
 			do_action( 'wptouch_parent_style_queued' );
-
-			// Load parent RTL css file
-			if ( wptouch_should_load_rtl() && file_exists( WP_CONTENT_DIR . '/' . $parent_info->location . '/' . $this->get_active_device_class() . '/' . $parent_info->location . '-rtl.css' ) ) {
-				wp_enqueue_style(
-					'wptouch-parent-rtl',
-					wptouch_check_url_ssl( $this->check_and_use_css_file(
-						$parent_info->location . '/' . $this->get_active_device_class() . '/' . $parent_info->location . '-rtl.css',
-						WP_CONTENT_DIR,
-						WP_CONTENT_URL
-					) ),
-		 			array( 'wptouch-parent' ),
-		 			WPTOUCH_VERSION
-		 		);
-			}
 		}
 
 		$css_file = $this->check_and_use_css_file(
@@ -2364,7 +2349,7 @@ class WPtouchProThree {
 			WP_CONTENT_URL
 		);
 
-		wp_enqueue_style( 'wptouch', wptouch_check_url_ssl( $css_file ), $dependencies, WPTOUCH_VERSION );
+		wp_enqueue_style( 'wptouch-theme-css', wptouch_check_url_ssl( $css_file ), 'wptouch-parent-theme-css', WPTOUCH_VERSION );
 
 		// Load child RTL css file
 		if ( wptouch_should_load_rtl() && file_exists( WP_CONTENT_DIR . '/' . $settings->current_theme_location . '/' . $settings->current_theme_name . '/' . $this->get_active_device_class() . '/' . $settings->current_theme_name . '-rtl.css' ) ) {
@@ -2375,7 +2360,7 @@ class WPtouchProThree {
 					WP_CONTENT_DIR,
 					WP_CONTENT_URL
 				) ),
-	 			array( 'wptouch' ),
+	 			array( 'wptouch-theme-css' ),
 	 			WPTOUCH_VERSION
 	 		);
 
@@ -2384,7 +2369,7 @@ class WPtouchProThree {
 
 	function setup_child_theme_styles() {
 		$css_file = $this->check_and_use_css_file( $this->get_stylesheet_directory( false )  . '/style.css' );
-		wp_enqueue_style( 'wptouch_child', wptouch_check_url_ssl( $css_file ), array( 'wptouch-parent' ), WPTOUCH_VERSION );
+		wp_enqueue_style( 'wptouch_child', wptouch_check_url_ssl( $css_file ), array( 'wptouch-parent-theme-css' ), WPTOUCH_VERSION );
 	}
 
 	function handle_desktop_switch_ajax() {
@@ -2394,10 +2379,12 @@ class WPtouchProThree {
 	}
 
 	function handle_desktop_footer() {
-		if ( defined( 'WPTOUCH_IS_FREE' ) ) {
-			echo "<!-- Powered by WPtouch: " . WPTOUCH_VERSION . " -->";
-		} else {
-			echo "<!-- Powered by WPtouch Pro: " . WPTOUCH_VERSION . " -->";
+		if ( !is_feed() ) {
+			if ( defined( 'WPTOUCH_IS_FREE' ) ) {
+				echo "<!-- Powered by WPtouch: " . WPTOUCH_VERSION . " -->";
+			} else {
+				echo "<!-- Powered by WPtouch Pro: " . WPTOUCH_VERSION . " -->";
+			}			
 		}
 	}
 

@@ -13,8 +13,8 @@
 		</a>
 		<div id="menu-toggle" class="show-hide-toggle tappable" data-effect-target="menu" role="button"><!--icon-reorder--></div>
 	</header>
-	
-	<?php if ( bauhaus_should_show_search() ) { ?>	
+
+	<?php if ( bauhaus_should_show_search() ) { ?>
 	<div id="search-dropper">
 		<div id="wptouch-search-inner">
 			<form method="get" id="searchform" action="<?php wptouch_bloginfo( 'search_url' ); ?>/">
@@ -24,11 +24,11 @@
 		</div>
 	</div>
 	<?php } ?>
-	
+
 	<div id="menu" class="wptouch-menu show-hide-menu">
 
 		<?php if ( wptouch_has_menu( 'primary_menu' ) ) { wptouch_show_menu( 'primary_menu' ); } ?>
-		
+
 		<?php if (  wptouch_fdn_show_login() ) { ?>
 			<ul class="menu-tree login-link">
 				<li>
@@ -38,12 +38,12 @@
 				</a>
 			<?php } else { ?>
 				<a href="<?php echo wp_logout_url( $_SERVER['REQUEST_URI'] ); ?>" class="tappable" title="<?php _e( 'Logout', 'wptouch-pro' ); ?>">
-					<i class="icon-user"></i> 
+					<i class="icon-user"></i>
 					<?php _e( 'Logout', 'wptouch-pro' ); ?>
 				</a>
 			<?php } ?>
 				</li>
-			</ul>	
+			</ul>
 		<?php } ?>
 
 	</div>

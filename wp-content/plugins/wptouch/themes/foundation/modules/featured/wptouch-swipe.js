@@ -12,14 +12,14 @@ function doFoundationFeaturedLoaded() {
 			slideOption = '6000';
 		} else if ( jQuery( '#slider').hasClass( 'fast') ) {
 			slideOption = '2500';
-		}		
-	} 
+		}
+	}
 
 	if ( jQuery( '#slider' ).hasClass( 'continuous' ) ) {
 		isContinuous = true;
 	}
-		
-	var bullets = jQuery( '.dots' ).find( 'li' );		
+
+	var bullets = jQuery( '.dots' ).find( 'li' );
 
 	var sliderOptions = {
 		startSlide: slideNumber,
@@ -30,7 +30,7 @@ function doFoundationFeaturedLoaded() {
 				bullets[i].className = ' ';
 			}
 			bullets[pos].className = 'active';
-		}		
+		}
 	}
 
 	// only include this parameter if it's non-zero
@@ -44,7 +44,7 @@ function doFoundationFeaturedLoaded() {
 }
 
 function foundationCreateDots() {
-	
+
 	var sliderEl = jQuery( '#slider' );
 	var images = sliderEl.find( 'a' );
 	var slideNumber = 0;
@@ -63,11 +63,11 @@ function foundationCreateDots() {
 	if ( jQuery( 'body' ).hasClass( 'rtl' ) ) {
 		var slideCount = jQuery( '.dots li' ).length;
 		slideNumber = slideCount - 1;
-	}			
+	}
 
 	jQuery( '.dots' ).find( 'li[data-pos="'+slideNumber+'"]' ).addClass( 'active' );
 }
 
-jQuery( document ).ready( function() { 
+jQuery( document ).ready( function() {
 	doFoundationFeaturedLoaded();
 });

@@ -1,6 +1,6 @@
 <?php
 
-define( 'BAUHAUS_THEME_VERSION', '1.0.6' );
+define( 'BAUHAUS_THEME_VERSION', '1.0.8' );
 define( 'BAUHAUS_SETTING_DOMAIN', 'bauhaus' );
 define( 'BAUHAUS_DIR', wptouch_get_bloginfo( 'theme_root_directory' ) );
 define( 'BAUHAUS_URL', wptouch_get_bloginfo( 'theme_root_url' ) );
@@ -158,6 +158,11 @@ function bauhaus_register_fonts() {
 			'grandhotel_crimson',
 			foundation_create_google_font( 'heading', 'Domine', 'sans-serif', array( '400' ) ),
 			foundation_create_google_font( 'body', 'News Cycle', 'sans-serif', array( '400', '700', '400italic', '700italic' ) )
+		);
+		foundation_register_google_font_pairing(
+			'muli_montserrat',
+			foundation_create_google_font( 'heading', 'Montserrat', 'sans-serif', array( '400' ) ),
+			foundation_create_google_font( 'body', 'Muli', 'sans-serif', array( '400', '400italic' ) )
 		);
 	}
 }

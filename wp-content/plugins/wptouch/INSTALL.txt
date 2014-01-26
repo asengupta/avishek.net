@@ -4,10 +4,10 @@ Installing WPtouch 3 is just like any other WordPress plugin, with the addition 
 
 = WPtouch 3 Installation Requirements: =
 
-- WordPress 3.5 or later (self-hosted installations only)
+- WordPress 3.6 or later (self-hosted installations only)
 - Administrative access in the WordPress admin
 - Filesystem access
-- PHP 5.3 or later
+- PHP 5.2 or later
 - MySQL 4.1 or later
 - PHP Safe Mode disabled for saving custom icons, sets and themes
 - WPtouch 2.x or 1.x are not compatible and must be deactivated
@@ -40,4 +40,4 @@ Follow the admin prompts to license WPtouch Pro 3. You'll need your account emai
 
 = BraveNewCloud =
 
-In order to access cloud themes and extensions, you'll need to license your installation first. Some themes and extensions are only available to customers with Business and/or Enterprise licenses.
+In order to access cloud themes and extensions, you'll need to license your installation first. Some themes and extensions are only available to customers, or customers with Business licenses or higher.
