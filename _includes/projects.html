@@ -1,9 +1,9 @@
-<nav>
-  {% for item in site.data.navigation %}
-  <div>
+<h3>{{ site.data.projects.heading }}</h3>
+
+{% for item in site.data.projects.projects %}
+<div>
     <a href="{{ item.link }}" {% if page.url == item.link %}style="color: red;"{% endif %}>
       {{ item.name }}
     </a>
 </div>
-  {% endfor %}
-</nav>
+{% endfor %}
