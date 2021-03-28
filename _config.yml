@@ -25,4 +25,5 @@ plugins:
 
 theme: jekyll-theme-minimal
 title: A Fish without a Bicycle
-description: A short description of your site's purpose
+description: Technology and Art
+markdown: kramdown
