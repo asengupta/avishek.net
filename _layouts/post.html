@@ -4,11 +4,9 @@ layout: default
 
 <h1>{{ page.title }}</h1>
 <p>
-  {{ page.date | date_to_string }}
   {% assign author = site.authors | where: 'short_name', page.author | first %}
-  <small>{{ page.date | date: "%-d %B %Y" }}</small>
   <div>
-  	<a href="{{ author.url }}">{{ author.name }}</a>
+  	<a href="{{ author.url }}">{{ author.name }}</a> on {{ page.date | date: "%-d %B %Y" }}
   </div>
   <hr/>
   {{content}}
