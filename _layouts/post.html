@@ -1,5 +1,5 @@
 ---
-usemathjax: true
+layout: default
 ---
 
 <h1>{{ page.title }}</h1>
@@ -7,13 +7,14 @@ usemathjax: true
   {{ page.date | date_to_string }}
   {% assign author = site.authors | where: 'short_name', page.author | first %}
   <small>{{ page.date | date: "%-d %B %Y" }}</small>
-  <p class="view">by {{ page.author | default: site.author }}</p>
+  <div>
+  	<a href="{{ author.url }}">{{ author.name }}</a>
+  </div>
+  <hr/>
   {{content}}
+  <hr/>
 
 {% if page.tags %}
   <small>tags: <em>{{ page.tags | join: "</em> - <em>" }}</em></small>
 {% endif %}
-  {% if author %}
-    - <a href="{{ author.url }}">{{ author.name }}</a>
-  {% endif %}
 </p>

@@ -4,7 +4,7 @@ projects:
     description: A graphing library written in Ruby built on top of Ruby-Processing
     link: https://github.com/asengupta/Basis
   - name: Cataract
-    description: A distributed hash table for experimentatio
+    description: A distributed hash table for experimentation
     link: https://github.com/asengupta/Cataract
   - name: COMRADE
     description: My undergraduate projects in robotics
