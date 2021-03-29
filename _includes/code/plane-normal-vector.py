@@ -7,7 +7,7 @@ ax = plt.axes()
 
 
 # Ensure that the next plot doesn't overwrite the first plot
-point  = np.array([1, 1, 1])
+point  = np.array([5, 5, 5])
 normal = np.array([-1, -1, 2])
 
 # a plane is a*x+b*y+c*z+d=0
