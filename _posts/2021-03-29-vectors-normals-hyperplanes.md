@@ -14,18 +14,18 @@ It is very instructive to look at a single **vector**. Remember that our worldvi
 The convention for defining vectors you will find in every textbook/paper is as a column of numbers (basically a **column vector**). We'd write a vector $$v{1}$$ as:
 
 $$
-v{1}=\begin{bmatrix}
-x{1} \\
-x{2} \\
+v_1=\begin{bmatrix}
+x_1 \\
+x_2 \\
 \end{bmatrix}
 $$
 
 Vectors implicitly originate from the origin (in this case, $$(0,0)$$). We take
 
 $$
-v{2}=\begin{bmatrix}
-x{11} && x{12} \\
-x{21} && x{22} \\
+v_2=\begin{bmatrix}
+x_{11} && x_{12} \\
+x_{21} && x_{22} \\
 \end{bmatrix}
 $$
 
@@ -34,26 +34,26 @@ You can look at $$v{2}$$ in two ways:
 A set of two column vectors, i.e.,
 $$
 \begin{bmatrix}
-x{11} \\
-x{21} \\
+x_{11} \\
+x_{21} \\
 \end{bmatrix}
 $$,
 $$
 \begin{bmatrix}
-x{12} \\
-x{22} \\
+x_{12} \\
+x_{22} \\
 \end{bmatrix}
 $$
 
 or, a set of two row vectors, i.e.,
 $$
 \begin{bmatrix}
-x{11} && x{12} \\
+x_{11} && x_{12} \\
 \end{bmatrix}
 $$,
 $$
 \begin{bmatrix}
-x{21} && x{22} \\
+x_{21} && x_{22} \\
 \end{bmatrix}
 $$
 
@@ -104,14 +104,14 @@ In other words, **satisfying the condition that a point (or vector) lies on a pl
 ### 3. Hyperplanes
 We can extend the same concept to higher dimensions, except we cannot really sketch it out (at least in a way that would make intuitive sense to us). Incidentally, it's just easier to refer to everything as a hyperplane when talking in the abstract, since a line is a two-dimensional hyperplane, a plane is a two-dimensional hyperplane, and so on. What this implies is that any hyperplane defined as:
 
-$$w{1}x{1}+w{2}x{2}+w{3}x{3}+...+w{n}x{n}=0$$
+$$w_1x_1+w_2x_2+w_3x_3+...+w_nx_n=0$$
 
 has its normal vector as: $$
                           v=\begin{bmatrix}
-                          w{1} \\
-                          w{2} \\
+                          w_1 \\
+                          w_2 \\
                           ... \\
-                          w{n} \\
+                          w_n \\
                           \end{bmatrix}
                           $$
 
