@@ -102,7 +102,7 @@ Do verify for yourself that this point lies on the plane. Also, as you can see, 
 In other words, **satisfying the condition that a point (or vector) lies on a plane (hyperplane) is the same thing as satisfying that the vector is perpendicular to the normal vector of that plane (hyperplane)**. It is literally the same computation, thanks to how **dot product** is defined.
 
 ### 3. Hyperplanes
-We can extend the same concept to higher dimensions, except we cannot really sketch it out (at least in a way that would make intuitive sense to us). Incidentally, it's just easier to refer to everything as a hyperplane when talking in the abstract, since a line is a two-dimensional hyperplane, a plane is a two-dimensional hyperplane, and so on. What this implies is that any hyperplane defined as:
+We can extend the same concept to higher dimensions, except we cannot really sketch it out (at least in a way that would make intuitive sense to us). Incidentally, it's just easier to refer to everything as a hyperplane when talking in the abstract, since a line is a one-dimensional hyperplane, a plane is a two-dimensional hyperplane, and so on. What this implies is that any hyperplane defined as:
 
 $$w_1x_1+w_2x_2+w_3x_3+...+w_nx_n=0$$
 
