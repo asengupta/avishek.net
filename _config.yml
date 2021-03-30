@@ -1,6 +1,7 @@
 collections:
   authors:
     output: true
+future: true
 
 defaults:
   - scope:
