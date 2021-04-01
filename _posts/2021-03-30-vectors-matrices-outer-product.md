@@ -4,7 +4,7 @@ author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Linear Algebra", "Theory"]
 ---
-Matrix multiplication is a fundamental operation in almost any Machine Learning proof, statement, or computation. Much insight may be gleaned by looking at different ways of looking matrix multiplication. In this post, we will look at one (and possibly the most important) interpretation: namely, the **linear combination of vectors**.
+Matrix multiplication (outer product) is a fundamental operation in almost any Machine Learning proof, statement, or computation. Much insight may be gleaned by looking at different ways of looking matrix multiplication. In this post, we will look at one (and possibly the most important) interpretation: namely, the **linear combination of vectors**.
 
 In fact, the geometric interpretation of this operation allows us to infer many properties that might be obscured if we were treating matrix multiplication as simple sums of products of numbers.
 
