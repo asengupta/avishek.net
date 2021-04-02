@@ -2,11 +2,13 @@
 
 <ul>
   {% for post in site.posts %}
-  {% assign author = site.authors | where: 'short_name', page.author | first %}
+  {% if post.draft == false %}
+    {% assign author = site.authors | where: 'short_name', page.author | first %}
     <li>
       <h2><a href="{{ post.url }}">{{ post.title }}</a></h2>
       <small>{{author.name}} on {{ post.date | date: "%-d %B %Y" }}</small>
       {{ post.excerpt }}
     </li>
+  {% endif %}
   {% endfor %}
 </ul>

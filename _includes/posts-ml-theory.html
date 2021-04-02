@@ -1,8 +1,21 @@
 <h1>Mathematics of Machine Learning for the Working Engineer</h1>
 
+
+<h2>Upcoming Posts</h2>
 <ul>
   {% for post in site.posts %}
-    {% if post.tags contains 'Theory' %}
+    {% if post.tags contains 'Theory' and post.draft == true %}
+    <li>
+      <div>{{ post.title }}</div>
+    </li>
+    {% endif %}
+  {% endfor %}
+</ul>
+
+<h2>Published</h2>
+<ul>
+  {% for post in site.posts %}
+    {% if post.tags contains 'Theory' and post.draft == false %}
       {% assign author = site.authors | where: 'short_name', page.author | first %}
         <li>
           <h2><a href="{{ post.url }}">{{ post.title }}</a></h2>

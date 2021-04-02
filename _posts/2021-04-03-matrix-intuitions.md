@@ -3,6 +3,7 @@ title: "Assorted Intuitions about Matrices"
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Linear Algebra", "Theory"]
+draft: true
 ---
 
 These are a few ways to look at a matrix.

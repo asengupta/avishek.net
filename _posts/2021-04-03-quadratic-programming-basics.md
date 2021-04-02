@@ -1,6 +1,7 @@
 ---
-title: "Dual of a Mathematical Program"
+title: "Quadratic Programming"
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Optimisation", "Theory"]
+draft: true
 ---
