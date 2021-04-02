@@ -72,7 +72,7 @@ $$\mathbf{a_{11}x + a_{12}x + a_{13}x + ... + a_{1N}x=0}$$ with the normal vecto
 
 By the basic definition of hyperplanes and normal vectors (for a quick refresher, see [Vectors, Normals, and Hyperplanes]({% post_url 2021-03-29-vectors-normals-hyperplanes %})), we can say that:
 
-- The vector $$x_O$$ is orthogonal to the normal vector $$\hat{n}$$, i.e., $$\mathbf{x_O\perp \hat{n}}$$ This condition is true for every vector $$x_O$$ in A's null space. 
+- The vector $$x_O$$ is orthogonal to the normal vector $$\hat{n}$$, i.e., $$\mathbf{x_O\perp \hat{n}}$$. Equivalently, $$\mathbf{x_O\cdot \hat{n}=0}$$ (the dot product is zero). This condition is true for every vector $$x_O$$ in $$A$$'s null space. 
 - Thus A's null space is orthogonal to the first row vector of $$A$$.
 
 This argument can be extended to all row vectors in $$A$$, proving that $$A$$'s null space is orthogonal to every row vector in $$A$$. By the property of linearity, this implies that $$A$$'s null space is orthogonal to $$A$$'s row space, i.e., $$\mathbf{N(A)\perp R(A)}$$.
