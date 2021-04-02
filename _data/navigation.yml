@@ -2,6 +2,8 @@
   link: /
 - name: Blog
   link: /blog.html
+- name: Foundations of Machine Learning
+  link: /ml-foundations.html
 - name: Art
   link: /art.html
 - name: About Me
