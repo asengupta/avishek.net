@@ -1,5 +1,5 @@
 ---
-title: "Intuitions on Matrices"
+title: "Assorted Intuitions about Matrices"
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Linear Algebra", "Theory"]
@@ -12,6 +12,8 @@ These are a few ways to look at a matrix.
 - A matrix $$A$$ cannot be inverted (i.e., it does not have a unique inverse) if any of its column vectors are linearly dependent on the others.
     - This is because, then there will always be a non-zero vector solution which will lose all of its components to zero; and there is no way to reverse that operation to recover the original vector.
 ![A Single Linearly Dependent Vector results in a non-invertible matrix](/assets/even-one-linear-dependence-causes-non-invertible-matrix.jpg)
+
+**Note that the above diagram is not mathematically correct.** I drew 5 basis vectors in 2D space, and you cannot have more than 2 linearly independent basis vectors in two dimensions. This diagram is simply for illustration purposes.
 
 - The determinant of a matrix is essentially the volume spanned by the basis vectors formed by its columns. A degenerate matrix has a determinant of zero because the measurement of this "hypervolume" on one axis becomes zero.
 
