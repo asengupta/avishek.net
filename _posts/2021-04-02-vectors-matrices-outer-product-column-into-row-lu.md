@@ -82,7 +82,8 @@ The steps are as follows:
 
 Let's look at the general case.
 
-1. Force the first column of the matrix to become all zeroes, by subtracting suitable scaled versions of the first row from every row. Express the thing you've subtracted as product of a column vector and a row vector, like we discussed above, since that is our building block.
+### Step 1
+Force the first column of the matrix to become all zeroes, by subtracting suitable scaled versions of the first row from every row. Express the thing you've subtracted as product of a column vector and a row vector, like we discussed above, since that is our building block.
 
 $$
 \begin{bmatrix}
@@ -114,7 +115,8 @@ a_{11} && a_{12} && ... && a_{1N}\\
 \end{bmatrix}\\
 $$
 
-2. Call the first term on the RHS, as $$\ell_1u_1$$, that is:
+### Step 2
+Call the first term on the RHS, as $$\ell_1u_1$$, that is:
 
 $$
 \ell_1u_1+
@@ -127,7 +129,8 @@ $$
 \end{bmatrix}\\
 $$
 
-3. Now subtract the second row from all the rows below it (with an appropriate multiplier) to make all the numbers in the second column, zero, that is:
+### Step 3
+Now subtract the second row from all the rows below it (with an appropriate multiplier) to make all the numbers in the second column, zero, that is:
 
 $$
 \begin{bmatrix}
@@ -160,7 +163,8 @@ $$
 \end{bmatrix}\\
 $$
 
-4. Call the first term on the LHS as $$\ell_2u_2$$, so that:
+### Step 4
+Call the first term on the LHS as $$\ell_2u_2$$, so that:
 
 $$
 \begin{bmatrix}
@@ -182,6 +186,7 @@ $$
 \end{bmatrix}\\
 $$
 
+### Step 5
 I hope you can see the pattern, we are gradually aiming to reduce all the elements of A to zero, while extracting all the $$\ell u$$ factors as a sum.
 Doing this will ultimately give us:
 
