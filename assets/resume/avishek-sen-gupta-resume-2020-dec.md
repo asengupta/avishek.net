@@ -1,6 +1,6 @@
 # Avishek Sen Gupta
 
-## Lead Consultant, ThoughtWorks
+## Technical Principal, ThoughtWorks
 
 __Avishek Sen Gupta__ works with ThoughtWorks as a __Lead Consultant__ with over 16 years of experience in the creation of large-scale distributed systems involving integration of disparate components, legacy and greenfield. He consults with clients on design, architecture, technical choices, patterns, testing techniques and development methodologies. He has worked with C#/. NET development, J2EE technologies, Ruby on Rails, NodeJS, R for statistical analysis, and Objective C for mobile (iOS) development.
 
@@ -77,11 +77,11 @@ The technologies used are:
 - AngularJS (including RequireJS, Mocha)
 - Spring MVC for web interfaces
 
-**Client: Global Non-Profit Microfinancing Organisation**
+**Client: Global Non-Profit Microfinancing Organisation (Data Analysis)**
 
 Avishek has worked as a Data Analyst for the client. The work involved analysing performance of various CKW (Community Knowledge Worker) initiatives across Africa to determine which CKW's were providing the maximum impact to the farming and animal husbandry communities, so as to optimise microfinance investment initiatives. As part of this work, Avishek built models to analyse the performance data, as well as visualisations to intuit the performance of these initiatives, based on various factors like geographical regions.
 
-**Client: Global Non-Profit Microfinancing Organisation**
+**Client: Global Non-Profit Microfinancing Organisation (Data Analysis)**
 
 Avishek has worked as a Data Analyst for the client. The work involved analysing test scores across various districts in the state of Karnataka, India, conducted under the Anganwadi initiative (which aims to uplift children of underprivileged workers through education). The aim was to analyse the effectiveness of the intervention initiatives, as well as potentially detect exam fraud. Avishek built several models to explain the data, as well as predictors for potential future performance. This included:
 - Decision Trees
