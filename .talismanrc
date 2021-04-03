@@ -1,0 +1,3 @@
+fileignoreconfig:
+- filename: _layouts/default.html
+  checksum: 7374ac582438ff2d253585cdb13efdd893eb82e40a3e148816f7d97a5ec3d59a
