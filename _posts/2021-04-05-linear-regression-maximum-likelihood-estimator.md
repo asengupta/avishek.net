@@ -5,7 +5,9 @@ usemathjax: true
 tags: ["Machine Learning", "Linear Regression", "Maximum Likelihod Estimator", "Theory", "Probability"]
 ---
 
-Let's look at **Linear Regression**. The "linear" term refers to the fact that the output variable is a **linear combination** of the input variables. Thus, this is a linear equation:
+Let's look at **Linear Regression**. The "linear" term refers to the fact that the output variable is a **linear combination** of the input variables.
+
+Thus, this is a linear equation:
 
 $$
 y=ax_1+bx_2+cx_3
@@ -21,8 +23,10 @@ $$
 In the general form, we are looking for a relation like:
 
 $$
+\mathbf{
 y=w_1x_1+w_2x_2+...+w_Nx_N \\
 y=\sum_{i=1}^Nw_ix_i
+}
 $$
 
 Linear regression is a useful (and uncomplicated) tool for building prediction models, either on its own, or in its more sophisticated incarnations (like **General Linear Models** or **Piecewise Linear Regression**). However, it is instructive to consider the applicability of the linear model in its simplest form to a set of data, because there are very specific guarantees that the data should provide if we are to represent it using a linear model.
