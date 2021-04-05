@@ -41,7 +41,7 @@ In contrast, the following picture demonstrates a clearly nonlinear relationship
 
 ![Nonlinearity in Linear Regression](/assets/images/linear-regression-nonlinearity.jpg)
 
-Let's go back to the simple perefectly fit data set above. Obviously, no data set is going to be perfect like the contrived example above, so you are more likely to see data like this:
+Let's go back to the simple perfectly fit data set above. Obviously, no data set is going to be perfect like the contrived example above, so you are more likely to see data like this:
 
 ![Residuals of Linear Regression](/assets/images/linear-regression-residuals.jpg)
 
