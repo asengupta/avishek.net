@@ -35,15 +35,15 @@ We will state these assumptions, as well as derive them from the base assumption
 
 Let's develop some intuition first through some examples. Check the diagram below. It should be obvious that this dataset can be modelled using linear regression. What this demonstrates specifically though, is the **linear relationship** between the input and the output, if we discount all other factors.
 
-![Linearity of Linear Regression](/assets/linear-regression-linearity.jpg)
+![Linearity of Linear Regression](/assets/images/linear-regression-linearity.jpg)
 
 In contrast, the following picture demonstrates a clearly nonlinear relationship between the input and the output data.
 
-![Nonlinearity in Linear Regression](/assets/linear-regression-nonlinearity.jpg)
+![Nonlinearity in Linear Regression](/assets/images/linear-regression-nonlinearity.jpg)
 
 Let's go back to the simple perefectly fit data set above. Obviously, no data set is going to be perfect like the contrived example above, so you are more likely to see data like this:
 
-![Residuals of Linear Regression](/assets/linear-regression-residuals.jpg)
+![Residuals of Linear Regression](/assets/images/linear-regression-residuals.jpg)
 
 Thus, the prediction will never perfectly match the data (if it did, we have another problem, called overfitting, which we will visit sometime), but perfect prediction is not really the aim here, because observations can be easily affected by noise and other random effects. However, the effect of the noise needs to be quantified in some fashion, even if we cannot make accurate pointwise predictions about what the noise/error effect for a particular observation can be.
 
@@ -55,7 +55,7 @@ Put another way, the error values should be equally randomly distributed around 
 
 Let's take the third example. Here, we definitely see a linear relationship between the input and output. The noise is also randomly distributed around the predicted value. But something else is going on here.
 
-![Showing Variance dependency on Input Variable](/assets/variable-variance.jpg)
+![Showing Variance dependency on Input Variable](/assets/images/variable-variance.jpg)
 
 The graph tells us that even though the noise is normally distributed around the predicted value, the spread of these noise values is not constant. This leads us to the next important assumption of linear regression, namely that:
 
@@ -65,7 +65,7 @@ This above assumption could be folded into the linearity assumption, but I feel 
 
 All of these assumptions can be summarised in the diagram below:
 
-![Linear Regression Assumptions](/assets/linear-regression-conditions.jpg)
+![Linear Regression Assumptions](/assets/images/linear-regression-conditions.jpg)
 
 This shows that at each output value predicted by the model, the data is normally distributed with constant variance and the mean as the predicted value.
 
@@ -75,8 +75,8 @@ In doing so, we want to ground our intuition of the mean being the average of *N
 How do we approach this? To start from basic principles, we need to start with a probability approach.
 Let's look at a couple of variations of the Gaussian distribution, one plot with varying means, the other with varying variance.
 
-![Linear Regression Assumptions](/assets/gaussians-varying-means.png)
-![Linear Regression Assumptions](/assets/gaussians-varying-variances.png)
+![Linear Regression Assumptions](/assets/images/gaussians-varying-means.png)
+![Linear Regression Assumptions](/assets/images/gaussians-varying-variances.png)
 
 This yields different Gaussians depending on how we tune the parameters $$\mu$$ and $$\sigma$$. Our aim is to find a combination of $$(\mu, \sigma)$$ which best explains the distribution of the observations for a particular input value.
 

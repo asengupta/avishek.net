@@ -11,7 +11,7 @@ This is probably the method most widely used in high school algebra. You are ess
 
 **The element $$Y_{ik}$$ in the $$i$$th row and the $$k$$th column is the dot product of the $$i$$th row vector (of the Left Hand Matrix) amd the $$k$$th column vector (of the Right Hand Matrix).**
 
-![Value-by-Value Multiplication](/assets/value-by-value-outer-product.jpg)
+![Value-by-Value Multiplication](/assets/images/value-by-value-outer-product.jpg)
 
 This is also something which makes it obvious that the number of columns of the left matrix should be equal to the number of rows of the right matrix, because the dot product involves pairwise multiplication, and that cannot happen if the number of components in the row vector and the column vector are unequal.
 

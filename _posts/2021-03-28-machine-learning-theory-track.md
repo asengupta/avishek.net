@@ -14,7 +14,7 @@ There are a couple of things worth noting here:
 - **The implementation is also important**: I hope to demonstrate many of the ML techniques through actual implementations in code. This can take one of two forms. On one end, you have the basic algorithmic implementation, which you could do in any programming language. At the other end, we are talking of scaling of ML techniques, and that will require using a suitable framework, like Spark.
 - **The map is not exhaustive**: I'm continuously adding to my understanding, and learning new mathematical concepts/techniques, so expect this list to evolve. I have not included time series analysis and the associated mathematics (Convolution, Laplace and Fourier Transforms) yet. Ultimately, I hope for this list to be a valuable study tool for myself to gauge my progress. If it helps you map out areas you want to focus on in your ML journey, feel free to use this.
 
-![Machine Learning Theory Map](/assets/machine-learning-theory-map.png)
+![Machine Learning Theory Map](/assets/images/machine-learning-theory-map.png)
 
 Let's try to unpack some of the relationships between the mathematics areas and the ML application areas.
 

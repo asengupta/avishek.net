@@ -58,7 +58,7 @@ $$
 
 In this approach, we are only correlating columns on both sides. Consider the following diagram to see how this combination works.
 
-![Column Vector Matrix Multiplication](/assets/matrix-multiplication-column-vector.png)
+![Column Vector Matrix Multiplication](/assets/images/matrix-multiplication-column-vector.png)
 
 What you are really doing is this: you are considering the **weighted sum of all the column vectors** of $$A_2$$ (Remember, in this picture, $$A_2$$ is just a bunch of column vectors).
 
@@ -86,7 +86,7 @@ $$
 ### 1.1 The Geometric Interpretation
 It is worth pausing to ground our understanding using the geometric interpretation. If you have followed the verbal explanation so far, the geometric interpretation should be pretty straightforward to comprehend.
 
-![Linear Combinations of Vectors](/assets/vector-linear-combination.png)
+![Linear Combinations of Vectors](/assets/images/vector-linear-combination.png)
 
 The vector $$\begin{bmatrix}2 && 3\end{bmatrix}^T$$ is stretched by a factor of 2, to become $$\begin{bmatrix}4 && 6\end{bmatrix}^T$$.
 Similarly, the vector $$\begin{bmatrix}5 && 10\end{bmatrix}^T$$ is stretched by a factor of 3, to become $$\begin{bmatrix}15 && 30\end{bmatrix}^T$$.
@@ -140,7 +140,7 @@ In the row vector approach, if you want to consider the rows as vectors, these v
 
 The algorithmic picture for multiplication using the row vector approach looks like this:
 
-![Column Vector Matrix Multiplication](/assets/matrix-multiplication-row-vector.png.png)
+![Column Vector Matrix Multiplication](/assets/images/matrix-multiplication-row-vector.png.png)
 
 It is important to note that the central idea here (regardless of whether we are considering column vectors or row vectors) is that we are computing linear combinations of vectors.
 The geometric interpretation for this example stays the same.

@@ -64,11 +64,11 @@ Let's talk a little bit about lines, surfaces, and their higher dimensional vari
 
 ### 1. Lines
 Here's a line $$6x+4y=0$$. I've also drawn its normal vector which is $$(6,4)$$. Now, note the direct correlation between the coefficients of the line equation and the normal vector. In fact, this is a very general rule, and we will see the reason for this right now.
-![Line and its Normal Vector](/assets/line-and-normal-vector.png)
+![Line and its Normal Vector](/assets/images/line-and-normal-vector.png)
 
 **Quick Aside**: Why is $$(6,4)$$ the normal vector? This is because any point on the line $$(6x+4y=0)$$ forms a vector with the origin, which is perpendicular to the normal vector (which obviously translates to the entire line being perpendicular to the $$(6,4)$$ vector). This is shown below.
 
-![Line and its Normal Vector Relationships](/assets/line-and-normal-vector-relationships.png)
+![Line and its Normal Vector Relationships](/assets/images/line-and-normal-vector-relationships.png)
 
 We haven't talked about the dot product yet (that comes later), but allow me to note a painfully obvious fact, any point on the line $$6x+4y=0$$, satisfies that equation. Indeed, you can see this clearly if we take $$(2,-3)$$ as an example, and write:
 
@@ -95,7 +95,7 @@ $$-x-y+2z=0$$
 
 and a point on this plane $$(5,5,5)$$.
 
-![Plane and its Normal Vector](/assets/plane-and-normal-vector.png)
+![Plane and its Normal Vector](/assets/images/plane-and-normal-vector.png)
 
 Do verify for yourself that this point lies on the plane. Also, as you can see, the coefficients of the plane equation form the normal vector of the plane. The same concept that applied to lines, also applies here.
 
@@ -103,7 +103,7 @@ In other words, **satisfying the condition that a point (or vector) lies on a pl
 
 The image below illustrates this idea.
 
-![Vectors in a Plane and its Normal Vector](/assets/normal-vectors-perpendicular-plane-vectors.jpg)
+![Vectors in a Plane and its Normal Vector](/assets/images/normal-vectors-perpendicular-plane-vectors.jpg)
 
 ### 3. Hyperplanes
 We can extend the same concept to higher dimensions, except we cannot really sketch it out (at least in a way that would make intuitive sense to us). Incidentally, it's just easier to refer to everything as a hyperplane when talking in the abstract, since a line is a one-dimensional hyperplane, a plane is a two-dimensional hyperplane, and so on. What this implies is that any hyperplane defined as:

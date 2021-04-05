@@ -15,7 +15,7 @@ Some of these points about matrices are worth noting down, as aids to intuition.
     - Mathematically, this means if there exists a nonzero $$x$$, such that $$Ax=0$$, $$A$$ is not invertible.
 - **The dot product of two vectors is a linear transformation of the right vector into the number line**, with the individual scalar components of the left vector being the basis vectors on this one-dimensional number line.
 
-![A Single Linearly Dependent Vector results in a non-invertible matrix](/assets/even-one-linear-dependence-causes-non-invertible-matrix.jpg)
+![A Single Linearly Dependent Vector results in a non-invertible matrix](/assets/images/even-one-linear-dependence-causes-non-invertible-matrix.jpg)
 
 **Note that the above diagram is not mathematically correct.** I drew 5 basis vectors in 2D space, and you cannot have more than 2 linearly independent basis vectors in two dimensions. This diagram is simply for illustration purposes.
 
