@@ -3,7 +3,7 @@ title: "Miscellaneous Topics"
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Theory", "Probability"]
-draft: true
+draft: true 
 ---
 
 ## Miscellaneous Topics
@@ -17,4 +17,5 @@ draft: true
 - Naive Bayes
 - Cross Validation
 - k-means clustering
+- Basic Explanations of Expectation and Conditional Probability
 - Latest ML Papers
