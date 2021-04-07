@@ -22,3 +22,6 @@ draft: true
 - Relationship between MLE and MAP
 - Multivariate Gaussian and the Covariance Matrix
 - Quadratic Approximation
+- Logistic Regression MLE Cost Function
+- Bayesian interpretation of Linear Regression
+- Basic Probability, Expectation, etc.
