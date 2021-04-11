@@ -19,4 +19,6 @@ Some of these points about matrices are worth noting down, as aids to intuition.
 
 **Note that the above diagram is not mathematically correct.** I drew 5 basis vectors in 2D space, and you cannot have more than 2 linearly independent basis vectors in two dimensions. This diagram is simply for illustration purposes.
 
-- The determinant of a matrix is essentially the volume spanned by the basis vectors formed by its columns. A degenerate matrix has a determinant of zero because the measurement of this "hypervolume" on one axis becomes zero.
+- The **determinant of a matrix** is essentially the **volume spanned by the basis vectors formed by its columns**. A degenerate matrix has a determinant of zero because the measurement of this "hypervolume" on one axis becomes zero.
+
+- **The left null space of a matrix represents the set of normal vectors for the hyperplane defined by the column space of this matrix.** This is because by definition, all vectors in the left null space are orthogonal to the column space. Thus, **any vector in the left null space also represents the actual geometric equation of the hyperplane defined by the column space.**

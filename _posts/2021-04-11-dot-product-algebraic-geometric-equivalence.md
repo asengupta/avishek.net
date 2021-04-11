@@ -16,7 +16,15 @@ $$
 This article shows two different ways of proving this, one long, and the other one super short (and one I feel is a little more intuitive and less mechanical). In addition, we will conclude with the importance of the dot product in various Machine Learning techniques.
 
 ## Proof through the Rule of Cosines
+We wish to find the dot product of two vectors, $$\vec{A}$$ and $$\vec{B}$$. $$\vec{A}$$ has magnitude $$a=\|A\|$$, and $$\vec{B}$$ has magnitude $$b=\|C\|$$. In the diagram, $$\vec{C}$$ is the difference of $$\vec{A}$$ and $$\vec{B}$$, i.e., $$\vec{A}-\vec{B}$$ and has a magnitude $$c=\|C\|$$. $$\theta$$ is the angle between $$\vec{A}$$ and $$\vec{B}$$.
+
+The situation is represented below.
+
 ![Dot Product Proof through Rule of Cosines](/assets/images/dot-product-proof-law-of-cosines.jpg)
+
+In addition, I've drawn the perpendicular $$\vec{P}$$ which has magnitude $$p$$. $$\vec{P}$$ divides $$\vec{A}$$ into two parts: $$t\vec{A}$$ and $$(1-t)\vec{A}$$.
+
+Let us list down some basic trigonometric identities evident from the diagram above.
 
 $$
 {at\over b}=cos\theta \\
@@ -77,6 +85,8 @@ The above is the original definition of the dot product, thus we have proved tha
 
 So, the above proof was somewhat circuitous, going through proving the Rule of Cosines. I'd like to sketch out a shorter, hopefully slightly more intuitive proof, that does not take thses many steps.
 
+I've redrawn the same diagram as above for reference, and emphasised the vector nature of the objects we are dealing with. All other labelling remains the same.
+
 ![Dot Product Proof through Choice of Basis](/assets/images/dot-product-proof-selection-of-basis.jpg)
 
 We start with the same identities, namely:
@@ -101,7 +111,7 @@ $$
 \vec{B}=t\vec{A}+\vec{P}
 $$
 
-If we take the component-wise product of \vec{A} and \vec{B}, which is the same as multiplying $$A^T$$ with $$B$$ we get:
+If we take the component-wise product of $$\vec{A}$$ and $$\vec{B}$$, which is the same as multiplying $$A^T$$ with $$B$$, we get:
 
 $$
 A^TB=t{\|A\|}^2+0.\|P\| \\
