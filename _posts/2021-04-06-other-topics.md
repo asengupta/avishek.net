@@ -25,3 +25,4 @@ draft: true
 - Logistic Regression MLE Cost Function
 - Bayesian interpretation of Linear Regression
 - Basic Probability, Expectation, etc.
+- Gaussian Processes and Intuition
