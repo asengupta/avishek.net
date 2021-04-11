@@ -5,7 +5,7 @@ usemathjax: true
 tags: ["Machine Learning", "Linear Algebra", "Dot Product", "Theory"]
 ---
 
-The **dot product of two vectors** is geometrically simple: the product of the magnitudes of these vectors multiplied by the cosine of the angle between them. What is not immediately obvious is the algebraic interpretation of the dot product, namely:
+The **dot product of two vectors** is geometrically simple: the product of the magnitudes of these vectors multiplied by the cosine of the angle between them. What is not immediately obvious is the algebraic interpretation of the dot product. Specifically, this definition:
 
 $$
 \mathbf{A^TB=\sum_{i=1}^N A_iB_i}
