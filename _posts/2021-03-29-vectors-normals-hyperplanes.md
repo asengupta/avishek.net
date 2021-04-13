@@ -106,7 +106,13 @@ The image below illustrates this idea.
 ![Vectors in a Plane and its Normal Vector](/assets/images/normal-vectors-perpendicular-plane-vectors.jpg)
 
 ### 3. Hyperplanes
-We can extend the same concept to higher dimensions, except we cannot really sketch it out (at least in a way that would make intuitive sense to us). Incidentally, it's just easier to refer to everything as a hyperplane when talking in the abstract, since a line is a one-dimensional hyperplane, a plane is a two-dimensional hyperplane, and so on. What this implies is that any hyperplane defined as:
+We can extend the same concept to higher dimensions, except we cannot really sketch it out (at least in a way that would make intuitive sense to us). Incidentally, it's just easier to refer to everything as a hyperplane when talking in the abstract, since a line is a one-dimensional hyperplane, a plane is a two-dimensional hyperplane, and so on.
+
+**Note**: I'd like to make the definition of a hyperplane explicit with respect to its dimensionality. **A hyperplane in a vector space with dimensionality $${\mathbb{R}}^N$$ is always of dimensionality $$N-1$$**, i.e., one dimension lesser than the ambient space it inhabits.
+
+**This guarantees a unique normal vector for that hyperplane**, because by the Rank Nullity Theorem, the null space (where the normal vector resides) will have only one basis. As a counterexample, a 2D plane in $${\mathbb{R}}^4$$ would have two linearly independent normal vectors, and thus does not qualify as a hyperplane in 4D space (but does qualify as one in 3D space).
+
+What this implies is that any hyperplane defined as:
 
 $$w_1x_1+w_2x_2+w_3x_3+...+w_nx_n=0$$
 
