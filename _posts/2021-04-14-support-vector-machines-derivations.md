@@ -9,6 +9,8 @@ We will derive the intuition behind **Support Vector Machines** from first princ
 
 We'll finally bring everything together by adding on the idea of projecting hyperplanes into higher dimensional (possibly infinite dimensional) spaces, and look at the motivation behind the kernel trick. At that point, the basic intuition behind SVMs should be rock-solid, and the stage should be set for extending to concepts of soft margins and misclassification.
 
+In this specific post, we will build up to deriving the optimisation problem that we'd like to eventually solve.
+
 ## The Mean and Difference: A Simple Observation
 Let's take a set of tuples. Each tuple contains two numbers, $$\mathbf{X=\{(1,3), (0,4), (-5, 9)\}}$$ . If we're asked to find the mean of each of these pairs of numbers, the answer is **2** in all cases. Note that the position of the mean does not change, as long as each pair of numbers moves in opposite directions at the same rate, i.e., **(0,4)** is the result of both ends of **(1,3)** shrinking and growing by 1; the same idea applies to the other tuples.
 
@@ -175,3 +177,42 @@ Here is an illustration of some example possibilities.
 More data may constrain the space of solutions some more, but it will still be infinite in the most general case, assuming that the data is linearly separable. What combination should we choose?
 
 This is where we'd like to impose some mathematical constraints on the solution to drive us toward a satisfactory solution.
+The most important one we have already stated, which is that all data points belonging to one class should fall on one side of the hyperplane.
+The second one is the one which gives Support Vector Machines their name. We'd like to maximise the Support Margin. What is a support margin? Let's look at the diagram with a separating hyperplane once again.
+
+If we take two points, one from each class, such that they are the closest to each other (there can be more than one of each type, but this argument extends to that as well), and draw two parallel hyperplanes through them (making sure that the points still say linearly separable), we will have drawn something like the dotted lines in the figure below.
+
+![SVM Support Hyperplanes](/assets/images/svm-supporting-hyperplanes.png)
+
+These hyperplanes that we've drawn are not the actual separating hyperplane, but they 'bracket' the actual hyperplane which will be used to classify our data. Thus, they are called the **supporting hyperplanes** of the SVM. The perpendicular distance between these supporting hyperplanes is the support margin of the Support Vector Machine. The actual separating hyperplane lies midway between these supporting hyperplanes.
+
+Now, at face value, it might seem that we haven't really improved our problem definition by a lot. After all, it is definitely possible to draw an infinite number of sets of supporting hyperplanes (and consequently, an infinite number of separating hyperplanes). The diagram below shows two possibilities: $$H_1$$, $$H_{1-}$$, and $$$H_{1+}$$ form one separating hyperplane-supporting hyperplane set, and $$H_2$$, $$H_{2-}$$, and $$$H_{2+}$$ form another.
+
+![SVM Support Hyperplane Possibilities](/assets/images/svm-options-separating-hyperplanes-supporting-hyperplanes.png)
+
+This is where we state the optimisation which will narrow down our solution space. We wish to find the set of supporting hyperplanes which maximises the support margin, subject to the constraints that all the data still stay linearly separable.
+
+This immediately has an important implication: namely, that no data points may exist inside the margin of the SVM. This immediately puts more constraints on our solution because now the data points of class 1 in our example, need to not only fall above the separating hyperplane, they also need to be above or on the supporting hyperplane $$H_+$$; the same argument holds for the other class.
+
+Let us quantify all of these conditions mathematically.
+We seek a separating hyperplane of the form $$N^Tx=b$$.
+We seek supporting hyperplanes of the form $$N^Tx=b+k$$ and $$N^Tx=b-k$$.
+
+### 1. Linearly Separable Data
+For a set of data $$x_i, i\in[1,N]$$, if we assume that data is divided into two classes (-1,+1), we can write the constraint equations as:
+
+$$
+\mathbf{
+N^Tx_i>b+k, \forall x_i|y_i=+1 \\
+N^Tx_i<b-k, \forall x_i|y_i=-1
+}
+$$
+
+### 2. Margin Maximisation
+We have already derived the perpendicular distance between two affine hyperplanes of the form $$N^Tx=b+k$$ and $$N^Tx=b-k$$, which is $$\frac{2k}{\|N\|}$$. We seek to obtain the following:
+
+$$
+\mathbf{m_{max}=max \frac{2k}{\|N\|}}
+$$
+
+This is an optimisation problem, which we will analyse in succeeding articles.
