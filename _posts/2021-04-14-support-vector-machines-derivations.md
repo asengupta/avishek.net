@@ -12,8 +12,12 @@ We'll finally bring everything together by adding on the idea of projecting hype
 ## The Mean and Difference: A Simple Observation
 Let's take a set of tuples. Each tuple contains two numbers, $$\mathbf{X=\{(1,3), (0,4), (-5, 9)\}}$$ . If we're asked to find the mean of each of these pairs of numbers, the answer is **2** in all cases. Note that the position of the mean does not change, as long as each pair of numbers moves in opposite directions at the same rate, i.e., **(0,4)** is the result of both ends of **(1,3)** shrinking and growing by 1; the same idea applies to the other tuples.
 
+![Constant Mean](/assets/images/constant-mean.png)
+
 Let's take a set of tuples. Each tuple contains two numbers, $$\mathbf{X=\{(1,3), (2,4), (7, 9)\}}$$. If we're asked to find the difference of each of these pairs of numbers, the answer is **2** in all cases. Note that the position of the mean keeps changing, as long as each pair of numbers moves in the smae direction at the same rate, i.e., **(2,4)** is the result of both ends of **(1,3)** moving by 1; the same idea applies to the other tuples.
 Thus, the mean in any of the above cases can always be written as $$b$$, and each tuple of number can be written as $$(b-k, b+k)$$, where **k** is a constant. Then the difference is always $$(b+k)-(b-k)=\mathbf{2k}$$ in all cases.
+
+![Constant Difference](/assets/images/constant-difference.png)
 
 This formulation will come in handy when we are expressing hyperplane intercepts later on, and exploring the possibilities of different hyperplane solutions for SVMs.
 
@@ -50,6 +54,10 @@ N^T(x-u)=0 \\
 \Rightarrow \mathbf{N^Tx=c} \\
 $$
 
+The situation is shown below. Any $$x$$ in the affine hyperplane is not perpendicular to the normal vector $$\vec{N}$$. Only by translating it back to the original hyperplane (the linear subspace) can the perpendicularity relationship hold.
+
+![Affine Hyperplane](/assets/images/affine-hyperplane.png)
+
 where $$c=N^Tu$$, a constant, and the components of $$N$$ are the weights $$w_1$$, $$w_2$$, etc.
 
 An interesting result to note is when a hyperplane is displaced along its normal. Let us assume that $$c=tN$$, where $$t$$ is some arbitrary scalar. Then, substituting this into the relationship we derived, we get:
@@ -59,7 +67,7 @@ N^Tx=tN^TN \\
 \Rightarrow N^Tx=t{\|N\|}^2 \\
 $$
 
-## Perpendicular Distance between two Parallel Affine Hyperplane
+## Perpendicular Distance between two Parallel Affine Hyperplanes
 Next, we derive the perpendicular distance between two affine hyperplanes. Given two hyperplanes of the form:
 
 $$ N^Tx=c_1 ....(H_1)$$ \\
@@ -72,10 +80,13 @@ Assume a point $$P_1$$ on $$H_1$$, and a corresponding point $$P2$$ on $$H_2$$. 
 $$
 N^TP_1=c_1 \\
 N^TP_2=c_2 \\
-
 P_2=P_1+tN \\
 \Rightarrow P_2-P_1=tN
 $$
+
+The situation is show below:
+
+![Distance between two Affine Hyperplanes](/assets/images/distance-between-two-hyperplanes.png)
 
 Subtracting:
 
@@ -115,7 +126,10 @@ d_{perp}(H_1,H_2)=\frac{b+k-(b-k)}{\|N\|} \\
 \Rightarrow \mathbf{d_{perp}(H_1,H_2)=\frac{2k}{\|N\|}}
 $$
 
-Here's the next question: what is the equation of the affine hyperplane halfway between $$H_1$$ and $$H_2$$. It is very tempting to assume that it is $$N^Tx=b$$, but let us validate this intuition.
+Here's the next question: what is the equation of the affine hyperplane halfway between $$H_1$$ and $$H_2$$. It is very tempting to assume that it is $$N^Tx=b$$, but let us validate this intuition. The figure below shows the situation.
+
+![Halfway Distance between two Affine Hyperplanes](/assets/images/halfway-distance-between-two-hyperplanes.png)
+
 
 The scaling factor for this halfway hyperplane is obviously $$t/2=\frac{c_2-c_1}{2{\|N\|}^2}$$.
 We use the same procedure we did when calculating the distance between $$H_1$$ and $$H_2$$, except this time we seek the intercept factor, and know the scaling factor already. Thus, if we write, for $$H_1$$ and the halfway hyperplane $$H_h$$:
@@ -140,4 +154,24 @@ This indeed corresponds with our intuition that an affine hyperplane midway betw
 
 ## Framing the SVM Optimisation Problem
 
+We now have all the background we need to state the general problem Support Vector Machines are attempting to solve.
+The primary purpose of SVMs is classification of training data. To put it very simply, we desire to find a affine hyperplane which can separate our data into two classes such that points in one class lie above the hyperplane, while all points in the other class, lie below the hyperplane.
 
+The diagram below illustrates the concept.
+
+![SVM Hyperplane Problem](/assets/images/svm-separating-hyperplane.png)
+
+Let us state the first, and most important, assumption which accompanies this investigation, namely, that the data in the two classes, should be linearly separable. This implies that it should be possible to find a hyperplane, any hyperplane, in the first place which can separate the two classes of data neatly above and below the hyperplane.
+
+**Note**: We will relax this assumption later, but for the moment, let us proceed with the simple case.
+
+The second condition we impose on our solution will become clearer from the discussion below.
+If you look at the picture above, you'll see that there is a lot of flexibility in terms of what this hyperplane can look like in terms of its parameters.
+In fact, in the example above, and very generally, there are an infinite number of hyperplanes which can partition the data into two classes perfectly, i.e., an infinite number of combinations of weights in the equation of the affine hyperplane.
+Here is an illustration of some example possibilities.
+
+![SVM Hyperplane Possibilities](/assets/images/svm-separating-hyperplane-possibilities.png)
+
+More data may constrain the space of solutions some more, but it will still be infinite in the most general case, assuming that the data is linearly separable. What combination should we choose?
+
+This is where we'd like to impose some mathematical constraints on the solution to drive us toward a satisfactory solution.
