@@ -40,9 +40,10 @@ Extending this to a higher dimension $$N$$, the equation of an affine hyperplane
 
 $$\mathbf{w_1x_1+w_2x_2+...+w_{N-1}x_{N-1}=b}$$
 
-The important thing to note is that the dimensionality of a hyperplane is always one less than the dimensionality of the ambient space it inhabits; that's why the indices in the above equation go up to $$N-1$$.
+The important thing to remember is that **the dimensionality of a hyperplane is always one less than the dimensionality of the ambient space it inhabits**; that's why the indices in the above equation go up to $$N-1$$.
 
-Why is this the general form of the equation, though? We can recover this general form with some simple matrix algebra. Let us assume that the hyperplane passing through the origin is represented by its normal $$N$$. Then, since every point $$x$$ on the hyoerplane is perpendicular to $$N$$, we can write:
+**Why is this the general form of the equation?** \\
+We can recover this general form with some simple matrix algebra. Let us assume that the hyperplane passing through the origin is represented by its normal $$N$$. Then, since every point $$x$$ on the hyoerplane is perpendicular to $$N$$, we can write:
 
 $$
 N^Tx=0
@@ -157,6 +158,8 @@ This indeed corresponds with our intuition that an affine hyperplane midway betw
 ## Framing the SVM Optimisation Problem
 
 We now have all the background we need to state the general problem Support Vector Machines are attempting to solve.
+
+### Separating Hyperplane
 The primary purpose of SVMs is classification of training data. To put it very simply, we desire to find a affine hyperplane which can separate our data into two classes such that points in one class lie above the hyperplane, while all points in the other class, lie below the hyperplane.
 
 The diagram below illustrates the concept.
@@ -180,13 +183,14 @@ This is where we'd like to impose some mathematical constraints on the solution 
 The most important one we have already stated, which is that all data points belonging to one class should fall on one side of the hyperplane.
 The second one is the one which gives Support Vector Machines their name. We'd like to maximise the Support Margin. What is a support margin? Let's look at the diagram with a separating hyperplane once again.
 
+### Supporting Hyperplanes
 If we take two points, one from each class, such that they are the closest to each other (there can be more than one of each type, but this argument extends to that as well), and draw two parallel hyperplanes through them (making sure that the points still say linearly separable), we will have drawn something like the dotted lines in the figure below.
 
 ![SVM Support Hyperplanes](/assets/images/svm-supporting-hyperplanes.png)
 
 These hyperplanes that we've drawn are not the actual separating hyperplane, but they 'bracket' the actual hyperplane which will be used to classify our data. Thus, they are called the **supporting hyperplanes** of the SVM. The perpendicular distance between these supporting hyperplanes is the support margin of the Support Vector Machine. The actual separating hyperplane lies midway between these supporting hyperplanes.
 
-Now, at face value, it might seem that we haven't really improved our problem definition by a lot. After all, it is definitely possible to draw an infinite number of sets of supporting hyperplanes (and consequently, an infinite number of separating hyperplanes). The diagram below shows two possibilities: $$H_1$$, $$H_{1-}$$, and $$$H_{1+}$$ form one separating hyperplane-supporting hyperplane set, and $$H_2$$, $$H_{2-}$$, and $$$H_{2+}$$ form another.
+Now, at face value, it might seem that we haven't really improved our problem definition by a lot. After all, it is definitely possible to draw an infinite number of sets of supporting hyperplanes (and consequently, an infinite number of separating hyperplanes). The diagram below shows two possibilities: $$H_1$$, $$H_{1-}$$, and $$H_{1+}$$ form one separating hyperplane-supporting hyperplane set, and $$H_2$$, $$H_{2-}$$, and $$H_{2+}$$ form another.
 
 ![SVM Support Hyperplane Possibilities](/assets/images/svm-options-separating-hyperplanes-supporting-hyperplanes.png)
 
