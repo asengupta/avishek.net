@@ -27,7 +27,7 @@ plugins:
   - jekyll-mermaid
 
 mermaid:
-  src: '/javascript/mermaid.min.js'
+  src: 'assets/javascript/mermaid.min.js'
 
 theme: jekyll-theme-minimal
 title: A Fish without a Bicycle
