@@ -13,7 +13,7 @@ $$
 \mathbf{A^TB=\sum_{i=1}^N A_iB_i}
 $$
 
-**Why should the sum of the products of the componets of two vectors result in the same conclusion?**
+**Why should the sum of the products of the components of two vectors result in the same conclusion?**
 
 This article shows two different ways of proving this, one long, and the other one super short (and one I feel is a little more intuitive and less mechanical). In addition, we will conclude with the importance of the dot product in various Machine Learning techniques.
 

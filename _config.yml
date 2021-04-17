@@ -24,8 +24,13 @@ plugins:
   - jekyll-feed
   - jekyll-sitemap
   - jekyll-seo-tag
+  - jekyll-mermaid
+
+mermaid:
+  src: '/javascript/mermaid.min.js'
 
 theme: jekyll-theme-minimal
 title: A Fish without a Bicycle
 description: Technology and Art
 markdown: kramdown
+excerpt_separator: ""
