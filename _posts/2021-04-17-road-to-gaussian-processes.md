@@ -5,7 +5,9 @@ usemathjax: true
 tags: ["Machine Learning", "Gaussian Processes", "Theory"]
 ---
 
-This article aims to start the road towards a theoretical intuition behind **Gaussian Processes**, another Machine Learning technique based on Bayes' Rule. However, there is a raft of material that I needed to understand and relearn before fully appreciating some of the underpinnings of this technique. I'd like to do some high level dives into some of the topics I believe will help practictioners go a little deeper than "it's just a Gaussian Process of many variables".
+This article aims to start the road towards a theoretical intuition behind **Gaussian Processes**, another Machine Learning technique based on **Bayes' Rule**. However, there is a raft of material that I needed to understand and relearn before fully appreciating some of the underpinnings of this technique.
+
+I'd like to do some high level dives into some of the topics I believe will help practictioners go a little deeper than "it's just a Gaussian Process of many variables".
 
 ## Theory Track for Gaussian Processes
 The map below shows the rough order in which the preliminary material will be presented.
