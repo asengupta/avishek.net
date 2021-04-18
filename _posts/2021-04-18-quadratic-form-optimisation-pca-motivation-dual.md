@@ -1,9 +1,8 @@
 ---
-title: "Quadratic Form of Matrices, Principal Component Analysis as a Quadratic Optimisation Problem"
+title: "Quadratic Optimisation using Principal Component Analysis as Motivation"
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Quadratic Optimisation", "Linear Algebra", "Principal Components Analysis", "Optimisation", "Theory"]
-draft: true
 ---
 
 This article presents the intuition behind the **Quadratic Form of a Matrix**, as well as its optimisation counterpart, **Quadratic Optimisation**. **Principal Components Analysis** is presented here, not in its own right, but as an application of these two concepts. PCA proper will be presented in another article where we will discuss **eigendecomposition**, **eigenvalues**, and **eigenvectors**.
@@ -120,3 +119,84 @@ Of course, there is a lot of be said about eigendecomposition, but take particul
 We will explore optimisation in a little bit, but let us focus on the **Quadratic Form of a Matrix** first.
 
 ## Quadratic Form of a Matrix
+The quadratic form of a matrix is always of the form $$\mathbf{x^TQx}$$ where $$x$$ is a column vector, and usually is the thing that varies. In quadratic optimisation problems, we usually attempt to determine $$x$$ which optimises (maximises) the form $$x^TQx$$, subject to one or more constraints.
+
+Thus, it is instructive to study the shape of $$x^TQx$$. Before looking at that, let us state some important assumptions about the shape of $$x$$ and $$Q$$.
+- $$x$$ is a $$N\times 1$$ column vector, thus $$x^T$$ is a $$1\times N$$ row vector.
+- $$Q$$ is a square $$N\times N$$ symmetric vector. We will examine in a second why this is not a limiting constraint at all.
+
+Let's take the two-dimensional case as an example, where:
+
+$$
+x=\begin{bmatrix}
+x \\
+y
+\end{bmatrix} \\
+Q=\begin{bmatrix}
+a && b \\
+b && c \\
+\end{bmatrix}
+$$
+
+Let us compute $$x^TQx$$:
+
+$$
+x^TQx=
+\begin{bmatrix}
+x && y
+\end{bmatrix}
+\begin{bmatrix}
+a && b \\
+b && c \\
+\end{bmatrix}
+\begin{bmatrix}
+x \\
+y
+\end{bmatrix} \\
+=\begin{bmatrix}
+x && y
+\end{bmatrix}
+\begin{bmatrix}
+ax+by \\
+bx+cy
+\end{bmatrix} \\
+=ax^2+2bxy+cy^2 \\
+f(x,y)=\mathbf{ax^2+2bxy+cy^2}
+$$
+
+This is the quadratic form of a $$2\times 2$$ matrix. **Note that the result is a scalar.** Also, note how every term incorporates a product of exactly two variables. Thus, it is a **homogenous polynomial**. This degree (or the number of variables in a term) does not vary for higher dimensional vectors.
+
+With that out of the way, it is time to look at the shape of this curve, so that we can build up our intuition of the Quadratic Program formulation. Of course, we cannot visualise dimensions higher than 3, so in the following discussion, all diagrams will incorporate two feature variables ($$x_1$$ and $$x_2$$), and the third dimension is the value of the polynomial $$f(x_1,x_2)$$.
+
+Here are some of the different surfaces, corresponding to what kind of coefficients exist in the quadratic polynomial.
+
+$$f(x)={x_1}^2+{x_2}^2$$
+![All Positive and No Cross Term](/assets/images/quadratic-surface-no-cross-term-all-positive.png)
+
+---
+$$f(x)=-{x_1}^2-{x_2}^2$$
+![No Cross Term Hill](/assets/images/quadratic-surface-no-cross-term-hill.png)
+
+---
+$$f(x)={x_1}^2-{x_2}^2$$
+![No Cross Term Saddle](/assets/images/quadratic-surface-no-cross-term-saddle.png)
+
+---
+$$f(x)={x_1}^2-{x_2}^2-2{x_1}{x_2}$$
+![Positive Cross Term Saddle](/assets/images/quadratic-surface-positive-cross-term-saddle.png)
+
+---
+$$f(x)={x_1}^2+{x_2}^2+2{x_1}{x_2}$$
+![Positive Cross Term](/assets/images/quadratic-surface-positive-cross-term.png)
+
+---
+
+The above graphs show only a part of the quadratic surfaces, because they extend infinitely in all directions.
+
+We will have a lot more to talk about quadratic surfaces when we tackle eigendecomposition proper, but for the moment, understand that Quadratic Optimisation problems involve searching for a combination of variables $$(x_1, x_2,...,x_N)$$ which find the **global maximum** on these surfaces, **subject to particular constraints on $$x_i$$**.
+
+That last phrase about constraints is particularly important. This is because all these quadratic surfaces extend infinitely in all directions, and you can make your variables as large as you want, if there are no constraints. For example, in the figure where $$f(x)={x_1}^2+{x_2}^2x$$, if we are asked to maximise $$f(x)$$, we can easily see that the function rises high towards infinity as $$(x_1, x_2)$$ move towards infinity. Thus, it is nonsensical (in many cases) to ask for optimisation if constraints are not present.
+
+However, it is important to note that some problems may have a constraint on them, but that constraint might not be activated while searching for a solution. We will discuss these situations in a bit when we introduce the intuition behind **Lagrangian Optimisation**, becaus combining all these conditions, gives us an important result in Quadratic Optimisation, the **Karush-Kuhn-Tucker Conditions** (KKT in short).
+
+### Invariability of Quadratic Polynomial under Symmetric Matrix Reformulation
