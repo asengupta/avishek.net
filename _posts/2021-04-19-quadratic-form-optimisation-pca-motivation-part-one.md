@@ -5,7 +5,7 @@ usemathjax: true
 tags: ["Machine Learning", "Quadratic Optimisation", "Linear Algebra", "Principal Components Analysis", "Optimisation", "Theory"]
 ---
 
-This article presents the intuition behind the **Quadratic Form of a Matrix**, as well as its optimisation counterpart, **Quadratic Optimisation**. **Principal Components Analysis** is presented here, not in its own right, but as an application of these two concepts. PCA proper will be presented in another article where we will discuss **eigendecomposition**, **eigenvalues**, and **eigenvectors**.
+This series of articles presents the intuition behind the **Quadratic Form of a Matrix**, as well as its optimisation counterpart, **Quadratic Optimisation**, motivated by the example of **Principal Components Analysis**. PCA is presented here, not in its own right, but as an application of these two concepts. PCA proper will be presented in another article where we will discuss **eigendecomposition**, **eigenvalues**, and **eigenvectors**.
 
 A succeeding post will explore the Quadratic Optimisation problem form, and the intuition behind the **Lagrangian** formulation.
 
