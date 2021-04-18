@@ -155,6 +155,30 @@ $$
 
 This indeed corresponds with our intuition that an affine hyperplane midway between two parallel affine hyperplanes will have its intercept as the mean of those on either side of it.
 
+### Aside: Alternative Equivalent Solution
+You can derive the same result, by assuming that you go along $$t/2$$ times along vector $$\vec{N}$$ starting from $$P_1$$. That is:
+
+$$
+P_H=P_1+\frac{t}{2}N
+$$
+
+First, we multiply throughout by $$N^T$$ to get:
+
+$$
+N^TP_H=N^TP_1+\frac{t}{2}N^TN \\
+\Rightarrow N^TP_H=N^TP_1+\frac{t}{2}{\|N\|}^2
+$$
+
+Remembering that $$ \mathbf{t=\frac{c_2-c_1}{\|N\|^2}} $$ and $$N^TP_1=c_1$$, we can write:
+
+$$
+N^TP_H=c_1+\frac{c_2-c_1}{2{\|N\|}^2}{\|N\|}^2 \\
+\Rightarrow N^TP_H=c_1+\frac{c_2-c_1}{2} \\
+\Rightarrow \mathbf{N^TP_H=\frac{c_1+c_2}{2}}
+$$
+
+which is the same result we've proved above.
+
 ## Framing the SVM Optimisation Problem
 
 We now have all the background we need to state the general problem Support Vector Machines are attempting to solve.
