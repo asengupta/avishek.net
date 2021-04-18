@@ -230,8 +230,8 @@ $$
 Thus, $$Q$$ is symmetric. Now,if we use $$Q$$ to compute the polynomial, we get for the coefficient of the $$x_ix_j$$ cross-term:
 
 $$
-Q_{ij}+Q{ji}=\frac{1}{2}(P_{ij}+P_{ji})+\frac{1}{2}(P_{ji}+P_{ij}) \\
-\Rightarrow \mathbf{Q_{ij}+Q{ji}=P_{ij}+P_{ji}}
+Q_{ij}+Q_{ji}=\frac{1}{2}(P_{ij}+P_{ji})+\frac{1}{2}(P_{ji}+P_{ij}) \\
+\Rightarrow \mathbf{Q_{ij}+Q_{ji}=P_{ij}+P_{ji}}
 $$
 
 Thus, computing $$Q$$'s quadratic form is the same as computing $$P$$'s quadratic polynomial, plus we have $$Q$$ as symmetric, which is what we set out to do.
