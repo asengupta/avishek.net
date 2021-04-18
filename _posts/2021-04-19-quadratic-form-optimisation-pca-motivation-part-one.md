@@ -1,11 +1,13 @@
 ---
-title: "Quadratic Optimisation using Principal Component Analysis as Motivation"
+title: "Quadratic Optimisation using Principal Component Analysis as Motivation: Part One"
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Quadratic Optimisation", "Linear Algebra", "Principal Components Analysis", "Optimisation", "Theory"]
 ---
 
 This article presents the intuition behind the **Quadratic Form of a Matrix**, as well as its optimisation counterpart, **Quadratic Optimisation**. **Principal Components Analysis** is presented here, not in its own right, but as an application of these two concepts. PCA proper will be presented in another article where we will discuss **eigendecomposition**, **eigenvalues**, and **eigenvectors**.
+
+A succeeding post will explore the Quadratic Optimisation problem form, and the intuition behind the **Lagrangian** formulation.
 
 One of the aims of this article is also to introduce PCA in a different context than eigenvectors, to show that there is more than one way to view a particular topic.
 
@@ -22,10 +24,13 @@ Specifically **if we have a row vector $$A$$ and a column vector $$B$$, the norm
 
 Generalising, instead of $$A$$ being a single row vector, let it be a set of row vectors, i.e., a matrix $$O\times F$$ (O=number of observations, F=number of variables, this will become relevant in a bit).
 
-Then, the result of $$C=AB$$ (where $$B$$ is a $$F\times 1$$ vector), will give us a $$O\times 1$$ vector in which the $$i$$th entry will be the dot product of the $$i$$the row vector of $$A$$ and the vector $$B$$.
+Then, the result of $$C=AB$$ (where $$B$$ is a $$F\times 1$$ vector), will give us a $$O\times 1$$ vector in which the $$i$$th entry will be the dot product of the $$i$$the row vector of $$A$$ and the vector $$B$$. **More specifically, if $$B$$ is a unit vector, the result is simply the projection of $$A$$ on $$B$$**, since:
 
+$$A\cdot B=\|A\|\|B\|cos\theta=\|A\|.1.cos \theta=\|A\|cos \theta$$.
 
-Geometrically, this gives us the projections of all the row vectors of $$A$$ onto $$B$$. This diagram explains the operation.
+Geometrically, this gives us the projections of all the row vectors of $$A$$ onto $$B$$, assuming that $$B$$ is a unit vector. This diagram explains the operation.
+
+![Row Vectors Projection](/assets/images/row-vectors-projection.png)
 
 ## Preliminary: Variance
 Variance essentially measures the degree of spread of a set of data around a mean value. This is also the same variance that is used to characterise a Gaussian Distribution. Given a set of data $$x_i\in\mathbb{R}, i\in[1,N]$$ with a mean $$\mu$$, variance is the average squared distance from the mean, i.e.,
@@ -61,10 +66,10 @@ Consider a matrix $$X$$, with one observation (data point) per row, each column 
 
 **We'd like to project these data onto a vector such that the variance of these projected points onto that vector is maximised.** There might be multiple vectors like this, but for the moment, let's stick with finding one of them.
 
-This picture explains the idea. As you can see, we can pick any random vector, and project our data onto it. These projections are scaled versions of this vector. We'd like the spread of these projections to be as dispersed as possible. For example $$V_1$$ doesn't seem to provide much spread (variance) for our data, whereas $$V_2$$ provides a much larger variance.
+This picture explains the idea. As you can see, we can pick any random vector ($$B$$ and $$C$$ in the picture), and project our data onto it. These projections are scaled versions of this vector. We'd like the spread of these projections to be as dispersed as possible. For example $$V_1$$ doesn't seem to provide much spread (variance) for our data, whereas $$V_2$$ provides a much larger variance.
 
+![Dataset projected onto arbitrary vectors](/assets/images/data-set-projecions-arbitrary-vectors.png)
 ### 2. Variance of Projections
-
 $$X$$ is a $$O\times F$$ matrix, $$V$$ is a $$F\times 1$$ vector, so the projection is a $$O\times 1$$ vector, the $$i$$th entry corresponding to the projection (a single number) of the $$i$$th row vector in $$X$$ onto $$V$$.
 
 $$
@@ -112,9 +117,10 @@ We thus need to find a vector $$V$$ which maximises the expression $$V^TX^TXV$$.
 **Maximise $$V^T\Sigma V$$ \\
 Subject to: $$V^TV=1$$**
 
-We will have more to say about the constraint $$V^TV=1$$ in a bit, when we elaborate on the Quadratic Form of a matrix, but for the moment, understand that the definition of Principal Components Analysis is about finding a set of vectors which maximise the variance of a data set when those vectors are used as the basis.
+The constraint $$V^TV=1$$ is present because **we'd like $$V$$ to be a unit vector**.
+Thus, we have formulated the definition of Principal Components Analysis, i.e., finding a set of vectors which maximise the variance of a data set when those vectors are used as the basis.
 
-Of course, there is a lot of be said about eigendecomposition, but take particular note of the form of the cost function. Very generally, it is $$xQx^T$$ or $$x^TQx$$ (depending upon how you have structured your data). This form arises quite often in general optimisation problems, and obviously, is very important in Linear Algebra. This belongs to the class of optimisation called **Quadratic Optimisation**.
+Of course, there is a lot to be said about eigendecomposition, but take particular note of the form of the cost function. Very generally, it is $$xQx^T$$ or $$x^TQx$$ (depending upon how you have structured your data). This form arises quite often in general optimisation problems, and obviously, is very important in Linear Algebra. This belongs to the class of optimisation called **Quadratic Optimisation**.
 
 We will explore optimisation in a little bit, but let us focus on the **Quadratic Form of a Matrix** first.
 
@@ -197,6 +203,37 @@ We will have a lot more to talk about quadratic surfaces when we tackle eigendec
 
 That last phrase about constraints is particularly important. This is because all these quadratic surfaces extend infinitely in all directions, and you can make your variables as large as you want, if there are no constraints. For example, in the figure where $$f(x)={x_1}^2+{x_2}^2x$$, if we are asked to maximise $$f(x)$$, we can easily see that the function rises high towards infinity as $$(x_1, x_2)$$ move towards infinity. Thus, it is nonsensical (in many cases) to ask for optimisation if constraints are not present.
 
-However, it is important to note that some problems may have a constraint on them, but that constraint might not be activated while searching for a solution. We will discuss these situations in a bit when we introduce the intuition behind **Lagrangian Optimisation**, becaus combining all these conditions, gives us an important result in Quadratic Optimisation, the **Karush-Kuhn-Tucker Conditions** (KKT in short).
+However, it is important to note that some problems may have a constraint on them, but that constraint might not be activated while searching for a solution. We will discuss these situations in a succeeding post when we introduce the intuition behind **Lagrangian Optimisation**, because combining all these conditions, gives us an important result in Quadratic Optimisation, the **Karush-Kuhn-Tucker Conditions** (KKT in short).
 
 ### Invariability of Quadratic Polynomial under Symmetric Matrix Reformulation
+Quadratic Optimisation problems involve matrices because they are a compact way of representing the problem. However, the actual optimisation revolves around the quadratic polynomial itself. This implies that **we can modify our matrix to be anything as long as the resulting quadratic polynomial is the same**.
+
+I noted earlier than one important assumption in Quadratic Optimisation is that the matrix $$Q$$ in the expression $$x^TQx$$ is a **symmetric matrix**. **What if we are given a matrix $$P$$ which is not symmetric?**
+
+We seek to reformulate this matrix $$P$$ such that it ends up being symmetric without affecting the resultant polynomial. To see how we can do this, it is instructive to look at the contribution of the matrix P to any of the cross terms of the polynomial.
+
+Very generally, **if we have a vector of N variables $$x_1, x_2,...,x_N$$, the contribution of the matrix $$P$$ to the coefficient of the cross term $$x_ix_j$$ is the sum $$P_{ij}+P_{ji}$$**. You can see this when we computed the quadratic form of $$ P=\begin{bmatrix}
+a && b \\
+b && c \\
+\end{bmatrix}
+$$
+
+The polynomial came out as $$x^2+y^2+2bxy$$. The entries $$(1,2)$$ and $$(2,1)$$ contributed to give $$2b$$ as the coefficient of the $$xy$$ term. You can verify this yourself for higher dimensional vectors.
+
+Thus, if we take $$\mathbf{Q=\frac{1}{2}(P^T+P)}$$, we get:
+
+$$
+Q_{ij}=\frac{1}{2}(P_{ij}+P_{ji}) \\
+Q_{ji}=\frac{1}{2}(P_{ji}+P_{ij})=Q_{ij}
+$$
+
+Thus, $$Q$$ is symmetric. Now,if we use $$Q$$ to compute the polynomial, we get for the coefficient of the $$x_ix_j$$ cross-term:
+
+$$
+Q_{ij}+Q{ji}=\frac{1}{2}(P_{ij}+P_{ji})+\frac{1}{2}(P_{ji}+P_{ij}) \\
+\Rightarrow \mathbf{Q_{ij}+Q{ji}=P_{ij}+P_{ji}}
+$$
+
+Thus, computing $$Q$$'s quadratic form is the same as computing $$P$$'s quadratic polynomial, plus we have $$Q$$ as symmetric, which is what we set out to do.
+
+The next part of this series of post will clarify some basic understanding of Vector Calculus, specifically around gradients, so as to making understanding the **Lagrangian formulation** easier.
