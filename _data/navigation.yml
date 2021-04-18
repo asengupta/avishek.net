@@ -4,6 +4,10 @@
   link: /blog.html
 - name: Foundations of Machine Learning
   link: /ml-foundations.html
+- name: Foundations of Distributed Systems
+  link: /distributed-systems-foundations.html
+- name: References
+  link: /references.html
 - name: Art
   link: /art.html
 - name: About Me

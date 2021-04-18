@@ -3,6 +3,7 @@ title: "Quadratic Form of Matrices, Principal Component Analysis as a Quadratic 
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Quadratic Optimisation", "Linear Algebra", "Principal Components Analysis", "Optimisation", "Theory"]
+draft: true
 ---
 
 This article presents the intuition behind the **Quadratic Form of a Matrix**, as well as its optimisation counterpart, **Quadratic Optimisation**. **Principal Components Analysis** is presented here, not in its own right, but as an application of these two concepts. PCA proper will be presented in another article where we will discuss **eigendecomposition**, **eigenvalues**, and **eigenvectors**.
@@ -35,7 +36,7 @@ $$
 $$
 
 where the subscript 2 indicates the **L2 Norm** or **Euclidean Norm**, which is nothing other than our basic distance formula.
-Let us simplify; we can always center the mean so that $$\mu=0$$, in which case, the above variance identity reduces to:
+Let us simplify; we can always **center the mean to the zero vector** so that $$\mathbf{\mu=0}$$, in which case, the above variance identity reduces to:
 
 $$
 \sigma^2=\frac{\sum_{i=1}^{N}{\|x_i\|}^2}{N}
@@ -50,10 +51,10 @@ $$
 ## Principal Components Analysis as an Optimisation Problem
 Let's look at PCA and how we can express it, starting from one of its definitions. The intuition behind PCA will be explained more when we get to eigendecomposition; for the moment, we restrict ourselves to a more mechanical interpretation of PCA.
 
-### 1. The Setup
+### 1. The Objective
 From the Wikipedia definition of PCA:
 
-The first principal component can equivalently be defined as a direction that maximizes the variance of the projected data. The $$i$$th principal component can be taken as a direction orthogonal to the first $$i-1$$th principal components that maximizes the variance of the projected data.
+> The first principal component can equivalently be defined as a direction that maximizes the variance of the projected data. The $$i$$th principal component can be taken as a direction orthogonal to the first $$i-1$$th principal components that maximizes the variance of the projected data.
 
 Alright, there's a lot to unpack here, but I want to simplify and say very informally that **PCA involves finding vectors which maximise the variance of a data set, when those vectors are used as basis vectors**.
 
