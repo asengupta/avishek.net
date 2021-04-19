@@ -19,6 +19,15 @@ Some quick definitions first:
     - There exists some non-zero combination of the row vectors of $$A$$ (i.e., column vectors of $$A^T$$) which results in the zero vector.
     - There exists at least one vector which gets transformed by matrix $$A^T$$ into the zero vector.
 
+---
+**Terminology Note**: Math textbooks and will usually define the **column space** as the **image** of $$A$$, and the **null space** as the **kernel** of $$A$$. $$A$$ is defined in such contexts as a **Linear Mapping**. In this perspective, $$A$$ is a linear transformation which operates on a vector $$x$$ to give a new vector, possibly of a different dimensionality, and therefore, in a new vector space.
+
+Thus, you may essentially view a matrix multiplication of $$A$$ ($$m\times n$$) with a vector $$x$$ ($$n\times 1$$) in two ways:
+  - $$x$$ is a bunch of weights which linearly combines the $$m$$ $$n$$-dimensional column vectors of $$A$$ (obviously in $${\mathbb{R}}^n$$) into a new $$n$$-dimensional vector (also obviously in $${\mathbb{R}}^n$$).
+  - $$A$$ is a linear transformation that maps an $$n$$-dimensional vector $$x$$ from $${\mathbb{R}}^n$$ into a new vector in $${\mathbb{R}}^m$$.
+
+---
+
 The important point is that any argument we make around the column space and null space of $$A$$ applies exactly to the row space and left null space of $$A^T$$, and vice versa.
 
 For purposes of this discussion, I'll pick a matrix which already has linearly independent column and row vectors.
