@@ -15,13 +15,27 @@ We will motivate most of the theory by illustrating the two-dimensional case in 
 
 Before we delve into the material proper, let's look at the big picture approach that you will go through as part of this.
 
+- Orthogonal Complements
 - Graphs and Level Sets
 - Jacobians
 - Tangent Spaces and Directional Derivatives
 - Implicit Function Theorem
 - Parameterisation in an underdetermined system of Linear Equations
 - Constrained Critical Points
-- Lagrangian Reformulation without Paramterisation
+- Lagrangian Formulation without Paramterisation
+
+## Orthogonal Complements
+We have already met **Orthogonal Complements** in [Intuitions about Matrix Subspaces]({% post_url 2021-04-02-matrix-subspaces-intuitions %}), when we were talking about **column spaces**, **row spaces**, **null spaces**, and **left null spaces**. Recalling quickly, the **column space** and the **left null space** are mutually orthogonal complements, and the **row space** and the **null space** are mutually orthogonal complements.
+
+The reason we revisit this topic is because I want to introduce some new notation notation, and talk about a couple of properties you may or may not be aware of.
+
+### Subset containership of Orthogonal Complements
+This rule is pretty simple, it states the following:
+
+**If $$U\subset V$$, then $$U^{\perp}\supset V^{\perp}$$**
+
+We illustrate this with a simple motivating example, but without proof.
+
 
 ## Graphs and Level Sets
 ---SOME TEXT---
