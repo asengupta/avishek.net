@@ -66,7 +66,7 @@ Consider a matrix $$X$$, with one observation (data point) per row, each column 
 
 **We'd like to project these data onto a vector such that the variance of these projected points onto that vector is maximised.** There might be multiple vectors like this, but for the moment, let's stick with finding one of them.
 
-This picture explains the idea. As you can see, we can pick any random vector ($$B$$ and $$C$$ in the picture), and project our data onto it. These projections are scaled versions of this vector. We'd like the spread of these projections to be as dispersed as possible. For example $$V_1$$ doesn't seem to provide much spread (variance) for our data, whereas $$V_2$$ provides a much larger variance.
+This picture explains the idea. As you can see, we can pick any random vector ($$B$$ and $$C$$ in the picture), and project our data onto it. These projections are scaled versions of this vector. We'd like the spread of these projections to be as dispersed as possible. For example, choosing $$C$$ as a reference vector doesn't seem to provide much spread (variance) for the data point $$V_2$$, whereas choosing $$B$$ as our reference vector provides a much larger variance to $$V_2$$.
 
 ![Dataset projected onto arbitrary vectors](/assets/images/data-set-projecions-arbitrary-vectors.png)
 ### 2. Variance of Projections

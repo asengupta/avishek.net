@@ -3,6 +3,7 @@ title: "Vector Calculus: Manifolds, Constraints, and Lagrange Multipliers"
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Optimisation", "Vector Calculus", "Lagrange Multipliers", "Theory"]
+draft: true
 ---
 
 In this article, we take a detour to understand the mathematical intuition behind **Constrained Optimisation**, and more specifically the method of **Lagrangian multipliers**. We have been discussing **Linear Algebra**, specifically matrices, for quite a bit now. **Optimisation theory**, and **Quadratic Optimisation** as well, relies heavily on **Vector Calculus** for many of its results and proofs.
