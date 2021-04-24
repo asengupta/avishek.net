@@ -3,7 +3,6 @@ title: "Vector Calculus: Manifolds, Constraints, and Lagrange Multipliers"
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Optimisation", "Vector Calculus", "Lagrange Multipliers", "Theory"]
-draft: true
 ---
 
 In this article, we take a detour to understand the mathematical intuition behind **Constrained Optimisation**, and more specifically the method of **Lagrangian multipliers**. We have been discussing **Linear Algebra**, specifically matrices, for quite a bit now. **Optimisation theory**, and **Quadratic Optimisation** as well, relies heavily on **Vector Calculus** for many of its results and proofs.
@@ -86,8 +85,22 @@ Similarly, the relation $$\mathbf{V^{\perp}\supset U^{\perp}}$$ clearly holds, s
 
 This validates the **Subset Rule**.
 
-
 ## Graphs and Level Sets
+Optimisation problems boil down to maximising (or minimising) a function of (usually) multiple variables. The form of the function has a bearing on how easy or hard the solution might be. This section introduces some terminology that further discussion will refer to, and it is best to not admit any ambiguity in some of these terms.
+
+### Graph of a Function
+Consider the function $$f(x)=x^2$$. By itself, it represents a single curve. This is a function of variable. However, consider what the function $$g(x)=(x,f(x))$$ looks like. This notation might seem unfamiliar -- after all, isn't a function supposed to output a single value? -- but we have already dealt with functions that return multiple values; we just bundled them up in matrices. So it is the case in this scenario: $$g(x)$$ takes in a value in $$\mathbb{R}$$ and returns a matrix (usually a column vector, for the sake of consistency) of the form
+$$\begin{bmatrix}
+x \\
+f(x)
+\end{bmatrix}
+$$. Later on, when we introduce vector-valued functions, $$x$$ and $$f(x)$$ will themselves be column vectors in their own right.
+
+### Level Set of a Function
+Consider the function $$f(x_1,x_2)=x_1^2-x_2$$. This is a function of two independent variables $$x_1$$ and $$x_2$$. Note that this function is very similar to $$y=x^2$$ (which can be rewritten as $$x^2-y=0$$), except there is no constraint on the output value. If we wish to observe the shape of this function, we will need to look at it in 3D: two dimensions for the independent variables, and the third for the output of the function $$f(x_1,x_2)$$.
+
+
+
 ---SOME TEXT---
 
 ## Jacobians

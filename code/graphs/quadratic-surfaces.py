@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from labellines import labelLine, labelLines
 
+def parabola_level_sets(x,y):
+    return x ** 2 - y
 
 def no_cross_term_all_negative(x, y):
     return -x ** 2 - y ** 2
@@ -39,5 +41,6 @@ fig = plt.figure()
 # plot_quadratic(positive_cross_term, fig)
 # plot_quadratic(no_cross_term_saddle, fig)
 # plot_quadratic(positive_cross_term_saddle, fig)
-plot_quadratic(no_cross_term_both_positive, fig)
+# plot_quadratic(no_cross_term_both_positive, fig)
+plot_quadratic(parabola_level_sets, fig)
 plt.show()
