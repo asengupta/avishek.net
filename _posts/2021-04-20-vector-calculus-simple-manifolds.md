@@ -9,7 +9,7 @@ In this article, we take a detour to understand the mathematical intuition behin
 
 Most of the rules for single variable calculus translate over to vectors calculus, but now we are dealing with **vector-valued functions** and **partial differentials**.
 
-This article will introduce the building blocks that we will need to reach our destination of understanding Lagrangians, with slightly more rigour than a couple of contour plots. **Please note that this is in no way an exhaustive introduction to Vector Calculus, only the concepts necessary to progress towards the stated goal are introduced.** If you're interested in studying the topic furhtre, there is a wealth of material to be found.
+This article will introduce the building blocks that we will need to reach our destination of understanding Lagrangians, with slightly more rigour than a couple of contour plots. **Please note that this is in no way an exhaustive introduction to Vector Calculus, only the concepts necessary to progress towards the stated goal are introduced.** If you're interested in studying the topic further, there is a wealth of material to be found.
 
 We will motivate most of the theory by illustrating the two-dimensional case in pictures, but understand that in actuality, we will often deal with **higher-dimensional vector spaces**.
 
