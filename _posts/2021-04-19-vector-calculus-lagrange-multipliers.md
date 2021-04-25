@@ -8,7 +8,7 @@ In this article, we finally put all our understanding of **Vector Calculus** to 
 
 We will then look at **critical points**, and how constraining them to a manifold naturally leads to the condition that the **normal vector of the curve to be optimised, must also be normal to the tangent space of the manifold**.
 
-We will then restate this in terms of Lagrange multipliers.
+We will then restate this in terms of **Lagrange multipliers**.
 
 **Note**: This article pulls a lot of understanding together, so be sure to have understood the material in [Vector Calculus: Graphs, Level Sets, and Linear Manifolds]({%post_url 2021-04-18-vector-calculus-simple-manifolds%}), before delving into this article, or you might get thoroughly confused.
 
