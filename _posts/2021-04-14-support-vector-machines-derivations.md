@@ -1,5 +1,5 @@
 ---
-title: "Support Vector Machine from First Principles: Part One"
+title: "Support Vector Machines from First Principles: Part One"
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Support Vector Machines", "Theory"]

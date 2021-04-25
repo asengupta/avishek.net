@@ -3,7 +3,6 @@ title: "Vector Calculus: Lagrange Multipliers, Manifolds, and the Implicit Funct
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Optimisation", "Vector Calculus", "Lagrange Multipliers", "Theory"]
-draft: true
 ---
 In this article, we finally put all our understanding of **Vector Calculus** to use by showing why and how **Lagrange Multipliers** work. We will be focusing on several important ideas, but the most important one is around the **linearisation of spaces at a local level**, which might not be smooth globally. The **Implicit Function Theorem** will provide a strong statement around the conditions necessary to satisfy this.
 
