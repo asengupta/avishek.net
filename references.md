@@ -5,11 +5,12 @@ title: Book References
 ## Machine Learning Theory
 - **Linear Algebra: Theory, Intuition, Code** : *Mike X Cohen*
 - **Introduction to Linear Algebra** : *Gilbert Strang*
+- **Vector Calculus, Linear Algebra and Differential Forms: A Unified Approach** : *John H. Hubbard, Barbara Burke Howard*
+- **Multivariate Calculus and Geometry** : *Sean Dineen*
 - **Mathematics for Machine Learning** : *Marc Peter Deisenroth*, *A. Aldo Faisal*, *Cheng Soon Ong*
 - **Knowledge Discovery with Support Vector Machines** : *Lutz H. Hamel*
 - **Machine Learning: A Probabilistic Perspective** : *Kevin P. Murphy*
 - **Nonlinear Programming** : *Peter Zörnig*
-- **Statstical Rethinking** : *Richard McElreath*
 - **Statstical Rethinking** : *Richard McElreath*
 - **Neural Networks and Learning Machines** : *Simon Haykin*
 - **Artificial Intelligence Engines** : *James Stone*

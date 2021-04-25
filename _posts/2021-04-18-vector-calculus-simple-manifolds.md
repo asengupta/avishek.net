@@ -209,7 +209,7 @@ $$
 where the subscript $$X$$ indicates we are differentiating with respect to the vector $$X=(x_1,x_2,...,x_n)$$.
 
 ## Tangent Spaces
-The exercise in the section Level Sets leads directly from the one-dimensional case to a discussion on Tangent Spaces in higher dimensions
+The exercise in the section Level Sets leads directly from the one-dimensional case to a discussion on Tangent Spaces in higher dimensions.
 
 ## Parameterisation in an underdetermined system of Linear Equations
 ---SOME TEXT---
