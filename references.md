@@ -24,7 +24,6 @@ title: Book References
 ## Distributed Systems
 - **Designing Data-Intensive Applications**: *Martin Kleppmann*
 - **Streaming Systems**: *Tyler Akidau*, *Slava Chernyak*, *Reuven Lax*
-- **Streaming Systems**: *Tyler Akidau*, *Slava Chernyak*, *Reuven Lax*
 - **Distributed Algorithms: A Verbose Tour**: *Fourré Sigs*
 - **Distributed Algorithms**: *Nancy Lynch*
 
@@ -33,3 +32,7 @@ title: Book References
 - **Algorithms**: *Robert Sedgewick*, *Kevin Wayne*
 - **Monolith to Microservices**: *Sam Newman*
 - **Technology Strategy Patterns: Architecture as Strategy**: *Eben Hewitt*
+
+## Web Resources
+- http://alexhwilliams.info/itsneuronalblog/2016/03/27/pca/
+- https://distill.pub/2019/visual-exploration-gaussian-processes/
