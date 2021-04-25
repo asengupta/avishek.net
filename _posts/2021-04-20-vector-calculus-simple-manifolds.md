@@ -15,10 +15,9 @@ We will motivate most of the theory by illustrating the two-dimensional case in 
 
 Before we delve into the material proper, let's look at the big picture approach that you will go through as part of this.
 
-- Required Review Material
 - Orthogonal Complements
 - Graphs and Level Sets
-- Gradients and Jacobians (basic stuff, not covering)
+- Gradients and Jacobians (We will not cover the basic material here too much, there may be other standalone posts about them, though)
 - Tangent Spaces
 - Parameterisation in an underdetermined system of Linear Equations
 
