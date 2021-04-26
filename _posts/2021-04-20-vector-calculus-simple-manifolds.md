@@ -38,7 +38,7 @@ One (obvious) fact is that the dimensionality of the ambient vector space $$V$$ 
 
 $$dim(V)\geq dim(S) \| S\in {C(A), R(A), LN(A), N(A)}$$
 
-We will make more precise statements about these relationships in the next section on $$Rank-Nullity Theorem$$.
+We will make more precise statements about these relationships in the next section on **Rank-Nullity Theorem**.
 
 ## Rank Nullity Theorem
 The **Rank Nullity** Theorem states that the sum of the dimensionality of the column space (rank) and that of its orthogonal complement, **left null space**, (**nullity**) is equal to the **dimension of the vector space they are embedded in**.
