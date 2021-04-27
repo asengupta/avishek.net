@@ -14,10 +14,10 @@ We will then restate this in terms of **Lagrange multipliers**.
 
 The structure of this article follows this sequence.
 
-- Constrained Critical Points in Two Dimensions
-- Constrained Critical Points in the General Case
-- Lagrangian Formulation
-- Extension to Nonlinear Constraints: Implicit Function Theorem
+- **Constrained Critical Points** in Two Dimensions
+- **Constrained Critical Points** in the **General Case**
+- **Lagrangian** Formulation and **Proof**
+- Extension to **Nonlinear Constraints**: Implicit Function Theorem
 
 We start with two important preliminaries.
 
@@ -267,14 +267,14 @@ T_{X1}=\begin{bmatrix}
 \end{bmatrix}
 $$
 
-This represents the parametric form of a vector in the tangent space of the manifold. Just like the $$y=x^2$$, where we had the parametric tangent vector as $$
+This represents the **parametric form** of a vector in the **tangent space** of the manifold. Just like the $$y=x^2$$, where we had the parametric tangent vector as $$
 \begin{bmatrix}
 1 \\
 2x
 \end{bmatrix}
 $$
 
-this one tells us how much the vector will change for a unit change along the $$u_1$$ basis vector. Remember, we had $$n$$ constraint equations, so all tangent vectors can be expressed as a combination of $$m$$ linearly independent vectors, and $$u_1$$ is one of them.
+, this one tells us how much the vector will change for a unit change along the $$u_1$$ basis vector. Remember, we had $$n$$ constraint equations, so all tangent vectors can be expressed as a combination of $$m$$ linearly independent vectors, and $$u_1$$ is one of them.
 
 So, **each entry in the $$1 \times m$$ output represents the dot product between the gradient vector and one of the $$m$$ tangent vectors**.
 
@@ -289,7 +289,9 @@ Taking the composite function $$f \circ G$$ allows us to change the problem from
 
 The output of $$\mathbf{D_{(U,V)}f}$$ is a $$1 \times m$$ vector, which we'd like to set to zero. This also implies an important result: **at the critical point, the gradient vector is perpendicular to every tangent vector**. This can also be restated as: **the tangent space (the space spanned by the $$m$$ tangent vectors) belongs to the kernel of $$\nabla f$$**. Note that I did not say that it **is** the kernel of $$\nabla f$$, merely that it **belongs** to that kernel.
 
-Mathematically, to find an optimum point, given a set of constraints, we can write the following condition:
+Now, usually when we attempt to find the optimum point on a function (in this case, say $$f(U,V)$$), we would want to take its derivative and set it to zero. However, **in the presence of other constraints**, the point that we seek is not necessarily the global maximum/minimum, since that point (or those points) are **not necessarily guaranteed to satisfy the constraints simultaneously**. **We still want a maximum/minimum, but we also want it to live on the constraint manifold.** What we can say is that the **direction derivative** of the function $$f(U,V)$$ in the direction of any vector in its tangent space will go to zero.
+
+Restated another way, **the gradient normal vector of the function $$F(U,V)$$ is orthogonal to every vector in the tangent space of $$F(U,V)$$**. Since orthogonality implies a dot product of zero, given the constraints we have, we can write the following condition as necessary for finding a **critical point**:
 
 $$
 \mathbf{
