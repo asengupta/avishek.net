@@ -205,10 +205,12 @@ The exercise in the section on **Level Sets** leads directly from the one-dimens
 Remember the equation to find the tangent space in one dimension, where we represented one variable in terms of the other? I reproduce it below for reference:
 
 $$
-y-y_0=\frac{\partial y}{\partial x}(x-x_0)
+y-y_0=\frac{dy}{dx}(x-x_0)
 $$
 
-Here, we have simply replaced the concrete values with $$(x_0,y_0)$$. Now, consider any equation of three variables. As an example:
+Here, we have simply replaced the concrete values with $$(x_0,y_0)$$. This is usually referred to as the **parametric form of a linear function**. It tells you how much $$y$$ when you change $$x$$ by a certain value. Specifically, it also tells you how much $$y$$ changes by, when you change $$x$$ by 1.This value is also, unsurprisingly, the slope of the linear function, represented here as $$\frac{\partial y}{\partial x}$$. Any vector on this linear function can be represented as $$\begin{bmatrix}1 \\ \frac{dy}{dx}\end{bmatrix}.t$$
+
+Now, consider any equation of three variables. As an example:
 
 $$
 x+2y+3z=0
