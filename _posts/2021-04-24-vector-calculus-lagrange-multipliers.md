@@ -12,17 +12,19 @@ We will then restate this in terms of **Lagrange multipliers**.
 
 **Note**: This article pulls a lot of understanding together, so be sure to have understood the material in [Vector Calculus: Graphs, Level Sets, and Linear Manifolds]({%post_url 2021-04-20-vector-calculus-simple-manifolds%}), before delving into this article, or you might get thoroughly confused.
 
-- Constrained Critical Points
-- Lagrangian Formulation without Paramterisation
-- Implicit Function Theorem
+The structure of this article follows this sequence.
 
-We start with two important ideas that we reviewed.
+- Constrained Critical Points in Two Dimensions
+- Constrained Critical Points in the General Case
+- Lagrangian Formulation
+- Extension to Nonlinear Constraints: Implicit Function Theorem
 
-- Function Composition 
+We start with two important preliminaries.
+
+- Function Composition
 - Chain Rule and Functions as Objects
-- Constraints are not necessarily linear
 
-## Function Composition and Functions as Objects
+## Preliminary: Function Composition and Functions as Objects
 Let us assume that:
 
 $$
@@ -42,7 +44,7 @@ We can borrow our intuition of **function pipelines in programming** to make sen
 
 You can do **symbolic manipulation** to directly substitute $$g(x)$$ into $$F(x)$$ to get $$F(x)=x.x^2=x^3$$. Either way, that's how function composition works. We introduce this because it will be used to build in the constraints for our optimisation problem, and we will see how **taking derivatives of composed functions translates to the dot product of linear transformations**.
 
-## Gradients and Tangent Spaces
+## Preliminary: Chain Rule
 Let us continue with the above example. Assume that:
 
 $$
@@ -133,7 +135,7 @@ $$**
 The above simple two-dimensional case will serve as our starting point. We now generalise in two conceptual directions.
 
 ## Generalisation to Multiple Constraints
-Recall what we spoke about systems of linear equations in [Vector Calculus: Graphs, Level Sets, and Linear Manifolds]({%post_url 2021-04-20-vector-calculus-simple-manifolds%}). Specifically, if there are $$n$$ variables, and $$n-k$$ equations, we can parametrically specify $$n-k$$ variables in terms of the other $$k$$ free variables.
+Recall what we spoke about systems of linear equations in [Vector Calculus: Graphs, Level Sets, and Linear Manifolds]({%post_url 2021-04-20-vector-calculus-simple-manifolds%}). Specifically, **if there are $$n$$ variables, and $$n-k$$ equations, we can parametrically specify $$n-k$$ variables in terms of the other $$k$$ free variables**.
 
 We can generalise the above dot product derivation for this general case. Before we do this, in order to avoid the ugly-looking $$n-k$$ expression, we restate the above as:
 
@@ -167,6 +169,7 @@ u_m \\
 \vdots \\
 \phi_n
 \end{bmatrix} \\
+\\
 \Rightarrow G(U)=(U,V) \\
 f(u_1, u_2, u_3, ..., u_m, v_1, v_2, v_3, ..., v_n)
 $$
@@ -179,7 +182,7 @@ D_UF=\frac{\partial f}{\partial (u_1, u_2, u_3, ..., u_m)} \\
 =\frac{\partial f}{\partial (u_1, u_2, u_3, ..., u_m, \phi_1, \phi_2, \phi_3, ..., \phi_n)}.\frac{\partial G}{(u_1, u_2, u_3, ..., u_m)}
 $$
 
-**The first term immediately reduces to $$D_uf$$**, where $$u=(u_1, u_2, u_3, ..., u_m)$$. Let's look at the second term, because that is going to take the derivative of $$G$$, which is no longer a simple function, but a **matrix of functions**.
+**The first term immediately reduces to $$D_{U,V}f$$**, where $$u=(u_1, u_2, u_3, ..., u_m)$$. Let's look at the second term, because that is going to take the derivative of $$G$$, which is no longer a simple function, but a **matrix of functions**.
 
 $$
 \frac{\partial G}{(u_1, u_2, u_3, ..., u_m)}=
@@ -198,7 +201,7 @@ $$
 \end{bmatrix} \\
 $$
 
-Yes, that is a lot of partial derivatives. But, as you can guess, most of this will be dramatically simplified. Note the first $$m$$ rows: all but one column in each of those $$m$$ rows will become zero. This simplifies to:
+Yes, that is a lot of partial derivatives. But, as you can guess, most of this will be dramatically simplified. Note the first $$m$$ rows: **all but one column in each of those $$m$$ rows will become zero**. This simplifies to:
 
 $$
 \frac{\partial G}{(u_1, u_2, u_3, ..., u_m)}=
@@ -218,6 +221,7 @@ $$
 $$
 
 To simplify notation further, we can collapse a lot of the above:
+
 $$
 \frac{\partial G}{\partial U}=
 \begin{bmatrix}
@@ -226,7 +230,7 @@ I_{m \times m} \\
 \end{bmatrix}
 $$
 
-Plugging this back into the equation for $$D_UF$$, we get:
+where $$I_{m \times m}$$ stands for an $$m \times m$$ identity matrix. Plugging this back into the equation for $$D_UF$$, we get:
 
 $$
 \mathbf{
@@ -247,9 +251,8 @@ I_{m \times m} \\
 
 This is still in the same form as the simple case that we described above. The above resolves to $$1 \times m$$ matrix. It will be instructive to study the columns of this matrix $$T_X$$.
 
-The left expression is simply the gradient vector, which is the vector normal to the surface of the curve $$f(U,V)$$, which is a $$1 \times (m+n)$$ 
+The left expression is simply the **gradient vector**, which is the vector normal to the surface of the curve $$f(U,V)$$, which is a $$1 \times (m+n)$$ 
 What can we say about the columns of $$T_X$$? Let's look at the first column. It is:
-
 
 $$
 T_{X1}=\begin{bmatrix}
@@ -273,16 +276,16 @@ $$
 
 this one tells us how much the vector will change for a unit change along the $$u_1$$ basis vector. Remember, we had $$n$$ constraint equations, so all tangent vectors can be expressed as a combination of $$m$$ linearly independent vectors, and $$u_1$$ is one of them.
 
-So, each entry in the $$1 \times m$$ output represents the dot product between the gradient vector and one of the $$m$$ tangent vectors.
+So, **each entry in the $$1 \times m$$ output represents the dot product between the gradient vector and one of the $$m$$ tangent vectors**.
 
 ## Optimising the Cost Function
-Let's take a step back and look at what we have done from a big-picture perspective. We have a function $$f$$ of $$m+n$$ variables that we'd like to optimise, subject to $$n$$ constraints, expressed as equations. We took those constraints, and solved the linear system of equations to end up with $$n$$ variables being expressed as a linear combination of $$m$$ linearly independent vectors.
+Let's take a step back and look at what we have done from a big-picture perspective. We have a function $$f$$ of $$m+n$$ variables that we'd like to optimise, subject to $$n$$ constraints, expressed as equations. **We took those constraints, and solved the linear system of equations to end up with $$n$$ variables being expressed as a linear combination of $$m$$ linearly independent vectors.**
 
-These $$m$$ vectors are all that are needed to completely determine the tangent space of the constraint manifold. They are tangent vectors because they are vectors expressed as linear functions with the weights being the slopes of the constraint equations.
+These $$m$$ vectors are all that are needed to completely determine the tangent space of the **constraint manifold**. They are **vectors in the tangent space** because they are **vectors expressed as linear functions with the weights being the slopes of the constraint equations**.
 
-Taking the composite function $$f \circ G$$ allows us to change the problem from a constrained problem to an unconstrained optimisation problem, because the constraints are already expressed between the relationships of the $$u_i$$ and $$v_i$$ variables.
+Taking the composite function $$f \circ G$$ allows us to change the problem from a **constrained problem to an unconstrained optimisation problem**, because the **constraints are already expressed between the relationships of the $$U$$ set and $$V$$ sets of variables**.
 
-In calculus, to find the optimum, we need to take the derivative and set it to zero, to find the critical point. This many be a maximum or a minimum, and that usually depends upon what the second derivative looks like, but we will postpone discussion for later.
+**In calculus, to find the critical point, we need to take the derivative and set it to zero. This many be a **maximum** or a **minimum**, and that usually depends upon what the **second derivative** looks like, but we will postpone discussion for later.
 
 The output of $$\mathbf{D_{(U,V)}f}$$ is a $$1 \times m$$ vector, which we'd like to set to zero. This also implies an important result: **at the critical point, the gradient vector is perpendicular to every tangent vector**. This can also be restated as: **the tangent space (the space spanned by the $$m$$ tangent vectors) belongs to the kernel of $$\nabla f$$**. Note that I did not say that it **is** the kernel of $$\nabla f$$, merely that it **belongs** to that kernel.
 
@@ -300,15 +303,15 @@ where:
 - $$\mathbf{D_{(U,V)}f}$$ is $$\mathbf{1 \times m}$$.
 
 ## Proof of Lagrange Multipliers
-We are about three-quarters of the way done. We have proved that the tangent space belongs to the kernel (null space) of the gradient vector. But we haven't gotten to proving the assertion about Lagrange multipliers yet. What we really need to prove is that the gradient vector can be expressed as linear combinations of [TODO FINISH THIS]
+We are about three-quarters of the way done. **We have proved that the tangent space belongs to the kernel (null space) of the gradient vector.** But we haven't gotten to proving the assertion about **Lagrange Multipliers** yet. What we really need to prove is that the **gradient vector can be expressed as linear combinations of the vectors in tangent space**, which will lead us directly to the conclusion we are hoping to prove.
 
-We need to express another identity, using the level sets of the **original** constraint functions themselves. If you remember, $$G$$ has been derived through row reduction techniques from the original $$n$$ constraint functions. Let's call them $$h_i$$, and define them as below:
+We need to express another identity, using the **level sets of the original constraint functions** themselves. If you remember, $$G$$ has been derived through row reduction techniques from the original $$n$$ constraint functions. Let's call them $$h_i$$, and define them as below:
 
 $$
 h_1(u_1,u_2,u_3,...,u_m,v_1,v_2,v_3,...,v_n)=c_1 \\
 h_2(u_1,u_2,u_3,...,u_m,v_1,v_2,v_3,...,v_n)=c_2 \\
 h_3(u_1,u_2,u_3,...,u_m,v_1,v_2,v_3,...,v_n)=c_3 \\
-\\vdots
+\\vdots \\
 h_n(u_1,u_2,u_3,...,u_m,v_1,v_2,v_3,...,v_n)=c_n
 $$
 
@@ -326,18 +329,20 @@ $$
 $$
 
 If we define:
+
 $$
 H=\begin{bmatrix}
 h_1 \\
 h_2 \\
-\vdots
+\vdots \\
 h_n \\
 \end{bmatrix}
 $$
 
 We can write:
+
 $$
-\mathbf{D_{(U,V)H}.T_X=0}
+\mathbf{D_{(U,V)}H.T_X=0}
 $$
 
 Do check that the indexes match: $$H$$ is $$m \times (m+n)$$, and $$T_X$$ is $$(m+n) \times m$$, so yes, they are compatible.
@@ -346,7 +351,7 @@ We now have these two identities:
 
 $$
 \mathbf{
-D_{(U,V)}f=\nabla f.T_X=0 \\
+D_{(U,V)}f.T_X=\nabla f.T_X=0 \\
 D_{(U,V)}H.T_X=0
 }
 $$
@@ -364,23 +369,23 @@ $$
 This implies that:
 
 $$
-C(T_X) \subset N(Df) = R^{\perp}(Df)\\
-C(T_X) \subset N(DH) = R^{\perp}(DH)
+C(T_X) \subset N(Df) = {R(Df)}^{\perp}\\
+C(T_X) \subset N(DH) = {R(DH)}^{\perp}
 $$
 
 Let us make some observations on the ranks of these matrices:
 
 - $$T_X$$ is $$(m+n) \times m$$, but has rank $$m$$. $$f$$ is $$1\times (m+n)$$. $$f$$ can have at most rank 1.
-- $$T_X$$ is $$(m+n) \times m$$, but has rank $$m$$. $$H$$ is $$n \times (m+n)$$, so its maximum column/row rank is $$n$$. Then, by the Rank-Nullity Theorem, its left null space/null space has a rank $$m$$.
+- $$T_X$$ is $$(m+n) \times m$$, but has rank $$m$$. $$H$$ is $$n \times (m+n)$$, so its maximum column/row rank is $$n$$. Then, by the Rank-Nullity Theorem, its left null space/null space has rank $$m$$.
 
-$$C(T_X)$$ and $$R^{\perp}(DH)$$ have the same rank $$m$$. Thus they are equal. This implies that:
+$$C(T_X)$$ and $${R(DH)}^{\perp}$$ have the same rank $$m$$. Thus they are equal. This implies that:
 
-$$R^{\perp}(DH) \subset R^{\perp}(Df)$$
+$${R(DH)}^{\perp} \subset {R(Df)}^{\perp}$$
 
 By the **Subset Rule**, we can say:
 
 $$
-{(R^{\perp}(DH))}^{\perp} \supset {(R^{\perp}(Df))}^{\perp} \\
+{({R(DH)}^{\perp})}^{\perp} \supset {({R(Df)}^{\perp})}^{\perp} \\
 \Rightarrow R(DH) \supset R(Df)
 $$
 
@@ -391,7 +396,7 @@ Check the indexes again:
 
 This implies that the row span of $$Df$$ is contained within the row span of $$DH$$. To put it another way:
 
-The row vector of $$Df$$ can be expressed as a linear combination of the row vectors of $$DH$$.
+**The row vector of $$Df$$ can be expressed as a linear combination of the row vectors of $$DH$$.**
 
 Thus, we can write:
 
