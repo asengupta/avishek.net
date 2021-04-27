@@ -12,8 +12,20 @@ We will then restate this in terms of **Lagrange multipliers**.
 
 **Note**: This article pulls a lot of understanding together, so be sure to have understood the material in [Vector Calculus: Graphs, Level Sets, and Linear Manifolds]({%post_url 2021-04-20-vector-calculus-simple-manifolds%}), before delving into this article, or you might get thoroughly confused.
 
-The structure of this article follows this sequence.
+## Definition of a Manifold
+Let us make precise the definition of a manifold now.
 
+We've looked at a system of $$k$$ linear equations of $$n$$ variables, where $$n-k$$ variables were expressed in terms of $$k$$ independent variables. If we remove the requirement of these equations being linear, then the solution space, i.e., the set of points $$(x_1, x_2,..., x_n)$$ which satisfy this system, constitutes a **k-manifold** in $$\mathbb{R}^n$$.
+
+- For a single equation, a manifold is simply the graph of that function.
+- For multiple equations, a manifold is essentially the set of points which satisfy all of those equations. For example:
+    - If we had two equations of intersecting lines in $$\mathbb{R}^2$$, then the manifold would simply be the point of intersection.
+    - If we had two equations of intersecting planes in $$\mathbb{R}^3$$, the manifold would be the line of intersection of those two planes.
+    - All vector subspaces are manifolds.
+
+![Examples of Manifolds](/assets/images/manifold-examples.png)
+
+The structure of this article follows this sequence.
 - **Constrained Critical Points** in Two Dimensions
 - **Constrained Critical Points** in the **General Case**
 - **Lagrangian** Formulation and **Proof**
@@ -106,7 +118,10 @@ D_xf(x,g)=g+x.2x=g(x)+2x^2 \\
 = 3x^2
 $$
 
-Yes, that was a complicated way of computing the same result we got earlier, but I want you to see the mechanics involved in applying the **Chain Rule** in the case of partial derivatives. More importantly, let us revisit the intermediate expression we used, namely:
+Yes, that was a complicated way of computing the same result we got earlier, but I want you to see the mechanics involved in applying the **Chain Rule** in the case of partial derivatives.
+
+## Constrained Critical Points in Two Dimensions
+The previous example can be reused to illustrate the concept of constrained critical points in two dimensions. Let us revisit the intermediate expression we used, namely:
 
 $$
 D_xf(x,g)=\left[\frac{\partial f(x,g)}{\partial x} \hspace{3mm} \frac{\partial f(x,g)}{\partial g} \right].\frac{d\Phi (x)}{dx}
@@ -124,6 +139,12 @@ $$**
 
 **Important Note**: Note that $$T_x$$ is **not** the normal vector to the tangent, but the actual vector along the tangent.
 
+The picture below shows the situation. The function $$f(x,y)=xy$$ is the function to be optimised. However, setting $$y=x^2$$, and substituting it into $$f(x,y)$$ so that it becomes $$f(x,g(x))$$ immediately constrains the y-coordinate to always be such that for any $$x$$, the point is always forced to move along the curve $$y=x^2$$, regardless of which level set of $$f(x,g(x))$$ is chosen.
+
+![Constrained Critical Points](/assets/images/constrained-critical-points-2d.png)
+
+**Note**: The above example isn't the best example because attempting to find a constrained critical point in this situation will result in $$(0,undefined)$$ on the curve, but the identities we derive here, still hold. We solve a more feasible problem next.
+
 If we have a point $$P$$ which satisfies $$g(x)$$, i.e., has the coordinates $$(x_0, g(x_0))$$, then the following holds:
 
 **$$
@@ -131,6 +152,42 @@ D_xf(P)=\nabla f(P).T_x
 $$**
 
 **The above expression represents the dot product of the gradient vector and the tangent vector at a point P which exists on the curve of the function defined by $$f(x,y)=xy$$ and satisfies the constraint $$g(x)=x^2$$.**
+
+Let us look at a problem with a proper solution.
+
+$$
+f(x)=xy \\
+y=g(x)=y=4-x
+$$
+
+Let's use the result we derived above. We have:
+
+$$
+\nabla f=\begin{bmatrix}y && x\end{bmatrix} \\
+\frac{d\Phi}{dx}=\begin{bmatrix}1 \\ -1\end{bmatrix}
+$$
+
+Multiplying the two, we get:
+
+$$
+D_xf=\nabla f.T_x=\begin{bmatrix}y && x\end{bmatrix}.\begin{bmatrix}1 \\ -1\end{bmatrix}=y-x=(4-x)-x=4-2x
+$$
+
+Setting the above to zero, we get:
+
+$$
+4-2x=0
+\Rightarrow x=2
+\Rightarrow y=2
+$$
+
+which is the solution we seek. Substituting $$x=2$$ back into $$f(x,y)=xy$$ gives us the correct level set, i.e., $$xy=4$$. The solution is shown below.
+
+![Point Manifold](/assets/images/parabola-straight-line-constrained-critical-point.png)
+
+The constrained critical point is $$(2,2)$$. **Note that this is different from finding an intersection between two curves.** There are an infinite number of $$xy=C$$ equations which can intersect with $$y=x^2$$. For example, $$xy=2$$ intersects with the constraint line in two places, But that does not maximise the value of $$xy$$.
+
+You will have also noticed that the curve containing the constrained critical point is tangent to the constraint curve (straight line, in this case). This is not a coincidence, as we will see when we get to the generalised, higher-dimensional case.
 
 The above simple two-dimensional case will serve as our starting point. We now generalise in two conceptual directions.
 
@@ -281,7 +338,7 @@ So, **each entry in the $$1 \times m$$ output represents the dot product between
 ## Optimising the Cost Function
 Let's take a step back and look at what we have done from a big-picture perspective. We have a function $$f$$ of $$m+n$$ variables that we'd like to optimise, subject to $$n$$ constraints, expressed as equations. **We took those constraints, and solved the linear system of equations to end up with $$n$$ variables being expressed as a linear combination of $$m$$ linearly independent vectors.**
 
-These $$m$$ vectors are all that are needed to completely determine the tangent space of the **constraint manifold**. They are **vectors in the tangent space** because they are **vectors expressed as linear functions with the weights being the slopes of the constraint equations**.
+These $$m$$ vectors are all that are needed to completely determine the tangent space of the **constraint manifold**. They are **vectors in the tangent space** because they are vectors expressed as linear functions with the weights being the slopes of the constraint equations.
 
 Taking the composite function $$f \circ G$$ allows us to change the problem from a **constrained problem to an unconstrained optimisation problem**, because the **constraints are already expressed between the relationships of the $$U$$ set and $$V$$ sets of variables**.
 
@@ -303,6 +360,10 @@ where:
 - $$\mathbf{\nabla f}$$ is $$\mathbf{1 \times (m+n)}$$
 - $$\mathbf{T_X}$$ is $$\mathbf{(m+n)\times m}$$
 - $$\mathbf{D_{(U,V)}f}$$ is $$\mathbf{1 \times m}$$.
+
+The figure below shows a simplified situation.
+
+![Gradient Normal Vector orthogonal to Tangent Space](/assets/images/orthogonal-gradient-vector-tangent-space.png)
 
 ## Proof of Lagrange Multipliers
 We are about three-quarters of the way done. **We have proved that the tangent space belongs to the kernel (null space) of the gradient vector.** But we haven't gotten to proving the assertion about **Lagrange Multipliers** yet. What we really need to prove is that the **gradient vector can be expressed as linear combinations of the vectors in tangent space**, which will lead us directly to the conclusion we are hoping to prove.
