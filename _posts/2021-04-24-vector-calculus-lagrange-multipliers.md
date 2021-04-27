@@ -137,12 +137,12 @@ Recall what we spoke about systems of linear equations in [Vector Calculus: Grap
 
 We can generalise the above dot product derivation for this general case. Before we do this, in order to avoid the ugly-looking $$n-k$$ expression, we restate the above as:
 
-If there are $$N$$ variables, and $$n$$ equations, we can parametrically specify $$n$$ variables in terms of the other $$m$$ free variables. Also, obviously, $$m+n=N$$.
+**If there are $$N$$ variables, and $$n$$ equations, we can parametrically specify $$n$$ variables in terms of the other $$m$$ free variables.** Also, obviously, $$m+n=N$$. Let the independent variables be $$U=(u_1, u_2, u_3,...,u_m)$$, and the dependent variables be $$V=(v_1, v_2, v_3,...,v_m)$$
 
 Now we write:
 
 $$
-\Phi=\begin{bmatrix}
+G(U)=\begin{bmatrix}
 u_1 \\
 u_2 \\
 u_3 \\
@@ -167,11 +167,11 @@ u_m \\
 \vdots \\
 \phi_n
 \end{bmatrix} \\
-
+\Rightarrow G(U)=(U,V) \\
 f(u_1, u_2, u_3, ..., u_m, v_1, v_2, v_3, ..., v_n)
 $$
 
-You should be able to recognise both of the above as the higher-dimensional analogs of the simple two-dimensional case we looked at earlier.
+You should be able to recognise both of the above as the **higher-dimensional analogs of the simple two-dimensional case** we looked at earlier.
 
 $$
 F(u_1, u_2, u_3, ..., u_m)=f \circ G \\
@@ -179,7 +179,7 @@ D_UF=\frac{\partial f}{\partial (u_1, u_2, u_3, ..., u_m)} \\
 =\frac{\partial f}{\partial (u_1, u_2, u_3, ..., u_m, \phi_1, \phi_2, \phi_3, ..., \phi_n)}.\frac{\partial G}{(u_1, u_2, u_3, ..., u_m)}
 $$
 
-The first one immediately reduces to $$D_uf$$, where $$u=(u_1, u_2, u_3, ..., u_m)$$. Let's look at the second term, because that is going to take the derivative of $$G$$, which is no longer a simple function, but a matrix of functions.
+**The first term immediately reduces to $$D_uf$$**, where $$u=(u_1, u_2, u_3, ..., u_m)$$. Let's look at the second term, because that is going to take the derivative of $$G$$, which is no longer a simple function, but a **matrix of functions**.
 
 $$
 \frac{\partial G}{(u_1, u_2, u_3, ..., u_m)}=
@@ -245,7 +245,162 @@ I_{m \times m} \\
 \end{bmatrix}
 }$$
 
-This is still in the same form as the simple case that we described above. The above resolves to $$1 \times m$$ matrix.
+This is still in the same form as the simple case that we described above. The above resolves to $$1 \times m$$ matrix. It will be instructive to study the columns of this matrix $$T_X$$.
+
+The left expression is simply the gradient vector, which is the vector normal to the surface of the curve $$f(U,V)$$, which is a $$1 \times (m+n)$$ 
+What can we say about the columns of $$T_X$$? Let's look at the first column. It is:
+
+
+$$
+T_{X1}=\begin{bmatrix}
+1 \\
+0 \\
+\vdots \\
+0_m \\
+{\phi'}_1 \\
+{\phi'}_2 \\
+\vdots \\
+{\phi'}_n \\
+\end{bmatrix}
+$$
+
+This represents the parametric form of a vector in the tangent space of the manifold. Just like the $$y=x^2$$, where we had the parametric tangent vector as $$
+\begin{bmatrix}
+1 \\
+2x
+\end{bmatrix}
+$$
+
+this one tells us how much the vector will change for a unit change along the $$u_1$$ basis vector. Remember, we had $$n$$ constraint equations, so all tangent vectors can be expressed as a combination of $$m$$ linearly independent vectors, and $$u_1$$ is one of them.
+
+So, each entry in the $$1 \times m$$ output represents the dot product between the gradient vector and one of the $$m$$ tangent vectors.
+
+## Optimising the Cost Function
+Let's take a step back and look at what we have done from a big-picture perspective. We have a function $$f$$ of $$m+n$$ variables that we'd like to optimise, subject to $$n$$ constraints, expressed as equations. We took those constraints, and solved the linear system of equations to end up with $$n$$ variables being expressed as a linear combination of $$m$$ linearly independent vectors.
+
+These $$m$$ vectors are all that are needed to completely determine the tangent space of the constraint manifold. They are tangent vectors because they are vectors expressed as linear functions with the weights being the slopes of the constraint equations.
+
+Taking the composite function $$f \circ G$$ allows us to change the problem from a constrained problem to an unconstrained optimisation problem, because the constraints are already expressed between the relationships of the $$u_i$$ and $$v_i$$ variables.
+
+In calculus, to find the optimum, we need to take the derivative and set it to zero, to find the critical point. This many be a maximum or a minimum, and that usually depends upon what the second derivative looks like, but we will postpone discussion for later.
+
+The output of $$\mathbf{D_{(U,V)}f}$$ is a $$1 \times m$$ vector, which we'd like to set to zero. This also implies an important result: **at the critical point, the gradient vector is perpendicular to every tangent vector**. This can also be restated as: **the tangent space (the space spanned by the $$m$$ tangent vectors) belongs to the kernel of $$\nabla f$$**. Note that I did not say that it **is** the kernel of $$\nabla f$$, merely that it **belongs** to that kernel.
+
+Mathematically, to find an optimum point, given a set of constraints, we can write the following condition:
+
+$$
+\mathbf{
+D_{(U,V)}f=\nabla f.T_X=0
+}
+$$
+
+where:
+- $$\mathbf{\nabla f}$$ is $$\mathbf{1 \times (m+n)}$$
+- $$\mathbf{T_X}$$ is $$\mathbf{(m+n)\times m}$$
+- $$\mathbf{D_{(U,V)}f}$$ is $$\mathbf{1 \times m}$$.
+
+## Proof of Lagrange Multipliers
+We are about three-quarters of the way done. We have proved that the tangent space belongs to the kernel (null space) of the gradient vector. But we haven't gotten to proving the assertion about Lagrange multipliers yet. What we really need to prove is that the gradient vector can be expressed as linear combinations of [TODO FINISH THIS]
+
+We need to express another identity, using the level sets of the **original** constraint functions themselves. If you remember, $$G$$ has been derived through row reduction techniques from the original $$n$$ constraint functions. Let's call them $$h_i$$, and define them as below:
+
+$$
+h_1(u_1,u_2,u_3,...,u_m,v_1,v_2,v_3,...,v_n)=c_1 \\
+h_2(u_1,u_2,u_3,...,u_m,v_1,v_2,v_3,...,v_n)=c_2 \\
+h_3(u_1,u_2,u_3,...,u_m,v_1,v_2,v_3,...,v_n)=c_3 \\
+\\vdots
+h_n(u_1,u_2,u_3,...,u_m,v_1,v_2,v_3,...,v_n)=c_n
+$$
+
+More generally, we write:
+$$
+h_i(U,V)=c_i
+$$
+
+Taking the derivative, and remembering that $$U=(u_1, u_2, u_3,...,u_m)$$, $$V=(v_1, v_2, v_3,...,v_m)$$ are shorthands for the reams of variables that I'd like to not write:
+
+$$
+\frac{\partial h_i(U,V)}{\partial U}=0 \\
+\Rightarrow \frac{\partial h_i(U,V)}{\partial (U,V)}.\frac{\partial G(U)}{\partial U}=0 \\
+\Rightarrow \mathbf{D_{(U,V)h_i}.T_X=0}
+$$
+
+If we define:
+$$
+H=\begin{bmatrix}
+h_1 \\
+h_2 \\
+\vdots
+h_n \\
+\end{bmatrix}
+$$
+
+We can write:
+$$
+\mathbf{D_{(U,V)H}.T_X=0}
+$$
+
+Do check that the indexes match: $$H$$ is $$m \times (m+n)$$, and $$T_X$$ is $$(m+n) \times m$$, so yes, they are compatible.
+
+We now have these two identities:
+
+$$
+\mathbf{
+D_{(U,V)}f=\nabla f.T_X=0 \\
+D_{(U,V)}H.T_X=0
+}
+$$
+
+Let's get rid of some extraneous notation to get:
+
+$$
+\mathbf{
+Df.T_X=0 \\
+DH.T_X=0
+}
+$$
+
+
+This implies that:
+
+$$
+C(T_X) \subset N(Df) = R^{\perp}(Df)\\
+C(T_X) \subset N(DH) = R^{\perp}(DH)
+$$
+
+Let us make some observations on the ranks of these matrices:
+
+- $$T_X$$ is $$(m+n) \times m$$, but has rank $$m$$. $$f$$ is $$1\times (m+n)$$. $$f$$ can have at most rank 1.
+- $$T_X$$ is $$(m+n) \times m$$, but has rank $$m$$. $$H$$ is $$n \times (m+n)$$, so its maximum column/row rank is $$n$$. Then, by the Rank-Nullity Theorem, its left null space/null space has a rank $$m$$.
+
+$$C(T_X)$$ and $$R^{\perp}(DH)$$ have the same rank $$m$$. Thus they are equal. This implies that:
+
+$$R^{\perp}(DH) \subset R^{\perp}(Df)$$
+
+By the **Subset Rule**, we can say:
+
+$$
+{(R^{\perp}(DH))}^{\perp} \supset {(R^{\perp}(Df))}^{\perp} \\
+\Rightarrow R(DH) \supset R(Df)
+$$
+
+Check the indexes again:
+
+- $$DH$$ is $$n \times (m+n)$$, so $$n$$ row vectors of length $$(m+n)$$ each.
+- $$Df$$ is $$1 \times (m+n)$$, so 1 row vector of length $$(m+n)$$.
+
+This implies that the row span of $$Df$$ is contained within the row span of $$DH$$. To put it another way:
+
+The row vector of $$Df$$ can be expressed as a linear combination of the row vectors of $$DH$$.
+
+Thus, we can write:
+
+$$ \mathbf{
+Df=\lambda_1 Dh_1(U,V)+\lambda_2 Dh_2(U,V)+\lambda_3 Dh_3(U,V)+...+\lambda_n Dh_n(U,V)
+}
+$$
+
+The weights of these linear combinations are called **Lagrange Multipliers**.
 
 ## Generalisation to Nonlinear Functions
 
