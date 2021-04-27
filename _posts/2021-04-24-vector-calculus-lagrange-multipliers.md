@@ -12,17 +12,17 @@ We will then restate this in terms of **Lagrange multipliers**.
 
 **Note**: This article pulls a lot of understanding together, so be sure to have understood the material in [Vector Calculus: Graphs, Level Sets, and Linear Manifolds]({%post_url 2021-04-20-vector-calculus-simple-manifolds%}), before delving into this article, or you might get thoroughly confused.
 
-- Implicit Function Theorem
 - Constrained Critical Points
 - Lagrangian Formulation without Paramterisation
+- Implicit Function Theorem
 
 We start with two important ideas that we reviewed.
 
-- Function Composition and Functions as Objects
-- Chain Rule
+- Function Composition 
+- Chain Rule and Functions as Objects
 - Constraints are not necessarily linear
 
-## Functions are Objects
+## Function Composition and Functions as Objects
 Let us assume that:
 
 $$
@@ -30,10 +30,27 @@ f(x,y)=xy \\
 y=g(x)=x^2
 $$
 
-then the notation $$F=f\circ g$$ represents function composition, where represents a function $$F$$ which has the same output as $$f(x,g(x))$$ (in this example). Also note that $$F$$ is a function of only $$x$$. In texts, $$f(x,y)$$ is written as $$f(x,g(x))$$ and is equivalent to the above form.
+Then the notation $$\mathbf{F=f\circ g}$$ represents function composition, where represents a function $$F$$ which has the same output as $$f(x,g(x))$$ (in this example). Also note that $$F$$ is a function of only $$x$$. In texts, $$f(x,y)$$ is written as $$f(x,g(x))$$ and is equivalent to the above form.
 
-Do not let the fact that there is a function in the parameter of $$f$$ confuse you; treat it as you would any other variable. If you know th actual expression $$f(x,g)$$, you can differentiate with respect to $$g$$ if needed. After all, $$g(x)$$ is essentially $$y$$.
-Writing it as $$f(x,g(x))$$ is notational shorthand for expressing that y is not really a free variable, it is expressed in terms of $$x$$. Moreover $$D_xF(x)$$ is the same thing as writing $$Df(x,g(x))$$.
+Do not let the fact that there is a function in the parameter of $$f$$ confuse you; treat it as you would any other variable. If you know the actual expression $$f(x,g)$$, you can differentiate with respect to $$g$$ if needed. After all, $$g(x)$$ is essentially $$y$$.
+
+Writing it as $$f(x,g(x))$$ is notational shorthand for expressing that $$y$$ is not really a free variable, it is expressed in terms of $$x$$. Moreover $$D_xF(x)$$ is the same thing as writing $$Df(x,g(x))$$.
+
+We can borrow our intuition of **function pipelines in programming** to make sense of this: an input $$x$$ enters $$g(x)$$, comes out as some output, which is then fed to the $$y$$ parameter of $$f(x,y)$$. The $$x$$ parameter is already available, so it gets applied for free (actually, while programming, you can't say things like "gets applied for free", you actually have to do the necessary plumbing to allow $$x$$ to reach $$f(x,y)$$).
+
+**Note that the composite function $$F(x)$$ takes in only one input, $$x$$.** This is because the first function that is applied is $$g(x)$$. You do not need to specify a $$y$$ -- in fact, you should not -- because the value of $$y$$ is constrained to be (in this instance) $$x^2$$.
+
+You can do **symbolic manipulation** to directly substitute $$g(x)$$ into $$F(x)$$ to get $$F(x)=x.x^2=x^3$$. Either way, that's how function composition works. We introduce this because it will be used to build in the constraints for our optimisation problem, and we will see how **taking derivatives of composed functions translates to the dot product of linear transformations**.
+
+## Gradients and Tangent Spaces
+Let us continue with the above example. Assume that:
+
+$$
+f(x,y)=xy \\
+y=g(x)=x^2
+$$
+
+Then the notation $$F=f\circ g$$ represents function composition, where $$F(x)=f(x,g(x))$$, as we have already stated.
 
 Now, if we wanted to find $$D_xf(x,g(x))$$, it is trivial to see that substituting $$x^2$$ for $$y$$ in $$f(x,y)$$ gives us $$f(x)=x^3$$, therefore:
 
@@ -41,7 +58,7 @@ $$
 D_xf(x,g(x))=3x^2
 $$
 
-However, let's look at the Chain Rule of differentiation for the above $$f(x,y)$$, because in our proofs, the actual form of $$f(x,y)$$ and $$g(x)$$ will not be available, and thus we will have to use the Chain Rule to express any results. For multivariable calculus, you may write:
+However, let's look at the **Chain Rule** of differentiation for the above $$f(x,y)$$, because in our proofs, the actual form of $$f(x,y)$$ and $$g(x)$$ will not be available, and thus we will have to use the Chain Rule to express any results. We have only **one free variable** for this composite function, i.e., $$x$$, so we may write:
 
 $$
 D_xf(x,g)=\frac{\partial f(x,g)}{\partial x} \\
@@ -49,14 +66,14 @@ D_xf(x,g)=\frac{\partial f(x,g)}{\partial x} \\
 $$
 
 Let's denote $$\Phi (x)=\begin  {bmatrix}x \\ g\end{bmatrix}$$.
-$${[x \hspace{3mm} g]}^T$$ is a vector so we are partially differentiating $$f(x,y)$$. In our example above, we can write for the first term, and substitute:
+$${[x \hspace{3mm} g]}^T$$ is a vector so we are partially differentiating $$f(x,y)$$. In our example above, we can write for the **first term**, and substitute:
 
 $$
 \frac{f(x,g)}{d[x \hspace{3mm} g]}=\left[\frac{\partial f(x,g)}{\partial x} \hspace{3mm} \frac{\partial f(x,g)}{\partial g} \right] \\
 \Rightarrow D_xf(x,y)=\left[\frac{\partial f(x,g)}{\partial x} \hspace{3mm} \frac{\partial f(x,g)}{\partial g} \right].\frac{d\Phi (x)}{dx}
 $$
 
-For the second term, we may write:
+For the **second term**, we may write:
 
 $$
 \frac{d{[x \hspace{3mm} g]}^T}{dx}=\begin{bmatrix}
@@ -87,7 +104,7 @@ D_xf(x,g)=g+x.2x=g(x)+2x^2 \\
 = 3x^2
 $$
 
-Yes, that was a complicated way of computing the same result we got earlier, but I want you to see the mechanics involved in applying the Chain Rule. More importantly, let us revisit the intermediate expression we used, namely:
+Yes, that was a complicated way of computing the same result we got earlier, but I want you to see the mechanics involved in applying the **Chain Rule** in the case of partial derivatives. More importantly, let us revisit the intermediate expression we used, namely:
 
 $$
 D_xf(x,g)=\left[\frac{\partial f(x,g)}{\partial x} \hspace{3mm} \frac{\partial f(x,g)}{\partial g} \right].\frac{d\Phi (x)}{dx}
@@ -95,7 +112,9 @@ $$
 
 If you notice carefully, **the expression $$\left[\frac{\partial f(x,g)}{\partial x} \hspace{3mm} \frac{\partial f(x,g)}{\partial g} \right]$$ exactly represents the gradient operator $$\nabla f(x,g(x))$$**.
 
-Furthermore, look at $$\frac {d\Phi (x)}{dx}=\begin{bmatrix}1 \\ \frac{dg}{dx}\end{bmatrix}$$. We can recognise this as the parametric form of the line $$\mathbf{y=g'(x).x}$$. This is because any vector on the tangent can be represented as $$\begin{bmatrix}1 \\ \frac{dg}{dx}\end{bmatrix}.t$$. As a consequence, **this is the tangent space of $$g(x)$$**. If we represent $$\frac {d\Phi (x)}{dx}$$ as $$T_x$$ (the tangent space), we can rewrite the identity as:
+Furthermore, look at $$\frac {d\Phi (x)}{dx}=\begin{bmatrix}1 \\ \frac{dg}{dx}\end{bmatrix}$$. We can recognise this as the **parametric form of the line $$\mathbf{y=g'(x).x}$$**. This is because any vector on the tangent can be represented as $$\begin{bmatrix}1 \\ \frac{dg}{dx}\end{bmatrix}.t$$.
+
+As a consequence, **this is the tangent space of $$g(x)$$**. If we represent $$\frac {d\Phi (x)}{dx}$$ as $$T_x$$ (the tangent space), we can rewrite the identity as:
 
 **$$
 D_xf(x,g)=\nabla f(x,g(x)).T_x
@@ -108,6 +127,8 @@ If we have a point $$P$$ which satisfies $$g(x)$$, i.e., has the coordinates $$(
 **$$
 D_xf(P)=\nabla f(P).T_x
 $$**
+
+**The above expression represents the dot product of the gradient vector and the tangent vector at a point P which exists on the curve of the function defined by $$f(x,y)=xy$$ and satisfies the constraint $$g(x)=x^2$$.**
 
 ## Implicit Function Theorem
 Functions come in many shapes and sizes. They aren't always necessarily linear. However, that does not mean that analysis of these nonlinear functions is intractable. Calculus makes the mostly nonlinear world around us, and tells us that we can treat any curve or surface, in any dimension, as linear if we only zoom into it close enough. It basically asks us to pretend that a complicated curve (and the corresponding function) is a linear function. This approximation is grossly wrong at larger scales, but gets better and better the more we zoom in.
