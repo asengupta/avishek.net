@@ -402,18 +402,58 @@ Thus, we can write:
 
 $$ \mathbf{
 Df=\lambda_1 Dh_1(U,V)+\lambda_2 Dh_2(U,V)+\lambda_3 Dh_3(U,V)+...+\lambda_n Dh_n(U,V)
-}
+} \\
+\\
+\square
 $$
 
 The weights of these linear combinations are called **Lagrange Multipliers**.
 
 ## Generalisation to Nonlinear Functions
+**There is an important assumption I've left unsaid.** In every example we've seen, I've always said that the **constraints represent a system of linear equations**. This might be true if our constraint equations are always straight lines, but is certainly **not** the case in other situations. Some examples of nonlinear constraints are:
+
+- $$x^2+x^3+y=3$$
+- $$xy+z=4$$
+- $$xy^4+z=4$$
+
+In all but a few "easy" cases, it is absolutely not possible to factor out variables, such that some dependent variables are expressed in terms of some independent variables. Even if that were possible, the assumption of a linear relationship would not hold.
+
+That is not the only problem. Constraint equations define the solution space such that even if the constraints are individually tractable to analyse, **the manifold formed by their intersection cannot be described by any easily-discovered equation**, linear or non-linear.
+
+For example, take a look at this beauty.
+
+![3D Manifold from Intersecting Cylinders](/assets/images/manifold-from-intersecting-cylinders.png)
+
+**The red line shows the manifold, which satisfies the equations of both these cylinders.** This intersection is not easily expressible; also it is guaranteed to be nonlinear in nature. And this is just two cylinders. It is not uncommon to have more constraint equations, all similarly nonlinear, and possibly **higher-dimensional**. We cannot even visualise such surfaces, let alone the intersections between them.
+
+**How are we to resolve this quandary?**
 
 ## Implicit Function Theorem
-Functions come in many shapes and sizes. They aren't always necessarily linear. However, that does not mean that analysis of these nonlinear functions is intractable. Calculus makes the mostly nonlinear world around us, and tells us that we can treat any curve or surface, in any dimension, as linear if we only zoom into it close enough. It basically asks us to pretend that a complicated curve (and the corresponding function) is a linear function. This approximation is grossly wrong at larger scales, but gets better and better the more we zoom in.
+Functions come in many shapes and sizes. They aren't always necessarily linear. However, that does not mean that analysis of these nonlinear functions is intractable. Calculus makes the mostly nonlinear world around us, and tells us that we can treat any curve or surface, in any dimension, as linear if we only zoom into it close enough.
 
-In optimisation, the constraints aren't always going to be linear.
-Every level set is a graph, i.e., for every equation, you can find the graph of a function where $$n-k$$ variables in the level set equation may be expressed as functions of $$k$$ independent variables, i.e., such a mapping exists locally. We could not have made the assumption of the existence of this mapping for the general case of nonlinear constraints without the Implicit Function Theorem.
+It basically asks us to pretend that a complicated curve (and the corresponding function) is a **linear function**. This approximation is grossly wrong at larger scales, but gets better and better the more we zoom in. This is essentially the concept behind tangents to curves. The slope of a tangent comes from considering two points: one point on the curve proper, and another curve in the neighbourhood of the first point, which is as close as possible to the first point, but not the same as the first point.
 
-## Lagrangian Reformulation without Paramterisation
----SOME TEXT---
+In calculus, this is termed the limit. That $$\frac{dy}{dx}$$ that we bandy about so much, essentially expresses a **linear relationship** between $$x$$ and $$y$$ at that point. This **piecewise linearity at infinitesmal scales** is what enables us to frame problems in a way that are solvable, instead of being overwhelmed by the nonlinearity of the function.
+
+In practice, we speak of **locality**: the neighbourhood of a point, as being a small non-zero-sized area around the point, smaller than you can possibly imagine. Then, you carry out your nice linear calculations in this neighbourhood, assured of the fact that you have zoomed in enough that the function looks linear.
+
+Let us return to our original quandry: **how can we even begin to find a critical point on a constraint manifold if we do not even know how to express some variables in terms of others in the constraint equations**? Remember, this parameterisation is what allows us to encode the constraints of the manifold into the function of the curve that we desire to find a critical point on.
+
+The first question we ask is: **does such a relationship even exist**? And since this is calculus, we ask **whether this relationship exists locally**, i.e., when we zoom in. Even if we only know whether it exists locally, that can still help us discover useful properties about the curve. The third question we can ask is whether we can know any aspects of this relationship.
+
+The **Implicit Function Theorem** has an answer to these questions.
+
+We will not delve much into the **Implicit Function Theorem**, merely state its results. That itself should validate the assumption around the linear relationship that we have been using all this time.
+
+The **Implicit Function Theorem** states that if a mapping $$F(x)$$ exists for a point $$c$$ such that:
+
+- $$\mathbf{F(c)=0}$$
+- $$F(c)$$ is **first order differentiable** ($$C^1$$ differentiable)
+- The derivative of F(c), i.e., $$DF(c)$$ is **onto**, i.e., for every value of $$DF(c)$$, there exists a corresponding input.
+
+then, the following holds true:
+
+- **There exists a system of linear equations $$DF(c)=0$$** which has $$n$$ pivotal variables in the level set constraint equations which can be expressed as functions of $$m$$ independent (non-pivotal) variables.
+- There is a **neighbourhood of $$c$$** where this linear relationship holds for $$F(c)=0$$.
+
+**We could not have made the assumption of the existence of this mapping for the general case of nonlinear constraints without the Implicit Function Theorem.**
