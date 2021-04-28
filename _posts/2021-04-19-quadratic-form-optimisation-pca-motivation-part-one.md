@@ -69,7 +69,10 @@ Consider a matrix $$X$$, with one observation (data point) per row, each column 
 This picture explains the idea. As you can see, we can pick any random vector ($$B$$ and $$C$$ in the picture), and project our data onto it. These projections are scaled versions of this vector. We'd like the spread of these projections to be as dispersed as possible. For example, choosing $$C$$ as a reference vector doesn't seem to provide much spread (variance) for the data point $$V_2$$, whereas choosing $$B$$ as our reference vector provides a much larger variance to $$V_2$$.
 
 ![Dataset projected onto arbitrary vectors](/assets/images/data-set-projecions-arbitrary-vectors.png)
+
 ### 2. Variance of Projections
+Let $$X$$ be a set of row vectors, each representing, say, a data point from our data set. $$F$$ is a candidate Principal Component vector.
+
 $$X$$ is a $$O\times F$$ matrix, $$V$$ is a $$F\times 1$$ vector, so the projection is a $$O\times 1$$ vector, the $$i$$th entry corresponding to the projection (a single number) of the $$i$$th row vector in $$X$$ onto $$V$$.
 
 $$
