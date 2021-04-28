@@ -66,7 +66,7 @@ $$
 
 That's right, **eigenvalues are nothing but Lagrange Multipliers when optimising for Principal Components Analysis**!
 
-We can go further, assuming there is more than one eigenvalue/eigenvector pair for matrix $$\Sigma$$. Let us assume that $$\Sigma$$ has two eigenvalue/eigenvectors. Let $$X_1$$ be the first one, which we have already found. $$X_2$$ is the second eigenvector. The necessary conditions for this eigenvector to exist are:
+We can go further, assuming there is more than one eigenvalue / eigenvector pair for matrix $$\Sigma$$. Let us assume that $$\Sigma$$ has two eigenvalues / eigenvectors. Let $$X_1$$ be the first one, which we have already found. $$X_2$$ is the second eigenvector. The necessary conditions for this eigenvector to exist are:
 
 - $${X_2}^T{X_2}=1$$ X_2 exists on the constraint manifold of a unit circle.
 - $$X_2.X_1=0$$, i.e., $$X_2$$ is orthogonal to $$X_1$$
@@ -109,7 +109,7 @@ You can repeat this proof for every eigenvector.
 You may not realise it, but we have also proved an important theorem of Linear Algebra, namely, the **Spectral Theorem of Matrices**, in this case, for symmetric matrices. It states a few things, two of which we have already proved.
 
 - $$\mathbf{A\vec{v}=\lambda\vec{v}}: \lambda \in \mathbb{R}, \vec{v} \in \mathbb{R}^n, A^T=A, A \in \mathbb{R}^n \times \mathbb{R}^n$$
-- For every symmetric matrix $$A$$, there exists a decomposition $$UDU^T$$, where the columns of $$U$$ are the eigenvectors of $$A$$, and $$D$$ is a diagonal matrix whose diagonal entries are the corresponding eigenvalues.
+- For every **symmetric matrix $$A$$**, **there exists a decomposition $$UDU^T$$**, where the **columns of $$U$$ are the eigenvectors** of $$A$$, and $$D$$ is a diagonal matrix whose **diagonal entries are the corresponding eigenvalues**.
 
 To see why the second statement is true, write out $$U$$ and $$D$$ as:
 
@@ -155,6 +155,8 @@ AUU^{-1}=UDU^{-1}
 $$
 
 This proves that **for every symmetric matrix $$A$$, there exists a decomposition $$UDU^T$$, where the columns of $$U$$ are the eigenvectors of $$A$$, and $$D$$ is a diagonal matrix, whose diagonal entries are the corresponding eigenvalues of $$A$$**.
+
+We have established a deep connectin between **Lagrange Multipliers** and **eigenvalues** of a matrix. However, **Quadratic Programming** covers some more material, which will be relevant when completing the derivation of the **Support Vector Machine** equations. This will be covered in an upcoming post.
 
 ## Supplementary Material
 ### 1. Proof that $$X^{-1}=X^T$$ for orthonormal matrices
