@@ -32,6 +32,10 @@ We spoke of **quadratic forms** as well; this is clearly a quadratic form of the
 **Find the critical point $$X$$ on $$f(X)=X^T\Sigma X:\mathbb{R}^n\rightarrow \mathbb{R}$$ such that:**
 - **$$X$$ lies on the unit sphere**, i.e., the manifold equation is $$\mathbf{g(X)=X^TX=1}$$.
 
+This is what the solution space might look like in the two-dimensinal case.
+
+![pca-axes-constraints](/assets/images/candidate-axes-pca-with-constraints.png)
+
 Let $$g(x)$$ be the constraint manifold. We now wish to compute the derivatives of the cost function of $$f(X)$$ and the manifold equation $$g(x)$$.
 
 For the cost function $$f(X)$$, so we can write:
@@ -68,7 +72,7 @@ That's right, **eigenvalues are nothing but Lagrange Multipliers when optimising
 
 We can go further, assuming there is more than one eigenvalue / eigenvector pair for matrix $$\Sigma$$. Let us assume that $$\Sigma$$ has two eigenvalues / eigenvectors. Let $$X_1$$ be the first one, which we have already found. $$X_2$$ is the second eigenvector. The necessary conditions for this eigenvector to exist are:
 
-- $${X_2}^T{X_2}=1$$ X_2 exists on the constraint manifold of a unit circle.
+- $${X_2}^T{X_2}=1$$, i.e., $$X_2$$ exists on the constraint manifold of a unit circle.
 - $$X_2.X_1=0$$, i.e., $$X_2$$ is orthogonal to $$X_1$$
 
 The same argument as the first part of the proof holds, that is:
