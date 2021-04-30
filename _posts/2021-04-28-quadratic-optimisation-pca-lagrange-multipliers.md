@@ -114,6 +114,7 @@ You may not realise it, but we have also proved an important theorem of Linear A
 
 - $$\mathbf{A\vec{v}=\lambda\vec{v}}: \lambda \in \mathbb{R}, \vec{v} \in \mathbb{R}^n, A^T=A, A \in \mathbb{R}^n \times \mathbb{R}^n$$
 - For every **symmetric matrix $$A$$**, **there exists a decomposition $$UDU^T$$**, where the **columns of $$U$$ are the eigenvectors** of $$A$$, and $$D$$ is a diagonal matrix whose **diagonal entries are the corresponding eigenvalues**.
+- For **non-symmetric matrices**, the **factorisation $$A=UDU^{-1}$$ still exists**.
 
 To see why the second statement is true, write out $$U$$ and $$D$$ as:
 
