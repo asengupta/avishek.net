@@ -42,7 +42,7 @@ Let's look at another well-known function, the sine curve.
 
 ![Sine Curve](/assets/images/sine-wave.png)
 
-The sine function $$f(x)=sin(x)$$ is not invertible in the domain $$[\infty, -\infty]$$. This is because values of $$x$$ separated by $$\frac{\pi}{2}$$ radians output the same value.
+The sine function $$f(x)=sin(x)$$ is **not invertible** in the domain $$[\infty, -\infty]$$. This is because values of $$x$$ separated by $$\frac{\pi}{2}$$ radians output the same value.
 
 For the function $$f(x)=sin(x)$$ to be invertible, **we restrict its domain to $$[-\frac{\pi}{2},\frac{\pi}{2}]$$**. You can easily see that in the range $$[-\frac{\pi}{2},\frac{\pi}{2}]$$, the sine function is **monotonic** (in this case, increasing).
 
@@ -67,7 +67,7 @@ f_2(x_1, x_2)=x_1-x_2 \\
 $$
 
 where $$X=(x_1,x_2)$$. I have simply rewritten the functions in matrix form above.
-What is the inverse of this function? We can simply compute the inverse of this matrix to get the answer. I won't show the steps here (I did this using augmented matrix Gaussian Elimination), but you can verify yourself that the inverse $$F^{-1}$$ is:
+**What is the inverse of this function?** We can simply compute the inverse of this matrix to get the answer. I won't show the steps here (I did this using augmented matrix Gaussian Elimination), but you can verify yourself that the inverse $$F^{-1}$$ is:
 
 $$
 F^{-1}(X)=\begin{bmatrix}
@@ -78,13 +78,21 @@ $$
 
 This can be extended to all higher dimensions, obviously.
 
-Let us repeat the same question as in the one-dimensional case: when is the function $$F$$ not invertible? We need to make our definition a little more sophisticated in the case of multivariable functions; the new requirement is that all its partial derivatives always be invertible. Stated this way, this implies that the the gradient of the function (Jacobian) $$\nabla F$$ be invertible over the entire region of interest.
+Let us repeat the same question as in the one-dimensional case: **when is the function $$F$$ not invertible?** We need to make our definition a little more sophisticated in the case of multivariable functions; the new requirement is that all its partial derivatives always be invertible. Stated this way, this implies that the the gradient of the function (Jacobian) $$\nabla F$$ be invertible over the entire region of interest.
 
-### Invertibility is proved if $$n$$ equations in $$n$$ unknowns has a solution
-We will take a look at the mechanics of the functions involved when dealing with the existence of function inverses.
-Briefly, and this should not come as a surprise, we have been looking at $$n$$ equations with $$n$$ unknowns.
+Briefly, we're looking at $$n$$ equations with $$n$$ unknowns, with all linearly independent column vectors. **Linear independence is a necessary condition for invertibility.**
+
+We are now ready to state the **Inverse Function Theorem** (well, the important part).
+
 ## Inverse Function Theorem
+In the neighbourhood of a domain around $$x_0$$ of a function $$F$$ which is known to be **continuously differentiable**, if the **derivative of the function $$DF(x_0)$$** is **invertible**, then there exists an **inverse function** $$F^{-1}$$ which exists in that same neighbourhood such that $$F^{-1}(F(x_0))=x_0$$.
+
+The theorem also gives us information about what the **derivative of the inverse function**, but we'll not delve into that aspect for the moment. Any textbook on Vector Calculus should have the relevant results.
+
+This is a very informal definition of the **Inverse Function Theorem**, but it conveys the most important part, namely: if the derivative of a function is invertible in some neighbourhood of $$x_0$$, there exists an inverse of the function itself in that neighbourhood.
+
 
 ## Implicit Function Theorem
+
 ### Function Reduction for Free Variables
 ### Invertibility can be proved for $$n$$ equations in $$m+n$$ unknowns if $$m$$ linearly independent basis vectors exist
