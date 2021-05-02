@@ -91,8 +91,83 @@ The theorem also gives us information about what the **derivative of the inverse
 
 This is a very informal definition of the **Inverse Function Theorem**, but it conveys the most important part, namely: if the derivative of a function is invertible in some neighbourhood of $$x_0$$, there exists an inverse of the function itself in that neighbourhood.
 
+The reason we stress a lot on the word **neighbourhood** is that a lot of functions are not necessarily continuously differentiable, especially for nonlinear functions. Linear functions look the same as their derivatives at every point. The Inverse Function Theorem also applies to linear functions, but its real value lies in applying to **nonlinear functions**, where the neighbourhood is taken to be infinitesmal, which then leads us to the definition of the **manifold**, which we have talked about in [Vector Calculus: Lagrange Multipliers, Manifolds, and the Implicit Function Theorem]({% post_url 2021-04-24-vector-calculus-lagrange-multipliers %}).
 
 ## Implicit Function Theorem
+What can we say about systems of functions which have $$n$$ unknowns, but less than $$n$$ equations? The **Implicit Function Theorem** gives us an answer to this; think of it as a more general version of the **Inverse Function Theorem**.
 
-### Function Reduction for Free Variables
-### Invertibility can be proved for $$n$$ equations in $$m+n$$ unknowns if $$m$$ linearly independent basis vectors exist
+Much of the details of the mechanics of this theorem is covered in [Vector Calculus: Lagrange Multipliers, Manifolds, and the Implicit Function Theorem]({% post_url 2021-04-24-vector-calculus-lagrange-multipliers %}). However, here we take a big-picture view.
+
+Suppose we have $$m+n$$ unknowns and $$n$$ equations.
+Thus, we will have $$n$$ pivotal variables, corresponding to $$n$$ linearly independent column vectors of this system of linear equations.
+This means that $$n$$ pivotal variables can be expressed in terms of $$m$$ free variables. Let us call the $$m$$ free variables $$U=(u_1, u_2,..., u_m)$$, and the $$n$$ pivotal variables $$V=(v_1, v_2, ..., v_n)$$.
+
+Let us consider the original function $$F_{old}$$.
+
+$$
+F_{old}(U,V)=\begin{bmatrix}
+f_1(u_1, u_2, u_3, ..., u_m, v_1, v_2, v_3, ..., v_n) \\
+f_2(u_1, u_2, u_3, ..., u_m, v_1, v_2, v_3, ..., v_n) \\
+f_3(u_1, u_2, u_3, ..., u_m, v_1, v_2, v_3, ..., v_n) \\
+\vdots \\
+f_n(u_1, u_2, u_3, ..., u_m, v_1, v_2, v_3, ..., v_n)
+\end{bmatrix}
+$$
+
+The new function $$F_{new}$$ is what we obtain once we have expressed $$V$$ in terms of only $$U$$. It looks like this:
+
+$$
+F_{new}(U)=\begin{bmatrix}
+u_1 \\
+u_2 \\
+u_3 \\
+\vdots \\
+u_m \\
+\phi_1(u_1, u_2, u_3, ..., u_m) \\
+\phi_2(u_1, u_2, u_3, ..., u_m) \\
+\phi_3(u_1, u_2, u_3, ..., u_m) \\
+\vdots \\
+\phi_n(u_1, u_2, u_3, ..., u_m)
+\end{bmatrix}
+$$
+
+Note that the original formulation had a function F_{old} which transformed the full set $$(U,V)$$ into a new vector. The new formulation now has $$m$$ free variables which stay unchanged after the transform, and $$n$$ pivotal variables $$V$$ which are mapped from $$U$$ with a new set of functions $$\Phi=(\phi_1,\phi_2,...,\phi_n,)$$.
+
+Now, instead of asking: **"Is there an inverse of the function $$F_old$$?"**, we ask: **"Is there an inverse of the function $$F_new$$?"**
+
+The **Implicit Function Theorem** states that if a mapping $$F_{old}(U,F_{new}(U))$$ exists for a point $$c=(U_0, F_{new}(U_0))$$ such that:
+
+- $$\mathbf{F_{old}(c)=0}$$
+- $$F_{old}(c)$$ is **first order differentiable** ($$C^1$$ differentiable)
+- The derivative of $$F_{old}$$ is invertible, implying $$L$$ is also invertible, where $$L$$ is defined as below:
+
+$$
+L=\begin{bmatrix}
+(D_1F_{old}, D_2F_{old}, D_3F_{old}, ..., D_nF_{old}) && (D_{n+1}F_{old}, D_{n+2}F_{old}, D_{n+3}F_{old}, ..., D_{n+m}F_{old}) \\
+0 && I_{m \times m}
+\end{bmatrix}
+$$
+
+then, the following holds true:
+
+- There exists an inverse mapping $$F_{new}^{-1}$$ for $$F_{new}$$ such that $$F_{old}(F_{new}^{-1}(V), V)=0$$ in the neighboourhood of $$c$$
+- There is a **neighbourhood of $$c$$** where this linear relationship holds for $$F(c)=0$$.
+
+The above is the same statement as the one made by the ****
+
+### Note on the Derivative Matrix
+Let us look at the matrix $$L$$ defined above. Here, we have added padded the derivatives with the zero matrix and an identity matrix to make the whole matrix $$L$$, square.
+
+We know that $$(D_1F_{old}, D_2F_{old}, D_3F_{old}, ..., D_nF_{old})$$ is $$n \times n$$ and is invertible, because we know that there are $$n$$ linearly independent columns in $$F_{old}$$.
+
+The matrix $$L$$ has the block form:
+
+$$
+L=
+\begin{bmatrix}
+A && C \\
+0 && B
+\end{bmatrix}
+$$
+
+where $$A$$ and $$B$$ are invertible, but $$C$$ need not be. To see why this results in $$L$$ being invertible, see [Intuitions around Matrix Multiplications]({% post_url 2021-04-29-quick-summary-of-common-matrix-product-methods %}).

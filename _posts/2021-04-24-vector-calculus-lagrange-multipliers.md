@@ -519,4 +519,4 @@ then, the following holds true:
 - **There exists a system of linear equations $$DF(c)=0$$** which has $$n$$ pivotal variables in the level set constraint equations which can be expressed as functions of $$m$$ independent (non-pivotal) variables.
 - There is a **neighbourhood of $$c$$** where this linear relationship holds for $$F(c)=0$$.
 
-**We could not have made the assumption of the existence of this mapping for the general case of nonlinear constraints without the Implicit Function Theorem.**
+**We could not have made the assumption of the existence of this mapping and its inverse for the general case of nonlinear constraints without the Implicit Function Theorem.**
