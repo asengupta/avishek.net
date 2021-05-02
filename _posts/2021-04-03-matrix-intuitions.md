@@ -12,6 +12,7 @@ Some of these points about matrices are worth noting down, as aids to intuition.
 - A matrix is a **linear transformation**, with its column vectors being the **new basis**.
 - A matrix $$A$$ cannot be inverted (i.e., it does not have a unique inverse) **if any of its column vectors are linearly dependent on the others**.
     - This is because, then there will always be a non-zero vector solution which will lose all of its components to zero; and **there is no way to reverse that operation to recover the original vector**.
+    - As an illustration, if you have an $$n \times n$$ matrix $$A$$, and an $$n \times 1$$ vector $$\vec{v}$$, and that the 1st and 2nd column vectors of $$A$$ are **linearly dependent**, but the rest of them are **linearly independent**. Then there exists a vector $$\vec{v_0}$$ of the form $$(a,b,0,0,...,0_n)$$ where the scalars $$a$$ and $$b$$ force the first two column vectors to **cancel out to zero** in the result; and since the rest of the vector components are zero to begin with, the result will end up all zeros.
     - Mathematically, this means if there exists a nonzero $$x$$, such that $$Ax=0$$, $$A$$ is not invertible.
 - **The dot product of two vectors is a linear transformation of the right vector into the number line**, with the individual scalar components of the left vector being the basis vectors on this one-dimensional number line.
 
