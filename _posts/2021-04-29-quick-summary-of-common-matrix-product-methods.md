@@ -1,5 +1,5 @@
 ---
-title: "Quick Intuitions about Common Ways of Looking at Matrix Multiplications"
+title: "Common Ways of Looking at Matrix Multiplications"
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Linear Algebra", "Theory"]
