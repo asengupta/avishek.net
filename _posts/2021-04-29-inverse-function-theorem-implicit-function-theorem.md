@@ -4,11 +4,11 @@ author: avishek
 usemathjax: true
 tags: ["Vector Calculus", "Linear Algebra", "Theory", "Mathematics"]
 ---
-We discussed this theorem at the end of the article on [Lagrange Multipliers]({% post_url 2021-04-24-vector-calculus-lagrange-multipliers%}), with some hand-waving too justify the linear behaviour on manifolds in arbitrary $$\mathbb{R}^N$$.
+We discussed the **Implicit Function Theorem** at the end of the article on [Lagrange Multipliers]({% post_url 2021-04-24-vector-calculus-lagrange-multipliers%}), with some hand-waving to justify the linear behaviour on manifolds in arbitrary $$\mathbb{R}^N$$.
 
-This article delves a little deeper to develop some more intuition on the Implicit Function Theorem, but starts with its more specialised relative, the Inverse Function Theorem. This is because it is easier to start with reasoning about the Inverse Function Theorem.
+This article delves a little deeper to develop some more intuition on the Implicit Function Theorem, but starts with its more specialised relative, the **Inverse Function Theorem**. This is because it is easier to start with reasoning about the Inverse Function Theorem.
 
-## Existence of Function Inverses
+## Inverse Functions
 ### Monotonicity in One Dimension
 
 Let's start with a simple motivating example. We have the function $$f(x)=2x: x \in \mathbb{R}^n$$. This gives a value, say $$y$$, given an $$x$$. We desire to find a function $$f^{-1}$$ which is the inverse of $$f^{-1}$$, i.e., given a $$y$$, we wish to recover $$x$$. Mathematically, we can say:
@@ -18,7 +18,7 @@ f^{-1}(f(x))=x
 $$
 
 In this case, the inverse is pretty easy to determine, it is $$f^{-1}(x)=\frac{x}{2}$$. The function $$f$$ is thus a mapping from $$\mathbb{R} \rightarrow \mathbb{R}$$.
-Let us ask the question while we are still dealing with very simple functions: under what conoditions does a function not have an inverse?
+Let us ask the question while we are still dealing with very simple functions: **under what conoditions does a function not have an inverse?**
 
 Let's think of this intuitively with an example. Does the function $$f(x)=5$$ have an inverse? This function forces all values of $$x\in \mathbb{R}^n$$ to a value of 5. Even hypothetically, if $$f^{-1}$$ exists, and we tried to find $$f^{-1}(5)$$, there would not be one solution for $$x$$. Algebraically, we could have written:
 
@@ -85,18 +85,22 @@ Briefly, we're looking at $$n$$ equations with $$n$$ unknowns, with all linearly
 We are now ready to state the **Inverse Function Theorem** (well, the important part).
 
 ## Inverse Function Theorem
+The **Inverse Function Theorem** states that:
+
 In the neighbourhood of a domain around $$x_0$$ of a function $$F$$ which is known to be **continuously differentiable**, if the **derivative of the function $$DF(x_0)$$** is **invertible**, then there exists an **inverse function** $$F^{-1}$$ which exists in that same neighbourhood such that $$F^{-1}(F(x_0))=x_0$$.
 
-The theorem also gives us information about what the **derivative of the inverse function**, but we'll not delve into that aspect for the moment. Any textbook on Vector Calculus should have the relevant results.
+The theorem also gives us information about what the **derivative of the inverse function**, but we'll not delve into that aspect for the moment. Any textbook on **Vector Calculus** should have the relevant results.
 
-This is a very informal definition of the **Inverse Function Theorem**, but it conveys the most important part, namely: if the derivative of a function is invertible in some neighbourhood of $$x_0$$, there exists an inverse of the function itself in that neighbourhood.
+This is a very informal definition of the **Inverse Function Theorem**, but it conveys the most important part, namely: **if the derivative of a function is invertible** in some neighbourhood of $$x_0$$, **there exists an inverse of the function** itself in that neighbourhood.
 
-The reason we stress a lot on the word **neighbourhood** is that a lot of functions are not necessarily continuously differentiable, especially for nonlinear functions. Linear functions look the same as their derivatives at every point. The Inverse Function Theorem also applies to linear functions, but its real value lies in applying to **nonlinear functions**, where the neighbourhood is taken to be infinitesmal, which then leads us to the definition of the **manifold**, which we have talked about in [Vector Calculus: Lagrange Multipliers, Manifolds, and the Implicit Function Theorem]({% post_url 2021-04-24-vector-calculus-lagrange-multipliers %}).
+The reason we stress a lot on the word **neighbourhood** is that a lot of functions are not necessarily continuously differentiable, especially for nonlinear functions. Linear functions look the same as their derivatives at every point, which is why we didn't need to worry about taking the derivative of $$f(x)=2x$$ in our initial example.
+
+The **Inverse Function Theorem** obviously applies to linear functions, but its real value lies in applying to **nonlinear functions**, where the neighbourhood is taken to be infinitesmal, which then leads us to the definition of the **manifold**, which we have talked about in [Vector Calculus: Lagrange Multipliers, Manifolds, and the Implicit Function Theorem]({% post_url 2021-04-24-vector-calculus-lagrange-multipliers %}).
 
 ## Implicit Function Theorem
 What can we say about systems of functions which have $$n$$ unknowns, but less than $$n$$ equations? The **Implicit Function Theorem** gives us an answer to this; think of it as a more general version of the **Inverse Function Theorem**.
 
-Much of the details of the mechanics of this theorem is covered in [Vector Calculus: Lagrange Multipliers, Manifolds, and the Implicit Function Theorem]({% post_url 2021-04-24-vector-calculus-lagrange-multipliers %}). However, here we take a big-picture view.
+Much of the mechanics implied by this theorem is covered in [Vector Calculus: Lagrange Multipliers, Manifolds, and the Implicit Function Theorem]({% post_url 2021-04-24-vector-calculus-lagrange-multipliers %}). However, here we take a big-picture view.
 
 Suppose we have $$m+n$$ unknowns and $$n$$ equations.
 Thus, we will have $$n$$ pivotal variables, corresponding to $$n$$ linearly independent column vectors of this system of linear equations.
@@ -135,6 +139,10 @@ Note that the original formulation had a function F_{old} which transformed the 
 
 Now, instead of asking: **"Is there an inverse of the function $$F_old$$?"**, we ask: **"Is there an inverse of the function $$F_new$$?"**
 
+The situation is illustrated below.
+
+![Implicit Function Theorem Intuition](/assets/images/implicit-function-theorem.png)
+
 The **Implicit Function Theorem** states that if a mapping $$F_{old}(U,F_{new}(U))$$ exists for a point $$c=(U_0, F_{new}(U_0))$$ such that:
 
 - $$\mathbf{F_{old}(c)=0}$$
@@ -153,7 +161,7 @@ then, the following holds true:
 - There exists an inverse mapping $$F_{new}^{-1}$$ for $$F_{new}$$ such that $$F_{old}(F_{new}^{-1}(V), V)=0$$ in the neighboourhood of $$c$$
 - There is a **neighbourhood of $$c$$** where this linear relationship holds for $$F(c)=0$$.
 
-The above is the same statement as the one made by the ****
+The above is the same statement as the one made by the **Inverse Function Theorem**, except that the system of linear equations in that scenario was completely determined. In the case of the **Implicit Function Theorem**, the system is **underdetermined**.
 
 ### Note on the Derivative Matrix
 Let us look at the matrix $$L$$ defined above. Here, we have added padded the derivatives with the zero matrix and an identity matrix to make the whole matrix $$L$$, square.
