@@ -166,6 +166,12 @@ The above is the same statement as the one made by the **Inverse Function Theore
 ### Note on the Derivative Matrix
 Let us look at the matrix $$L$$ defined above. Here, we have added padded the derivatives with the zero matrix and an identity matrix to make the whole matrix $$L$$, square.
 
+For simple linear surfaces, simply finding the inverse of the system of linear equations is enough, since as I noted, the gradient vector is the same as the surfce normal globally, but that is not true for "lumpy" functions globally. It is true for a neighbourhood $$x_0$$. But what is the **size of this neighbourhood** such that the derivative approximates the actual function reasonably well?
+
+Put another way, what is the size of the neighbourhood, **where the first derivative does not change too fast** for it to be useful in approximating the actual function? This requires the derivative satisfying the **Lipschitz Condition**, which is a way of putting a **strong guarantee on continuous differentiability**.
+
+We will not go into the details of how this condition is satisfied, but only state that calculating a metric associated with this condition, requires us to compute $$L^{-1}$$.
+
 We know that $$(D_1F_{old}, D_2F_{old}, D_3F_{old}, ..., D_nF_{old})$$ is $$n \times n$$ and is invertible, because we know that there are $$n$$ linearly independent columns in $$F_{old}$$.
 
 The matrix $$L$$ has the block form:

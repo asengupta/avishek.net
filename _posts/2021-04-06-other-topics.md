@@ -8,7 +8,9 @@ draft: true
 
 ## Miscellaneous Topics
 
-- Newton-Raphson Method
+- Newton-Raphson Method 
+- Gradient Descent and Stochastic Gradient Descent
+- Dynamic Programming
 - Missing Data and Data Imputation
 - L1 and L2 Regularisation
 - p-values and hypothesis testing
