@@ -137,7 +137,7 @@ $$
 
 Note that the original formulation had a function F_{old} which transformed the full set $$(U,V)$$ into a new vector. The new formulation now has $$m$$ free variables which stay unchanged after the transform, and $$n$$ pivotal variables $$V$$ which are mapped from $$U$$ with a new set of functions $$\Phi=(\phi_1,\phi_2,...,\phi_n,)$$.
 
-Now, instead of asking: **"Is there an inverse of the function $$F_old$$?"**, we ask: **"Is there an inverse of the function $$F_new$$?"**
+Now, instead of asking: **"Is there an inverse of the function $$F_{old}$$?"**, we ask: **"Is there an inverse of the function $$F_{new}$$?"**
 
 The situation is illustrated below.
 

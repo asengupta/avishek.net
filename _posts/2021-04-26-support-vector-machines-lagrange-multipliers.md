@@ -2,7 +2,7 @@
 title: "Support Vector Machines from First Principles: Part Two"
 author: avishek
 usemathjax: true
-tags: ["Machine Learning", "Support Vector Machines", "Theory"]
+tags: ["Machine Learning", "Support Vector Machines", "Optimisation", "Theory"]
 draft: true
 ---
 
