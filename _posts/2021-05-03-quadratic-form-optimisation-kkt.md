@@ -54,12 +54,16 @@ $$
 \theta_1+\theta_2+...+\theta_n=1
 $$
 
+![Affine Set](/assets/images/affine-set.png)
+
 In words, a vector is an **affine combination** of $$n$$ vectors if the **coefficients of the linear combinations of those vectors sum to one**.
 
 ## Preliminary: Convex and Concave Functions
 The layman's explanation of a convex function is that it is a bowl-shaped function. However, let us state this mathematically: we say a function is convex, if the graph of that function lies below every point on a line connecting any two points on that function.
 
-If $$(x_1, f(x_1))$$ and $$(x_2, f(x_2))$$ are two points on a function $$f(x)$$, then $$f(x)$$ is **convex** if:
+![Convex Function](/assets/images/convex-function.png)
+
+If $$(x_1, f(x_1))$$ and $$(x_2, f(x_2))$$ are two points on a function $$f(x)$$, then $$f(x)$$ is **convex** iff:
 
 $$
 \mathbf{f(\theta x_1+(1-\theta x_2))\leq \theta f(x_1)+(1-\theta)f(x_2)}
@@ -67,6 +71,7 @@ $$
 
 Consider a point $$P$$ on the line connecting $$[x_1, f(x_1)]$$ and $$[x_2, f(x_2)]$$, its coordinate on that line is $$[\theta x_1+(1-\theta) x_2, \theta f(x_1)+(1-\theta) f(x_2)]$$. The corresponding point on the graph is $$[\theta x_1+(1-\theta) x_2, f([\theta x_1+(1-\theta) x_2)]$$.
 
+![Concave Function](/assets/images/concave-function.png)
 The same condition, but inverted, can be applied to define a concave function. A function $$f(x)$$ is **concave** iff:
 
 $$
@@ -169,6 +174,8 @@ $$
 
 We'll prove an interesting result that will prove useful when exploring the shape of the **Lagrangian of the objective function**, namely that **the infimum of any set of concave functions is a concave function**.
 
+![Concave Infimum](/assets/images/concave-infimum.png)
+
 Let there be a chord $$C_1$$ connecting (x_1, f_1(x_1)) and (x_2, f_1(x_2)) for a concave function $$f_1(x)$$.
 Let there be a chord $$C_2$$ connecting (x_1, f_2(x_1)) and (x_2, f_2(x_2)) for a concave function $$f_2(x)$$.
 
@@ -237,14 +244,15 @@ $$
 
 We have simply moved all the terms of the Lagrangian formulation onto one side and denoted it by $$L(x,\lambda)$$.
 
+![Shape of Lagrangian for a Convex Objective Function](/assets/images/lagrangian-shape.png)
+![Shape of Lagrangian for a Convex Objective Function](/assets/images/quadratic-surface-no-cross-term-saddle.png)
+
 
 ## Exploring the Properties of the Lagrangian
 
-## Affine Functions as Constraints
 ## Geometric Intuition of Convex Optimisation
 ### Active Constraints
 ### Inactive Constraints
 ## Max-Min Inequality
 ### Duality Gap
-## Karush-Kuhn-Tucker Conditions
-## Saddle Point Theorem
+## Karush-Kuhn-Tucker or Saddle Point Theorem
