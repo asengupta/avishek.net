@@ -243,7 +243,7 @@ In the first figure, the global minimum of $$f(x)$$ violates the constraint sinc
 
 Contrast this with the diagram above. Here, the shape of the solution space is different. The minimum $$f(x)$$ lies within the $$g(x)\leq 0$$ zone. This means that even if we minimise $$f(x)$$ without regard to the constraint $$g(x)\leq 0$$, we'll still get the minimum solution which still satisfies the constraint. In this scenario, we call $$g(x)\leq 0$$ an **inactive constraint**.
 
-
+We note the 
 ## Lagrangian
 We now have the machinery to explore the Lagrangian Dual in some detail.
 
@@ -280,8 +280,6 @@ We have simply moved all the terms of the Lagrangian formulation onto one side a
 ## Exploring the Properties of the Lagrangian
 
 ## Geometric Intuition of Convex Optimisation
-### Active Constraints
-### Inactive Constraints
 ## Max-Min Inequality
 ### Duality Gap
 ## Karush-Kuhn-Tucker or Saddle Point Theorem
