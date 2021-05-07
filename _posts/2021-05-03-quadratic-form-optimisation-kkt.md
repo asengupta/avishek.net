@@ -26,18 +26,7 @@ where:
 
 For **Quadratic Optimisation**, the extra constraint that is imposed is: $$g_i(x)$$ is are also affine functions. Therefore, all of our constraints are essentially linear.
 
-Furthermore, for this discussion, I omit $$h_i(x)$$ for clarity; any **equality constraints can always be converted into inequality constraints**, and become part of $$g_i(x)$$.
-
-Thus, this is the reframing of the **Quadratic Optimisation** problem for the purposes of this discussion.
-
-Minimise (with respect to $$x$$), $$\mathbf{f(x)}$$
-
-subject to: $$\mathbf{g_i(x)\leq 0, i=1,...,n}$$
-
-where:
-
-- $$\mathbf{f(x)}$$ is a **convex function**
-- $$\mathbf{g_i(x)}$$ are **affine functions**
+We will talk of this simplification when we explore the shape of the Lagrangian.
 
 ## Preliminary: Affine Sets
 Take any two vectors $$\vec{v_1}$$ and $$\vec{v_2}$$. All the vectors (or points, if you so prefer) along the line joining the tips of $$\vec{v_1}$$ and $$\vec{v_2}$$ obviously lie on a straight line. Thus, we can represent any vector along this line segment as:
@@ -159,22 +148,39 @@ $$
 \begin{equation}\mathbf{min(a+b, c+d) \geq min(a,c)+min(b,d)} \label{ineq:2} \end{equation}
 $$
 
-## Preliminary: Pointwise Infimum and Supremum
-The **infimum** of two functions $$f_1(x)$$ and $$f_2(x)$$ is defined as thus:
+## Preliminary: Infimum and Supremum
+The **infimum** of a function $$f(x)$$ is defined as:
 
 $$
-inf(f_1, f_2)=min\{f_1(x), f_2(x)\}
+\mathbf{inf_x(f(x))=M | M<f(x) \forall x}
 $$
 
-The **supremum** of two functions $$f_1(x)$$ and $$f_2(x)$$ is defined as thus:
+The infimum is defined for all functions even if the minimum does not exist for a function, and is equal to the mimimum if it does exist.
+
+The supremum of a function $$f(x)$$ is defined as:
 
 $$
-sup(f_1, f_2)=max\{f_1(x), f_2(x)\}
+\mathbf{sup_x(f(x))=M | M>f(x) \forall x}
 $$
 
-We'll prove an interesting result that will prove useful when exploring the shape of the **Lagrangian of the objective function**, namely that **the infimum of any set of concave functions is a concave function**.
+The **supremum** is defined for all functions even if the maximum does not exist for a function, and is equal to the maximum if it does exist.
 
-![Concave Infimum](/assets/images/concave-infimum.png)
+## Preliminary: Pointwise Infimum and Pointwise Supremum
+The **pointwise infimum** of two functions $$f_1(x)$$ and $$f_2(x)$$ is defined as thus:
+
+$$
+pinf(f_1, f_2)=min\{f_1(x), f_2(x)\}
+$$
+
+The **pointwise supremum** of two functions $$f_1(x)$$ and $$f_2(x)$$ is defined as thus:
+
+$$
+psup(f_1, f_2)=max\{f_1(x), f_2(x)\}
+$$
+
+We'll prove an interesting result that will prove useful when exploring the shape of the **Lagrangian of the objective function**, namely that **the pointwise infimum of any set of concave functions is a concave function**.
+
+![Concave Pointwise Infimum](/assets/images/concave-infimum.png)
 
 Let there be a chord $$C_1$$ connecting (x_1, f_1(x_1)) and (x_2, f_1(x_2)) for a concave function $$f_1(x)$$.
 Let there be a chord $$C_2$$ connecting (x_1, f_2(x_1)) and (x_2, f_2(x_2)) for a concave function $$f_2(x)$$.
@@ -186,34 +192,36 @@ f_1(\alpha x_1+\beta x_2)\geq \alpha f_1(x_1)+\beta f_1(x_2) \\
 f_2(\alpha x_1+\beta x_2)\geq \alpha f_2(x_1)+\beta f_2(x_2)
 $$
 
-where $$\alpha+\beta=1$$. Let us define the infimum function as:
+where $$\alpha+\beta=1$$. Let us define the **pointwise infimum** function as:
 
-$$\mathbf{inf(x)=min\{f_1(x), f_2(x)\}}$$
+$$\mathbf{pinf(x)=min\{f_1(x), f_2(x)\}}$$
 
 Then:
 
 $$
-inf(\alpha x_1+\beta x_2)=min\{ f_1(\alpha x_1+\beta x_2), f_2(\alpha x_1+\beta x_2)\} \\
+pinf(\alpha x_1+\beta x_2)=min\{ f_1(\alpha x_1+\beta x_2), f_2(\alpha x_1+\beta x_2)\} \\
 \geq min\{ \alpha f_1(x_1)+\beta f_1(x_2), \alpha f_2(x_1)+\beta f_2(x_2)\} \hspace{4mm} .......(from \eqref{ineq:1})\\
 \geq \alpha.min\{f_1(x_1),f_2(x_1)\} + \beta.min\{f_1(x_2),f_2(x_2)\} \hspace{4mm} .......(from \eqref{ineq:2})\\
-= \mathbf{\alpha.inf(x_1) + \beta.inf(x_2)}
+= \mathbf{\alpha.pinf(x_1) + \beta.pinf(x_2)}
 $$
 
 Thus, we can summarise:
 
 $$
 \begin{equation}
-\mathbf{inf(\alpha x_1+\beta x_2) \geq \alpha.inf(x_1) + \beta.inf(x_2)}
+\mathbf{pinf(\alpha x_1+\beta x_2) \geq \alpha.pinf(x_1) + \beta.pinf(x_2)}
 \end{equation}
 $$
 
-which is the form of an **concave function**, and thus we can conclude that $$inf(x)$$ is a concave function if all of its component functions are concave.
+which is the form of an **concave function**, and thus we can conclude that $$pinf(x)$$ is a concave function if all of its component functions are concave.
 
-Since this is a general result for any two coordinates $$x_1,x_2:x_1,x_2 \neq 0$$, we can conclude that **the infimum of two concave functions is also a concave function**. This can be extended to an arbitrary set of arbitrary concave functions.
+Since this is a general result for any two coordinates $$x_1,x_2:x_1,x_2 \neq 0$$, we can conclude that **the pointwise infimum of two concave functions is also a concave function**. This can be extended to an arbitrary set of arbitrary concave functions.
 
-Using very similar arguments, we can also prove that **the supremum of an arbitrary set of convex functions is also a convex function**.
+Using very similar arguments, we can also prove that **the pointwise supremum of an arbitrary set of convex functions is also a convex function**.
 
-The other straightforward conclusion is that **the infimum of any set of affine functions is always concave, because affine functions are concave** (they are also convex, but we cannot draw any general conclusions about the infimum of convex functions).
+The other straightforward conclusion is that **the pointwise infimum of any set of affine functions is always concave, because affine functions are concave** (they are also convex, but we cannot draw any general conclusions about the pointwise infimum of convex functions).
+
+**Note**: The **pointwise infimum** and **pointwise supremum** have different definitions from the **infimum** and **supremum**, respectively.
 
 ## Active and Inactive Constraints
 In Quadratic Programming, $$g_i(x)|i=1,2,...,n$$ represent the constraint functions. An important concept to get an intuition is about the difference between dealing with pure equality constraints and inequality cnstraints.
@@ -245,7 +253,20 @@ Contrast this with the diagram above. Here, the shape of the solution space is d
 
 We note the 
 ## Lagrangian
-We now have the machinery to explore the Lagrangian Dual in some detail.
+We now have the machinery to explore the **Lagrangian Dual** in some detail. Before proceeding with this section, let us restate the **Quadratic Optimisation** problem in a more simplified form first.
+
+For this discussion, I'll omit the equality constraints $$h_i(x)$$ for clarity; any **equality constraints can always be converted into inequality constraints**, and become part of $$g_i(x)$$.
+
+Thus, this is the reframing of the **Quadratic Optimisation** problem for the purposes of this discussion.
+
+Minimise (with respect to $$x$$), $$\mathbf{f(x)}$$
+
+subject to: $$\mathbf{g_i(x)\leq 0, i=1,...,n}$$
+
+where:
+
+- $$\mathbf{f(x)}$$ is a **convex function**
+- $$\mathbf{g_i(x)}$$ are **affine functions**
 
 We have already seen in [Vector Calculus: Lagrange Multipliers, Manifolds, and the Implicit Function Theorem]({% post_url 2021-04-24-vector-calculus-lagrange-multipliers %}) that the gradient vector of a function can be expressed as a **linear combination of the gradient vectors** of the constraint manifolds.
 
@@ -265,7 +286,7 @@ $$
 
 where $$x=(U,V)$$. We will not consider the pivotal and non-pivotal variables separately in this discussion.
 
-We will first consider the **Lagrangian** form of a function. The Lagrangian form is simply restating the Lagrange Multiplier form as a function $$L(X,\lambda)$$, like so:
+We will first consider the **Lagrangian** of a function. The Lagrangian form is simply restating the Lagrange Multiplier form as a function $$L(X,\lambda)$$, like so:
 
 $$
 L(x,\lambda)=f(x,\lambda)+\sum_{i=1}^n\lambda_i.g_i(x)
@@ -273,13 +294,57 @@ $$
 
 We have simply moved all the terms of the Lagrangian formulation onto one side and denoted it by $$L(x,\lambda)$$.
 
+Note that differentiating with respect to $$x$$ and setting it to zero, will get us back to the usual **Vector Calculus**-motivated definition, i.e.:
+
+$$
+D_xL=
+\mathbf{
+\nabla f-{[\nabla G]}^T\lambda
+}
+$$
+
+where $$G$$ represents $$n$$ constraint functions, $$\lambda$$ represents the $$n$$ Lagrange multipliers, and $$f$$ is the objective function.
+
+## Exploring the Properties of the Lagrangian
+### 1. The Primal Optimisation Problem
+We will now explore the properties of the Lagrangian, both analytically, as well as geometrically.
+
+Remembering the definition of the supremum of a function, we find the supremum of the Lagrangian with respect to \lambda (that is, to find the supremum in each case, we vary the value of \lambda) to be the following:
+
+$$
+sup_\lambda L(x,\lambda)=\begin{cases}
+f(x) & \text{if } g_i(x)\leq 0 \\
+\infty & \text{if } g_i(x)>0
+\end{cases}
+$$
+
+We can see that the function $$sup_\lambda L(x)$$ incorporates the constraints $$g_i(x)$$ directly, there is a penalty of $$\infty$$ for any constraint which is violated. Therefore, the original problem of minimising $$f(x)$$ can be equivalently stated as:
+
+$$
+\text{Minimise (w.r.t. x)  }sup_\lambda L(x,\lambda) \\
+\text{where } L(x,\lambda)=f(x,\lambda)+\sum_{i=1}^n\lambda_i.g_i(x)
+$$
+
+Equivalently, we say:
+
+$$
+\text{Find }\mathbf{inf_x\text{  }sup_\lambda L(x,\lambda)} \\
+\text{where } L(x,\lambda)=f(x,\lambda)+\sum_{i=1}^n\lambda_i.g_i(x)
+$$
+
+This is referred to in the mathematical optimisation field as the **primal optimisation problem**.
+
+Difficulty in Solving the Primal Optimisation Problem
+
+### 2. The Dual Optimisation Problem
+## 3. Max-Min Inequality
+## Geometric Intuition of Convex Optimisation
+## Karush-Kuhn-Tucker or Saddle Point Theorem
+### Weak Duality
+### Strong Duality
+### Duality Gap
+
 ![Shape of Lagrangian for a Convex Objective Function](/assets/images/lagrangian-shape.png)
 ![Shape of Lagrangian for a Convex Objective Function](/assets/images/quadratic-surface-no-cross-term-saddle.png)
 
 
-## Exploring the Properties of the Lagrangian
-
-## Geometric Intuition of Convex Optimisation
-## Max-Min Inequality
-### Duality Gap
-## Karush-Kuhn-Tucker or Saddle Point Theorem

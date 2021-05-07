@@ -465,12 +465,23 @@ Thus, we can write:
 
 $$ \mathbf{
 Df=\lambda_1 Dh_1(U,V)+\lambda_2 Dh_2(U,V)+\lambda_3 Dh_3(U,V)+...+\lambda_n Dh_n(U,V)
-} \\
+}
 \\
 \square
 $$
 
 The weights of these linear combinations are called **Lagrange Multipliers**.
+We can simplify this notationally to:
+
+$$ \mathbf{
+\nabla f={[\nabla H]}^T\lambda
+}
+$$
+
+where:
+- $$\nabla f$$ is $$(m+n) \times 1$$ (1 function, partial derivatives in $$m+n$$ variables)
+- $$\nabla H$$ is $$n \times (m+n)$$ ($$n$$ equations, partial derivatives in $$m+n$$ variables)
+- $$\lambda$$ is $$n\times 1$$ ($$n$$ Lagrange multipliers)
 
 ## Generalisation to Nonlinear Functions
 **There is an important assumption I've left unsaid.** In every example we've seen, I've always said that the **constraints represent a system of linear equations**. This might be true if our constraint equations are always straight lines, but is certainly **not** the case in other situations. Some examples of nonlinear constraints are:
