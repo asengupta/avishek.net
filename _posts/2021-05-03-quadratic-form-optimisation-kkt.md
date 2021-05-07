@@ -215,6 +215,35 @@ Using very similar arguments, we can also prove that **the supremum of an arbitr
 
 The other straightforward conclusion is that **the infimum of any set of affine functions is always concave, because affine functions are concave** (they are also convex, but we cannot draw any general conclusions about the infimum of convex functions).
 
+## Active and Inactive Constraints
+In Quadratic Programming, $$g_i(x)|i=1,2,...,n$$ represent the constraint functions. An important concept to get an intuition is about the difference between dealing with pure equality constraints and inequality cnstraints.
+
+The diagram below shows an example where all the constraints are equality constraints.
+
+![Equality Coonstraints](/assets/images/optimisation-equality-constraints.png)
+
+There are two points to note.
+
+- All equality constraints are expressed in the form $$g_i(x)=0$$ and they all must be satisfied simultaneously.
+- All equality constraints, being affine must be tangent to the objective function surface, since only then can the gradient vector of the solution be expressed as the Lagrangian combination of these tangent spaces.
+
+The situation changes when inequality constraints are involved. Here is another rough diagram to demonstrate. The y-coordinate represents the image of the objective function $$f(x)$$. The x-coordinate represents the image of the constraint function $$g(x)$$, i.e., the different values $$g(x)$$ can take for different values of $$x$$.
+
+The equality condition in this case maps to the y-axis, since that corresponds to $$g(x)=0$$. However, we're dealing with inequality constraints here, namely, $$g(x) \leq 0$$; thus the viable space of solutions for $$f(x)$$ are all to the left of the y-axis.
+
+As you can see, since $$g(x)\leq 0$$, the solution is not required to touch the level set of the constraint manifold corresponding to zero. Such solutions might not be the optimal solutions (we will see why in a moment), but they are viable solutions nevertheless.
+
+We now draw two example solution spaces with two different shapes.
+
+![Active Constraint in Optimisation](/assets/images/optimisation-active-constraint.png)
+
+In the first figure, the global minimum of $$f(x)$$ violates the constraint since it lies in the $$g(x)>0$$. Thus, we cannot pick that; we must pick minimum $$f(x)$$ that does not violate the constraint $$g(x)\leq 0$$. This point in the diagram lies on the y-axis, i.e., on $$g(x)=0$$. The constraint $g(x)\leq 0$$ in this scenario is considered an **active constraint**.
+
+![Inactive Constraint in Optimisation](/assets/images/optimisation-inactive-constraint.png)
+
+Contrast this with the diagram above. Here, the shape of the solution space is different. The minimum $$f(x)$$ lies within the $$g(x)\leq 0$$ zone. This means that even if we minimise $$f(x)$$ without regard to the constraint $$g(x)\leq 0$$, we'll still get the minimum solution which still satisfies the constraint. In this scenario, we call $$g(x)\leq 0$$ an **inactive constraint**.
+
+
 ## Lagrangian
 We now have the machinery to explore the Lagrangian Dual in some detail.
 
