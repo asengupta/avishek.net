@@ -93,6 +93,67 @@ Thus all mappings of the form $$\mathbf{f(x)=Ax+C}$$ are **affine functions**.
 
 We may draw another interesting conclusion: **affine functions are both convex and concave**. This is because affine functions satisfy the equality conditions for both convexity and concavity: **an affine set on an affine function lies fully on the function itself**.
 
+## Preliminary: Some Inequality Proofs
+
+### Result 1
+
+If $$a\geq b$$, and $$c\geq d$$, then:
+
+$$min(a,c)\geq min(b,d)$$
+
+The proof goes like this, we can define the following inequalities in terms of the $$min$$ function:
+
+$$
+\begin{eqnarray}
+a \geq min(a,c) \label{eq:1} \\
+c \geq min(a,c) \label{eq:2} \\
+b \geq min(b,d) \label{eq:3} \\
+d \geq min(b,d) \label{eq:4} \\
+\end{eqnarray}
+$$
+
+Then, the identities $$a \geq b$$ and $$\eqref{eq:3}$$ imply:
+
+$$ a \geq b \geq min(b,d)$$
+
+Similarly, the identities $$c \geq d$$ and $$\eqref{eq:4}$$ imply that:
+
+$$ c \geq d \geq min(b,d)$$
+
+Therefore, regardless of our choice from $$a$$, $$c$$ from the function $$min(a,c)$$, the result will always be greater than $$min(b,d)$$. Thus we write:
+
+$$ \begin{equation} \mathbf{min(a,c) \geq min(b,d)} \label{ineq:1}\end{equation}$$
+
+### Result 2
+
+Here we prove that:
+
+$$
+min(a+b, c+d) \geq min(a,c)+min(b,d)
+$$
+
+Here we take a similar approach, noting that:
+
+$$
+a \geq min(a,c) \\
+c \geq min(a,c) \\
+b \geq min(b,d) \\
+d \geq min(b,d) \\
+$$
+
+Therefore, if we compute $$a+b$$ and $$c+d$$, we can write:
+
+$$
+a+b \geq min(a,c)+min(b,d) \\
+c+d \geq min(a,c)+min(b,d)
+$$
+
+Therefore, regardless of our choice from $$a+b$$, $$c+d$$ from the function $$min(a+b,c+d)$$, the result will always be greater than $$min(a,c)+min(b,d)$$. Thus we write:
+
+$$
+\begin{equation}\mathbf{min(a+b, c+d) \geq min(a,c)+min(b,d)} \label{ineq:2} \end{equation}
+$$
+
 ## Preliminary: Pointwise Infimum and Supremum
 The **infimum** of two functions $$f_1(x)$$ and $$f_2(x)$$ is defined as thus:
 
@@ -111,40 +172,41 @@ We'll prove an interesting result that will prove useful when exploring the shap
 Let there be a chord $$C_1$$ connecting (x_1, f_1(x_1)) and (x_2, f_1(x_2)) for a concave function $$f_1(x)$$.
 Let there be a chord $$C_2$$ connecting (x_1, f_2(x_1)) and (x_2, f_2(x_2)) for a concave function $$f_2(x)$$.
 
-Let us fix two points with the same x-coordinate $$x_0$$, one lying on $$C_1$$, the other on $$C_2$$. Assume these points are respectively represented as:
+Let us fix two arbitrary x-coordinates $$x_1$$ and $$x_2$$. Then, by the definition of a **concave function** (see above), we can write for $$f_1$$ and $$f_2$$:
 
 $$
-P_1=\alpha_1 x_1+\beta_1 x_2, \alpha_1+\beta_1=1 \\
-P_2=\alpha_2 x_1+\beta_2 x_2, \alpha_2+\beta_2=1
+f_1(\alpha x_1+\beta x_2)\geq \alpha f_1(x_1)+\beta f_1(x_2) \\
+f_2(\alpha x_1+\beta x_2)\geq \alpha f_2(x_1)+\beta f_2(x_2)
 $$
 
-Then, by the definition of a **concave function** (see above), we can write for $$f_1$$ and $$f_2$$:
+where $$\alpha+\beta=1$$. Let us define the infimum function as:
+
+$$\mathbf{inf(x)=min\{f_1(x), f_2(x)\}}$$
+
+Then:
 
 $$
-f_1(\alpha_1 x_1+\beta_1 x_2)\geq \alpha_1 f_1(x_1)+\beta_1 f_1(x_2) \\
-f_2(\alpha_2 x_1+\beta_2 x_2)\geq \alpha_2 f_1(x_1)+\beta_2 f_1(x_2)
+inf(\alpha x_1+\beta x_2)=min\{ f_1(\alpha x_1+\beta x_2), f_2(\alpha x_1+\beta x_2)\} \\
+\geq min\{ \alpha f_1(x_1)+\beta f_1(x_2), \alpha f_2(x_1)+\beta f_2(x_2)\} \hspace{4mm} .......(from \eqref{ineq:1})\\
+\geq \alpha.min\{f_1(x_1),f_2(x_1)\} + \beta.min\{f_1(x_2),f_2(x_2)\} \hspace{4mm} .......(from \eqref{ineq:2})\\
+= \mathbf{\alpha.inf(x_1) + \beta.inf(x_2)}
 $$
 
-If we assume that $$inf(f_1(\alpha_1 x_1+\beta_1 x_2), f_2(\alpha_2 x_1+\beta_2 x_2))=f_1(\alpha_1 x_1+\beta_1 x_2)$$, this implies that:
+Thus, we can summarise:
 
 $$
-f_2(\alpha_2 x_1+\beta_2 x_2) \geq f_1(\alpha_1 x_1+\beta_1 x_2)
+\begin{equation}
+\mathbf{inf(\alpha x_1+\beta x_2) \geq \alpha.inf(x_1) + \beta.inf(x_2)}
+\end{equation}
 $$
 
-This gives us the two inequalities:
+which is the form of an **concave function**, and thus we can conclude that $$inf(x)$$ is a concave function if all of its component functions are concave.
 
-$$
-f_2(\alpha_2 x_1+\beta_2 x_2)\geq \alpha_1 f_1(x_1)+\beta_1 f_1(x_2) \\
-f_2(\alpha_2 x_1+\beta_2 x_2)\geq \alpha_2 f_2(x_1)+\beta_2 f_2(x_2)
-$$
-
-The second inequality, we already know; it's the combination of the first and second inequality which tells us that the graph of the function $$f_2(\alpha_2 x_1+\beta_2 x_2)$$ is higher than the two points $$P_0$$, $$P_1$$ on the respective chords $$C_1$$, $$C_2$$ of $$f_1$$, $$f_2$$.
-
-Since this is a general result for any two chords in $$f_1$$ and $$f_2$$, we can conclude that **the infimum of two convex functions is also a convex function**. This can be extended to an arbitrary set of arbitrary concave functions.
+Since this is a general result for any two coordinates $$x_1,x_2:x_1,x_2 \neq 0$$, we can conclude that **the infimum of two concave functions is also a concave function**. This can be extended to an arbitrary set of arbitrary concave functions.
 
 Using very similar arguments, we can also prove that **the supremum of an arbitrary set of convex functions is also a convex function**.
 
-The other straightforward conclusion is that **the infimum of any set of affine functions is always concave, because affine functions are concave** (they are also convex, but we cannot draw any conclusions about the infimum of convex functions).
+The other straightforward conclusion is that **the infimum of any set of affine functions is always concave, because affine functions are concave** (they are also convex, but we cannot draw any general conclusions about the infimum of convex functions).
 
 ## Lagrangian
 We now have the machinery to explore the Lagrangian Dual in some detail.

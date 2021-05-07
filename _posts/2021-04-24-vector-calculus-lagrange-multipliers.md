@@ -335,7 +335,7 @@ $$
 
 So, **each entry in the $$1 \times m$$ output represents the dot product between the gradient vector and one of the $$m$$ tangent vectors**.
 
-## Optimising the Cost Function
+## Optimising the Objective Function
 Let's take a step back and look at what we have done from a big-picture perspective. We have a function $$f$$ of $$m+n$$ variables that we'd like to optimise, subject to $$n$$ constraints, expressed as equations. **We took those constraints, and solved the linear system of equations to end up with $$n$$ variables being expressed as a linear combination of $$m$$ linearly independent vectors.**
 
 These $$m$$ vectors are all that are needed to completely determine the tangent space of the **constraint manifold**. They are **vectors in the tangent space** because they are vectors expressed as linear functions with the weights being the slopes of the constraint equations.
