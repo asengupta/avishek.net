@@ -27,7 +27,7 @@ $$
 In words, a vector is an **affine combination** of $$n$$ vectors if the **coefficients of the linear combinations of those vectors sum to one**.
 
 ## Convex and Concave Functions
-The layman's explanation of a convex function is that it is a bowl-shaped function. However, let us state this mathematically: we say a function is convex, if the graph of that function lies below every point on a line connecting any two points on that function.
+The layman's explanation of a convex function is that it is a bowl-shaped function. However, let us state this mathematically: we say a function is convex, **if the graph of that function lies below every point on a line connecting any two points on that function**.
 
 ![Convex Function](/assets/images/convex-function.png)
 
@@ -179,8 +179,8 @@ Then:
 
 $$
 pinf(\alpha x_1+\beta x_2)=min\{ f_1(\alpha x_1+\beta x_2), f_2(\alpha x_1+\beta x_2)\} \\
-\geq min\{ \alpha f_1(x_1)+\beta f_1(x_2), \alpha f_2(x_1)+\beta f_2(x_2)\} \hspace{4mm} .......(from \eqref{ineq:1})\\
-\geq \alpha.min\{f_1(x_1),f_2(x_1)\} + \beta.min\{f_1(x_2),f_2(x_2)\} \hspace{4mm} .......(from \eqref{ineq:2})\\
+\geq min\{ \alpha f_1(x_1)+\beta f_1(x_2), \alpha f_2(x_1)+\beta f_2(x_2)\} \hspace{4mm}\text{          (from }\eqref{ineq:1})\\
+\geq \alpha.min\{f_1(x_1),f_2(x_1)\} + \beta.min\{f_1(x_2),f_2(x_2)\} \hspace{4mm}(\text{          from } \eqref{ineq:2})\\
 = \mathbf{\alpha.pinf(x_1) + \beta.pinf(x_2)}
 $$
 
@@ -212,7 +212,7 @@ The diagram below shows an example where all the constraints are equality constr
 There are two points to note.
 
 - All equality constraints are expressed in the form $$g_i(x)=0$$ and they all must be satisfied simultaneously.
-- All equality constraints, being affine must be tangent to the objective function surface, since only then can the gradient vector of the solution be expressed as the Lagrangian combination of these tangent spaces.
+- **All equality constraints, being affine, must be tangent to the objective function surface**, since only then can the gradient vector of the solution be expressed as the Lagrangian combination of these tangent spaces.
 
 The situation changes when inequality constraints are involved. Here is another rough diagram to demonstrate. The y-coordinate represents the image of the objective function $$f(x)$$. The x-coordinate represents the image of the constraint function $$g(x)$$, i.e., the different values $$g(x)$$ can take for different values of $$x$$.
 
