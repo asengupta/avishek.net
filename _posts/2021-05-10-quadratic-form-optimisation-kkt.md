@@ -3,7 +3,6 @@ title: "Quadratic Optimisation: Lagrangian Dual, and the Karush-Kuhn-Tucker Cond
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Quadratic Optimisation", "Linear Algebra", "Optimisation", "Theory"]
-draft: true
 ---
 
 This article concludes the (very abbreviated) theoretical background required to understand **Quadratic Optimisation**. Here, we extend the **Lagrangian Multipliers** approach, which in its current form, admits only equality constraints. We will extend it to allow constraints which can be expressed as inequalities.
@@ -51,9 +50,9 @@ $$
 We can rewrite this as:
 
 $$ \mathbf{
-Df(x,\lambda)=\sum_{i=1}^n\lambda_i.Dg_i(x)
+Df(x)=\sum_{i=1}^n\lambda_i.Dg_i(x)
 } \\
-\Rightarrow f(x,\lambda)=\sum_{i=1}^n\lambda_i.g_i(x)
+\Rightarrow f(x)=\sum_{i=1}^n\lambda_i.g_i(x)
 $$
 
 where $$x=(U,V)$$. We will not consider the pivotal and non-pivotal variables separately in this discussion.
@@ -64,8 +63,10 @@ We now have the machinery to explore the **Lagrangian Dual** in some detail. Bef
 We will first consider the **Lagrangian** of a function. The Lagrangian form is simply restating the Lagrange Multiplier form as a function $$L(X,\lambda)$$, like so:
 
 $$
-L(x,\lambda)=f(x,\lambda)+\sum_{i=1}^n\lambda_i.g_i(x)
+L(x,\lambda)=f(x)+\sum_{i=1}^n\lambda_i.g_i(x)\text{  such that }\lambda_i\geq 0
 $$
+
+**Note**: The $$\mathbf{\lambda_i \geq 0}$$ is an important constraint that will help us formulate the **Karush-Kuhn-Tucker Conditions**.
 
 We have simply moved all the terms of the Lagrangian formulation onto one side and denoted it by $$L(x,\lambda)$$.
 
@@ -84,7 +85,7 @@ where $$G$$ represents $$n$$ constraint functions, $$\lambda$$ represents the $$
 ### 1. The Primal Optimisation Problem
 We will now explore the properties of the Lagrangian, both analytically, as well as geometrically.
 
-Remembering the definition of the supremum of a function, we find the supremum of the Lagrangian with respect to \lambda (that is, to find the supremum in each case, we vary the value of \lambda) to be the following:
+Remembering the definition of the supremum of a function, we find the supremum of the Lagrangian with respect to $$\lambda$$ (that is, to find the supremum in each case, we vary the value of $$\lambda$$) to be the following:
 
 $$
 sup_\lambda L(x,\lambda)=\begin{cases}
@@ -93,18 +94,24 @@ f(x) & \text{if } g_i(x)\leq 0 \\
 \end{cases}
 $$
 
+Remember that $$\mathbf{\lambda \geq 0}$$.
+
+Thus, for the first case, if $$g_i(x) \leq 0$$, the best we can do is set $$\lambda=0$$, since any other non-negative value will not be the supremum.
+
+In the second case, if $$g(x)>0$$, the supremum of the function can be as high as we like as long as we keep increasing the value of $$\lambda$$. Thus, we can simply set it to $$\infty$$, and the corresponding supremum becomes $$\infty$$.
+
 We can see that the function $$sup_\lambda L(x)$$ incorporates the constraints $$g_i(x)$$ directly, there is a penalty of $$\infty$$ for any constraint which is violated. Therefore, the original problem of minimising $$f(x)$$ can be equivalently stated as:
 
 $$
 \text{Minimise (w.r.t. x)  }sup_\lambda L(x,\lambda) \\
-\text{where } L(x,\lambda)=f(x,\lambda)+\sum_{i=1}^n\lambda_i.g_i(x)
+\text{where } L(x,\lambda)=f(x)+\sum_{i=1}^n\lambda_i.g_i(x)
 $$
 
 Equivalently, we say:
 
 $$
 \text{Find }\mathbf{inf_x\text{  }sup_\lambda L(x,\lambda)} \\
-\text{where } L(x,\lambda)=f(x,\lambda)+\sum_{i=1}^n\lambda_i.g_i(x)
+\text{where } L(x,\lambda)=f(x)+\sum_{i=1}^n\lambda_i.g_i(x)
 $$
 
 This is referred to in the mathematical optimisation field as the **primal optimisation problem**.
@@ -116,9 +123,45 @@ The main difficulty in solving the primal problem arises from the fact that the 
 We already know from the [Max-Min Inequality]({% post_url 2021-05-08-quadratic-optimisation-theory %}) that:
 
 $$
-\text{sup}_y g(x,y)\leq \text{inf}_x h(x,y) \\
-\Rightarrow \mathbf{\text{sup}_y \text{ inf}_x f(x,y)\leq \text{inf}_x \text{ sup}_y f(x,y)} \text{   }\forall x,y\in\mathbb{R}
+\mathbf{\text{sup}_y \text{ inf}_x f(x,y)\leq \text{inf}_x \text{ sup}_y f(x,y)} \text{   }\forall x,y\in\mathbb{R}
 $$
+
+Since this is a general statement about any $$f(x,y)$$, we can apply this inequality to the Primal Optimisation Problem, i.e.:
+
+$$
+\text{sup}_\lambda \text{ inf}_x L(x,\lambda) \leq \text{inf}_x \text{ sup}_\lambda L(x,\lambda)
+$$
+
+The right side is the **Primal Optimisation Problem**, and the right side is known as the **Dual Optimisation Problem**, and in this case, the **Lagrangian Dual**.
+
+To understand the fuss about the **Lagrangian Dual**, we will begin with the more restrictive case where equality holds for the **Max-Min Inequality**, and later discuss the more general case and its implications. For this first part, we will assume that:
+
+$$
+\text{sup}_\lambda \text{ inf}_x L(x,\lambda) = \text{inf}_x \text{ sup}_\lambda L(x,\lambda)
+$$
+
+Let's look at a motivating example. This is the graph of the Lagrangian for the following problem:
+
+$$
+\text{Minimise}_x f(x)=x^2 \\
+\text{subject to: } x \leq 0
+$$
+
+The Lagrangian in this case is given by:
+
+$$L(x,\lambda)=x^2+\lambda x$$
+
+This is the corresponding graph of $$L(x,\lambda)$$.
+
+![Shape of Lagrangian for a Convex Objective Function](/assets/images/lagrangian-shape.png)
+
+Let us summarise a few properties of this graph.
+
+- **The function is convex in $$x$$**: Assume $$\lambda=C$$ is a constant, then the function has the form $$\mathbf{x^2+Cx}$$ which is a family of parabolas. **A parabola is a convex function**, thus the result follows.
+- **The function is concave in $$\lambda$$**: Assume that $$x=C$$ and $$x^2=K$$ are constants, then the function has the form $$\mathbf{C\lambda+K}$$, which is the general form of **affine functions**. **Affine functions are both convex and concave**, but we will be drawing more conclusions based on their concave nature, so we will simply say that **the Lagrangian is concave in $$\lambda$$**. Thus, **the Lagrangian is also a family of concave functions**.
+- As a direct consequence of the Lagrangian being a family of concave functions, we can say that **the pointwise infimum of the Lagrangian is a concave function**. We established this result in [Quadratic Optimisation Concepts]({% post_url 2021-05-08-quadratic-optimisation-theory %}). This result is irrespective of the shape of the Lagrangian in the direction of $$x$$.
+
+![Shape of Lagrangian for a Convex Objective Function](/assets/images/lagrangian-saddle.png)
 
 ## Geometric Intuition of Convex Optimisation
 ## Karush-Kuhn-Tucker or Saddle Point Theorem
@@ -126,6 +169,4 @@ $$
 ### Strong Duality
 ### Duality Gap
 
-![Shape of Lagrangian for a Convex Objective Function](/assets/images/lagrangian-shape.png)
-![Shape of Lagrangian for a Convex Objective Function](/assets/images/quadratic-surface-no-cross-term-saddle.png)
 
