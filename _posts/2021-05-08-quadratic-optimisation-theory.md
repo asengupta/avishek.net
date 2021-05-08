@@ -252,7 +252,7 @@ In the general case, the infimum will define a function whose image will contain
 
 $$
 \text{sup}_y g(x,y)\leq \text{inf}_x h(x,y) \\
-\Rightarrow \mathbf{\text{sup}_y \text{ inf}_x f(x,y)\leq \text{inf}_x \text{ sup}_y} \text{   }\forall x,y\in\mathbf{R}
+\Rightarrow \mathbf{\text{sup}_y \text{ inf}_x f(x,y)\leq \text{inf}_x \text{ sup}_y f(x,y)}\text{   }\forall x,y\in\mathbf{R}
 $$
 
 This is the statement of the **Max-Min Inequality**.
@@ -262,7 +262,7 @@ The **Minimax Theorem** (first proof by **John von Neumann**) specifies conditio
 Specifically, the theorem states that the 
 
 $$
-\mathbf{\text{sup}_y \text{ inf}_x f(x,y)\leq \text{inf}_x \text{ sup}_y} \text{   }\forall x,y\in\mathbf{R}
+\mathbf{\text{sup}_y \text{ inf}_x f(x,y)\leq \text{inf}_x \text{ sup}_y f(x,y)} \text{   }\forall x,y\in\mathbf{R}
 $$
 
 if:

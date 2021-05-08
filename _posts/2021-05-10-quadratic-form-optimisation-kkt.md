@@ -27,11 +27,6 @@ where:
 
 For **Quadratic Optimisation**, the extra constraint that is imposed is: $$g_i(x)$$ is are also affine functions. Therefore, all of our constraints are essentially linear.
 
-We will talk of this simplification when we explore the shape of the Lagrangian.
-
-## Lagrangian
-We now have the machinery to explore the **Lagrangian Dual** in some detail. Before proceeding with this section, let us restate the **Quadratic Optimisation** problem in a more simplified form first.
-
 For this discussion, I'll omit the equality constraints $$h_i(x)$$ for clarity; any **equality constraints can always be converted into inequality constraints**, and become part of $$g_i(x)$$.
 
 Thus, this is the reframing of the **Quadratic Optimisation** problem for the purposes of this discussion.
@@ -62,6 +57,9 @@ Df(x,\lambda)=\sum_{i=1}^n\lambda_i.Dg_i(x)
 $$
 
 where $$x=(U,V)$$. We will not consider the pivotal and non-pivotal variables separately in this discussion.
+
+## Lagrangian
+We now have the machinery to explore the **Lagrangian Dual** in some detail. Before proceeding with this section, let us restate the **Quadratic Optimisation** problem in a more simplified form first.
 
 We will first consider the **Lagrangian** of a function. The Lagrangian form is simply restating the Lagrange Multiplier form as a function $$L(X,\lambda)$$, like so:
 
@@ -112,9 +110,16 @@ $$
 This is referred to in the mathematical optimisation field as the **primal optimisation problem**.
 
 Difficulty in Solving the Primal Optimisation Problem
+The main difficulty in solving the primal problem arises from the fact that the number of variables to optimise is stuff
 
 ### 2. The Dual Optimisation Problem
-## 3. Max-Min Inequality
+We already know from the [Max-Min Inequality]({% post_url 2021-05-08-quadratic-optimisation-theory %}) that:
+
+$$
+\text{sup}_y g(x,y)\leq \text{inf}_x h(x,y) \\
+\Rightarrow \mathbf{\text{sup}_y \text{ inf}_x f(x,y)\leq \text{inf}_x \text{ sup}_y f(x,y)} \text{   }\forall x,y\in\mathbb{R}
+$$
+
 ## Geometric Intuition of Convex Optimisation
 ## Karush-Kuhn-Tucker or Saddle Point Theorem
 ### Weak Duality
