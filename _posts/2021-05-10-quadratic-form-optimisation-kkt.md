@@ -3,6 +3,7 @@ title: "Quadratic Optimisation: Lagrangian Dual, and the Karush-Kuhn-Tucker Cond
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Quadratic Optimisation", "Linear Algebra", "Optimisation", "Theory"]
+draft: true
 ---
 
 This article concludes the (very abbreviated) theoretical background required to understand **Quadratic Optimisation**. Here, we extend the **Lagrangian Multipliers** approach, which in its current form, admits only equality constraints. We will extend it to allow constraints which can be expressed as inequalities.
