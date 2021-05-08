@@ -43,8 +43,7 @@ We have already seen in [Vector Calculus: Lagrange Multipliers, Manifolds, and t
 
 $$ \mathbf{
 Df=\lambda_1 Dh_1(U,V)+\lambda_2 Dh_2(U,V)+\lambda_3 Dh_3(U,V)+...+\lambda_n Dh_n(U,V)
-} \\
-\\
+}
 $$
 
 We can rewrite this as:
@@ -56,6 +55,28 @@ Df(x)=\sum_{i=1}^n\lambda_i.Dg_i(x)
 $$
 
 where $$x=(U,V)$$. We will not consider the pivotal and non-pivotal variables separately in this discussion.
+
+In this original formulation, we expressed the gradient vector as a linear combination of the gradient vector(s) of the constraint manifold(s).
+We can bring everything over to one side and flip the signs of the Lagrangian Multipliers to get the following:
+
+$$
+Df(x)+\sum_{i=1}^n\lambda_i.Dg_i(x)=0
+$$
+
+Since the derivatives in this case represent the gradient vectors, we can rewrite the above as:
+
+$$
+\mathbf{
+\begin{equation}
+\nabla f(x)+\sum_{i=1}^n\lambda_i.\nabla g_i(x)=0
+\label{eq:kkt-1}
+\end{equation}
+}
+$$
+
+This expresses the fact that the **gradient vector of the tangent space must be opposite (and obviously parallel) to the direction of the gradient vector of the objective function**. All it really amounts to is a **change in the sign** of the multipliers $$\lambda_i$$; we do this so that the **Lagrange multiplier terms act as penalties** when the constraints $$g_i(x)$$ are violated. We will see this in action when we explore the properties of the Lagrangian in the next few sections.
+
+The identity $$\eqref{eq:kkt-1}$$ is the **Stationarity Condition**, one of the **Karush-Kuhn-Tucker Conditions**.
 
 ## Lagrangian
 We now have the machinery to explore the **Lagrangian Dual** in some detail. Before proceeding with this section, let us restate the **Quadratic Optimisation** problem in a more simplified form first.
@@ -159,7 +180,7 @@ Let us summarise a few properties of this graph.
 
 - **The function is convex in $$x$$**: Assume $$\lambda=C$$ is a constant, then the function has the form $$\mathbf{x^2+Cx}$$ which is a family of parabolas. **A parabola is a convex function**, thus the result follows.
 - **The function is concave in $$\lambda$$**: Assume that $$x=C$$ and $$x^2=K$$ are constants, then the function has the form $$\mathbf{C\lambda+K}$$, which is the general form of **affine functions**. **Affine functions are both convex and concave**, but we will be drawing more conclusions based on their concave nature, so we will simply say that **the Lagrangian is concave in $$\lambda$$**. Thus, **the Lagrangian is also a family of concave functions**.
-- As a direct consequence of the Lagrangian being a family of concave functions, we can say that **the pointwise infimum of the Lagrangian is a concave function**. We established this result in [Quadratic Optimisation Concepts]({% post_url 2021-05-08-quadratic-optimisation-theory %}). This result is irrespective of the shape of the Lagrangian in the direction of $$x$$.
+- As a direct consequence of the Lagrangian being a family of concave functions, we can say that **the pointwise infimum of the Lagrangian is a concave function**. We established this result in [Quadratic Optimisation Concepts]({% post_url 2021-05-08-quadratic-optimisation-theory %}). This result is irrespective of the shape of the Lagrangian in the direction of $$x$$. This is important because the
 
 ![Shape of Lagrangian for a Convex Objective Function](/assets/images/lagrangian-saddle.png)
 
