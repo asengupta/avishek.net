@@ -79,7 +79,7 @@ This expresses the fact that the **gradient vector of the tangent space must be 
 
 The identity $$\eqref{eq:kkt-1}$$ is the **Stationarity Condition**, one of the **Karush-Kuhn-Tucker Conditions**.
 
-### Active and Inactive Constraints
+## Active and Inactive Constraints
 In **Quadratic Optimisation**, $$g_i(x)|i=1,2,...,n$$ represent the constraint functions. An important concept to get an intuition is about the difference between dealing with pure equality constraints and inequality cnstraints.
 
 The diagram below shows an example where all the constraints are equality constraints.
@@ -107,7 +107,7 @@ In the first figure, the global minimum of $$f(x)$$ violates the constraint sinc
 
 Contrast this with the diagram above. Here, the shape of the solution space is different. The minimum $$f(x)$$ lies within the $$g(x)\leq 0$$ zone. This means that even if we minimise $$f(x)$$ without regard to the constraint $$g(x)\leq 0$$, we'll still get the minimum solution which still satisfies the constraint. In this scenario, we call $$g(x)\leq 0$$ an **inactive constraint**. This implies that in this scenario, we do not even need to consider the constraint $$g_i(x)$$ as part of the objective function. As you will see, after we define the Lagrangian, this can be done by setting the corresponding Lagrangian multiplier to zero.
 
-## Lagrangian
+## The Lagrangian
 We now have the machinery to explore the **Lagrangian Dual** in some detail. Before proceeding with this section, let us restate the **Quadratic Optimisation** problem in a more simplified form first.
 
 We will first consider the **Lagrangian** of a function. The Lagrangian form is simply restating the Lagrange Multiplier form as a function $$L(X,\lambda)$$, like so:
