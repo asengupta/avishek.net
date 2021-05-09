@@ -383,9 +383,31 @@ These assume that the constraints are nonlinear.
 
 However, for our current purposes, if we assume that the inequality constraints are affine functions, we do not need to satisfy any other condition: the duality gap will be zero by default under these conditions; the optimum dual solution will always equal the optimal primal solution, i.e., $$p^*=d^*$$.
 
+This also guarantees the existence of a saddle point in the solution of the Lagrangian. A saddle point of a function $$f(x,y)$$ is defined as a point (x^*,y^*) which satisfies the following condition:
+
+$$
+f(x^*,\bigcirc)\leq f(x^*,y^*)\leq f(\bigcirc, y^*)
+$$
+
+where $$\bigcirc$$ represents "any $$x$$" or "any $$y$$" depending upon its placement. Applying this to our objective function, we can write:
+
+$$
+f(x^*,\bigcirc)\leq f(x^*,\lambda^*)\leq f(\bigcirc, \lambda^*)
+$$
+
+The implication is that starting from the saddle point, the function slopes down in the direction of $$\lambda$$, and slopes up in the direction of $$x$$. The figure below shows the general shape of the Lagrangian with a convex objective function and affine (inequality and equality) constraints.
+
 ![Shape of Lagrangian for a Convex Objective Function](/assets/images/lagrangian-saddle.png)
 
-This also guarantees the existence of a saddle point in the solution 
+The reason this leads to Strong Duality is this: minimising $$f(x,\lambda)$$ with respect to $$x$$ first, then maximising with respect to $$\lambda$$, takes us to the same point $$(x^*,y^*)$$ that would be reached, if we first maximise $$f(x,\lambda)$$ with respect to $$\lambda$$, then minimise with respect to $$\lambda$$.
+
+Mathematically, this implies:
+
+$$
+\mathbf{\text{sup}_\lambda \text{ inf}_x f(x,\lambda)= \text{inf}_x \text{ sup}_\lambda f(x,\lambda)}
+$$
+
+thus implying that the Duality Gap is zero.
 
 ## Notes
 - Karush-Kuhn-Tucker Conditions use Farkas' Lemma for proof. This will necessitate 
