@@ -267,10 +267,9 @@ Let us summarise a few properties of this graph.
 
 ![Shape of Lagrangian for a Convex Objective Function](/assets/images/lagrangian-saddle.png)
 
+## Recap: The Big Picture
 ## Geometric Intuition of Convex Optimisation
 ## Saddle Point Theorem
 ### Weak Duality
 ### Strong Duality
 ### Duality Gap
-
-

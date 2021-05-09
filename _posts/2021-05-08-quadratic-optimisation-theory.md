@@ -1,5 +1,5 @@
 ---
-title: "Quadratic Optimisation Concepts: Affine Sets / Functions, Convex / Concave Functions"
+title: "Quadratic Optimisation: Mathematical Background"
 author: avishek
 usemathjax: true
 tags: ["Quadratic Optimisation", "Optimisation", "Theory"]
@@ -25,6 +25,25 @@ $$
 ![Affine Set](/assets/images/affine-set.png)
 
 In words, a vector is an **affine combination** of $$n$$ vectors if the **coefficients of the linear combinations of those vectors sum to one**.
+
+## Convex and Non-Convex Sets
+A set is said to be a **convex set** if for any two points belonging to the set, all their affine combinations also belong to the set. In simpler times, it means that a straight line between two points belonging to a convex set, lies completely inside the set.
+
+Mathematically, the condition for convexity is the following:
+
+$$
+\theta p_1+(1-\theta)p_2 \in C, \text{ if } p_1,p_2 \in C
+$$
+
+The set shown below is a convex set.
+
+![Convex Set](/assets/images/convex-set.png)
+
+Any set that does not adhere to the above definition, is, by definition, a **nonconvex set**.
+
+The set below is **nonconvex**. The red segments of the lines joining the points within the set lie outside the set, and thus violate the definition of convexity.
+
+![Nonconvex Set](/assets/images/nonconvex-set.png)
 
 ## Convex and Concave Functions
 The layman's explanation of a convex function is that it is a bowl-shaped function. However, let us state this mathematically: we say a function is convex, **if the graph of that function lies below every point on a line connecting any two points on that function**.
@@ -65,6 +84,21 @@ $$
 Thus all mappings of the form $$\mathbf{f(x)=Ax+C}$$ are **affine functions**.
 
 We may draw another interesting conclusion: **affine functions are both convex and concave**. This is because affine functions satisfy the equality conditions for both convexity and concavity: **an affine set on an affine function lies fully on the function itself**.
+
+## Supporting Hyperplanes
+A **supporting hyperplane** for a set $$C$$ is a hyperplane which has the following properties:
+
+- The **supporting hyperplane** is guaranteed to contain at least one point which is also on the boundary of the set $$C$$.
+- The **supporting hyperplane** divides $$\mathbb{R}^n$$ into two **half-spaces** such that set $$C$$ is completely contained by one of these half-spaces.
+
+The definition of a convex set can also be explained by supporting hyperplanes. If there exists at least one supporting hyperplane for each point on the boundary of a set $$C$$, $$C$$ is convex.
+
+The diagram below shows an example of a supporting hyperplane for a convex set.
+![Supporting Hyperplane for a Convex Set](/assets/images/valid-supporting-hyperplane.png)
+
+The diagram below shows an example of an invalid supporting hyperplane (the dotted hyperplane). The dotted supporting hyperplane cannot exist because set $$C$$ lies in both the half-spaces defined by this hyperplane.
+
+![Invalid Supporting Hyperplane for a Non-Convex Set](/assets/images/invalid-supporting-hyperplane.png)
 
 ## Some Inequality Proofs
 
