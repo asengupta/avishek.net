@@ -267,21 +267,20 @@ Let us summarise a few properties of this graph.
   
 This is important because it allows us to frame the Lagrangian of a Quadratic Optimisation as a concave-convex function. This triggers a whole list of simplifications, some of which I list below (we'll discuss most of them in succeeding sections).
 
-- Guarantee of a saddle point.
-- Zero duality gap by default
-- No extra conditions for Strong Duality
+- Guarantee of a **saddle point**
+- **Zero duality gap** by default
+- No extra conditions for **Strong Duality**
 
 ![Shape of Lagrangian for a Convex Objective Function](/assets/images/lagrangian-saddle.png)
 
-## Recap: The Big Picture
 ## Geometric Intuition of Convex Optimisation
-Let us look at the geometric interpretation of the Lagrangian Dual. For this discussion, we will assume that the constraints are active. The Lagrangian itself is:
+Let us look at the **geometric interpretation** of the Lagrangian Dual. For this discussion, we will assume that the **constraints are active**. The Lagrangian itself is:
 
 $$
 L(x,\lambda)=f(x)+\sum_{i=1}^n\lambda_i.g_i(x)\text{  such that }\lambda_i\geq 0 \text{ and } g_i(x)\leq 0
 $$
 
-For the purposes of the discussion, let's assume one constraint, so that th Lagrangian is now:
+For the purposes of the discussion, let's assume one constraint, so that the Lagrangian is now:
 
 $$
 L(x,\lambda)=f(x)+\lambda.g(x)\text{  such that }\lambda\geq 0 \text{ and } g(x)\leq 0
@@ -294,7 +293,7 @@ C=\lambda.g(x)+f(x) \\
 \Rightarrow f(x)=-\lambda.g(x)+C
 $$
 
-This is the equation of a straight line, with slope $$-\lambda$$ and y-intercept $$C$$. Note that $$C$$ in this case represents the Lagrangian objective function.
+**This is the equation of a straight line**, with slope $$-\lambda$$ and y-intercept $$C$$. Note that $$C$$ in this case represents the Lagrangian objective function.
 
 Let's walk through the Lagrangian maximisation-minimisation procedure step-by-step. The procedure is:
 
@@ -304,12 +303,10 @@ $$
 
 There are two important points to note here:
 
-- We have restricted $$\lambda\geq 0$$. Therefore the slope of the Lagrangian is always negative.
-- Moving this line to the left decreases its y-intercept, in this case, $$C$$.
+- We have restricted $$\lambda\geq 0$$. Therefore the **slope of the Lagrangian is always negative**.
+- **Moving this line to the left decreases its y-intercept**, in this case, $$C$$.
 
 ### 1. Infimum with respect to $$x$$
-We are really doing this step to express the fact that the gradient vector of $$f(x)$$ is parallel and opposite to the gradient vector of the constraint $$g(x)$$.
-
 The first step is $$\text{ inf}_x L(x,\lambda)$$, which translates to:
 
 $$
@@ -331,24 +328,27 @@ $$
 This gives us the condition for such a minimisation to be possible, which, as you must have guessed, simply restates the **Kuhn-Tucker Stationarity Condition**.
 
 The situation looks like below.
+
 ![Infimum Supporting Hyperplanes for a Convex Set](/assets/images/infimum-supporting-hyperplane-convex-set.png)
 
-Note that because $$\lambda\geq 0$$ and also due to how the infimum works, none of the supporting hyperplanes touch $$G$$ in the first quadrant (positive); they have all moved as far left as possible, and are effectively tangent to $$G$$ at $$g(x)\geq 0$$.
+The important thing to note is that as a result of taking the infimum, all the Lagrangians are now **supporting hyperplanes** of $$G$$.
+
+Also, because $$\lambda\geq 0$$ and also due to how the infimum works, none of the supporting hyperplanes touch $$G$$ in the first quadrant (positive); they have all moved as far left as possible, and are effectively tangent to $$G$$ at $$g(x)\geq 0$$.
 
 As you see below, this operation holds true even for nonconvex sets.
 
 ![Infimum Supporting Hyperplanes for a Convex Set](/assets/images/infimum-supporting-hyperplanes-nonconvex-set.png)
 
-More importantly however, it tells us what the supporting hyperplane for the convex set looks like for a given value of $$\lambda$$. Obviously, this also implies that the Lagrangian is tangent to $$G$$.
+The infimum operation tells us what the supporting hyperplane for the convex set looks like for a given value of $$\lambda$$. Obviously, this also implies that the Lagrangian is tangent to $$G$$. This is expressed by the fact that the gradient vector of $$f(x)$$ is parallel and opposite to the gradient vector of the constraint $$g(x)$$.
 
 Take special note of the Lagrangian line for $$\lambda_1$$ in the nonconvex set; we shall have occasion to revisit it very soon.
 
 ### 1. Supremum with respect to $$\lambda$$
 The above infimum (minimisation) operation has given us the Lagrangian in terms of $$\lambda$$ only. This family of Lagrangians is represented by $$\text{ inf}_x \lambda.g(x)+f(x)$$.
 
-Geometrically, you can assume that you have an infinite set of Lagrangians, one for every value of $$\lambda$$, each of them a supporting hyperplane for the $$[g(x), f(x)]$$ set.
+**Geometrically, you can assume that you have an infinite set of Lagrangians, one for every value of $$\lambda$$, each of them a supporting hyperplane for the $$[g(x), f(x)]$$ set.**
 
-Now, to actually find the optimum point, we'd like to select the supporting hyperplane that has the maximum corresponding cost $$C$$, or y-intercept. Algebraically, this implies finding $$\text{ inf}_\lambda \text{ inf}_x \lambda.g(x)+f(x)$$.
+Now, to actually find the optimum point, we'd like to select the **supporting hyperplane that has the maximum corresponding cost $$C$$**, or y-intercept. Algebraically, this implies finding $$\text{ inf}_\lambda \text{ inf}_x \lambda.g(x)+f(x)$$.
 
 Note that the Lagrangian is concave in $$\lambda$$, thus the minimisation has also given us a concave problem to solve. In this case, we will be maximising this concave problem (which corresponds to minimising a convex problem).
 
@@ -359,31 +359,31 @@ In the diagram above, I've marked the winning supporting hyperplane, thicker. Fo
 ## Strong Duality
 The interesting (and useful) thing to note is that if you were to solve the **Primal Optimisation Problem** instead of the **Lagrangian Dual Problem**, or even the original optimisation problem in the **standard Quadratic Programming form**, you will get the same result as $$d^*$$.
 
-This is the result of the function being concave in $$\lambda$$ and convex in $$x$$, implying the existence of a saddle point, which we will delve into when discussing the **Saddle Point Theorem**. This is also the situation where the equality clause of the **Max-Min Inequality** holds.
+This is the result of the function being concave in $$\lambda$$ and convex in $$x$$, **implying the existence of a saddle point**. This is also the situation where the equality clause of the **Max-Min Inequality** holds.
 
 ## Weak Duality and the Duality Gap
 I'd purposefully omitted the result of finding the supremum for the nonconvex case in the previous section. This is because the nonconvex scenario is what shows us the real difference between the **Primal Optimisation Problem** and its **Lagrangian Dual**.
 
-The winning supporting hyperplane for the nonconvex set is shown below.
+The winning supporting hyperplane for the **nonconvex set** is shown below.
 
 ![Supremum Supporting Hyperplanes for a Non-Convex Set](/assets/images/duality_gap-nonconvex-set.png)
 
 The solution for the **Lagrangian Dual Problem** is marked $$d^*$$, and the solution for the **Primal Optimisation Problem** is marked $$p^*$$. As you can clearly see, $$d^*$$ and $$p^*$$ do not coincide.
 
-The dual solution is in this case, is not the actual solution, but it provides a lower bound on $$p^*$$, i.e., if we can compute $$d^*$$, we can use it to decide if the solution by an optimisation algorithm is "good enough". It is also a validation that we are not searching in an infeasible area of the solution space.
+The dual solution is in this case, is not the actual solution, but **it provides a lower bound on $$p^*$$**, i.e., if we can compute $$d^*$$, we can use it to decide if the solution by an optimisation algorithm is "good enough". It is also a validation that we are not searching in an infeasible area of the solution space.
 
-This is the situation where the inequality condition of the **Max-Min Inequality** holds.
+**This is the situation where the inequality condition of the **Max-Min Inequality** holds.**
 
-The difference between the $$p^*$$ and $$d^*$$ is called the **Duality Gap**. Obviously, the duality gap is zero when conditions of Strong Duality are satisfied.
+The difference between the $$p^*$$ and $$d^*$$ is called the **Duality Gap**. Obviously, the duality gap is zero when conditions of **Strong Duality** are satisfied. When these conditions for Strong Duality are not satisfied, we say that **Weak Duality** holds.
 
 ## Conditions for Strong Duality
 There are many different conditions which, if satisfied by themselves, guarantee Strong Duality. In particular, textbooks cite **Slater's Constraint Qualification** very frequently, and the **Linear Independence Constraint Qualification** also finds mention. 
 
-These assume that the constraints are nonlinear.
+These above constraint qualifications assume that the constraints are nonlinear.
 
-However, for our current purposes, if we assume that the inequality constraints are affine functions, we do not need to satisfy any other condition: the duality gap will be zero by default under these conditions; the optimum dual solution will always equal the optimal primal solution, i.e., $$p^*=d^*$$.
+However, for our current purposes, if we assume that the **inequality constraints are affine functions**, we do not need to satisfy any other condition: **the duality gap will be zero by default** under these conditions; the optimum dual solution will always equal the optimal primal solution, i.e., $$p^*=d^*$$.
 
-This also guarantees the existence of a saddle point in the solution of the Lagrangian. A saddle point of a function $$f(x,y)$$ is defined as a point (x^*,y^*) which satisfies the following condition:
+This also **guarantees the existence of a saddle point** in the solution of the Lagrangian. A saddle point of a function $$f(x,y)$$ is defined as a point (x^*,y^*) which satisfies the following condition:
 
 $$
 f(x^*,\bigcirc)\leq f(x^*,y^*)\leq f(\bigcirc, y^*)
@@ -399,15 +399,16 @@ The implication is that starting from the saddle point, the function slopes down
 
 ![Shape of Lagrangian for a Convex Objective Function](/assets/images/lagrangian-saddle.png)
 
-The reason this leads to Strong Duality is this: minimising $$f(x,\lambda)$$ with respect to $$x$$ first, then maximising with respect to $$\lambda$$, takes us to the same point $$(x^*,y^*)$$ that would be reached, if we first maximise $$f(x,\lambda)$$ with respect to $$\lambda$$, then minimise with respect to $$\lambda$$.
+The reason this leads to **Strong Duality** is this: minimising $$f(x,\lambda)$$ with respect to $$x$$ first, then maximising with respect to $$\lambda$$, takes us to the same point $$(x^*,y^*)$$ that would be reached, if we first maximise $$f(x,\lambda)$$ with respect to $$\lambda$$, then minimise with respect to $$\lambda$$.
 
-Mathematically, this implies:
+Mathematically, this implies that:
 
 $$
 \mathbf{\text{sup}_\lambda \text{ inf}_x f(x,\lambda)= \text{inf}_x \text{ sup}_\lambda f(x,\lambda)}
 $$
 
-thus implying that the Duality Gap is zero.
+thus implying that the **Duality Gap** is zero.
 
 ## Notes
-- Karush-Kuhn-Tucker Conditions use Farkas' Lemma for proof. This will necessitate 
+- **Karush-Kuhn-Tucker Conditions** use **Farkas' Lemma** for proof.
+- The **Saddle Point Theorem** is not proven here.
