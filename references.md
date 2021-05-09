@@ -10,6 +10,7 @@ title: Book References
 - **Mathematics for Machine Learning** : *Marc Peter Deisenroth*, *A. Aldo Faisal*, *Cheng Soon Ong*
 - **Knowledge Discovery with Support Vector Machines** : *Lutz H. Hamel*
 - **Machine Learning: A Probabilistic Perspective** : *Kevin P. Murphy*
+- **Convex Optimization** : *Stephen P. Boyd*, *Lieven Vandenberghe*
 - **Nonlinear Programming** : *Peter Zörnig*
 - **Statstical Rethinking** : *Richard McElreath*
 - **Neural Networks and Learning Machines** : *Simon Haykin*
