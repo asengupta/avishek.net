@@ -271,7 +271,7 @@ This is important because it allows us to frame the Lagrangian of a Quadratic Op
 
 ![Shape of Lagrangian for a Convex Objective Function](/assets/images/lagrangian-saddle.png)
 
-## Geometric Intuition of Convex Optimisation
+## Geometric Intuition of the Lagrange Dual Problem
 Let us look at the **geometric interpretation** of the Lagrangian Dual. For this discussion, we will assume that the **constraints are active**. The Lagrangian itself is:
 
 $$
@@ -291,7 +291,7 @@ C=\lambda.g(x)+f(x) \\
 \Rightarrow f(x)=-\lambda.g(x)+C
 $$
 
-**This is the equation of a straight line**, with slope $$-\lambda$$ and y-intercept $$C$$. Note that $$C$$ in this case represents the Lagrangian objective function.
+**This is the equation of a straight line**, with **slope $$-\lambda$$** and **y-intercept $$C$$**. Note that $$C$$ in this case represents the Lagrangian objective function.
 
 Let's walk through the Lagrangian maximisation-minimisation procedure step-by-step. The procedure is:
 
@@ -331,15 +331,15 @@ The situation looks like below.
 
 The important thing to note is that as a result of taking the infimum, all the Lagrangians are now **supporting hyperplanes** of $$G$$.
 
-Also, because $$\lambda\geq 0$$ and also due to how the infimum works, none of the supporting hyperplanes touch $$G$$ in the first quadrant (positive); they have all moved as far left as possible, and are effectively tangent to $$G$$ at $$g(x)\geq 0$$.
+Also, because $$\lambda\geq 0$$ and also due to how the infimum works, none of the supporting hyperplanes touch $$G$$ in the first quadrant (positive); they have all moved as far left as possible, and are effectively tangent to $$G$$ at $$g(x)\leq 0$$.
 
-As you see below, this operation holds true even for nonconvex sets.
+As you see below, **this operation holds true even for nonconvex sets**.
 
 ![Infimum Supporting Hyperplanes for a Convex Set](/assets/images/infimum-supporting-hyperplanes-nonconvex-set.png)
 
 The infimum operation tells us what the supporting hyperplane for the convex set looks like for a given value of $$\lambda$$. Obviously, this also implies that the Lagrangian is tangent to $$G$$. This is expressed by the fact that the gradient vector of $$f(x)$$ is parallel and opposite to the gradient vector of the constraint $$g(x)$$.
 
-Take special note of the Lagrangian line for $$\lambda_1$$ in the nonconvex set; we shall have occasion to revisit it very soon.
+Take special note of the Lagrangian line for $$\lambda_1$$ in the nonconvex set scenario; we shall have occasion to revisit it very soon.
 
 ### 1. Supremum with respect to $$\lambda$$
 The above infimum (minimisation) operation has given us the Lagrangian in terms of $$\lambda$$ only. This family of Lagrangians is represented by $$\text{ inf}_x \lambda.g(x)+f(x)$$.
@@ -370,14 +370,14 @@ The solution for the **Lagrangian Dual Problem** is marked $$d^*$$, and the solu
 
 The dual solution is in this case, is not the actual solution, but **it provides a lower bound on $$p^*$$**, i.e., if we can compute $$d^*$$, we can use it to decide if the solution by an optimisation algorithm is "good enough". It is also a validation that we are not searching in an infeasible area of the solution space.
 
-**This is the situation where the inequality condition of the **Max-Min Inequality** holds.**
+**This is the situation where the inequality condition of the Max-Min Inequality holds.**
 
 The difference between the $$p^*$$ and $$d^*$$ is called the **Duality Gap**. Obviously, the duality gap is zero when conditions of **Strong Duality** are satisfied. When these conditions for Strong Duality are not satisfied, we say that **Weak Duality** holds.
 
 ## Conditions for Strong Duality
 There are many different conditions which, if satisfied by themselves, guarantee Strong Duality. In particular, textbooks cite **Slater's Constraint Qualification** very frequently, and the **Linear Independence Constraint Qualification** also finds mention. 
 
-These above constraint qualifications assume that the constraints are nonlinear.
+**The above-mentioned constraint qualifications assume that the constraints are nonlinear.**
 
 However, for our current purposes, if we assume that the **inequality constraints are affine functions**, we do not need to satisfy any other condition: **the duality gap will be zero by default** under these conditions; the optimum dual solution will always equal the optimal primal solution, i.e., $$p^*=d^*$$.
 
