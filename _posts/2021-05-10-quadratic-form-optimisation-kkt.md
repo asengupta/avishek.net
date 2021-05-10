@@ -7,7 +7,7 @@ tags: ["Machine Learning", "Quadratic Optimisation", "Linear Algebra", "Optimisa
 
 This article concludes the (very abbreviated) theoretical background required to understand **Quadratic Optimisation**. Here, we extend the **Lagrangian Multipliers** approach, which in its current form, admits only equality constraints. We will extend it to allow constraints which can be expressed as inequalities.
 
-Much of this discussion applies to the general class of **Convex Optimisation**; however, I will be constraining the form of the problem slightly to simplify discussion. We have already developed most of the basic mathematical results (see [Quadratic Optimisation Concepts]({% post_url 2021-05-08-quadratic-optimisation-theory %})) in order to fully appreciate the implications of the **Karush-Kuhn-Tucker Theorem** (also called the **Saddle Point Theorem**).
+Much of this discussion applies to the general class of **Convex Optimisation**; however, I will be constraining the form of the problem slightly to simplify discussion. We have already developed most of the basic mathematical results (see [Quadratic Optimisation Concepts]({% post_url 2021-05-08-quadratic-optimisation-theory %})) in order to fully appreciate the implications of the **Karush-Kuhn-Tucker Theorem**.
 
 **Convex Optimisation** solves problems framed using the following standard form:
 
@@ -234,7 +234,7 @@ $$
 \text{sup}_\lambda \text{ inf}_x L(x,\lambda) \leq \text{inf}_x \text{ sup}_\lambda L(x,\lambda)
 $$
 
-The right side is the **Primal Optimisation Problem**, and the right side is known as the **Dual Optimisation Problem**, and in this case, the **Lagrangian Dual**.
+The right side is the **Primal Optimisation Problem**, and the left side is known as the **Dual Optimisation Problem**, and in this case, the **Lagrangian Dual**.
 
 To understand the fuss about the **Lagrangian Dual**, we will begin with the more restrictive case where equality holds for the **Max-Min Inequality**, and later discuss the more general case and its implications. For this first part, we will assume that:
 
