@@ -28,3 +28,14 @@ draft: true
 - Bayesian interpretation of Linear Regression
 - Basic Probability, Expectation, etc.
 - Gaussian Processes and Intuition
+- Information Geometry
+- Singular Value Decomposition
+
+- ML Practice
+    - Newton-Raphson Method
+    - Gradient Descent and Stochastic Gradient Descent
+    - Dynamic Programming
+    - Sequential Minimal Optimisation
+    - Schur Complement
+    - Cholesky Factorisation
+  
