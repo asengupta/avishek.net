@@ -231,8 +231,8 @@ For a set of data $$x_i, i\in[1,N]$$, if we assume that data is divided into two
 
 $$
 \mathbf{
-N^Tx_i>b+k, \forall x_i|y_i=+1 \\
-N^Tx_i<b-k, \forall x_i|y_i=-1
+N^Tx_i\geq b+k, \forall x_i|y_i=+1 \\
+N^Tx_i\leq b-k, \forall x_i|y_i=-1
 }
 $$
 
