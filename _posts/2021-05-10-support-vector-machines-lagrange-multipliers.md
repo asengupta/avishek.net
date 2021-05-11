@@ -7,9 +7,11 @@ tags: ["Machine Learning", "Support Vector Machines", "Optimisation", "Theory"]
 
 We have looked at how **Lagrangian Multipliers** and how they help build constraints as part of the function that we wish to optimise. Their relevance in **Support Vector Machines** is how the constraints about the classifier margin (i.e., the supporting hyperplanes) is incorporated in the search for the **optimal hyperplane**.
 
-We introduced the first part of the problem in [Support Vector Machines from First Principles: Part One]({% post_url 2021-04-14-support-vector-machines-derivations %}). We then took a detour through **Vector Calculus** and ***Constrained Quadratic Optimisation** to build our mathematical understanding for the succeeeding analysis.
+We introduced the first part of the problem in [Support Vector Machines from First Principles: Part One]({% post_url 2021-04-14-support-vector-machines-derivations %}). We then took a detour through **Vector Calculus** and **Constrained Quadratic Optimisation** to build our mathematical understanding for the succeeding analysis.
 
-The necessary background material for understanding this article is covered in:
+We will now derive the analytical form of the Support Vector Machine variables in this post. This article will only discuss **Linear Support Vector Machines**, which apply to a **linearly separable data set**. **Non-Linear Support Vector Machines** will be discussed in an upcoming article.
+
+The necessary background material for understanding this article is covered in the following articles:
 
 - [Support Vector Machines from First Principles: Part One]({% post_url 2021-04-14-support-vector-machines-derivations %})
 - Vector Calculus Background
@@ -25,7 +27,7 @@ The necessary background material for understanding this article is covered in:
   
 Before we proceed with the calculations, I'll restate the original problem again.
 
-## 1. Support Vector Machine Problem Statement
+## Support Vector Machine Problem Statement
 For a set of data $$x_i, i\in[1,N]$$, if we assume that data is divided into two classes (-1,+1), we can write the constraint equations as:
 
 $$
@@ -45,7 +47,7 @@ $$
 
 We are also given a set of training examples $$x_i, i=1,2,...,n$$ which are already labelled either **+1** or **-1**. **The important assumption here is that these training data points are linearly separable**, i.e., there exists a hyperplane which divides the two categories, such that no point is misclassified. Our task is to find this hyperplane with the maximum possible margin, which will be defined by its **supporting hyperplanes**.
 
-## 2. Restatement of the Support Vector Machine Problem Statement
+## Restatement of the Support Vector Machine Problem Statement
 Remembering the standard form of a **Quadratic Programming** problem, we want the objective function to be a minimisation problem, as well as a quadratic problem.
 
 Furthermore, we'd like to set the constant $$k=1$$, and rewrite $$N$$ with $$w$$. Thus, the objective function may be rewritten as:
@@ -83,7 +85,7 @@ $$
 
 for all $$x_i$$ such that $$\lambda_i\geq 0$$, $$g_i(x)\leq 0$$, and $$y_i\in\{-1,+1\}$$.
 
-We have already assumed the **Primal and Dual Feasibility Conditions** above. The Dual Optimisation Problem is then:
+We have already assumed the **Primal and Dual Feasibility Conditions** above. The **Dual Optimisation Problem** is then:
 
 $$
 \text{max}_\lambda\hspace{4mm}\text{min}_{w,b} \hspace{4mm} L(w,\lambda,b)
@@ -97,7 +99,10 @@ $$
 
 Note that the only constraints that will be activated will be the ones which are for points lying on the supporting hyperplanes.
 
-### Solving for $$w^\ast$$
+## The Support Vector Machine Solution
+We have three variables in the Lagrangian Dual: $$(w,b,\lambda)$$. We will now solve for each of them in turn.
+
+### 1. Solving for $$w^\ast$$
 Let's see what the KKT Stationarity Condition gives us.
 
 $$
@@ -117,7 +122,7 @@ $$
 
 If we denote $$w^\ast$$ as the optimal solution for $$w$$.
 
-### Solving for $$b^\ast$$
+### 2. Solving for $$b^\ast$$
 Differentiating with respect to $$b$$, and setting it to zero, we get:
 
 $$
@@ -142,6 +147,8 @@ Therefore, we may find $$b^+$$ and $$b^-$$ by finding:
 
 **$$H^+$$ and $$H^-$$ are the supporting hyperplanes.** The situation is shown below.
 
+![Solving for Primal and Dual SVM Variables](/assets/images/svm-solving-y-intercept.png)
+
 We already saw in [Support Vector Machines from First Principles: Part One]({% post_url 2021-04-14-support-vector-machines-derivations %}) that the separating hyperplane $$H_0$$ lies midway between $$H^+$$ and $$H^-$$, implying that $$b^\ast$$ is the mean of $$b^+$$ and $$b^-$$. Thus, we get:
 
 $$
@@ -152,7 +159,7 @@ b^\ast=\frac{b^++b^-}{2} \label{eq:b}
 \end{equation}
 $$
 
-### Solving for $$\lambda^\ast$$
+### 3. Solving for $$\lambda^\ast$$
 Let us simplify the $$\eqref{eq:lagrangian}$$ in light of these new identities. We write:
 
 $$
@@ -184,6 +191,15 @@ $$
 }
 $$
 
+### Solving for $$b^\ast$$: A Shortcut
+I noted that to find $$b^+$$ and $$b^-$$, we needed to find respectively, the minimum and maximum values from each category applied to the candidate separating hyperplane $$f(x)=w^\ast x$$. As it turns out, we do not need to look through all the points.
+
+Recall that the support vectors are the ones which define the constraints in the form of supporting hyperplanes. Also, recall from our discussion on the Lagrangian Dual that the constraints are only activated for $$g(x)=0$$, i.e., the Lagrange multipliers for those points are the only nonzero multipliers; all other constraints have their Lagrange multipliers as zero.
+
+
+This means that if we have already computed the **Lagrange multipliers**, we only need to search through the **points which have nonzero Lagrange multipliers** to find $$b^+$$ and $$b^-$$. We do not need to find the maximum and minimum values, and the number of points we need to look at, is vastly reduced, presumably because most of the data points will be inside the halfspaces proper, and not exactly on the supporting hyperplanes $$H^+$$ and $$H^-$$.
+
+### Summary
 Note that at the end of our calculation, we will have arrived at ($$\lambda^\ast$$, $$w^\ast$$, $$b^\ast$$) as the optimal solution for the Lagrangian. Recall that by our **assumptions of Quadratic Optimisation**, this **Lagrangian is a concave-convex function**, and thus the primal and the dual optimum solutions coincide (**no duality gap**). In effect, this is the same solution that we'd have gotten if we'd solved the original optimisation problem.
 
 Once the training has completed, categorising a new point from a test set, is done simply by finding:
@@ -203,3 +219,9 @@ b^\ast=\frac{b^++b^-}{2} \\
 $$
 
 ## Relationship with the Perceptron
+The **Perceptron** is a much simpler version of a Support Vector Machine. I'll cover the Perceptron in its article, but simply put: the perceptron also attempts to create a linear discriminant hyperplane between two classes of data, with the purpose of classifying new data points into either one of these categories.
+
+The form of the solution for the perceptron is also a hyperplane of the form $$f(x)=wx-b$$. The perceptron may be trained sequentially, or batchwise, but regardless of the training sequence, the **final adjustment that is applied to $$w$$ in the hyperplane solution is proportional to $$\sum^{i=1}_n \eta x_iy_i$$**. This is very similar to the identity $$w^\ast=\sum_{i=1}^n \lambda_ix_iy_i$$ which we derived in $$\eqref{eq:weight}$$. 
+
+However, since the **Perceptron** does not attempt to maximise the margin between the two categories, the **separating hyperplane may perform well on the training set**, but might end up arbitrarily close to the support vector in either category, thus **increasing the risk of misclassification of new test points in that category, which lie close to the support vector**.
+
