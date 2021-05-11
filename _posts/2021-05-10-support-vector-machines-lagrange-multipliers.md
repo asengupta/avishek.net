@@ -189,7 +189,7 @@ Note that at the end of our calculation, we will have arrived at ($$\lambda^\ast
 Once the training has completed, categorising a new point from a test set, is done simply by finding:
 
 $$
-y_t=sgn[w^\ast x_t+b^\ast]
+y_t=sgn[w^\ast x_t-b^\ast]
 $$
 
 Summarising, the expressions for the **optimal Primal and Dual variables** are:
@@ -201,3 +201,5 @@ b^\ast=\frac{b^++b^-}{2} \\
 \lambda^\ast=\text{arginf}_\lambda \left[\sum_{i=1}^n \lambda_i - \frac{1}{2} \sum_{i=1}^n\sum_{j=1}^n\lambda_i\lambda_jy_iy_jx_ix_j\right]
 }
 $$
+
+## Relationship with the Perceptron
