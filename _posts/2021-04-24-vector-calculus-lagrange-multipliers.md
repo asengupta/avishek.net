@@ -83,7 +83,7 @@ Let's denote $$\Phi (x)=\begin  {bmatrix}x \\ g\end{bmatrix}$$.
 $${[x \hspace{3mm} g]}^T$$ is a vector so we are partially differentiating $$f(x,y)$$. In our example above, we can write for the **first term**, and substitute:
 
 $$
-\frac{f(x,g)}{d[x \hspace{3mm} g]}=\left[\frac{\partial f(x,g)}{\partial x} \hspace{3mm} \frac{\partial f(x,g)}{\partial g} \right] \\
+\frac{df(x,g)}{d[x \hspace{3mm} g]}=\left[\frac{\partial f(x,g)}{\partial x} \hspace{3mm} \frac{\partial f(x,g)}{\partial g} \right] \\
 \Rightarrow D_xf(x,y)=\left[\frac{\partial f(x,g)}{\partial x} \hspace{3mm} \frac{\partial f(x,g)}{\partial g} \right].\frac{d\Phi (x)}{dx}
 $$
 
@@ -342,7 +342,7 @@ These $$m$$ vectors are all that are needed to completely determine the tangent 
 
 Taking the composite function $$f \circ G$$ allows us to change the problem from a **constrained problem to an unconstrained optimisation problem**, because the **constraints are already expressed between the relationships of the $$U$$ set and $$V$$ sets of variables**.
 
-**In calculus, to find the critical point, we need to take the derivative and set it to zero. This many be a **maximum** or a **minimum**, and that usually depends upon what the **second derivative** looks like, but we will postpone discussion for later.
+In calculus, to find the critical point, we need to take the derivative and set it to zero. This may be a **maximum** or a **minimum**, and that usually depends upon what the **second derivative** looks like, but we will postpone discussion for later.
 
 The output of $$\mathbf{D_{(U,V)}f}$$ is a $$1 \times m$$ vector, which we'd like to set to zero. This also implies an important result: **at the critical point, the gradient vector is perpendicular to every tangent vector**. This can also be restated as: **the tangent space (the space spanned by the $$m$$ tangent vectors) belongs to the kernel of $$\nabla f$$**. Note that I did not say that it **is** the kernel of $$\nabla f$$, merely that it **belongs** to that kernel.
 

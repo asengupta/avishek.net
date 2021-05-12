@@ -3,6 +3,7 @@ title: "Support Vector Machines from First Principles: Non-Linear SVMs and the K
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Support Vector Machines", "Kernels", "Theory"]
+draft: true
 ---
 
 The Support Vector Machine we have discussed only works for linearly separable data. Real-world data sets are seldom linearly separable. In this
