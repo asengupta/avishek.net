@@ -62,7 +62,7 @@ where $$V$$ is the embedding space. This always ends up as the number of basis v
 ### Subset containership of Orthogonal Complements
 This rule is pretty simple, it states the following:
 
-**If $$V\subset U$$, then $$V^{\perp}\supset U^{\perp}$$**
+**If $$U\subset V$$, then $$U^{\perp}\supset V^{\perp}$$**
 
 We illustrate this with a simple motivating example, but without proof.
 If $$\vec{U}=(1,0,0)$$, then its orthogonal complement $$U^{\perp}$$ is the plane $$x=0$$, as shown below:
@@ -71,11 +71,11 @@ If $$\vec{U}=(1,0,0)$$, then its orthogonal complement $$U^{\perp}$$ is the plan
 If $$V$$ is the plane $$z=0$$, then its orthogonal complement is $$\vec{V^{\perp}}=(0,0,1)$$, as shown below:
 ![Plane V and Vector V-Perp](/assets/images/plane-v-and-its-orthogonal-complement-vector-v-perp.png)
 
-Now, the relation $$\mathbf{V\subset U}$$ clearly holds, since the vector $$\vec{U}=(1,0,0)$$ exists in the plane $$V=z=0$$, as shown below:
+Now, the relation $$\mathbf{U\subset V}$$ clearly holds, since the vector $$\vec{U}=(1,0,0)$$ exists in the plane $$V=z=0$$, as shown below:
 
 ![Plane V Contains Vector U](/assets/images/plane-v-containing-vector-u.png)
 
-Similarly, the relation $$\mathbf{V^{\perp}\supset U^{\perp}}$$ clearly holds, since $$U^{\perp}=x=0$$ contains the vector $$\vec{V^{\perp}}=(0,0,1)$$, as shown below:
+Similarly, the relation $$\mathbf{U^{\perp}\supset V^{\perp}}$$ clearly holds, since $$U^{\perp}=x=0$$ contains the vector $$\vec{V^{\perp}}=(0,0,1)$$, as shown below:
 
 ![Plane U-Perp Contains Vector V-Perp](/assets/images/plane-u-perp-containing-vector-v-perp.png)
 
