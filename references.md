@@ -12,7 +12,7 @@ title: Book References
 - **Machine Learning: A Probabilistic Perspective** : *Kevin P. Murphy*
 - **Convex Optimization** : *Stephen P. Boyd*, *Lieven Vandenberghe*
 - **Nonlinear Programming** : *Peter Zörnig*
-- **Statstical Rethinking** : *Richard McElreath*
+- **Statistical Rethinking** : *Richard McElreath*
 - **Neural Networks and Learning Machines** : *Simon Haykin*
 - **Artificial Intelligence Engines** : *James Stone*
 - **Probability for the Enthusiastic Beginner** : *David Morin*
@@ -33,6 +33,11 @@ title: Book References
 - **Algorithms**: *Robert Sedgewick*, *Kevin Wayne*
 - **Monolith to Microservices**: *Sam Newman*
 - **Technology Strategy Patterns: Architecture as Strategy**: *Eben Hewitt*
+
+## Pure Mathematics
+- **Writing Proofs in Analysis**: *Jonathan M. Kane*
+- **How to Think about Analysis**: *Lara Alcock*
+- **Principles of Topology**: *Fred H. Croom*
 
 ## Web Resources
 - http://alexhwilliams.info/itsneuronalblog/2016/03/27/pca/
