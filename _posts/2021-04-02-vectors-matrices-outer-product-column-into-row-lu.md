@@ -4,7 +4,7 @@ author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Linear Algebra", "Theory"]
 ---
-We will discuss the Column-into-Rows computation technique for matrix outer products. This will lead us to one of the important factorisations (the LU Decomposition) that is used computationally when solving systems of equations, or computing matrix inverses.
+We will discuss the Column-into-Rows computation technique for matrix outer products. This will lead us to one of the important factorisations (the **LU Decomposition**) that is used computationally when solving systems of equations, or computing matrix inverses.
 
 ## The Building Block
 Let's start with the building block which we'll extend to the computation of the matrix outer product. That component is the multiplication of a column vector ($$M\times 1$$, left side) with a row vector ($$1\times N$$, right side).
@@ -44,7 +44,7 @@ a_1 && a_2 && ... && a_N\\
 $$
 
 Each product in the result $$a_1b_1$$, $$a_2b_2$$, etc. is an $$M\times P$$ matrix, and the sum of them is obviously $$M\times P$$ as well.
-Alright, so this is a way of computing the outer product of matrices. That's great, but let's look at why this is useful. That application is the LU Decomposition technique, and the high-level intuition behind it is sketched below.
+Alright, so this is a way of computing the outer product of matrices. That's great, but let's look at why this is useful. That application is the **LU Decomposition** technique, and the high-level intuition behind it is sketched below.
 
 - A single matrix will be expressed as the sum of the product of two matrices $${\ell}_1 u_1$$, $${\ell}_2 u_2$$, ..., $${\ell}_N u_N$$. It is important to note that we are dealing with an $$N\times N$$ matrix, i.e., a square matrix.
 - We will go in the reverse direction and express this sum as a product of two matrices, $$\mathbf{L}$$ and $$\mathbf{U}$$.
@@ -134,11 +134,11 @@ Now subtract the second row from all the rows below it (with an appropriate mult
 
 $$
 \begin{bmatrix}
-\mathbf{0} && \mathbf{0} && ... && \mathbf{0}\\
-\mathbf{0} && a'_{22} && ... && a'_{2N}\\
-\mathbf{0} && a'_{32} && ... && a'_{3N}\\
+a_{11} && a_{12} && ... && a_{1N}\\
+a_{21} && a_{22} && ... && a_{2N}\\
+a_{31} && a_{32} && ... && a_{3N}\\
 ...    && ...    && ..  && ...\\
-\mathbf{0} && a'_{N2} && ... && a'_{NN}\\
+a_{N1} && a_{N2} && ... && a_{NN}\\
 \end{bmatrix}\\
 =
 \ell_1u_1+
@@ -164,15 +164,15 @@ $$
 $$
 
 ### Step 4
-Call the first term on the LHS as $$\ell_2u_2$$, so that:
+Call the second term on the RHS as $$\ell_2u_2$$, so that:
 
 $$
 \begin{bmatrix}
-\mathbf{0} && \mathbf{0} && ... && \mathbf{0}\\
-\mathbf{0} && a'_{22} && ... && a'_{2N}\\
-\mathbf{0} && a'_{32} && ... && a'_{3N}\\
+a_{11} && a_{12} && ... && a_{1N}\\
+a_{21} && a_{22} && ... && a_{2N}\\
+a_{31} && a_{32} && ... && a_{3N}\\
 ...    && ...    && ..  && ...\\
-\mathbf{0} && a'_{N2} && ... && a'_{NN}\\
+a_{N1} && a_{N2} && ... && a_{NN}\\
 \end{bmatrix}\\
 =
 \ell_1u_1+
@@ -192,11 +192,11 @@ Doing this will ultimately give us:
 
 $$
 \begin{bmatrix}
-\mathbf{0} && \mathbf{0} && ... && \mathbf{0}\\
-\mathbf{0} && a'_{22} && ... && a'_{2N}\\
-\mathbf{0} && a'_{32} && ... && a'_{3N}\\
+a_{11} && a_{12} && ... && a_{1N}\\
+a_{21} && a_{22} && ... && a_{2N}\\
+a_{31} && a_{32} && ... && a_{3N}\\
 ...    && ...    && ..  && ...\\
-\mathbf{0} && a'_{N2} && ... && a'_{NN}\\
+a_{N1} && a_{N2} && ... && a_{NN}\\
 \end{bmatrix}\\
 =
 \mathbf{
@@ -241,7 +241,7 @@ which is the form that we wanted, namely:
 $$A=LU$$
 
 ## Implications for Machine Learning
-The LU factorisation will mostly be seen in lower level matrix computational techniques. Below are some examples.
+The LU Factorisation will mostly be seen in lower level matrix computational techniques. Below are some examples.
 
 - For a system of equations given by $$Ax=b$$, the LU decomposition technique can be used to solve systems of linear equations repeatedly for different values of $$b$$ without doing the entire process of Gaussian Elimination every time for a different value of $$b$$.
 - Matlab uses LU decomposition to calculate inverse matrices.

@@ -52,3 +52,75 @@ $$
 Thus, $$a_{(n++)++}$$ is unique in the set $$\{a_0,a_1,a_2,...,a_n,a_{n++},a_{(n++)++}\}$$. Thus, we can assign a unique natural number $$a_{(n++)++}$$ such that $$a_{(n++)++}=f_{n++}(a_{n++})$$.
 
 $$\blacksquare$$
+
+## Proof of Existence of Real Cube Roots
+
+I've begun self-studying Real Analysis, and wanted to ask the community if the following constitutes a valid proof that real cube roots exist for all real numbers.
+
+Let $$r\in\mathbb{N}$$
+For the case of $$r=0$$, the cube root is $$0$$.
+
+Consider the set $$\mathbb{S}=\{x:x^3\leq r, x\in \mathbb{R}, r\in \mathbb{R}, r>0\}$$.
+
+This set is non-empty because $0\in\mathbb{S}$. It is also bounded by $r+1$ because $$(r+1)^3=r^3+3r^2+3r+1>r$$.
+
+Therefore, by the Completeness Axiom, $\mathbb{S}$ has a least upper bound. Denote this least upper bound by $$x$$.
+By the Trichotomy property, $$x^3<r$$, or, $$x^3>r$$, or $$x^3=r$$.
+
+Assume that: $$x^3<r$$
+
+If the cube of the least upper bound is less than $$r$$, then there must exist a $$x+\delta$$ whose cube is also less than $$r$$.
+
+Then, we'd like to find a $$\delta>0$$ such that $$(x+\delta)^3<r$$. This gives us:
+
+$$
+(x+\delta)^3<r \\
+x^3+\delta^3+3x^2\delta+3x\delta^2<r \\
+(x^3-r)+\delta^3+3x^2\delta+3x\delta^2<0 \\
+$$
+
+$$x^3-r$$ is a negative quantity by our assumption, thus it is enough to prove that:
+
+$$\delta^3+3x^2\delta+3x\delta^2<0$$
+
+Since $$\delta$$ is positive, we also have:
+
+$$
+(x+\delta)^3-x^3>0 \\
+\delta^3+3x^2\delta+3x\delta^2>0
+$$
+
+But here we have a contradiction since $$\delta^3+3x^2\delta+3x\delta^2$$ cannot be greater than and less than zero simultaneously. Thus, our assumption of $$x^3<r$$ is false.
+
+Assume that: $$x^3>r$$
+
+If the cube of the least upper bound is greater than $$r$$, then there must exist a $$x-\delta$$ whose cube is also greater than $$r$$.
+
+Then, we'd like to find a $$\delta>0$$ such that $$(x-\delta)^3>r$$. This gives us:
+
+$$
+(x-\delta)^3>r \\
+x^3-\delta^3-3x^2\delta+3x\delta^2>r \\
+(x^3-r)-\delta^3-3x^2\delta+3x\delta^>0 \\
+$$
+
+$$x^3-r$$ is a positive quantity by our assumption, thus it is enough to prove that:
+
+$$
+-\delta^3-3x^2\delta+3x\delta^2>0
+\delta^3+3x^2\delta-3x\delta^2<0
+$$
+
+Since $$\delta$$ is positive, we also have:
+
+$$
+(x-\delta)^3-x^3>0 \\
+-\delta^3-3x^2\delta+3x\delta^2>0
+\delta^3+3x^2\delta-3x\delta^2>0
+$$
+
+But here we have a contradiction since $$\delta^3+3x^2\delt-3x\delta^2$$ cannot be greater than and less than zero simultaneously. Thus, our assumption of $$x^3>r$$ is false.
+
+Thus, it must be true that $$s^3=r$$, which proves that for every real number $$r$$, there exists a real number $$s$$, such that $$s^3=r$$.
+
+$$\blacksquare$$
