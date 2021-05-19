@@ -55,72 +55,110 @@ $$\blacksquare$$
 
 ## Proof of Existence of Real Cube Roots
 
-I've begun self-studying Real Analysis, and wanted to ask the community if the following constitutes a valid proof that real cube roots exist for all real numbers.
-
 Let $$r\in\mathbb{N}$$
 For the case of $$r=0$$, the cube root is $$0$$.
 
-Consider the set $$\mathbb{S}=\{x:x^3\leq r, x\in \mathbb{R}, r\in \mathbb{R}, r>0\}$$.
+Consider the set $$\mathbb{S}=\{x:x^3\leq r, x\in \mathbb{R}, r\in \mathbb{R}\}$$.
 
-This set is non-empty because $0\in\mathbb{S}$. It is also bounded by $r+1$ because $$(r+1)^3=r^3+3r^2+3r+1>r$$.
+This set is non-empty because $0\in\mathbb{S}$. It is also bounded by $$r+1$$ because $$(r+1)^3=r^3+3r^2+3r+1>r$$.
 
-Therefore, by the Completeness Axiom, $\mathbb{S}$ has a least upper bound. Denote this least upper bound by $$x$$.
-By the Trichotomy property, $$x^3<r$$, or, $$x^3>r$$, or $$x^3=r$$.
+Therefore, by the **Completeness Axiom**, $$\mathbb{S}$$ has a least upper bound. Denote this least upper bound by $$x$$.
 
-Assume that: $$x^3<r$$
+By the **Trichotomy property**, these are the possible cases:
 
-If the cube of the least upper bound is less than $$r$$, then there must exist a $$x+\delta$$ whose cube is also less than $$r$$.
+- **Case 1**: $$x^3<r$$
+- **Case 2**: $$x^3>r$$
+- **Case 3**: $$x^3=r$$.
 
-Then, we'd like to find a $$\delta>0$$ such that $$(x+\delta)^3<r$$. This gives us:
+**Case 1**: Assume that: $$\mathbb{x^3<r}$$
+
+Then, by our definition of $$\mathbb{S}$$, **$$x\in\mathbb{S}$$ and is its least upper bound**, i.e., **there are no elements in $$\mathbb{S}$$ which are greater than $$x$$**.
+
+If the cube of the least upper bound $$x$$ is less than $$r$$, then it is enough to show that there exists a $$x+\delta:\delta>0$$ whose cube is also less than $$r$$.
+
+Assume that $$0<\delta<1$$. There can exist $$\delta>1$$, but that would restrict the choice of upper bounds we have to play about with:
+
+Then, we'd like to find a $$0<\delta<1$$ such that $$(x+\delta)^3<r$$. This gives us:
 
 $$
 (x+\delta)^3<r \\
 x^3+\delta^3+3x^2\delta+3x\delta^2<r \\
-(x^3-r)+\delta^3+3x^2\delta+3x\delta^2<0 \\
+(x^3-r)+\delta^3+3x^2\delta+3x\delta^2<0
 $$
 
-$$x^3-r$$ is a negative quantity by our assumption, thus it is enough to prove that:
-
-$$\delta^3+3x^2\delta+3x\delta^2<0$$
-
-Since $$\delta$$ is positive, we also have:
+We know that $$3x\delta^2<3x\delta$$ is a positive quantity, and note that $$\delta^3<\delta$$, thus we can say:
 
 $$
-(x+\delta)^3-x^3>0 \\
-\delta^3+3x^2\delta+3x\delta^2>0
+(x^3-r)+\delta^3+3x^2\delta+3x\delta^2<(x^3-r)+\delta+3x^2\delta+3x\delta
 $$
 
-But here we have a contradiction since $$\delta^3+3x^2\delta+3x\delta^2$$ cannot be greater than and less than zero simultaneously. Thus, our assumption of $$x^3<r$$ is false.
+Then, it is enough to prove that:
 
-Assume that: $$x^3>r$$
+$$(x^3-r)+\delta+3x^2\delta+3x\delta<0$$
 
-If the cube of the least upper bound is greater than $$r$$, then there must exist a $$x-\delta$$ whose cube is also greater than $$r$$.
+With some algebraic manipulation, we get:
 
-Then, we'd like to find a $$\delta>0$$ such that $$(x-\delta)^3>r$$. This gives us:
+$$
+(x^3-r)+\delta+3x^2\delta+3x\delta<0 \\
+\Rightarrow \delta(1+3x^2+3x)<r-x^3 \\
+\Rightarrow \delta<\frac{r-x^3}{1+3x^2+3x}
+$$
+
+If we assume $$\delta=\frac{1}{k}:k\in\mathbb{N}$$, then we can say:
+
+$$
+k>\frac{1+3x^2+3x}{r-x^3}: k\in\mathbb{N}
+$$
+
+Since the **Archimedean property** states that natural numbers have no upper bound, $$k$$ must exist.
+This means, we have proven that there is a $$k\in\mathbb{N}$$, for which there exists a cube root $$(x+\frac{1}{k})$$ which is larger than $$x$$, such that $$(x+\frac{1}{k})^3<r$$. **This implies that $$(x+\frac{1}{k})$$ exists in $$\mathbb{S}$$**. However, this contradicts our assumption that no element greater than $$x$$ exists in $$\mathbb{S}$$.
+
+**Thus, the statement $$x^3<r$$ is false.**
+
+**Case 2**: Assume that: $$\mathbb{x^3>r}$$
+
+If the cube of the least upper bound $$x$$ is greater than $$r$$, then it is enough to show that there exists a $$x-\delta:\delta>0$$ whose cube is also greater than $$r$$.
+
+Assume that $$0<\delta<1$$. There can exist $$\delta>1$$, but that would restrict the choice of upper bounds we have to play about with:
+
+Then, we'd like to find a $$0<\delta<1$$ such that $$(x+\delta)^3>r$$. This gives us:
 
 $$
 (x-\delta)^3>r \\
 x^3-\delta^3-3x^2\delta+3x\delta^2>r \\
-(x^3-r)-\delta^3-3x^2\delta+3x\delta^>0 \\
+(x^3-r)-\delta^3-3x^2\delta+3x\delta^2>0 \\
 $$
 
-$$x^3-r$$ is a positive quantity by our assumption, thus it is enough to prove that:
+Again note that since $$\delta^3<\delta$$, and $$3x\delta^2$$ is positive, we can write:
 
 $$
--\delta^3-3x^2\delta+3x\delta^2>0
-\delta^3+3x^2\delta-3x\delta^2<0
+(x^3-r)-\delta^3-3x^2\delta+3x\delta^2>(x^3-r)-\delta-3x^2\delta \\
 $$
 
-Since $$\delta$$ is positive, we also have:
+Thus it is enough to prove that:
 
 $$
-(x-\delta)^3-x^3>0 \\
--\delta^3-3x^2\delta+3x\delta^2>0
-\delta^3+3x^2\delta-3x\delta^2>0
+(x^3-r)-\delta-3x^2\delta>0
 $$
 
-But here we have a contradiction since $$\delta^3+3x^2\delt-3x\delta^2$$ cannot be greater than and less than zero simultaneously. Thus, our assumption of $$x^3>r$$ is false.
+Some algebraic manipulation gives us:
 
-Thus, it must be true that $$s^3=r$$, which proves that for every real number $$r$$, there exists a real number $$s$$, such that $$s^3=r$$.
+$$
+(1+3x^2)\delta<x^3-r \\
+\Rightarrow \delta<\frac{x^3-r}{1+3x^2}
+$$
+
+If we assume $$\delta=\frac{1}{k}:k\in\mathbb{N}$$, then we can say:
+
+$$
+k>\frac{1+3x^2}{x^3-r}: k\in\mathbb{N}
+$$
+
+Since the **Archimedean property** states that natural numbers have no upper bound, $$k$$ must exist.
+This means, we have proven that there is a $$k\in\mathbb{N}$$, for which there exists a cube root $$(x-\frac{1}{k})$$ which is smaller than $$x$$, such that $$(x-\frac{1}{k})^3<r$$. **Thus, $$(x+\frac{1}{k})$$ is a least upper bound for $$\mathbb{S}$$**; however, this contradicts our assumtion that $$x$$ is the least upper bound.
+
+**Thus, the statement $$x^3>r$$ is false.**
+
+Thus, the only possibility is that **Case 3** is true, i.e., $$x^3=r$$, thus implying the existence of real cube roots of real numbers.
 
 $$\blacksquare$$
