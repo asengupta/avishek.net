@@ -11,3 +11,5 @@ We will focus on the advantages of projecting the linearly-inseparable data into
 
 We'll then discuss the computational disadvantages of doing this in practice, and look at some of the theory, namely the **Kernel Trick**, which allows us to perform the necessary higher-dimensional computations, without projecting every point in our data set into higher dimensions, explicitly.
 
+We discuss an important result which allows the Kernel Trick to be a valid representation of an inner product, which is **Mercer's Theorem**, from **Functional Analysis**.
+
