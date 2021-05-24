@@ -1,5 +1,5 @@
 ---
-title: "Support Vector Machines from First Principles: Non-Linear SVMs and the Kernel Trick"
+title: "Support Vector Machines from First Principles: Non-Linear SVMs, Mercer's Theorem, and the Kernel Trick"
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Support Vector Machines", "Kernels", "Theory"]
