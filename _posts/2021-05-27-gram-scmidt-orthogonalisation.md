@@ -1,5 +1,5 @@
 ---
-title: "Gram-Schmidt Orthogonalisation"
+title: "The Gram-Schmidt Orthogonalisation"
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Linear Algebra", "Proofs", "Theory"]
