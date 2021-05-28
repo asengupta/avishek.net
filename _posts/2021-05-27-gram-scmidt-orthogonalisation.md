@@ -73,7 +73,7 @@ The procedure goes as follows:
 Assume $$m$$ **linearly independent** (but not orthogonal) vectors in $$\mathbb{R}^n$$. They span some subspace $$V_m$$ of dimensionality $$m$$. Let these vectors be $$x_1$$, $$x_2$$, $$x_3$$, ..., $$x_m$$.
 
 - We have to start somewhere, so let's assume that our first orthogonal basis vector is $$u_1=\frac{x_1}{\|x_1\|}$$ (normalise to be a unit vector). **$$u_1$$ is our first orthogonal basis vector.**
-- We now project $$x_2$$ onto $$u_1$$, finding $${x_2}_{u_1\parallel}$$ and $${x_2}_{u_1\perp}$$ as we have described in the previous sections. We won't really use $${x_2}_{u_1\parallel}$$ except to calculate its orthogonal component $${x_2}_{u_1\perp}.
+- We now project $$x_2$$ onto $$u_1$$, finding $${x_2}_{u_1\parallel}$$ and $${x_2}_{u_1\perp}$$ as we have described in the previous sections. We won't really use $${x_2}_{u_1\parallel}$$ except to calculate its orthogonal component $${x_2}_{u_1\perp}$$.
 - Designate $$u_2={x_2}_{u_1\perp}$$. Because of the way we have constructed $$u_2$$, $$u_2$$ is orthogonal to $$u_1$$. **We now have two orthogonal basis vectors, $$u_1$$, $$u_2$$.** Normalise them to unit vectors as needed. Computationally, $$u_2$$ looks like this:
   
   $$
