@@ -1,9 +1,8 @@
 ---
-title: "Kernel Functions: Results from Functional Analysis"
+title: "Kernel Functions: Results from Real and Functional Analysis"
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Kernels", "Theory", "Functional Analysis"]
-draft: true
 ---
 
 This article discusses an important construction called **Reproducing Kernel Hilbert Spaces**, which allows the Kernel function to be a valid representation of an inner product in (potentially) higher-dimensional space, from **Functional Analysis**. This construction will allow us to perform the necessary higher-dimensional computations, without projecting every point in our data set into higher dimensions, explicitly, in the case of **Non-Linear Support Vector Machines**, which will be discussed in the upcoming article.
@@ -15,7 +14,13 @@ As usual, there is a whole raft of mathematical machinery that we'll have to def
 ## Mathematical Preliminaries
 
 ## Metric Spaces
-A set equipped with a distance metric
+A set equipped with a distance metric is a metric space. A distance metric is defined as a function which defines the "distance" between two members of a set. The definition of what "distance" consititutes, varies based on the sort of metric space, and the application. A distance metric $$d(x,y)$$ must satisfy the following conditions.
+
+- $$d(x,y)>0, \forall x\neq y$$
+- $$d(x,y)=0 \Rightarrow x=y$$
+- $$d(x,y)=d(y,x)$$
+- $$d(x,z)\leq d(x,y)+d(y,z)$$
+
 ## Banach Spaces
 A metric space equipped with a norm
 ## Hilbert Spaces
