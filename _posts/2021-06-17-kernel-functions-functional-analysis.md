@@ -4,7 +4,7 @@ author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Kernels", "Theory", "Functional Analysis"]
 ---
-
+ABCD
 This article discusses an important construction called **Reproducing Kernel Hilbert Spaces**, which allows the Kernel function to be a valid representation of an inner product in (potentially) higher-dimensional space, from **Functional Analysis**. This construction will allow us to perform the necessary higher-dimensional computations, without projecting every point in our data set into higher dimensions, explicitly, in the case of **Non-Linear Support Vector Machines**, which will be discussed in the upcoming article.
 
 This construction, it is to be noted, is not unique to Support Vector Machines, and applies to the general class of techniques in Machine Learning, called **Kernel Methods**.
