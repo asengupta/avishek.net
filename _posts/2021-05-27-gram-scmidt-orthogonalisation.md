@@ -31,6 +31,8 @@ $$
 
 and indeed, we'd be justified in doing that, but let's not make that simplification, because there is a more general case coming up, where this will not be a scalar. Thus, the component of $$\vec{x}$$ in the direction $$\vec{u}$$ is $$ut={(u^Tu)}^{-1}u^Txu$$ and the orthogonal component will be $$x-ut=x-{(u^Tu)}^{-1}u^Txu$$.
 
+The one important thing to note is the expression for $$t$$ in the general case, i.e., when it is not a scalar. It is basically the expression for the **left inverse of a general matrix**:
+
 There is one simplifying assumption we can make: if $$\vec{u}$$ is a unit vector, then $$u^Tu=I$$, which simplifies the expressions to:
 
 $$
@@ -60,6 +62,10 @@ $$
 x_{u\parallel}=u^Txu \text{  (if u is a unit vector)}\\
 \mathbf{x_{u\perp}=x-{(u^Tu)}^{-1}u^Txu} \\
 x_{u\perp}=x-u^Txu \text{  (if u is a unit vector)}
+$$
+
+$$
+t={(u^Tu)}^{-1}u^Tx
 $$
 
 ## Gram-Schmidt Orthogonalisation
