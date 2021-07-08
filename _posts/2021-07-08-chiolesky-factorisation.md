@@ -1,5 +1,5 @@
 ---
-title: "The Cholesky and LDL' Factorisations"
+title: "The Cholesky and LDL* Factorisations"
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Theory", "Linear Algebra"]
@@ -168,3 +168,71 @@ D_{11} && 0 && 0 \\
 0 && 0 && 1\\
 \end{bmatrix}
 $$
+
+Multiplying out the right hand side gives us the following:
+
+$$
+\begin{bmatrix}
+D_{11} && 0 && 0 \\
+L_{21}D_{11} && D_{22} && 0\\
+L_{31}D_{11} && L_{32}D_{22} && D_{33}\\
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+1 && L_{21} && L_{31} \\
+0 && 1 && L_{32}\\
+0 && 0 && 1\\
+\end{bmatrix} \\
+=
+\begin{bmatrix}
+D_{11} && L_{21}D_{11} && L_{31}D_{11} \\
+L_{21}D_{11} && {L_{21}}^2D_{11} + D_{22} && L_{31}L_{21}D_{11} + L_{32}D_{22}\\
+L_{31}D_{11} && L_{31}L_{21}D_{11} + L_{32}D_{22} && {L_{31}}^2D_{11} + {L_{32}}^2D_{22} + D_{33} \\
+\end{bmatrix}
+
+$$
+
+This suggests the following pattern for the diagonal elements.
+
+$$
+A_{ii}=D_{ii} + \sum_{k=1}^{i-1}{L_{ik}}^2D_{kk} \\
+\Rightarrow D_{ii} = A_{ii} - \sum_{k=1}^{i-1}{L_{ik}}^2D_{kk}
+$$
+
+For the off-diagonal elements, the following pattern is suggested.
+
+$$
+A_{ij}=L_{ij}D_{jj} + \sum_{k=1}^{j-1}L_{ik}L_{jk}D_{kk} \\
+\Rightarrow L_{ij} = \frac{1}{D_{jj}}\cdot \left( A_{ij} - \sum_{k=1}^{j-1}L_{ik}L_{jk}D_{kk}\right)     \\
+$$
+
+The example computation for the $$LDL^T$$ is not shown here, but it proceeds in exactly the same way as the Cholesky example computation above.
+
+The important thing to note is that these equations work because every element we are computing, depends only on other elements in the matrix which are above and to the left of that particular element. Since we begin from the top left and proceed column-wise, we know all the factors needed to compute any element. Further, the symmetry of the matrix allows us to do the same thing row-wise instead.
+
+## Applications
+### Solutions to Linear Equations
+Cholesky Factorisation is used in solving large systems of linear equations, because we can exploit the lower triangular nature of $$L$$ and the upper triangular nature of $$L^T$$.
+
+$$
+AX=B
+\Rightarrow LL^TX=B
+$$
+
+If we know set $$Y=L^TX$$, then we can write:
+$$
+LY=B
+$$
+
+This can be solved very simply using forward substitution, because $$L$$ is lower triangular. Once we have computed $$Y$$, we solve the following system which we used for substitution, i.e.:
+
+$$
+L^TX=Y
+$$
+
+This is also a very easy computation, since $$L^T$$ is upper triangular, and thus $$X$$ can be solved using backward substitution.
+
+It is also important to note that one of the aims of these factorisation algorithms is to also ensure that the decomposed factors are as sparse as possible. To this end, there is usually a step before the actual factorisation where the initial matrix is reconfigured (swapping columns and/or rows) based on certain metrics to ensure that the factors end up being as sparse as possible. Such algorithms are called Minimum Degree Algorithms.
+
+### Interior Point Method Algorithms in Linear Programming
+In Linear Programming solvers (like GLPK), Cholesky factorisation is used as part of the Interior Point Method solver in each step. Again, the primary use is to solve a system of linear equations, but this is an example of where it fits in a larger real-world context.
