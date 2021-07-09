@@ -4,22 +4,24 @@ author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Theory", "Linear Algebra"]
 ---
-This article discusses a set of two useful (and closely related) matrix factorisations: the **Cholesky** and the **$$LDL^T$$** factorisations. Both of them find various uses: the Cholesky factorisation particularly is used when **solving large systems of linear equations**.
+This article discusses a set of two useful (and closely related) factorisations for **positive-definite matrices**: the **Cholesky** and the **$$LDL^T$$** factorisations. Both of them find various uses: the Cholesky factorisation particularly is used when **solving large systems of linear equations**.
 
-The **Cholesky factorisation** decomposes a **positive definite matrix** into the following form:
+**NOTE**: By definition, **a positive-definite matrix is symmetric**.
 
-$$
-A=LL^T
-$$
+## Factorisation Forms
 
-where $$L$$ is a **lower triangular matrix**.
-The $$LDL^T$$ factorisation as its name suggests, decomposes a **positive definite matrix** into the following form:
+- The **Cholesky factorisation** decomposes a positive definite matrix into the following form:  
+  
+  $$ \mathbf{A=LL^T}$$  
+  
+  where $$A$$ is **positive-definite**, and $$L$$ is a **lower triangular matrix**.
+  
 
-$$
-A=LDL^T
-$$
-
-where $$D$$ is a **diagonal matrix**, and $$L$$ is a **lower triangular matrix** which has **1 in all its diagonal elements**.
+- The **$$LDL^T$$ factorisation** as its name suggests, decomposes a **positive definite matrix** into the following form:  
+  
+  $$ \mathbf{A=LDL^T} $$  
+  
+  where $$A$$ is **positive-definite**, $$D$$ is a **diagonal matrix**, and $$L$$ is a **lower triangular matrix** which has **1 in all its diagonal elements**.
 
 ## Cholesky Factorisation
 
@@ -139,7 +141,7 @@ $$
 A=LDL^T
 $$
 
-where $$L$$ is lower triangular with all its diagonal elements set to 1, and $$D$$ is a diagonal matrix.
+where $$A$$ is a **positive-definite matrix**, $$L$$ is lower triangular with all its diagonal elements set to 1, and $$D$$ is a diagonal matrix.
 
 Let us take the $$3\times 3$$ matrix as an example again, and we will follow the same approach as we did with the Cholesky factorisation.
 
