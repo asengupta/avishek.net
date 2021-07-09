@@ -239,7 +239,7 @@ $$
 
 How would you solve the above system? Very easy, in the same way as **Forward Substitution**, except in this case, you'd be working backwards from the bottom. This is **Backward Substitution**, and if you have a system of equations arranged in either of the above configurations, the solution is usually very direct.
 
-If these equations were converted into matrix form, you see immediately that the **forward substitution form is an upper triangular matrix**, like so:
+If these equations were converted into matrix form, you see immediately that the **forward substitution form is an lower triangular matrix**, like so:
 
 $$
 \begin{bmatrix}
@@ -257,14 +257,14 @@ c_4 \\
 \end{bmatrix} \\
 $$
 
-Similarly, the **backward substitution** form is a **lower triangular matrix**, like so:
+Similarly, the **backward substitution** form is a **upper triangular matrix**, like so:
 
 $$
 \begin{bmatrix}
 2 && 7 && 8 && 3\\
-4 && 5 && 6 && 0\\
-2 && 3 && 0 && 0\\
-1 && 0 && 0 && 0\\
+0 && 4 && 5 && 6\\
+0 && 0 && 2 && 3\\
+0 && 0 && 0 && 1\\
 \end{bmatrix}
 \cdot X =
 \begin{bmatrix}
@@ -286,7 +286,7 @@ AX=B
 \Rightarrow LL^TX=B
 $$
 
-If we know set $$Y=L^TX$$, then we can write:
+If we now set $$Y=L^TX$$, then we can write:
 $$
 LY=B
 $$
