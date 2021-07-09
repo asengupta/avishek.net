@@ -1,5 +1,5 @@
 ---
-title: "Real Analysis Proofs"
+title: "Real Analysis Proofs #1"
 author: avishek
 usemathjax: true
 tags: ["Real Analysis", "Mathematics", "Proof"]
