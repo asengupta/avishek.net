@@ -114,7 +114,7 @@ Let's do a quick sanity check. Checking back to the dimensions of the matrices, 
 -$$AQ$$ and $$CS$$ give a $$n \times m$$ matrix.
 -$$BR$$ give a $$m \times n$$ matrix.
 
-The cool thing is that uou can write out the element-wise equalities, and solve for $$P$$, $$Q$$, $$R$$, $$S$$, as if they were simple variables, as long as you adhere to the matrix operation rules of **ordering**, **transpose**, **inverse**, etc.
+The cool thing is that you can write out the element-wise equalities, and solve for $$P$$, $$Q$$, $$R$$, $$S$$, as if they were simple variables, as long as you adhere to the matrix operation rules of **ordering**, **transpose**, **inverse**, etc.
 
 Thus, we can write:
 

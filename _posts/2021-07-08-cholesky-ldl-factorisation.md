@@ -110,14 +110,14 @@ Note, at each stage, **we've bolded the terms which are already known from one o
 The first column is easy to compute.
 
 $$
-L_{11}=\sqrt{a_{11}} \\
+L_{11}=\sqrt{\mathbf{a_{11}}} \\
 L_{21}=\frac{\mathbf{A_{21}}}{\mathbf{L_{11}}} \\
 L_{31}=\frac{\mathbf{A_{31}}}{\mathbf{L_{11}}} \\
 ...
 $$
 
 ### Second Column
-The first element in the lower triangular section of the second column is the diagonal element (remember we're only considering the lower triangular section, since the upper triangular section will be the mirror image, because $$LL^T is symmetric$$). For this, we can apply the **diagonal element formula**, like so:
+The first element in the lower triangular section of the second column is the diagonal element (remember we're only considering the lower triangular section, since the upper triangular section will be the mirror image, because $$LL^T$$ is symmetric). For this, we can apply the **diagonal element formula**, like so:
 
 $$
 L_{22}=\sqrt{\mathbf{A_{22}} - {\mathbf{L_{21}}}^2} \\
