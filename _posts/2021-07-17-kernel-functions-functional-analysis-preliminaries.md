@@ -218,3 +218,141 @@ If functions can be treated as vectors, we should be able to express - and creat
 We can essentially bring to bear all the machinery of Linear Algebra, since its results apply to all sorts of vectors. Vectors can be matrices, or functions, or other things.
 Thus, a set of functions can span a vector space of functions. This idea will be an important part in the construction of RKHS's.
 
+## Postive Semi-Definite Kernels and the Gram Matrix
+
+Positive semi-definite matrices are square symmetric matrices which have the following property:
+
+$$
+v^TSv\geq 0
+$$
+
+where $$S$$ is the $$n\times n$$ matrix, and $$v$$ is a $$n\times 1$$ vector. You can convince yourself that the final result of $$v^TSv$$ is a single scalar.
+
+Positive semi-definite matrices can always be expressed as the product of a matrix and its transpose.
+
+$$
+A=L^TL
+$$
+
+See [Cholesky and $$LDL^T$$ Factorisations]({% post_url 2021-07-08-cholesky-ldl-factorisation %}) for further details on how this decomposition works.
+To see why a Cholesky-decomposable matrix satisfies the positive semi-definiteness property, rewrite $$v^TSv$$ so that:
+
+$$
+v^TSv=v^TL^TLv \\
+=(v^TL^T)(Lv) \\
+={(Lv)}^T(Lv)
+={\|Lv\|}^2 \geq 0
+$$
+
+## Inner Product and the Gram Matrix
+With this intuition, we turn to a common operation in many Machine Learning algorithms: the **Inner Product**. The inner product is a very common operation. As we discussed in the first section of this article, inner product calculations usually need to be combined with projecting the original input vectors to a higher dimensional space first. We will revisit the SVM equations in an upcoming post to see the use of the Gram Matrix, which in the context of kernel functions is simply the matrix of all possible inner products of all data points.
+
+Assume we have $$n$$ data vectors $$x_1$$, $$x_2$$, $$x_3$$, ..., $$x_n$$.
+The matrix that will be used to characterise the positive semi-definiteness of kernels is:
+
+$$
+K=\begin{bmatrix}
+\kappa(x_1, x_1) && \kappa(x_2, x_1) && ... && \kappa(x_n, x_1) \\
+\kappa(x_1, x_2) && \kappa(x_2, x_2) && ... && \kappa(x_n, x_2) \\
+\kappa(x_1, x_3) && \kappa(x_2, x_3) && ... && \kappa(x_n, x_3) \\
+\vdots && \vdots && \ddots && \vdots \\
+\kappa(x_1, x_n) && \kappa(x_2, x_n) && ... && \kappa(x_n, x_n) \\
+\end{bmatrix}
+$$
+
+where $$\kappa(x,y)$$ is the kernel function. We will say that the kernel function is positive semi-definite if:
+
+$$
+v^TKv\geq 0
+$$
+
+where $$v$$ is any $$n\times 1$$ vector.
+Let's expand out the final result because that is a form we will see in both the construction of the Reproducing Kernel Hilbert Space, as well as the solutions for Support Vector Machines.
+
+Let $$v=\begin{bmatrix}
+\alpha_1 \\
+\alpha_2 \\
+\vdots \\
+\alpha_n \\
+\end{bmatrix}
+$$
+
+Then, expanding everything out, we got:
+
+$$
+v^TKv=
+\begin{bmatrix}
+\alpha_1 && \alpha_2 && \ldots && \alpha_n
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+\kappa(x_1, x_1) && \kappa(x_2, x_1) && ... && \kappa(x_n, x_1) \\
+\kappa(x_1, x_2) && \kappa(x_2, x_2) && ... && \kappa(x_n, x_2) \\
+\kappa(x_1, x_3) && \kappa(x_2, x_3) && ... && \kappa(x_n, x_3) \\
+\vdots && \vdots && \ddots && \vdots \\
+\kappa(x_1, x_n) && \kappa(x_2, x_n) && ... && \kappa(x_n, x_n) \\
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+\alpha_1 \\
+\alpha_2 \\
+\vdots \\
+\alpha_n \\
+\end{bmatrix}
+
+\\=
+{\begin{bmatrix}
+\alpha_1\kappa(x_1, x_1) + \alpha_2\kappa(x_1, x_2) + \alpha_3\kappa(x_1, x_3)  +  ... + \alpha_n\kappa(x_1, x_n) \\
+\alpha_1\kappa(x_2, x_1) + \alpha_2\kappa(x_2, x_2) + \alpha_3\kappa(x_2, x_3)  +  ... + \alpha_n\kappa(x_2, x_n) \\
+\alpha_1\kappa(x_3, x_1) + \alpha_2\kappa(x_3, x_2) + \alpha_3\kappa(x_3, x_3)  +  ... + \alpha_n\kappa(x_3, x_n) \\
+\vdots \\
+\alpha_1\kappa(x_n, x_1) + \alpha_2\kappa(x_n, x_2) + \alpha_3\kappa(x_n, x_3)  +  ... + \alpha_n\kappa(x_n, x_n) \\
+\end{bmatrix}}^T
+\cdot
+\begin{bmatrix}
+\alpha_1 \\
+\alpha_2 \\
+\vdots \\
+\alpha_n \\
+\end{bmatrix}
+
+\\=
+{\begin{bmatrix}
+\sum_{i=1}^n\alpha_i\kappa(x_1, x_i) \\
+\sum_{i=1}^n\alpha_i\kappa(x_2, x_i) \\
+\sum_{i=1}^n\alpha_i\kappa(x_3, x_i) \\
+\vdots \\
+\sum_{i=1}^n\alpha_i\kappa(x_n, x_i) \\
+\end{bmatrix}}^T
+\cdot
+\begin{bmatrix}
+\alpha_1 \\
+\alpha_2 \\
+\vdots \\
+\alpha_n \\
+\end{bmatrix} \\
+
+=
+\alpha_1\sum_{i=1}^n\alpha_i\kappa(x_1, x_i)
++\alpha_2\sum_{i=1}^n\alpha_i\kappa(x_2, x_i)
++\alpha_3\sum_{i=1}^n\alpha_i\kappa(x_3, x_i)
++\ldots
++\alpha_n\sum_{i=1}^n\alpha_i\kappa(x_n, x_i) \\
+
+=
+\sum_{j=1}^n\sum_{i=1}^n\alpha_i\alpha_j\kappa(x_j, x_i)
+$$
+
+Note that the first factor in a couple of lines, is written in transpose form to make it more readable.
+Thus, from the above expansion, we get:
+
+$$
+K=v^TKv=\sum_{j=1}^n\sum_{i=1}^n\alpha_i\alpha_j\kappa(x_j, x_i)
+$$
+
+For a positive semi-definite kernel $$K$$, we must have this expression non-negative, that is:
+
+$$
+\sum_{j=1}^n\sum_{i=1}^n\alpha_i\alpha_j\kappa(x_j, x_i) \geq 0
+$$
+
