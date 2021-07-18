@@ -3,11 +3,11 @@ title: "Kernel Functions: Reproducing Kernel Hilbert Spaces"
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Kernels", "Theory", "Functional Analysis", "Linear Algebra"]
-draft: false
+draft: true
 ---
-This article uses the groundwork laid in [Kernel Functions: Functional Analysis and Linear Algebra Preliminaries]({% post_url 2021-07-17-kernel-functions-functional-analysis-preliminaries %}) to discuss the construction of **Reproducing Kernel Hilbert Spaces**, which allows the Kernel function to be a valid representation of an inner product in (potentially) higher-dimensional space, from **Functional Analysis**. This construction will allow us to perform the necessary higher-dimensional computations, without projecting every point in our data set into higher dimensions, explicitly, in the case of **Non-Linear Support Vector Machines**, which will be discussed in the upcoming article.
+This article uses the groundwork laid in [Kernel Functions: Functional Analysis and Linear Algebra Preliminaries]({% post_url 2021-07-17-kernel-functions-functional-analysis-preliminaries %}) to discuss the construction of **Reproducing Kernel Hilbert Spaces**, which allows certain functions (called **Kernel Functions**) to be a valid representation of an **inner product** in (potentially) higher-dimensional space. This construction will allow us to perform the necessary higher-dimensional computations, without projecting every point in our data set into higher dimensions, explicitly, in the case of **Non-Linear Support Vector Machines**, which will be discussed in an upcoming article.
 
-This construction, it is to be noted, is not unique to Support Vector Machines, and applies to the general class of techniques in Machine Learning, called **Kernel Methods**.
+This construction, it is to be noted, is not unique to Support Vector Machines, and applies to the general class of techniques in Machine Learning, called **Kernel Methods**. 
 
 ## Inner Product and the Gram Matrix
 With this intuition, we turn to a common operation in many Machine Learning algorithms: the **Inner Product**. 
