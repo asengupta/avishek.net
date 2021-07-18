@@ -330,7 +330,6 @@ This represents the **parametric form** of a vector in the **tangent space** of 
 2x
 \end{bmatrix}
 $$
-
 , this one tells us how much the vector will change for a unit change along the $$u_1$$ basis vector. Remember, we had $$n$$ constraint equations, so all tangent vectors can be expressed as a combination of $$m$$ linearly independent vectors, and $$u_1$$ is one of them.
 
 So, **each entry in the $$1 \times m$$ output represents the dot product between the gradient vector and one of the $$m$$ tangent vectors**.

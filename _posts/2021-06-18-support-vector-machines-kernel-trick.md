@@ -10,4 +10,5 @@ The Support Vector Machine we have discussed only works for linearly separable d
 
 We'll then discuss the computational disadvantages of doing this in practice, and look at some of the theory, namely the **Kernel Trick**, which allows us to perform the necessary higher-dimensional computations, without projecting every point in our data set into higher dimensions, explicitly.
 
-For this, we will refer to the results and proofs discussed in [Kernel Functions]({% post_url 2021-06-17-kernel-functions-functional-analysis %}
+For this, we will refer to the results and proofs discussed in [Kernel Functions]({% post_url 2021-07-20-kernel-functions-rkhs %})
+

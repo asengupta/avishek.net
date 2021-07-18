@@ -55,8 +55,8 @@ where $$V$$ is the embedding space. This always ends up as the number of basis v
 
 - A vector $$U=(1,2,3)$$ requires three basis vectors ($$(1,0,0), (0,1,0), (0,0,1)$$) to specify it completely in $${\mathbb{R}}^3$$. Note that this is choice of basis vectors is not unique; I simply picked the **standard basis vectors** to illustrate the point. Thus $$dim(U)$$ in this case is 3.
 - The dimensionality of $$V=(1,2,3)$$ is 1, since it is a vector. The column space of this "matrix" $$\begin{bmatrix} 1 \\ 2 \end{bmatrix}$$ is basically a straight line extending infinitely long in both directions of this vector.
-- **To fully cover the ambient vector space $$V={\mathbb{R}}^3$$**, you need a vector space which is a plane, which is a two-dimensional subspace. This is mechanically deducible from the **Rank-Nullity Theorem** (3-1=2), but you can also intuit that **the entire 3D space $$V$$ can be covered by taking a plane and translating it infinitely forwards and backwards along the vector $$U$$**.
-- The plane we would like to pick is the orthogonal complement of $$V$$, i.e., the plane $$P=x+2y+3z=0$$. Can you see why it's an orthogonal complement? Taking the dot product of the plane $$P$$ and vector $$V$$ gives us zero.
+- **To fully cover the ambient vector space $$V={\mathbb{R}}^3$$**, you need a vector space which is a plane, which is a two-dimensional subspace. This is mechanically deducible from the **Rank-Nullity Theorem** (3-1=2), but you can also intuit that **the entire 3D space $$\mathbb{R}^n$$ can be covered by taking a plane and translating it infinitely forwards and backwards along the vector $$U$$**.
+- The plane we would like to pick is the orthogonal complement of $$V$$, i.e., the plane $$P=x+2y+3z=0$$. Can you see why it's an orthogonal complement? Taking the dot product of any vector in the plane $$P$$ (like $$(-5,1,1)$$) and vector $$V$$ gives us zero.
 - It is also clear that to represent this plane in the form of a vector subspace (i.e., matrix form), we need **two linearly independent 3D column vectors**. This will automatically imply that the rank of this matrix is 2, which validates the conclusion that we drew earlier from the **Rank-Nullity Theorem**.
 
 ### Subset containership of Orthogonal Complements
@@ -219,10 +219,10 @@ $$
 Here, we can represent $$z$$ as a function of $$(x,y)$$, like so:
 
 $$
-z=-\frac{2y+3z}{3}
+z=-\frac{x+2y}{3}
 $$
 
-We have essentially moved up one dimension, where **one variable is now expressed in terms of two variables**, instead of one. If we wish to find the tangent space for this, we can use the same concept, except that this time partial differentiation will make sense, since you have two dependent variables, so you take the partial derivative for each of them separately. So, we can write:
+We have essentially moved up one dimension from the previous example, where **one variable is now expressed in terms of two variables**, instead of one. If we wish to find the tangent space for this, we can use the same concept, except that this time partial differentiation will make sense, since you have two dependent variables, so you take the partial derivative for each of them separately. So, we can write:
 
 $$
 z-z_0=\begin{bmatrix}
@@ -290,9 +290,9 @@ We have arrived at the row reduced echelon form. We see that we have two pivots,
 
 $$
 x-z=0 \\
-y+2z=0
 \Rightarrow x=z \\
-y=-2z
+y+2z=0 \\
+\Rightarrow y=-2z
 $$
 
 Thus, we have one free variable ($$z$$), which can be used to express $$x$$ and $$y$$. Note that the rank of the matrix, which is 2, and the number of variables, which is 3. **As a general rules, if we have a system of $$n-k$$ equations for $$n$$ variables, there are $$k$$ free variables (parameters), and the remaining $$n-k$$ variables can be expressed in terms of the $$k$$ parameters.**
