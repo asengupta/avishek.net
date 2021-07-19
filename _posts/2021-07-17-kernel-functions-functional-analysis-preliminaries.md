@@ -145,6 +145,7 @@ Another important point to note: we will be switching up notation. **Inner produ
 There are a few important properties any candidate for an inner product must satisfy. All these properties intuitively make sense since we've been using them without stating them implicitly while doing Matrix Algebra.
 
 - **Positive Definite**: $$\langle x,x\rangle>0$$ if $$x\neq 0$$
+- **Principle of Indiscernibles**: $$x=0$$ if $$\langle x,y\rangle=0$$
 - **Symmetric**: $$\langle x,y\rangle=\langle y,x\rangle$$
 - **Linear**:
     - $$\langle \alpha x,y\rangle=\alpha\langle x,y\rangle, \alpha\in\mathbb{R}$$
@@ -256,11 +257,13 @@ v^TSv=v^TL^TLv \\
 ={\|Lv\|}^2 \geq 0
 $$
 
+The important result to know is that all positive semi-definite matrices have a **Cholesky Factorisation**. We will explore the proof in a future post.
+
 ## Inner Product and the Gram Matrix
 With this intuition, we turn to a common operation in many Machine Learning algorithms: the **Inner Product**. The inner product is a very common operation. As we discussed in the first section of this article, inner product calculations usually need to be combined with projecting the original input vectors to a higher dimensional space first. We will revisit the SVM equations in an upcoming post to see the use of the Gram Matrix, which in the context of kernel functions is simply the matrix of all possible inner products of all data points.
 
 Assume we have $$n$$ data vectors $$x_1$$, $$x_2$$, $$x_3$$, ..., $$x_n$$.
-The matrix that will be used to characterise the positive semi-definiteness of kernels is:
+The matrix that will be used to characterise the positive semi-definiteness of kernels is called the **Gram Matrix**. Given $$n$$ data points $$x_1$$, $$x_2$$, ..., $$x_n$$, the Gram matrix is written as:
 
 $$
 K=\begin{bmatrix}

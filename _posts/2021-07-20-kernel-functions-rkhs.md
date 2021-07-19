@@ -3,7 +3,7 @@ title: "Kernel Functions: Reproducing Kernel Hilbert Spaces"
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Kernels", "Theory", "Functional Analysis", "Linear Algebra"]
-draft: true
+draft: false
 ---
 This article uses the groundwork laid in [Kernel Functions: Functional Analysis and Linear Algebra Preliminaries]({% post_url 2021-07-17-kernel-functions-functional-analysis-preliminaries %}) to discuss the construction of **Reproducing Kernel Hilbert Spaces**. We originally asked the following question: **what can we say about a function on a pair of input vectors which also ends up being the inner product of those vectors projected onto a higher dimensional space?**
 
@@ -17,10 +17,51 @@ If we can answer this question, then we can circumvent the process of projecting
 Mathematically, we are looking for a few things:
 - A mapping function $$\phi(x)$$: The mapping function projects our input into a higher-dimensional space.
 - A definition of an inner product operation $$\langle\bullet, \bullet\rangle$$: We already know (or think we know) that this inner product is the same as our intuitive understanding of an inner product, but we'll see.
-- A kernel function $$\kappa(x,y)$$ 
+- A kernel function $$\kappa(x,y)$$ which performs both of the above operations in one shot, i.e., $$\kappa(x,y)=\langle\Phi(x)\cdot\Phi(y)\rangle$$.
+
+There are three properties that a valid inner product operation must satisfy: we discussed them in [Kernel Functions: Functional Analysis and Linear Algebra Preliminaries]({% post_url 2021-07-17-kernel-functions-functional-analysis-preliminaries %}). This implies that $$\kappa$$ must satisfy these properties. I reproduce them below for reference.
+
+- **Positive Definite**: $$\kappa(x,x)>0$$ if $$x\neq 0$$
+- **Principle of Indiscernibles**: $$x=0$$ if $$\kappa(x,y)=0$$
+- **Symmetric**: $$\kappa(x,y)=\kappa(y,x)$$
+- **Linear**:
+    - $$\kappa(\alpha x,y)=\alpha\kappa(x,y), \alpha\in\mathbb{R}$$
+    - $$\kappa(x+y,z)=\kappa(x,z)+\kappa(y,z)$$
+
 We will alter our original question slightly to give some motivation for this proof. We ask the following:
-- Is there a Hilbert space where the kernel function we choose is a valid inner product operation?
-- If so, what does the projecting function
+- Is there a Hilbert space where the kernel function $$\kappa$$ we choose is a valid inner product operation?
+- If so, what does the projecting function $$\Phi$$ look like?
+
+Now, recall the criterion for positive semi-definiteness for a Gram matrix of $$n$$ data points. Translated into polynomial form, it looked like this:
+
+$$
+\sum_{j=1}^n\sum_{i=1}^n\alpha_i\alpha_j\kappa(x_j, x_i) \geq 0
+$$
+
+You can see immediately, that for $$n=1$$, and $$\alpha_1=1$$, the above simplifies to $$\kappa(x_1,y_1)=\kappa(x,y)\geq 0$$. This immediately gives us a hint about functions for which positive semi-definite matrices can be constructed out of all data points (without making any assumptions about those data points); they are good candidates for kernel functions. Note that the above simplification results from having a single data point in our data set.
+
+Furthermore, if $$\kappa$$ is symmetric, the Gram matrix will be symmetric because $$G_{ij}=\kappa(x_i, x_j)=\kappa(x_j, x_i)=G_{ji}$$.
+
+So there is definitely strong evidence of positive semi-definite functions being kernel functions, but we need to add a little more rigour to our intuition. For example, we still have no idea what the mapping function $$\Phi$$ should look like. 
+
+## Linear Combinations of Positive Semi-definite Matrices
+
+There are two more points from the above exploratory analysis that is worth discussing, because we will be using it in our proof.
+
+- The sum of positive semi-definite matrices is also positive semi-definite. Take two positive semi-definite matrices $$A$$ and $$B$$. Then, by definition of positive semi-definiteness, $$v^TAv\geq 0$$ and $$v^TBv\geq 0$$. So if we write:
+
+  $$
+  v^T(A+B)v=(v^TA+v^TB)v=\underbrace{\underbrace{v^TAv}_{\geq 0}+\underbrace{v^TBv}_{\geq 0}}_{\geq 0}
+  $$
+
+- Positive semi-definite matrices scaled by non-negative scalars $$\alpha\geq 0, \alpha\in\mathbb{R}$$ are also positive semi-definite because:
+
+  $$
+  v^T(\underbrace{\alpha}_{\geq 0} A)v= \underbrace{\underbrace{\alpha}_{\geq 0}\underbrace{v^TAv}_{\geq 0}}_{\geq 0}  $$
+
+The practical implication, as we will see, is that non-negative linear combinations of kernel functions are also kernel functions. In practice, the proof will use a set of kernel functions defined by a particular set of data points as basis vectors and use those to define a vector space of kernel functions. Any function in this space will then necessarily be a kernel function as well because of the implications we just discussed.
+
+## Function Currying
 Assume that such a linear functional exists. We call this the **kernel function** $$\kappa(x,y)$$. Now recall the notion of function currying from programming, where specifying a subset of arguments to a function, yields a new function with the already-passed-in parameters fixed, and the rest of the parameters still available to specify.
 
 If we specify one of the parameters of $$\kappa(x,y)$$, say $$y=Y$$, this yields a new function with $$y$$ fixed to $$Y$$ and $$x$$ still available to specify. We use the common notation used for common functions, by putting a dot in the place of the unspecified variables. We write it like so:
