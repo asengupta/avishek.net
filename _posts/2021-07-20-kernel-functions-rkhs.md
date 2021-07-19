@@ -5,17 +5,22 @@ usemathjax: true
 tags: ["Machine Learning", "Kernels", "Theory", "Functional Analysis", "Linear Algebra"]
 draft: true
 ---
-This article uses the groundwork laid in [Kernel Functions: Functional Analysis and Linear Algebra Preliminaries]({% post_url 2021-07-17-kernel-functions-functional-analysis-preliminaries %}) to discuss the construction of **Reproducing Kernel Hilbert Spaces**, which allows certain functions (called **Kernel Functions**) to be a valid representation of an **inner product** in (potentially) higher-dimensional space. This construction will allow us to perform the necessary higher-dimensional computations, without projecting every point in our data set into higher dimensions, explicitly, in the case of **Non-Linear Support Vector Machines**, which will be discussed in an upcoming article.
+This article uses the groundwork laid in [Kernel Functions: Functional Analysis and Linear Algebra Preliminaries]({% post_url 2021-07-17-kernel-functions-functional-analysis-preliminaries %}) to discuss the construction of **Reproducing Kernel Hilbert Spaces**. We originally asked the following question: **what can we say about a function on a pair of input vectors which also ends up being the inner product of those vectors projected onto a higher dimensional space?**
 
-This construction, it is to be noted, is not unique to Support Vector Machines, and applies to the general class of techniques in Machine Learning, called **Kernel Methods**. 
+If we can answer this question, then we can circumvent the process of projecting a pair of vectors into higher-dimensional space, and then computing their inner products; we can simply apply a single function which gives us the inner products in higher dimensional space.
 
-## Inner Product and the Gram Matrix
-With this intuition, we turn to a common operation in many Machine Learning algorithms: the **Inner Product**. 
+![Kernel Function Shortcut](/assets/images/kernel-function-shortcut-diagram.jpg)
 
-For a quick refresher of **Inner Product** (specifically, the **Dot Product** ), check out [Dot Product: Algebraic and Geometric Equivalence]({% post_url 2021-04-11-dot-product-algebraic-geometric-equivalence %}).
 
-We ask the following question: **when is a function on a pair of original vectors also the inner product of those vectors projected into a higher dimensional space?** If we can answer this question, then we can circumvent the process of projecting a pair of vectors into higher-dimensional space, and then computing their inner products, and apply a single linear functional which gives us the inner products in higher dimensional space.
+## Proof by Construction
 
+Mathematically, we are looking for a few things:
+- A mapping function $$\phi(x)$$: The mapping function projects our input into a higher-dimensional space.
+- A definition of an inner product operation $$\langle\bullet, \bullet\rangle$$: We already know (or think we know) that this inner product is the same as our intuitive understanding of an inner product, but we'll see.
+- A kernel function $$\kappa(x,y)$$ 
+We will alter our original question slightly to give some motivation for this proof. We ask the following:
+- Is there a Hilbert space where the kernel function we choose is a valid inner product operation?
+- If so, what does the projecting function
 Assume that such a linear functional exists. We call this the **kernel function** $$\kappa(x,y)$$. Now recall the notion of function currying from programming, where specifying a subset of arguments to a function, yields a new function with the already-passed-in parameters fixed, and the rest of the parameters still available to specify.
 
 If we specify one of the parameters of $$\kappa(x,y)$$, say $$y=Y$$, this yields a new function with $$y$$ fixed to $$Y$$ and $$x$$ still available to specify. We use the common notation used for common functions, by putting a dot in the place of the unspecified variables. We write it like so:

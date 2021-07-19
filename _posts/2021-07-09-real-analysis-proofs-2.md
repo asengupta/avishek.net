@@ -4,7 +4,7 @@ author: avishek
 usemathjax: true
 tags: ["Real Analysis", "Mathematics", "Proof"]
 ---
-
+ld
 Continuing on my journey through **Real Analysis**, we will focus here on common **proof patterns** which apply to **irrational square roots**.
 These patterns apply to the following sort of proof exercises:
 
@@ -14,7 +14,7 @@ These patterns apply to the following sort of proof exercises:
 - Prove that $$\sqrt 12$$ is irrational.
 - ...etc.
 
-The proofs are all based on **Proof by Contradiction**. **Thus, the starting point is always to assume that the square root of the number in question, say $$\sqrt 7$$ is indeed a rational number**, implying that it can be expressed as $$\frac{p}{q}$$, where $$p,q\in\mathbb{N}$$.
+The proofs are all based on **Proof by Contradiction**. **Thus, the starting point is always to assume that the square root of the number in question, say $$\sqrt 7$$, is indeed a rational number**, implying that it can be expressed as $$\frac{p}{q}$$, where $$p,q\in\mathbb{N}$$.
 
 Let's take a specific example which will demonstrate the first proof pattern:
 
@@ -51,7 +51,7 @@ $$
 
 This implies that $$q^2$$ is even, therefore $$q$$ has to be even.
 This leads us to a contradiction, since $$p$$ and $$q$$ cannot both be even.
-The second contradiction this leads us to is that the truth table shows that $$q$$ is odd, but we concludede that $$q$$ is even.
+The second contradiction this leads us to is that the truth table shows that $$q$$ is odd, but we concluded that $$q$$ is even.
 
 Therefore, $$\sqrt 2$$ is not a rational number.
 $$\blacksquare$$
@@ -151,7 +151,7 @@ The final pattern we'd like to write down, reduces a problem to a simpler one.
 ## Prove that $$\sqrt 12$$ is irrational
 
 ### Proof
-We assume that $$\sqrt 3$$ is rational. Therefore, we can express it as a ratio of two integers $$\frac{p}{q}:p,q\in\mathbb{N}$$, which have no common factors between them. Thus:
+We assume that $$\sqrt 12$$ is rational. Therefore, we can express it as a ratio of two integers $$\frac{p}{q}:p,q\in\mathbb{N}$$, which have no common factors between them. Thus:
 
 $$
 \frac{p^2}{q^2}=12 \\
