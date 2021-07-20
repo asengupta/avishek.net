@@ -157,17 +157,4 @@ A set equipped with a distance metric is a metric space. A distance metric is de
 - $$d(x,y)=d(y,x)$$
 - $$d(x,z)\leq d(x,y)+d(y,z)$$
 
-## Normed Spaces
-A vector space equipped with a norm, not neceessarily complete
-## Banach Spaces
-A vector space equipped with a norm, which has been completed
-## Hilbert Spaces
-A Banach Space equipped with an inner product
-## Hilbert Spaces of Functions
-## Riesz Representation Theorem
-A link between **Functional Analysis** and **Linear Algebra**
-## Properties of Kernel Functions
-Symmetric, Positive and Semi-Definite
-## Reproducing Kernel Hilbert Spaces : Construction
-Proofs of properties of RKHS Inner Product
 ## Alternative Formulation : Mercer's Theorem
