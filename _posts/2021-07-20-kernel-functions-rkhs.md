@@ -61,6 +61,39 @@ There are two more points from the above exploratory analysis that is worth disc
 
 The practical implication, as we will see, is that non-negative linear combinations of kernel functions are also kernel functions. In practice, the proof will use a set of kernel functions defined by a particular set of data points as basis vectors and use those to define a vector space of kernel functions. Any function in this space will then necessarily be a kernel function as well because of the implications we just discussed.
 
+## Riesz Representation Theorem
+
+Informally, the Riesz Representation Theorem states that every linear functional $$f$$ applied on a vector $$x$$ in a vector space $$X$$ is equivalent to the inner product of a unique vector (corresponding to $$f$$) with $$x$$.
+
+We'll show a motivating example in finite-dimensional space $$\mathbb{R}^2$$. Assume we have a vector $$\vec{z}=\begin{bmatrix}1\\2\end{bmatrix}$$, and a function $$f(x)=2\vec{x}_1+3\vec{x}_2$$.
+
+Then there exists a vector $$\vec{v}=\begin{bmatrix}2\\3\end{bmatrix}$$ corresponding to $$f$$ such that $$f(\vec{z})=\langle\vec{v},\vec{z}\rangle$$. Indeed, if we evaluate both sides, we get:
+
+$$
+f(\vec{z})=2.1+3.2=8 \\
+\langle\vec{v},\vec{z}\rangle=2.1+3.2=8
+$$
+
+## Evaluation Functional and the Reproducing Kernel Property
+
+The Evaluation Functional is an interesting function: it takes another function as an input, and applies a specific argument to that function. As an example, if we have a function, like so:
+
+$$
+f(x)=2x+3
+$$
+
+We can define an evaluation functional called $$\delta_3(f)$$ such that:
+
+$$
+\delta_3(f)=f(3)=2.3+3=9
+$$
+
+For every $$x\in X$$, we have a corresponding evaluation functional $$\delta_x$$. In other words, there exists a mapping $$\Phi:x\mapsto\delta_x$$
+
+By the Riesz Representation Theorm, the application of the evaluation functional onto any function $$f\in\mathcal{H}$$ is equivalent to the inner product of a vector $$K_x$$ and $$f$$. We can write this down as:
+
+$$\delta_x(f)={\langle K_x,f\rangle}_H=f(x)$$
+
 ## Function Currying
 Assume that such a linear functional exists. We call this the **kernel function** $$\kappa(x,y)$$. Now recall the notion of function currying from programming, where specifying a subset of arguments to a function, yields a new function with the already-passed-in parameters fixed, and the rest of the parameters still available to specify.
 
