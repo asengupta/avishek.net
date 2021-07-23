@@ -6,6 +6,8 @@
   link: /ml-foundations.html
 - name: Foundations of Distributed Systems
   link: /distributed-systems-foundations.html
+- name: Engineering
+  link: /engineering.html
 - name: References
   link: /references.html
 - name: Art
