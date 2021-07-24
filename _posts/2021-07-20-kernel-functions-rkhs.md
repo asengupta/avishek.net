@@ -5,7 +5,7 @@ usemathjax: true
 tags: ["Machine Learning", "Kernels", "Theory", "Functional Analysis", "Linear Algebra"]
 draft: false
 ---
-This article uses the previous mathematicsl groundwork to discuss the construction of **Reproducing Kernel Hilbert Spaces**.
+This article uses the previous mathematicsl groundwork to discuss the construction of **Reproducing Kernel Hilbert Spaces**. We'll make several assumptions that have been proved and discussed in those articles. There are multiple ways of discussing Kernel Functions, like the **Moore–Aronszajn Theorem** and **Mercer's Theorem**. We may discuss some of those approaches in the future, but here we will focus on the constructive approach here to characterise **Kernel Functions**.
 
 The two specific posts discussing the background are:
 
@@ -67,7 +67,7 @@ There are two more points from the above exploratory analysis that is worth disc
 
 The practical implication, as we will see, is that non-negative linear combinations of kernel functions are also kernel functions. In practice, the proof will use a set of kernel functions defined by a particular set of data points as basis vectors and use those to define a vector space of kernel functions. Any function in this space will then necessarily be a kernel function as well because of the implications we just discussed.
 
-## Evaluation Functional and the Reproducing Kernel Property
+## Evaluation Functionals
 
 The Evaluation Functional is an interesting function: it takes another function as an input, and applies a specific argument to that function. As an example, if we have a function, like so:
 
@@ -81,6 +81,9 @@ $$
 \delta_3(f)=f(3)=2.3+3=9
 $$
 
+## Continuity and Boundedness of Evaluation Functional
+Here we will treat the Evaluation Functional in its functional form (the "formula view", if you like). Is the graph of the Evaluation Functional continuous. We can prove that if a linear functional is bounded, then it is also continuous. In this case, we will prove that the Evaluation Functional is bounded in the function space $$\mathcal{H}$$.
+
 ## Connecting the Evaluation Functional and the Riesz Representation Theorem
 
 We have already discussed that the Riesz Representation Theorem applies to bounded linear functionals. Here we connect that concept with the Evaluation Functional.
@@ -90,6 +93,14 @@ For every $$x\in X$$, we have a corresponding evaluation functional $$\delta_x$$
 By the Riesz Representation Theorm, the application of the evaluation functional onto any function $$f\in\mathcal{H}$$ is equivalent to the inner product of a vector $$K_x$$ and $$f$$. We can write this down as:
 
 $$\delta_x(f)={\langle K_x,f\rangle}_H=f(x)$$
+
+This leads to the Reproducing Kernel property. If we assume that the vector corresponding to the evaluation functional is the Kernel Function, then we can take another Kernel Function, say $$K_y$$, and can write:
+
+$$
+\delta_x(K_y)=\langle K_x, K_y \rangle=K_y(x)=K(x,y)
+$$
+
+Now we know that a kernel function takes in two vectors as input. How are we to define $$K_x$$, $$K_y$$ such that they take in one value. The next section discusses the construction of the mapping.
 
 ## Function Currying
 Assume that such a linear functional exists. We call this the **kernel function** $$\kappa(x,y)$$. Now recall the notion of function currying from programming, where specifying a subset of arguments to a function, yields a new function with the already-passed-in parameters fixed, and the rest of the parameters still available to specify.

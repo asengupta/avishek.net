@@ -1,5 +1,5 @@
 ---
-title: "Functional Analysis: Results for Operators"
+title: "Functional Analysis: Useful Results"
 author: avishek
 usemathjax: true
 tags: ["Mathematics", "Theory", "Operator Theory", "Functional Analysis"]
@@ -7,26 +7,123 @@ draft: false
 ---
 This article expands the groundwork laid in [Kernel Functions: Functional Analysis and Linear Algebra Preliminaries]({% post_url 2021-07-17-kernel-functions-functional-analysis-preliminaries %}) to discuss some more properties and proofs for some of the properties of functions that we will use in the construction of **Reproducing Kernel Hilbert Spaces**. 
 
+However, in this article, we will expound more fundamentals concepts to build up our intuition. Thus, this (and some other articles) will serve as a "knowledge base" for applicable results in Real and Functional Analysis, and will be referenced in more future posts.
+
+We will discuss:
+
+- Metric Spaces and $$L^p$$ Norms
+- Operators and Linear Functionals
+- $$L^2$$ and $$L^\infty$$ Norms for Functions
+- Cauchy Sequences and Limits
+- Cauchy Sequences of Functions
+- Boundedness and Continuity for Operators
+- Riesz Representation Theorem
+
+## Metric Spaces
+
+Sets don't come naturally equipped with a way to measure "distances" between their elements. Some sets might have intuitive notions of what it means by distance between two elements in it, like n-dimensional Euclidean space ($$\mathbb{R}^n$$), but those intuitive metrics are not the only possible metrics available for those sets.
+
+A set equipped with a distance metric is a metric space. A distance metric is defined as a function which defines the "distance" between two members of a set. The definition of what "distance" consititutes, varies based on the sort of metric space, and the application. A distance metric $$d(x,y)$$ must satisfy the following conditions.
+
+- $$d(x,y)>0, \forall x\neq y$$
+- $$d(x,y)=0 \Rightarrow x=y$$
+- $$d(x,y)=d(y,x)$$
+- $$d(x,z)\leq d(x,y)+d(y,z)$$
+
 ## Vector and Operator Norms
+Before discussing the norm of a function, let's talk of the family of norms which include the natural concept of the Euclidean norm, namely the $$L^p$$ norms.
 
-## Linearity
-Here we will treat the Evaluation Functional as an infinite dimensional vector, and apply it on a function $$f$$. This amounts to taking the inner product with $$f$$. If we treat the function $$f$$ as the vector, and the values of the corresponding values of the Evaluation Functional as coefficients of a function, then it is definitely a linear functional. All evaluation functionals are linear functionals.
+The generalised $$L^p$$ norm for a vector $$x$$ in $$\mathbb{R}^n$$ is defined as:
 
-## Continuity and Boundedness
-Here we will treat the Evaluation Functional in its functional form (the "formula view", if you like). Is the graph of the Evaluation Functional continuous. We can prove that if a linear functional is bounded, then it is also continuous. In this case, we will prove that the Evaluation Functional is bounded in the function space $$\mathcal{H}$$.
+$$
+\|x\|_p={({\|x_1\|}^p + {\|x_2\|}^p + ... + {\|x_n\|}^p)}^{\frac{1}{p}} \\
+\|x\|_p={(\sum_{i=1}^n {\|x_i\|}^p)}^{\frac{1}{p}}
+$$
+
+The definition of the Euclidean distance metric falls out from the above definition immediately for $$p=2$$. Interestingly, we see that other norms are possible. Say we put $$p=1$$ above. Then we get the $$L^1$$ norm defined as:
+
+$$
+\|x\|_1=\|x_1\| + \|x_2\| + ... + \|x_n\|
+$$
+
+Let us investigate the shapes traced by these norms to build a little geometric intuition, in $$\mathbb{R}^2$$. To do this, we will trace the locii of points for which $$\|x\|_p=1$$. That is, we will look at the locii for which the following norm equalities are satisfied.
+
+$$
+\|x\|+\|y\|=1 \\
+{({\|x\|}^2+{\|y\|}^2)}^{\frac{1}{2}}=1 \\
+{({\|x\|}^3+{\|y\|}^3)}^{\frac{1}{3}}=1 \\
+\vdots
+$$
+
+![Lp Norms](/assets/images/lp-norms.png)
+
+As you can see, the $$L^2$$ norm is the familiar unit circle given by $$x^2+y^2=1$$. The other norms, however, look a little strange. However, this goes to show that the distance metric is a choice we actively make when building a metric space. Higher-powered $$L^p$$ norms become "squarer" in shape.
+
+The limiting case is the $$L^\infty$$ norm which is essentially a square with corners at $$(1,1)$$, $$(1,-1)$$, $$(-1,1)$$, and $$(-1,-1)$$.
+
+It can be proven that:
+
+$$\|x\|_\infty=max(\|x_1\|, \|x_2\|, ..., \|x_n\|)$$
+
+Intuitively, we can think of this definition like this: **the magnitude of the largest vector component overpowers all other vector components, when it is raised to infinity**.
+
+
+## Operators, Linear Functionals, and Linearity
+For the purposes of discussion, we may consider operators as equivalent to Linear Transformations (there are nonlinear operators too, but that is outside the scope of this discussion). The term "operator" is used when these transformations are applied to a wide variety of inputs, usually beyond simple geometric notions of $$\mathbb{R}^n$$..
+
+In our discussions of applications of **Functional Analysis**, the most common application of operators will be on functions; but we may think of them as linear transformations under a different name. Note that they are still functions operating on vectors (because the inputs are functions, which are vectors themselves). For the results discussed in this article, we will restrict ourselves to **Continuous Linear Operators**.
+
+**Linear Functionals** are functions which map vectors specifically to their field of scalars, usually $$\mathbb{R}$$ or $$\mathbb{C}$$.
+
+ We will discuss conceptions of continuity next, but understand that both **Linear Functionals** and **Linear Operators** obey two important rules:
+
+- $$L(\alpha x)=\alpha L(x)$$
+- $$L(x+y)=L(x)+L(y)$$
+
+We will discuss the continuity aspect enjoyed by **Continuous Linear Operators** in an upcoming section.
+
+We look at a couple of very simple examples of what does and does not constitute Linear Functionals.
+
+### Example of a Linear Functional
+Let $$f(x)=2x, x\in\mathbb{R}$$. Then, you can pick a constant $$C$$, say $$C=3$$, such that:
+
+$$\|Tx\|=2\|x\|\leq 3\|x\|$$
+
+### Non-Example of a Linear Functional
+As a non-example, consider $$f(x)=2x+3$$. Note that this is not a linear transformation in $$R^n$$; one intuitive reason is that there is no matrix you can define which can reproduce this operation when applied to any $$x\in\mathbb{R}$$. This is despite the fact that this is a continuous function.
+
+It is also not a Linear Functional because it does not follow one of the properties, as follows:
+
+$$
+f(x_1+x_2)=2(x_1+x_2)+3=2x_1+2x_2+3 \\
+f(x_1)+f(x_2)=2x_1+3+2x_2+3=2x_1+2x_2+6\\
+\Rightarrow f(x_1+x_2)\neq f(x_1)+f(x_2)
+$$
+
+Please note that this definition of linearity is not one that non-mathematicians are used to, since you'd normally look at an expression $$2x+3$$ and conclude that it was "linear" in the sense that it expresses a polynomial of degree one, or alternatively, its graph is a straight line (or a plane in $$\mathbb{R}^3$$, or an equivalent hyperplane in higher dimensions).
+
+## Continuity of Linear Operators
+Continuity is defined as follows
+
+$$
+f\rightarrow f_0 \Rightarrow Tf\rightarrow Tf_0\\
+$$
+
+The equivalent definition for continuity is:
+
+$$
+\|f-f_0\|\rightarrow 0\\
+\Rightarrow \|T(f-f_0)\|\rightarrow 0 \\
+\Rightarrow \|T(f)-T(f_0)\|\rightarrow 0 \text{   (by the definition of a linear operator)}
+$$
+
+## Boundedness of Linear Operators
 
 Boundedness is defined as follows:
 
 $$
 \|Tx\|\leq C\|x\| \text{  for } C>0, C\in\mathbb{R}
 $$
-
-Continuity is defined as follows:
-
-$$
-f\rightarrow f_0 \Rightarrow Tf\rightarrow Tf_0
-$$
-
 
 ## Riesz Representation Theorem
 
@@ -41,14 +138,9 @@ f(\vec{z})=2.1+3.2=8 \\
 \langle\vec{v},\vec{z}\rangle=2.1+3.2=8
 $$
 
-Since the evaluation functional can be pro
-
-## Metric Spaces
-A set equipped with a distance metric is a metric space. A distance metric is defined as a function which defines the "distance" between two members of a set. The definition of what "distance" consititutes, varies based on the sort of metric space, and the application. A distance metric $$d(x,y)$$ must satisfy the following conditions.
-
-- $$d(x,y)>0, \forall x\neq y$$
-- $$d(x,y)=0 \Rightarrow x=y$$
-- $$d(x,y)=d(y,x)$$
-- $$d(x,z)\leq d(x,y)+d(y,z)$$
 
 ## Alternative Formulation : Mercer's Theorem
+
+## References
+- Proof that the Infinity Norm is the maximum value of a Vector: https://math.stackexchange.com/questions/3099179/proving-the-infinity-norm-is-equal-to-the-maximum-value-of-the-vector
+
