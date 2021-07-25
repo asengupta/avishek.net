@@ -1,11 +1,11 @@
 ---
-title: "Functional Analysis: Useful Results"
+title: "Functional Analysis: Norms, Linear Functionals, and Operators"
 author: avishek
 usemathjax: true
 tags: ["Mathematics", "Theory", "Operator Theory", "Functional Analysis"]
 draft: false
 ---
-This article expands the groundwork laid in [Kernel Functions: Functional Analysis and Linear Algebra Preliminaries]({% post_url 2021-07-17-kernel-functions-functional-analysis-preliminaries %}) to discuss some more properties and proofs for some of the properties of functions that we will use in the construction of **Reproducing Kernel Hilbert Spaces**. 
+This article expands the groundwork laid in [Kernel Functions: Functional Analysis and Linear Algebra Preliminaries]({% post_url 2021-07-17-kernel-functions-functional-analysis-preliminaries %}) to discuss some more properties and proofs for some of the properties of functions that we will use in future discussions on **Kernel Methods** in Machine Learning, including (but not restricted to) the construction of **Reproducing Kernel Hilbert Spaces**. 
 
 However, in this article, we will expound more fundamentals concepts to build up our intuition. Thus, this (and some other articles) will serve as a "knowledge base" for applicable results in Real and Functional Analysis, and will be referenced in more future posts.
 
@@ -19,18 +19,45 @@ We will discuss:
 - Boundedness and Continuity for Operators
 - Riesz Representation Theorem
 
-## Metric Spaces
+## Operators, Linear Functionals, and Linearity
+For the purposes of discussion, we may consider operators as equivalent to Linear Transformations (there are nonlinear operators too, but that is outside the scope of this discussion). The term "operator" is used when these transformations are applied to a wide variety of inputs, usually beyond simple geometric notions of $$\mathbb{R}^n$$.
 
-Sets don't come naturally equipped with a way to measure "distances" between their elements. Some sets might have intuitive notions of what it means by distance between two elements in it, like n-dimensional Euclidean space ($$\mathbb{R}^n$$), but those intuitive metrics are not the only possible metrics available for those sets.
+In our discussions of applications of **Functional Analysis**, the most common application of operators will be on functions; but we may think of them as linear transformations under a different name. Note that they are still functions operating on vectors (because the inputs are functions, which are vectors themselves). For the results discussed in this article, we will restrict ourselves to **Continuous Linear Operators**.
 
-A set equipped with a distance metric is a metric space. A distance metric is defined as a function which defines the "distance" between two members of a set. The definition of what "distance" consititutes, varies based on the sort of metric space, and the application. A distance metric $$d(x,y)$$ must satisfy the following conditions.
+Briefly then, an **Operator** is defined as $$T:X\rightarrow Y$$, where $$X$$ and $$Y$$ are vector spaces.
 
-- $$d(x,y)>0, \forall x\neq y$$
-- $$d(x,y)=0 \Rightarrow x=y$$
-- $$d(x,y)=d(y,x)$$
-- $$d(x,z)\leq d(x,y)+d(y,z)$$
+**Linear Functionals** are functions which map vectors specifically to their field of scalars, usually $$\mathbb{R}$$ or $$\mathbb{C}$$.
 
-## Vector and Operator Norms
+Briefly then, a **Linear Functional** is defined as $$f:X\rightarrow\mathbb{F}$$, where $$X$$ is a vector space. $$\mathbb{F}$$ can be either $$\mathbb{R}$$ (the real number line) or $$\mathbb{C}$$ (the complex plane). For future discussions, we will simply use $$\mathbb{R}$$.
+
+Both **Linear Functionals** and **Linear Operators** obey two important rules:
+
+- $$L(\alpha x)=\alpha L(x)$$
+- $$L(x+y)=L(x)+L(y)$$
+
+We will discuss the continuity aspect enjoyed by **Continuous Linear Operators** in an upcoming section.
+
+We look at a couple of very simple examples of what does and does not constitute Linear Functionals.
+
+### Example of a Linear Functional
+Let $$f(x)=2x, x\in\mathbb{R}$$. Then, you can pick a constant $$C$$, say $$C=3$$, such that:
+
+$$\|Tx\|=2\|x\|\leq 3\|x\|$$
+
+### Non-Example of a Linear Functional
+As a non-example, consider $$f(x)=2x+3$$. Note that this is not a linear transformation in $$R^n$$; one intuitive reason is that there is no matrix you can define which can reproduce this operation when applied to any $$x\in\mathbb{R}$$. This is despite the fact that this is a continuous function.
+
+It is also not a Linear Functional because it does not follow one of the properties, as follows:
+
+$$
+f(x_1+x_2)=2(x_1+x_2)+3=2x_1+2x_2+3 \\
+f(x_1)+f(x_2)=2x_1+3+2x_2+3=2x_1+2x_2+6\\
+\Rightarrow f(x_1+x_2)\neq f(x_1)+f(x_2)
+$$
+
+Please note that this definition of linearity is not one that non-mathematicians are used to, since you'd normally look at an expression $$2x+3$$ and conclude that it was "linear" in the sense that it expresses a polynomial of degree one, or alternatively, its graph is a straight line (or a plane in $$\mathbb{R}^3$$, or an equivalent hyperplane in higher dimensions).
+
+## Function Norms
 Before discussing the norm of a function, let's talk of the family of norms which include the natural concept of the Euclidean norm, namely the $$L^p$$ norms.
 
 The generalised $$L^p$$ norm for a vector $$x$$ in $$\mathbb{R}^n$$ is defined as:
@@ -67,57 +94,84 @@ $$\|x\|_\infty=max(\|x_1\|, \|x_2\|, ..., \|x_n\|)$$
 
 Intuitively, we can think of this definition like this: **the magnitude of the largest vector component overpowers all other vector components, when it is raised to infinity**.
 
+Different norms can be assigned to vector spaces of functions. Two of the common ones are as follows:
 
-## Operators, Linear Functionals, and Linearity
-For the purposes of discussion, we may consider operators as equivalent to Linear Transformations (there are nonlinear operators too, but that is outside the scope of this discussion). The term "operator" is used when these transformations are applied to a wide variety of inputs, usually beyond simple geometric notions of $$\mathbb{R}^n$$..
+- **$$L^2$$ Function Norm**: The function is treated as a vector with an infinite number of dimensions similar to how we discussed in [Kernel Functions: Functional Analysis and Linear Algebra Preliminaries]({% post_url 2021-07-17-kernel-functions-functional-analysis-preliminaries %}). In this case, the function norm is identical to the norm induced by the Inner Product; though you should keep in mind that though the inner product induces this norm, this norm can be defined independently without the existence of an inner product in the space under discussion.
 
-In our discussions of applications of **Functional Analysis**, the most common application of operators will be on functions; but we may think of them as linear transformations under a different name. Note that they are still functions operating on vectors (because the inputs are functions, which are vectors themselves). For the results discussed in this article, we will restrict ourselves to **Continuous Linear Operators**.
+  (An equivalent formulation exists: we can treat a function as an infinite sequence of scalars $$\{a_n\}=(a_1, a_2, a_3, ...)$$. We will keep this treatment aside for now.)
+  
+  The $$L^2$$ function norm then looks like:
+  
+  $$
+  {\|f\|}_p=\int_a^b {\|f(x)\|}^2 dx
+  $$
+  
+- **$$L^\infty$$ Function Norm**: This one boils down to simply finding out the maximum value attained by the function, or alternatively, the smallest value of $$C\in\mathbb{R}$$ such that $$C>\|f(x)\|$$ for all $$x$$. The norm then becomes:
+  
+  $$
+  {\|f\|}_\infty={sup}_x\|f(x)\|
+  $$
 
-**Linear Functionals** are functions which map vectors specifically to their field of scalars, usually $$\mathbb{R}$$ or $$\mathbb{C}$$.
+## Operator Norm
+The Operator Norm is not really a new way of describing a norm; it still depends upon the norms defined in vector spaces for the actual calculation. An operator norm is a measure of how much the operator modifies the norm of the original input vector.
 
- We will discuss conceptions of continuity next, but understand that both **Linear Functionals** and **Linear Operators** obey two important rules:
+Assume we have a vector $$x$$ in a vector space $$X$$, and an operator $$T:X\rightarrow Y$$. Then its norm is $$\|x\|$$. Applying the operator $$T$$ on $$x$$ gives us $$Tx$$, whose norm in turn is $$\|Tx\|$$.
+The degree of change in the norm is then given by $$\frac{\|Tx\|}{\|x\|}$$. However, we want to find the maximum possible degree of change in norm, across all possible vectors in $$X$$.
 
-- $$L(\alpha x)=\alpha L(x)$$
-- $$L(x+y)=L(x)+L(y)$$
-
-We will discuss the continuity aspect enjoyed by **Continuous Linear Operators** in an upcoming section.
-
-We look at a couple of very simple examples of what does and does not constitute Linear Functionals.
-
-### Example of a Linear Functional
-Let $$f(x)=2x, x\in\mathbb{R}$$. Then, you can pick a constant $$C$$, say $$C=3$$, such that:
-
-$$\|Tx\|=2\|x\|\leq 3\|x\|$$
-
-### Non-Example of a Linear Functional
-As a non-example, consider $$f(x)=2x+3$$. Note that this is not a linear transformation in $$R^n$$; one intuitive reason is that there is no matrix you can define which can reproduce this operation when applied to any $$x\in\mathbb{R}$$. This is despite the fact that this is a continuous function.
-
-It is also not a Linear Functional because it does not follow one of the properties, as follows:
-
-$$
-f(x_1+x_2)=2(x_1+x_2)+3=2x_1+2x_2+3 \\
-f(x_1)+f(x_2)=2x_1+3+2x_2+3=2x_1+2x_2+6\\
-\Rightarrow f(x_1+x_2)\neq f(x_1)+f(x_2)
-$$
-
-Please note that this definition of linearity is not one that non-mathematicians are used to, since you'd normally look at an expression $$2x+3$$ and conclude that it was "linear" in the sense that it expresses a polynomial of degree one, or alternatively, its graph is a straight line (or a plane in $$\mathbb{R}^3$$, or an equivalent hyperplane in higher dimensions).
-
-## Continuity of Linear Operators
-Continuity is defined as follows
+The operator norm is then defined as the maximum possible value of this ratio.
 
 $$
-f\rightarrow f_0 \Rightarrow Tf\rightarrow Tf_0\\
+\|T\|={max}_{x}\frac{\|Tx\|_Y}{\|x\|_X}
 $$
 
-The equivalent definition for continuity is:
+The only problem with the above is that $$\|T\|$$ will not be defined for $$x=0$$. Thus, we conveniently exclude 0 from the definition, to give us the following:
 
 $$
-\|f-f_0\|\rightarrow 0\\
-\Rightarrow \|T(f-f_0)\|\rightarrow 0 \\
-\Rightarrow \|T(f)-T(f_0)\|\rightarrow 0 \text{   (by the definition of a linear operator)}
+\|T\|={max}_{x\neq 0}\frac{\|Tx\|_Y}{\|x\|_X}
 $$
 
-## Boundedness of Linear Operators
+Note the subscripts in the norms above. Since $$T$$ takes $$x$$ to a vector space $$Y$$, the norm of $$x$$ is measured using the norm defined in vector space $$X$$, but the norm of $$Tx$$ is measured using the norm defined in the vector space $$Y$$.
+
+There is a simpler way of expressing this: if we constrain $$x$$ to always have a norm of 1, i.e., a unit vector, the denominator in the above expression becomes 1, so we can rewrite the operator norm as:
+
+$$
+\|T\|={max}_{\|x\|=1}\|Tx\|_Y
+$$
+
+I've omitted the norm subscript above, but remember that $$\|x\|=\|x\|_X$$ in the above expression.
+
+## Metric Spaces
+
+Sets don't come naturally equipped with a way to measure "distances" between their elements. Some sets might have intuitive notions of what it means by distance between two elements in it, like n-dimensional Euclidean space ($$\mathbb{R}^n$$), but those intuitive metrics are not the only possible metrics available for those sets.
+
+A set equipped with a distance metric is a metric space. A distance metric is defined as a function which defines the "distance" between two members of a set. The definition of what "distance" consititutes, varies based on the sort of metric space, and the application. A distance metric $$d(x,y)$$ must satisfy the following conditions.
+
+- $$d(x,y)>0, \forall x\neq y$$
+- $$d(x,y)=0 \Rightarrow x=y$$
+- $$d(x,y)=d(y,x)$$
+- $$d(x,z)\leq d(x,y)+d(y,z)$$
+
+## Continuity of Functions
+
+Continuity for a function can be defined as follows:
+
+$$
+x\rightarrow x_0 \Rightarrow f(x)\rightarrow f(x_0)\\
+$$
+
+Another equivalent definition for continuity is more useful:
+
+$$
+d(x,x_0)\rightarrow 0\Rightarrow d(f(x), f(x_0))\rightarrow 0 \\
+$$
+
+where $$d(\bullet, \bullet)$$ is the distance metric defined for the metric space under discussion. However, the formulation that is used most commonly in proofs (in Real Analysis, etc.), is the $$\epsilon-\delta$$ formulation. Mathematically, this is:
+
+$$
+\forall \epsilon>0, \exists\delta>0 \text{ such that } d(x,x_0)<\delta \Rightarrow d(f(x), f(x_0))<\epsilon
+$$
+
+## Continuity and Boundedness of Linear Functionals
 
 Boundedness is defined as follows:
 
@@ -138,9 +192,6 @@ f(\vec{z})=2.1+3.2=8 \\
 \langle\vec{v},\vec{z}\rangle=2.1+3.2=8
 $$
 
-
-## Alternative Formulation : Mercer's Theorem
-
 ## References
-- Proof that the Infinity Norm is the maximum value of a Vector: https://math.stackexchange.com/questions/3099179/proving-the-infinity-norm-is-equal-to-the-maximum-value-of-the-vector
-
+- [Proof that the Infinity Norm is the maximum value of a Vector](https://math.stackexchange.com/questions/3099179/proving-the-infinity-norm-is-equal-to-the-maximum-value-of-the-vector)
+- [Proof that Boundedness implies Continuity for Linear Operators](https://en.wikipedia.org/wiki/Bounded_operator#Bounded_linear_operators_between_normed_spaces)

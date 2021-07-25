@@ -10,7 +10,7 @@ This article uses the previous mathematicsl groundwork to discuss the constructi
 The two specific posts discussing the background are:
 
 - [Kernel Functions: Functional Analysis and Linear Algebra Preliminaries]({% post_url 2021-07-17-kernel-functions-functional-analysis-preliminaries %})
-- [Functional Analysis: Results for Operators]({% post_url 2021-07-19-functional-analysis-results-for-operators %})
+- [Functional Analysis: Norms, Linear Functionals, and Operators]({% post_url 2021-07-19-functional-analysis-results-for-operators %})
 
 We originally asked the following question: **what can we say about a function on a pair of input vectors which also ends up being the inner product of those vectors projected onto a higher dimensional space?**
 
@@ -101,6 +101,10 @@ $$
 $$
 
 Now we know that a kernel function takes in two vectors as input. How are we to define $$K_x$$, $$K_y$$ such that they take in one value. The next section discusses the construction of the mapping.
+
+## Representer Theorem
+
+## Empirical Risk Minimisation
 
 ## Function Currying
 Assume that such a linear functional exists. We call this the **kernel function** $$\kappa(x,y)$$. Now recall the notion of function currying from programming, where specifying a subset of arguments to a function, yields a new function with the already-passed-in parameters fixed, and the rest of the parameters still available to specify.
