@@ -192,6 +192,116 @@ f(\vec{z})=2.1+3.2=8 \\
 \langle\vec{v},\vec{z}\rangle=2.1+3.2=8
 $$
 
+## Mercer's Theorem
+
+Mercer's Theorem is the functional (read infinite-dimensional) version of the eigendecomposition of a matrix. We present the equivalent forms without proof; we may tackle it in a more theoretical Functional Analysis post.
+
+We talked about eigenvalues and eigenvectors briefly in [Quadratic Optimisation using Principal Component Analysis as Motivation: Part Two]({%post_url 2021-04-28-quadratic-optimisation-pca-lagrange-multipliers %}), where we saw that symmetric matrices have orthogonal eigenvectors. There is also another property they enjoy in that all the eigenvalues are real-valued.
+
+### Symmetric Matrices and Orthogonal Eigenvectors
+Here is a quick refresher proof on why symmetric matrices have orthogonal eigenvectors. Assume a symmetric matrix $$A=A^T$$. Pick any two of its eigenvectors and corresponding eigenvalues, say $$(\lambda_1, v_1)$$ and $$(\lambda_2, v_2)$$, with the reasonable assumption that $$\lambda_1\neq\lambda_2$$. Then we can write the following chain of identities:
+
+$$
+\lambda_1{v_1}^Tv_2=(\lambda_1{v_1}^T)v_2={(Av_1)}^Tv_2={v_1}^TA^Tv_2 \\
+= {v_1}^TAv_2 \text{ because A is symmetric} \\
+= {v_1}^T(Av_2)={v_1}^T(\lambda_2v_2)=\lambda_2{v_1}^Tv_2 \\
+\Rightarrow \lambda_1{v_1}^Tv_2 - \lambda_2{v_1}^Tv_2 = 0 \\
+\Rightarrow (\lambda_1-\lambda_2){v_1}^Tv_2 = 0
+$$
+
+Since we have assumed that $$\lambda_1\neq\lambda_2$$, we get:
+
+$$
+{v_1}^Tv_2 = 0
+$$
+
+implying that all eigenvectors of a symmetric matrix are orthogonal to each other.
+
+There will be a deeper delve into eigenvectors in a succeeding post.
+
+### Spectral Theorem for Finite-Dimensional Matrices
+
+The infinite-dimensional version of an eigenvector is predictably called an eigenfunction. Let's look at the finite-dimensional case to establish a direct visual equivalence with the statement of Mercer's Theorem.
+
+We take the case of a symmetric matrics which have strictly orthogonal real-valued eigenvectors, and then multiply out the matrices to see what $$A$$ looks like.
+
+Let
+
+$$
+V=
+\begin{bmatrix}
+V_1 && V_2 && \ldots && V_n \\
+\vert && \vert && \ldots && \vert
+\end{bmatrix} \\
+
+\lambda=
+\begin{bmatrix}
+\lambda_1 && 0 && \ldots && 0 \\
+0 && \lambda_2 && \ldots && 0\\
+\vdots && \vdots && \ddots && \vdots\\
+0 && 0 && \ldots && \lambda_n
+\end{bmatrix} \\ 
+$$
+
+Then, expanding, we get:
+
+$$
+A=V\lambda V^T
+=\begin{bmatrix}
+V_1 && V_2 && \ldots && V_n \\
+\vert && \vert && \ldots && \vert
+\end{bmatrix}
+
+\cdot
+
+\begin{bmatrix}
+\lambda_1 && 0 && \ldots && 0 \\
+0 && \lambda_2 && \ldots && 0\\
+\vdots && \vdots && \ddots && \vdots\\
+0 && 0 && \ldots && \lambda_n
+\end{bmatrix}
+
+\cdot
+
+\begin{bmatrix}
+V_1 && - \\
+V_2 && - \\
+\vdots \\
+V_n && - \\
+\end{bmatrix}\\
+
+= \begin{bmatrix}
+\lambda_1 V_1 && \lambda_2 V_2 && \ldots && \lambda_n V_n \\
+\vert && \vert && \ldots && \vert
+\end{bmatrix}
+
+\cdot
+
+\begin{bmatrix}
+V_1 && - \\
+V_2 && - \\
+\vdots \\
+V_n && - \\
+\end{bmatrix}\\
+
+= \lambda_1 V_1{V_1}^T + \lambda_1 V_2{V_2}^T + \lambda_1 V_3{V_3}^T + ... + \lambda_1 V_n{V_n}^T \\
+\Rightarrow A = \sum_{i=1}^n \lambda_i V_i{V_i}^T
+$$
+
+The above is simply the statement of the Spectral Theory of Matrices.
+
+### Spectral Theorem for Infinite-Dimensional Matrices (aka Kernel Functions)
+
+Mercer's Theorem is an extension of this to an infinite-dimensional matrix, where the eigenvectors are replaced by eigenfunctions (remember, functions are vectors too), and the requirement for a symmetric matrix is replaced by a positive semi-definite function $$\kappa(x,y)$$, characterised by the positive semi-definiteness of the **Gram Matrix** as noted in the **Inner Product and the Gram Matrix** section in [Kernel Functions: Functional Analysis and Linear Algebra Preliminaries]({% post_url 2021-07-17-kernel-functions-functional-analysis-preliminaries %}).
+
+Mathematically, Mercer Theorem states that:
+
+$$
+\kappa(x,y)=\sum_{i=1}^\infty \lambda_i \psi_i(x)\psi_i(y)
+$$
+
+where $$\psi_i(\bullet)$$ is the $$i$$th eigenfunction. Note that this implies that there are an infinite number of eigenfunctions.
+
 ## References
 - [Proof that the Infinity Norm is the maximum value of a Vector](https://math.stackexchange.com/questions/3099179/proving-the-infinity-norm-is-equal-to-the-maximum-value-of-the-vector)
 - [Proof that Boundedness implies Continuity for Linear Operators](https://en.wikipedia.org/wiki/Bounded_operator#Bounded_linear_operators_between_normed_spaces)
