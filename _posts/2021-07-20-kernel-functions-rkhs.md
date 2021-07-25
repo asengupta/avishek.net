@@ -5,12 +5,19 @@ usemathjax: true
 tags: ["Machine Learning", "Kernels", "Theory", "Functional Analysis", "Linear Algebra"]
 draft: false
 ---
-This article uses the previous mathematicsl groundwork to discuss the construction of **Reproducing Kernel Hilbert Spaces**. We'll make several assumptions that have been proved and discussed in those articles. There are multiple ways of discussing Kernel Functions, like the **Moore–Aronszajn Theorem** and **Mercer's Theorem**. We may discuss some of those approaches in the future, but here we will focus on the constructive approach here to characterise **Kernel Functions**.
+This article uses the previous mathematical groundwork to discuss the construction of **Reproducing Kernel Hilbert Spaces**. We'll make several assumptions that have been proved and discussed in those articles. There are multiple ways of discussing Kernel Functions, like the **Moore–Aronszajn Theorem** and **Mercer's Theorem**. We may discuss some of those approaches in the future, but here we will focus on the constructive approach here to characterise **Kernel Functions**.
 
-The two specific posts discussing the background are:
+The specific posts discussing the background are:
 
 - [Kernel Functions: Functional Analysis and Linear Algebra Preliminaries]({% post_url 2021-07-17-kernel-functions-functional-analysis-preliminaries %})
 - [Functional Analysis: Norms, Linear Functionals, and Operators]({% post_url 2021-07-19-functional-analysis-results-for-operators %})
+
+We will discuss the following:
+
+- Construction of a Reproducing Kernel Hilbert Space
+- Examples of some Non-Trivial RKHS's
+- Empirical Risk Minimisation
+- Representer Theorem
 
 We originally asked the following question: **what can we say about a function on a pair of input vectors which also ends up being the inner product of those vectors projected onto a higher dimensional space?**
 

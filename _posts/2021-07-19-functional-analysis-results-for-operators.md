@@ -1,5 +1,5 @@
 ---
-title: "Functional Analysis: Norms, Linear Functionals, and Operators"
+title: "Functional Analysis: Norms, Operators, and Some Theorems"
 author: avishek
 usemathjax: true
 tags: ["Mathematics", "Theory", "Operator Theory", "Functional Analysis"]
@@ -9,17 +9,17 @@ This article expands the groundwork laid in [Kernel Functions: Functional Analys
 
 However, in this article, we will expound more fundamentals concepts to build up our intuition. Thus, this (and some other articles) will serve as a "knowledge base" for applicable results in Real and Functional Analysis, and will be referenced in more future posts.
 
-We will discuss:
+We will discuss the following topics:
 
 - Metric Spaces and $$L^p$$ Norms
 - Operators and Linear Functionals
+- $$L^p$$ Norms
 - $$L^2$$ and $$L^\infty$$ Norms for Functions
-- Cauchy Sequences and Limits
-- Cauchy Sequences of Functions
 - Boundedness and Continuity for Operators
 - Riesz Representation Theorem
+- Mercer's Theorem
 
-## Operators, Linear Functionals, and Linearity
+## Operators and Linear Functionals
 For the purposes of discussion, we may consider operators as equivalent to Linear Transformations (there are nonlinear operators too, but that is outside the scope of this discussion). The term "operator" is used when these transformations are applied to a wide variety of inputs, usually beyond simple geometric notions of $$\mathbb{R}^n$$.
 
 In our discussions of applications of **Functional Analysis**, the most common application of operators will be on functions; but we may think of them as linear transformations under a different name. Note that they are still functions operating on vectors (because the inputs are functions, which are vectors themselves). For the results discussed in this article, we will restrict ourselves to **Continuous Linear Operators**.
@@ -57,7 +57,7 @@ $$
 
 Please note that this definition of linearity is not one that non-mathematicians are used to, since you'd normally look at an expression $$2x+3$$ and conclude that it was "linear" in the sense that it expresses a polynomial of degree one, or alternatively, its graph is a straight line (or a plane in $$\mathbb{R}^3$$, or an equivalent hyperplane in higher dimensions).
 
-## Function Norms
+## $$L^p$$ Norms
 Before discussing the norm of a function, let's talk of the family of norms which include the natural concept of the Euclidean norm, namely the $$L^p$$ norms.
 
 The generalised $$L^p$$ norm for a vector $$x$$ in $$\mathbb{R}^n$$ is defined as:
@@ -94,7 +94,10 @@ $$\|x\|_\infty=max(\|x_1\|, \|x_2\|, ..., \|x_n\|)$$
 
 Intuitively, we can think of this definition like this: **the magnitude of the largest vector component overpowers all other vector components, when it is raised to infinity**.
 
-Different norms can be assigned to vector spaces of functions. Two of the common ones are as follows:
+
+## Function Norms
+
+With that discussion of norms, it should be clear now that different norms can be assigned to vector spaces of functions as well. The important point two remember is that functions have an infinite number of dimensions. Two of the common ones are as follows:
 
 - **$$L^2$$ Function Norm**: The function is treated as a vector with an infinite number of dimensions similar to how we discussed in [Kernel Functions: Functional Analysis and Linear Algebra Preliminaries]({% post_url 2021-07-17-kernel-functions-functional-analysis-preliminaries %}). In this case, the function norm is identical to the norm induced by the Inner Product; though you should keep in mind that though the inner product induces this norm, this norm can be defined independently without the existence of an inner product in the space under discussion.
 
@@ -294,7 +297,7 @@ The above is simply the statement of the Spectral Theory of Matrices.
 
 Mercer's Theorem is an extension of this to an infinite-dimensional matrix, where the eigenvectors are replaced by eigenfunctions (remember, functions are vectors too), and the requirement for a symmetric matrix is replaced by a positive semi-definite function $$\kappa(x,y)$$, characterised by the positive semi-definiteness of the **Gram Matrix** as noted in the **Inner Product and the Gram Matrix** section in [Kernel Functions: Functional Analysis and Linear Algebra Preliminaries]({% post_url 2021-07-17-kernel-functions-functional-analysis-preliminaries %}).
 
-Mathematically, Mercer Theorem states that:
+Mathematically, Mercer's Theorem states that:
 
 $$
 \kappa(x,y)=\sum_{i=1}^\infty \lambda_i \psi_i(x)\psi_i(y)
