@@ -9,6 +9,8 @@ This article expands the groundwork laid in [Kernel Functions: Functional Analys
 
 However, in this article, we will expound more fundamentals concepts to build up our intuition. Thus, this (and some other articles) will serve as a "knowledge base" for applicable results in Real and Functional Analysis, and will be referenced in more future posts.
 
+There is some more (unorganised) material in [Functional and Real Analysis Notes]({% post_url 2021-07-18-notes-on-convergence-continuity %}) which this post will also refer to.
+
 We will discuss the following topics:
 
 - Metric Spaces and $$L^p$$ Norms
@@ -20,15 +22,23 @@ We will discuss the following topics:
 - Mercer's Theorem
 
 ## Operators and Linear Functionals
-For the purposes of discussion, we may consider operators as equivalent to Linear Transformations (there are nonlinear operators too, but that is outside the scope of this discussion). The term "operator" is used when these transformations are applied to a wide variety of inputs, usually beyond simple geometric notions of $$\mathbb{R}^n$$.
+For the purposes of discussion, we may consider **Operators** as equivalent to Linear Transformations (there are nonlinear operators too, but that is outside the scope of this discussion). The term "operator" is used when these transformations are applied to a wide variety of inputs, usually beyond simple geometric notions of $$\mathbb{R}^n$$.
 
 In our discussions of applications of **Functional Analysis**, the most common application of operators will be on functions; but we may think of them as linear transformations under a different name. Note that they are still functions operating on vectors (because the inputs are functions, which are vectors themselves). For the results discussed in this article, we will restrict ourselves to **Continuous Linear Operators**.
 
 Briefly then, an **Operator** is defined as $$T:X\rightarrow Y$$, where $$X$$ and $$Y$$ are vector spaces.
 
+![Operator Examples](/assets/images/operator-examples.png)
+*Some examples of Operators, $$T_1:\mathbb{R}^2\rightarrow\mathbb{R}^2$$ and $$T_2:\mathbb{R}^2\rightarrow\mathbb{R}^3$$*
+
 **Linear Functionals** are functions which map vectors specifically to their field of scalars, usually $$\mathbb{R}$$ or $$\mathbb{C}$$.
 
 Briefly then, a **Linear Functional** is defined as $$f:X\rightarrow\mathbb{F}$$, where $$X$$ is a vector space. $$\mathbb{F}$$ can be either $$\mathbb{R}$$ (the real number line) or $$\mathbb{C}$$ (the complex plane). For future discussions, we will simply use $$\mathbb{R}$$.
+
+![Linear Functional Examples](/assets/images/linear-functional-examples.png)
+*An  example of a Linear Functional $$\mathbb{R}^2\rightarrow\mathbb{R}$$*
+
+By the way, Linear Functionals are also Operators because they are also linear transformations; it is just that they always map to a vector space over the field of scalars (specifically the field over which the linear functional was defined on).
 
 Both **Linear Functionals** and **Linear Operators** obey two important rules:
 
@@ -114,6 +124,11 @@ With that discussion of norms, it should be clear now that different norms can b
   $$
   {\|f\|}_\infty={sup}_x\|f(x)\|
   $$
+  
+  This is also referred to as the **sup-norm** of a function, and can be written as $${\|\|}_sup$$.
+
+![Sup Norm of a Function](/assets/images/l-infinity-norm-of-function.png)
+*Sup Norm of a Function*
 
 ## Operator Norm
 The Operator Norm is not really a new way of describing a norm; it still depends upon the norms defined in vector spaces for the actual calculation. An operator norm is a measure of how much the operator modifies the norm of the original input vector.
@@ -168,19 +183,19 @@ $$
 d(x,x_0)\rightarrow 0\Rightarrow d(f(x), f(x_0))\rightarrow 0 \\
 $$
 
-where $$d(\bullet, \bullet)$$ is the distance metric defined for the metric space under discussion. However, the formulation that is used most commonly in proofs (in Real Analysis, etc.), is the $$\epsilon-\delta$$ formulation. Mathematically, this is:
+where $$d(\bullet, \bullet)$$ is the distance metric defined for the metric space under discussion. However, the formulation that is used most commonly in proofs (in Real Analysis, etc.), is the $$\epsilon-\delta$$ formulation. Mathematically, for a function $$f:X\rightarrow Y$$, this is:
 
 $$
-\forall \epsilon>0, \exists\delta>0 \text{ such that } d(x,x_0)<\delta \Rightarrow d(f(x), f(x_0))<\epsilon
+\forall \epsilon>0, \exists\delta>0 \text{ such that } d_X(x,x_0)<\delta \Rightarrow d_Y(f(x),f(x_0))<\epsilon \\
+\forall \epsilon>0, \exists\delta>0 \text{ such that } \|x,x_0\|_X<\delta \Rightarrow {\|f(x) - f(x_0)\|}_Y<\epsilon \\
 $$
 
-## Continuity and Boundedness of Linear Functionals
+The two definitions above are equivalent, since a metric can be induced by a norm, and we will usually describe normed spaces. The $$d_X$$, $$d_Y$$, $$\|\bullet\|_X$$, and $$\|\bullet\|_Y$$ are there to make explicit the fact the norms (and by extension, the distance metric) might be different in the domain and the codomain.
 
-Boundedness is defined as follows:
+Generally speaking, a mapping (a function is a mapping) is continuous if it preserves convergence in the codomain of the mapping. See [Functional and Real Analysis Notes]({% post_url 2021-07-18-notes-on-convergence-continuity %}) for more discussion on convergence.
 
-$$
-\|Tx\|\leq C\|x\| \text{  for } C>0, C\in\mathbb{R}
-$$
+
+Informally, this means that if there were two points $$x_1$$, $$x_2$$ in the domain $$X$$ which were close to each other (closeness defined by the distance metric induced by the norm, or transitively, the inner product in $$X$$: see [Function Norms](#function-norms)), then the corresponding mapped points $$f(x_1)$$, $$f(x_2)$$ in the codomain are also close to each other (closeness defined by some distance metric in the codomain).
 
 ## Riesz Representation Theorem
 
@@ -293,7 +308,7 @@ $$
 
 The above is simply the statement of the Spectral Theory of Matrices.
 
-### Spectral Theorem for Infinite-Dimensional Matrices (aka Kernel Functions)
+### Mercer's Theorem: Spectral Theorem for Positive Semi-Definite Functions
 
 Mercer's Theorem is an extension of this to an infinite-dimensional matrix, where the eigenvectors are replaced by eigenfunctions (remember, functions are vectors too), and the requirement for a symmetric matrix is replaced by a positive semi-definite function $$\kappa(x,y)$$, characterised by the positive semi-definiteness of the **Gram Matrix** as noted in the **Inner Product and the Gram Matrix** section in [Kernel Functions: Functional Analysis and Linear Algebra Preliminaries]({% post_url 2021-07-17-kernel-functions-functional-analysis-preliminaries %}).
 
