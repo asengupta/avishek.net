@@ -183,7 +183,7 @@ $$
 Then by the above identities $$\eqref{eq:x_partial_kernel}$$ and $$\eqref{eq:y_partial_kernel}$$, we conclude that:
 
 $$
-\kappa(x,y)=\langle\kappa(x,\bullet)\kappa(y,\bullet)\rangle
+\mathbf{\kappa(x,y)=\langle\kappa(x,\bullet)\kappa(y,\bullet)\rangle}
 $$
 
 This is the **Reproducing Kernel Property**, and it is the property which gives Reproducing Kernel Hilbert Spaces their name.
