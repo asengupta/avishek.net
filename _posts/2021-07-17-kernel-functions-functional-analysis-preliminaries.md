@@ -145,7 +145,7 @@ Another important point to note: we will be switching up notation. **Inner produ
 There are a few important properties any candidate for an inner product must satisfy. All these properties intuitively make sense since we've been using them without stating them implicitly while doing Matrix Algebra.
 
 - **Positive Definite**: $$\langle x,x\rangle>0$$ if $$x\neq 0$$
-- **Principle of Indiscernibles**: $$x=0$$ if $$\langle x,y\rangle=0$$
+- **Principle of Indiscernibles**: $$x=0$$ if $$\langle x,x\rangle=0$$
 - **Symmetric**: $$\langle x,y\rangle=\langle y,x\rangle$$
 - **Linear**:
     - $$\langle \alpha x,y\rangle=\alpha\langle x,y\rangle, \alpha\in\mathbb{R}$$
