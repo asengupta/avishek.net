@@ -317,7 +317,7 @@ $$
 \kappa(x,y)=\sum_{i=1}^\infty \lambda_i \psi_i(x)\psi_i(y)
 $$
 
-where \kappa(x,y) is a positive semi-definite function and $$\psi_i(\bullet)$$ is the $$i$$th eigenfunction. Note that this implies that there are an infinite number of eigenfunctions.
+where $$\kappa(x,y)$$ is a positive semi-definite function and $$\psi_i(\bullet)$$ is the $$i$$th eigenfunction. Note that this implies that there are an infinite number of eigenfunctions.
 
 ## References
 - [Proof that the Infinity Norm is the maximum value of a Vector](https://math.stackexchange.com/questions/3099179/proving-the-infinity-norm-is-equal-to-the-maximum-value-of-the-vector)

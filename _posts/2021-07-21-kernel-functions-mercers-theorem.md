@@ -13,7 +13,7 @@ The specific posts discussing the background are:
 - [Functional Analysis: Norms, Linear Functionals, and Operators]({% post_url 2021-07-19-functional-analysis-results-for-operators %})
 - [Functional and Real Analysis Notes]({% post_url 2021-07-18-notes-on-convergence-continuity %})
 
-It is also advisable (though not necessary) to review - [Kernel Functions with Reproducing Kernel Hilbert Spaces]({% post_url 2021-07-20-kernel-functions-rkhs %}) to contrast and compare that approach with the one shown here.
+It is also advisable (though not necessary) to review [Kernel Functions with Reproducing Kernel Hilbert Spaces]({% post_url 2021-07-20-kernel-functions-rkhs %}) to contrast and compare that approach with the one shown here.
 
 Recall what Mercer's Theorem states:
 
