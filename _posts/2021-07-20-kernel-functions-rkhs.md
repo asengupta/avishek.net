@@ -154,7 +154,7 @@ $$
 =\langle\phi(X),\phi(Y)\rangle
 $$
 
-With the same argument for a different vector $$Y$$, we can then write:
+Using the same argument for a different vector $$Y$$, we can then summarise both $$\phi(X)$$ and $$\phi(Y)$$:
 
 $$
 \begin{equation}
@@ -162,6 +162,7 @@ $$
 \label{eq:x_partial_kernel}
 \end{equation}
 $$
+
 $$
 \begin{equation}
 \phi_Y(\bullet)=\kappa(Y,\bullet)
