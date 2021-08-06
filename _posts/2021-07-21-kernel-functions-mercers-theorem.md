@@ -21,4 +21,4 @@ $$
 \kappa(x,y)=\sum_{i=1}^\infty \lambda_i \psi_i(x)\psi_i(y)
 $$
 
-where \kappa(x,y) is a positive semi-definite function and $$\psi_i(\bullet)$$ is the $$i$$th eigenfunction. Note that this implies that there are an infinite number of eigenfunctions.
+where $$\kappa(x,y)$$ is a positive semi-definite function and $$\psi_i(\bullet)$$ is the $$i$$th eigenfunction. Note that this implies that there are an infinite number of eigenfunctions.
