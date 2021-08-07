@@ -157,8 +157,8 @@ $$
 =a^2 \int_{-\infty}^{+\infty} exp\left(- \frac{ {(x-y)}^2}{2\sigma^2} \right)\cdot exp\left(- \frac{2}{2\sigma^2}\cdot\left({\left(\mu-\frac{x+y}{2}\right)}^2 - \frac{ x^2+y^2+2xy-4xy}{4} \right) \right)d\mu \\
 =a^2 \int_{-\infty}^{+\infty} exp\left(- \frac{ {(x-y)}^2}{2\sigma^2} \right)\cdot exp\left(- \frac{2}{2\sigma^2}\cdot\left({\left(\mu-\frac{x+y}{2}\right)}^2 - \frac{ {(x-y)}^2}{4} \right) \right)d\mu \\
 =a^2 \int_{-\infty}^{+\infty} exp\left(- \frac{ {(x-y)}^2}{2\sigma^2} \right) \cdot exp\left( \frac{ {(x-y)}^2}{4\sigma^2} \right) \cdot exp\left(- \frac{2}{2\sigma^2}\cdot {\left(\mu-\frac{x+y}{2}\right)}^2 \right) d\mu \\
-=a^2 \cdot exp\left(- \frac{ {(x-y)}^2}{4\sigma^2} \right) \underbrace{\int_{-\infty}^{+\infty} exp\left(- \frac{1}{ {(\frac{\sigma}{\sqrt{2}})}^2 } \cdot {\left(\mu-\frac{x+y}{2}\right)}^2 \right) d\mu}_{\text{Gaussian integrates to 1}} \\
-{\langle \phi_x(\mu),\phi_y(\mu)\rangle}=a^2\frac{\sigma^2}{2} \cdot exp\left(- \frac{ {(x-y)}^2}{4\sigma^2} \right) \\
+=a^2 \cdot exp\left(- \frac{ {(x-y)}^2}{4\sigma^2} \right) \underbrace{\int_{-\infty}^{+\infty} exp\left(- \frac{1}{ 2{(\frac{\sigma}{\sqrt{2}})}^2 } \cdot {\left(\mu-\frac{x+y}{2}\right)}^2 \right) d\mu}_{\text{Gaussian integrates to }\sqrt{\pi}\sigma} \\
+{\langle \phi_x(\mu),\phi_y(\mu)\rangle}=a^2\sqrt{\pi}\sigma\cdot exp\left(- \frac{ {(x-y)}^2}{4\sigma^2} \right) \\
 $$
 
 Comparing this with the standard form of the one-dimensional kernel function, we can see that the constants of the feature map $$\phi(x)$$ can be calculated. The **standard deviation of the feature map** becomes:
@@ -168,16 +168,23 @@ $$
 \Rightarrow \sigma=\frac{\sigma_K}{\sqrt{2}}
 $$
 
-The **scaling coefficient of the feature map** then looks like this:
+Next we see what the **scaling coefficient of the feature map** looks like. If $$a=\frac{1}{\sigma\sqrt{2\pi}}$$, we get:
 
 $$
-a^2\frac{\sigma^2}{2}=C \\
-\Rightarrow a^2\frac{\sigma_K^2}{4}=C \\
-\Rightarrow a^2=\frac{4C}{\sigma_K^2} \\
-\Rightarrow a=\frac{2\sqrt{C}}{\sigma_K}
+C=a^2\sqrt{\pi}\sigma \\
+=a^2\sqrt{\frac{\pi}{2}}\sigma_K \\
+=\frac{1}{2\pi\sigma^2}\sqrt{\frac{\pi}{2}}\sigma_K \\
+=\frac{2}{2\pi\sigma_K^2}\sqrt{\frac{\pi}{2}}\sigma_K \\
+\Rightarrow C=\frac{1}{\sqrt{2\pi}\sigma_K}
 $$
 
-If we choose these values for our feature map $$\phi(x)$$, we will see that gives us:
+If we choose this value of $$\sigma$$ for our feature map $$\phi(x)$$, we will see that gives us:
+
+$$
+\kappa(x,y)=\frac{1}{\sigma_K\sqrt{2\pi}}\cdot exp\left( -\frac{ {(x-\mu)}^2}{2\sigma_K^2}\right) \\
+$$
+
+which is the standard normal distribution. Thus, we can conclude that:
 
 $$
 \kappa(x,y)=\langle\phi(x)\phi(y)\rangle
