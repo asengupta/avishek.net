@@ -12,6 +12,7 @@ title: Book References
 - **Neural Networks and Learning Machines** : *Simon Haykin*
 - **Artificial Intelligence Engines** : *James Stone*
 - **Probability for the Enthusiastic Beginner** : *David Morin*
+- **The Geometry of Multivariate Statistics** : *Thomas D. Wickens*
 
 ## Machine Learning Practice
 - **Machine Learning Engineering**: *Andriy Burkov*

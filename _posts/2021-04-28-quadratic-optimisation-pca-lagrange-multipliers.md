@@ -42,9 +42,9 @@ For the cost function $$f(X)$$, so we can write:
 
 $$
 D_Xf(X)=D[X^T\Sigma X] \\
-= X^T\Sigma+\Sigma X \\
-=X^T\Sigma+X^T{\Sigma} \\
-=2X^T\Sigma
+= X^T\Sigma+X^T\Sigma^T  \\
+=X^T(\Sigma+{\Sigma}^T) \\
+=2X^T\Sigma \text{   (since } \sigma \text{ is symmetric, } \Sigma=\Sigma^T \text{)}
 $$
 
 Taking the derivative of the manifold equation $$g(x)$$, we get:
@@ -65,7 +65,7 @@ Taking the transpose on both sides, we get:
 
 $$
 {(X^T\Sigma)}^T={(\lambda_1 X^T)}^T \\
-\Rightarrow \mathbf{\Sigma X=\lambda_1 X}
+\Rightarrow \mathbf{\Sigma^T X=\lambda_1 X}
 $$
 
 That's right, **eigenvalues are nothing but Lagrange Multipliers when optimising for Principal Components Analysis**!
