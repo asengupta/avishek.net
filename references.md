@@ -13,6 +13,7 @@ title: Book References
 - **Artificial Intelligence Engines** : *James Stone*
 - **Probability for the Enthusiastic Beginner** : *David Morin*
 - **The Geometry of Multivariate Statistics** : *Thomas D. Wickens*
+- **Statistical Methods: The Geometric Approach** : *David J. Saville*, *Graham R. Wood*
 
 ## Machine Learning Practice
 - **Machine Learning Engineering**: *Andriy Burkov*
