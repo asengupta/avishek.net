@@ -9,7 +9,6 @@ title: Book References
 - **Convex Optimization** : *Stephen P. Boyd*, *Lieven Vandenberghe*
 - **Nonlinear Programming** : *Peter Zörnig*
 - **Statistical Rethinking** : *Richard McElreath*
-- **Neural Networks and Learning Machines** : *Simon Haykin*
 - **Artificial Intelligence Engines** : *James Stone*
 - **Probability for the Enthusiastic Beginner** : *David Morin*
 - **The Geometry of Multivariate Statistics** : *Thomas D. Wickens*
@@ -38,6 +37,7 @@ title: Book References
 - **Principles of Topology**: *Fred H. Croom*
 - **The Way of Analysis**: *Robert S. Strichartz*
 - **Functional Analysis**: *Joseph Muscat*
+- **Functional Analysis for Physics and Engineering**: *Hiroyuki Shima*
 - **Linear Algebra: Theory, Intuition, Code** : *Mike X Cohen*
 - **Introduction to Linear Algebra** : *Gilbert Strang*
 - **Vector Calculus, Linear Algebra and Differential Forms: A Unified Approach** : *John H. Hubbard, Barbara Burke Howard*
