@@ -11,7 +11,7 @@ This article covers a smattering of statistical procedures which can be derived 
 We will discuss the following relations:
 
 - Mean as the Projection Coefficient onto the Model Vector
-- Variance as the Average of Projections onto the Null Space of the Model Vector
+- Variance as the Averaged Projection onto the Null Space of the Model Vector
 - Pearson's Correlation Coefficient as the Cosine of Angle between Two Vectors
 - Coefficient of Projection as the Linear Regression Coefficient
 
@@ -37,6 +37,10 @@ $$
 t=\frac{a^Tb}{a^Ta}
 $$
 
+The situation is as below.
+
+![Geometric Interpretation of Mean](/assets/images/mean-geometric-interpretation.png)
+
 In this case, $$a=\nu_1$$ and $$b=x$$. Note that $$\nu_1^T\nu_1=n$$, so we get:
 
 $$
@@ -56,7 +60,10 @@ $$
 
 which is the formula for the mean.
 
-## Variance as a Projection onto the Null Space of the Model Vector
+## Variance as the Averaged Projection onto the Null Space of the Model Vector
+![Geometric Interpretation of Variance](/assets/images/mean-variance-geometric-interpretation.png)
+
+
 ## Pearson's Correlation Coefficient as the Cosine of Angle between Two Vectors
 ## Coefficient of Projection as the Linear Regression Coefficient
 
