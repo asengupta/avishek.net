@@ -1,12 +1,12 @@
 ---
-title: "Statistics from Linear Algebra: Linear Regression"
+title: "Statistics from Geometry and Linear Algebra"
 author: avishek
 usemathjax: true
 tags: ["Theory", "Statistics", "Linear Algebra"]
 draft: false
 ---
 
-This article covers some common statistical quantities/metrics which can be derived from **Linear Algebra** without recourse to Probability or Calculus. Of course, those subjects add more rigour and insight into these concepts, but our aim is to provide a form of intuitive shorthand for the reader.
+This article covers some common statistical quantities/metrics which can be derived from **Linear Algebra** and corresponding intuitions from **Geometry**, **without recourse to Probability or Calculus**. Of course, those subjects add more rigour and insight into these concepts, but our aim is to provide a form of intuitive shorthand for the reader.
 
 Much of this stems from me attempting to understand links between statistical concepts and **Linear Algebra**. This post is a work in progress and will receive new additions over time.
 
