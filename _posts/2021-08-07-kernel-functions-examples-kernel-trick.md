@@ -11,7 +11,6 @@ The specific posts discussing the background are:
 
 - [Support Vector Machines from First Principles: Part One]({% post_url 2021-04-14-support-vector-machines-derivations %})
 - [Support Vector Machines from First Principles: Linear SVMs]({% post_url 2021-05-10-support-vector-machines-lagrange-multipliers %})
-- [Kernel Functions: Kernel Functions with Mercer's Theorem]({% post_url 2021-07-21-kernel-functions-mercers-theorem %})
 - [Kernel Functions: Kernel Functions with Reproducing Kernel Hilbert Spaces]({% post_url 2021-07-20-kernel-functions-rkhs %})
 - [Kernel Functions: Functional Analysis and Linear Algebra Preliminaries]({% post_url 2021-07-17-kernel-functions-functional-analysis-preliminaries %})
 - [Functional Analysis: Norms, Linear Functionals, and Operators]({% post_url 2021-07-19-functional-analysis-results-for-operators %})
