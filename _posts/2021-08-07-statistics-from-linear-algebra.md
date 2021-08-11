@@ -15,10 +15,6 @@ We will discuss the following relations:
 - Pearson's Correlation Coefficient as the Cosine of Angle between Two Vectors
 - Coefficient of Projection as the Linear Regression Coefficient
 
-## Model Vector and Error Space
-
-We will introduce some terms and intuition to aid the discussions on the above statistical concepts.
-
 ## Mean as the Projection Coefficient onto the Model Vector
 Assume $$n$$ scalar observations which form a vector $$x\in\mathbb{R}^n$$. Then the mean of this set of observations is the projection of $$x$$ onto the All-Ones Vector given by $$\nu_1\in\mathbb{R}^n$$. We will refer to $$\nu_1$$ as the **Model Vector**, going forward.
 
