@@ -63,11 +63,11 @@ which is the formula for the mean.
 
 ## Variance as the Averaged Projection onto the Null Space of the Model Vector
 
-A similar relation holds for the variance of a data set. For the mean, we have already calculated the projection of the data set vector onto the Model Vector. The vector $$X-\nu_1t$$ is, by definition, always perpendicular to the Model Vector $$\nu_1$$, and thus lies in its nullspace.
+A similar relation holds for the variance of a data set. For the mean, we have already calculated the projection of the data set vector onto the Model Vector. The vector $$X-\nu_1t$$ is, by definition, always perpendicular to the Model Vector $$\nu_1$$, and thus lies in its **null space**.
 
-In $$\mathbb{R}^n$$ (for $$n$$ entries in the data set), the nullspace pf the Model Vector is the plane perpendicular to it, passing through the origin, as shown in the image below. Obviously, $$X-\nu_1t$$ lies on this plane. This plane is referred to as the **Error Space**. Thus, stated another way,$$X-\nu_1t$$ is the projection of the data vector $$X$$ onto the nullspace of the **Model Vector**.
+In $$\mathbb{R}^n$$ (for $$n$$ entries in the data set), the nullspace of the Model Vector is the plane perpendicular to it and passing through the origin, as shown in the image below. Obviously, $$X-\nu_1t$$ lies on this plane. This plane is referred to as the **Error Space**. Thus, stated another way,$$X-\nu_1t$$ is the projection of the data vector $$X$$ onto the nullspace of the **Model Vector**.
 
-Of particular note is the fact that the **Error Space** is an $$(n-1)$$-dimensional hyperplace in $$\mathbb{R}^n$$. **The variance is defined as the norm of projection of the dataset vector $$X$$ into the Error Space, averaged across a set of orthonormal basis vectors in the Error Space.**
+Of particular note is the fact that the **Error Space** is an $$(n-1)$$-dimensional hyperplane in $$\mathbb{R}^n$$. **The variance is defined as the norm of projection of the dataset vector $$X$$ into the Error Space, averaged across a set of orthonormal basis vectors in the Error Space.**
 
 For an $$(n-1)$$-dimensional hyperplane, the number of orthonormal basis vectors is $$n-1$$. See the picture below for clarification.
 
@@ -145,11 +145,11 @@ However, note that the above expression is of the same form as that of the proje
 
 Thus the **regression coefficient is simply the projection coefficient of the observed (dependent) dataset vector $$Y_c$$ onto the independent predictor dataset vector $$X_c$$**.
 
-Note that in the general case of $$\mathbb{R}^n$$, you get the regression coefficient with a similar form, as a result of the solution of a set of linear equations. We discuss this next.
+Note that in the general case of $$\mathbb{R}^n$$, you get the regression coefficient with a similar form, namely, as a result of the solution of a set of linear equations. We discuss this next.
 
 ## Linear Regression in $$\mathbb{R}^n$$
 
-There are several perspectives we can use when discussing Linear Regression in $$\mathbb{R}^n$$. We discuss two views on this next.
+There are several perspectives we can use when discussing Linear Regression in $$\mathbb{R}^n$$. We discuss two views of this in the following sections.
 
 ### 1. Linear Regression as Solution of a Set of Linear Equations
 Assume a set of observations that we wish to represent using a linear model like so:
@@ -194,7 +194,7 @@ Y_n
 $$
 
 We need to solve for $$\beta$$.
-$$X$$ is not, in general, a square matrix (it would be extremely unlikely for the number of observations exactly matches the number of features of the dataset). Thus, we cannot take the inverse of $$X$$ directly. However, we can take the inverse of $$X^TX$$ since the product of a matrix and its transpose is symmetric (also positive semi-definite, incidentally).
+$$X$$ is not, in general, a square matrix (it would be extremely unlikely for the number of observations to exactly match the number of features of the dataset). Thus, we cannot take the inverse of $$X$$ directly. However, we can take the inverse of $$X^TX$$ since the product of a matrix and its transpose is symmetric (also positive semi-definite, incidentally).
 
 Thus, we can multiply by $$X^T$$ on both sides, and get:
 
@@ -210,7 +210,7 @@ Note that the above form is similar to $$\eqref{eq:regression-coefficient-2d}$$,
 
 Consider the vector subspace spanned by $$X\beta$$. If the coefficients of $$\beta$$ were perfect predictors, then $$Y$$ would always lie in $$C(X\beta)$$ (column space of $$X\beta$$). However, data is always noisy, so the best we can hope for is a $$\beta$$, which minimises the error between $$Y$$ and $$X\beta$$.
 
-Appropriately enough, the smallest error intuitively is the vertical projection of $$Y$$ onto $$C(X\beta)$$. The diagram below shows the situation.
+Intuitively, the smallest error is the vertical projection of $$Y$$ onto $$C(X\beta)$$. The diagram below shows the situation.
 
 ![Linear Regression as Minimisation of Prediction Error](/assets/images/linear-regression-minimised-error.png)
 
