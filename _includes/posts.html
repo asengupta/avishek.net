@@ -12,7 +12,7 @@
     {% assign author = site.authors | where: 'short_name', post.author | first %}
     <li>
       <h2><a href="{{ post.url }}">{{ post.title }}</a></h2>
-      {{ post.date | date: "%-d %B %Y" }}
+      <i>{{ post.date | date: "%-d %B %Y" }}</i>
       <br></br>
       {{ post.excerpt }}
       <hr/>
