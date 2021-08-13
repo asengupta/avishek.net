@@ -22,3 +22,20 @@ $$
 $$
 
 where $$\kappa(x,y)$$ is a positive semi-definite function and $$\psi_i(\bullet)$$ is the $$i$$th eigenfunction. Note that this implies that there are an infinite number of eigenfunctions.
+
+## Evaluation Functionals
+
+The Evaluation Functional is an interesting function: it takes another function as an input, and applies a specific argument to that function. As an example, if we have a function, like so:
+
+$$
+f(x)=2x+3
+$$
+
+We can define an evaluation functional called $$\delta_3(f)$$ such that:
+
+$$
+\delta_3(f)=f(3)=2.3+3=9
+$$
+
+## Continuity and Boundedness of Evaluation Functional
+Here we will treat the Evaluation Functional in its functional form (the "formula view", if you like). Is the graph of the Evaluation Functional continuous. We can prove that if a linear functional is bounded, then it is also continuous. In this case, we will prove that the Evaluation Functional is bounded in the function space $$\mathcal{H}$$.
