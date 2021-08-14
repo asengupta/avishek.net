@@ -17,8 +17,15 @@ We will discuss the following relations:
 - **Pearson's Correlation Coefficient** as the Cosine of Angle between Two Vectors
 - **Linear Regression Coefficient** as the Coefficient of Projection
 
+## Note on Convention
+For data sets, we use the convention of **observations-by-features**. Each row in a matrix is a single point in the data set, i.e., an observation. A single column represents the sequence of recordings of a single feature (dimension) across all the points in our data set.
+
+Accordingly, any data matrix will be an $$O\times F$$ matrix, with $$O$$ data points, and $$F$$ dimensions.
+
+**Mean, covariance, etc. are always computed for a given dimension (feature), not across dimensions**, which would make no sense, since each dimension represents a separate domain variable. In terms of probability, each feature is a **Random Variable**.
+
 ## Mean as the Projection Coefficient onto the Model Vector
-Assume $$n$$ scalar observations which form a vector $$x\in\mathbb{R}^n$$. Then the mean of this set of observations is the projection of $$x$$ onto the **All-Ones Vector** given by $$\nu_1\in\mathbb{R}^n$$. We will refer to $$\nu_1$$ as the **Model Vector**, going forward.
+Assume $$n$$ scalar observations which form a vector $$x\in\mathbb{R}^n$$. This represents $$n$$ data vectors in $$\mathbb{R}$$. Then the mean of this set of observations is the projection of $$x$$ onto the **All-Ones Vector** given by $$\nu_1\in\mathbb{R}^n$$. We will refer to $$\nu_1$$ as the **Model Vector**, going forward.
 
 The **Model Vector** looks like:
 
@@ -61,13 +68,18 @@ $$
 
 which is the formula for the mean.
 
+### Notes
+
+- In this geometric view, the mean is also a vector defined in terms of the **Model Vector** by $$\nu_1t$$. This we will call the **Mean Vector** $$X_\mu$$.
+- It is important to note what the mean here represents: it is the **mean vector of a set of $$n$$ 1-dimensional vectors ($$\mathbb{R}$$)**.
+
 ## Variance as the Averaged Projection onto the Null Space of the Model Vector
 
 A similar relation holds for the variance of a data set. For the mean, we have already calculated the projection of the data set vector onto the Model Vector. The vector $$X-\nu_1t$$ is, by definition, always perpendicular to the Model Vector $$\nu_1$$, and thus lies in its **null space**.
 
 In $$\mathbb{R}^n$$ (for $$n$$ entries in the data set), the nullspace of the Model Vector is the plane perpendicular to it and passing through the origin, as shown in the image below. Obviously, $$X-\nu_1t$$ lies on this plane. This plane is referred to as the **Error Space**. Thus, stated another way,$$X-\nu_1t$$ is the projection of the data vector $$X$$ onto the nullspace of the **Model Vector**.
 
-Of particular note is the fact that the **Error Space** is an $$(n-1)$$-dimensional hyperplane in $$\mathbb{R}^n$$. **The variance is defined as the norm of projection of the dataset vector $$X$$ into the Error Space, averaged across a set of orthonormal basis vectors in the Error Space.**
+Of particular note is the fact that the **Error Space** is an $$(n-1)$$-dimensional hyperplane in $$\mathbb{R}^n$$. **The variance is defined as the norm squared of the projection of the dataset vector $$X$$ into the Error Space, averaged across a set of orthonormal basis vectors in the Error Space.**
 
 For an $$(n-1)$$-dimensional hyperplane, the number of orthonormal basis vectors is $$n-1$$. See the picture below for clarification.
 
@@ -76,11 +88,21 @@ For an $$(n-1)$$-dimensional hyperplane, the number of orthonormal basis vectors
 The variance then comes out as:
 
 $$
-\mathbf{\sigma^2=\frac{ {(X-\nu_1t)}^T(X-\nu_1t)}{n-1}}
+\begin{aligned}
+\sigma^2 &=\frac{ {\|X-X_\mu\|}^2}{n-1} \\
+&\mathbf{=\frac{ {(X-X_\mu)}^T(X-X_\mu)}{n-1}}\\
+&\mathbf{=\frac{ {(X-\nu_1t)}^T(X-\nu_1t)}{n-1}}
+\end{aligned}
 $$
 
 This provides an intuitive explanation of why the sample variance (and consequently standard deviation) has an $$n-1$$ in its denominator instead of $$n$$.
 
+In multi-dimensional space, where there are $$n$$ observations and $$f$$ features, $$X$$ is an $$n\times f$$ matrix, and the above expression becomes the **Covariance Matrix**, denoted by $$\sigma$$, which is an $$f\times f$$ matrix.
+
+
+$$
+\mathbf{\Sigma=\frac{ {(X-X_\mu)}^T(X-X_\mu)}{n-1}}
+$$
 ## Pearson's Correlation Coefficient as the Cosine of Angle between Two Vectors
 The Pearson's Correlation Coefficient for two data sets $$X$$ and $$Y$$ is usually defined as:
 

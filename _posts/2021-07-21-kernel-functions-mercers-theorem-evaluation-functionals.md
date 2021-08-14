@@ -1,5 +1,5 @@
 ---
-title: "Kernel Functions with Mercer's Theorem"
+title: "Kernel Functions: Mercer's Theorem and Evaluation Functionals"
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Kernels", "Theory", "Functional Analysis"]
