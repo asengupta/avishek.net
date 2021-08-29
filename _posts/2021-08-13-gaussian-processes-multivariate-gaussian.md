@@ -87,4 +87,7 @@ $$
 = \sum_{i=1}^n \frac{ {(x_i-\mu_i)}^2}{\lambda_i^2}=C
 $$
 
+## Projection as Change of Basis
+
+We have already discussed projections of vectors onto other vectors in several places (for example, in [Gram-Schmidt Orthogonalisation]({% post_url 2021-05-27-gram-scmidt-orthogonalisation %})). We can look at vector projection through a different lens, namely as a change in coordinate system.
 
