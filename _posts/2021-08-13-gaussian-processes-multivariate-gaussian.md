@@ -38,13 +38,17 @@ $$
 
 Then, we can see that:
 
-$$D^{-1}=\begin{bmatrix}
+$$
+\begin{equation}
+D^{-1}=\begin{bmatrix}
 \frac{1}{\lambda_1} && 0 && 0 && \cdots && 0 \\
 0 && \frac{1}{\lambda_2} && 0 && \cdots && 0 \\
 0 && 0 && \frac{1}{\lambda_3} && \cdots && 0 \\
 \vdots && \vdots && \vdots && \ddots && \vdots \\
 0 && 0 && 0 && \cdots && \frac{1}{\lambda_n} \\
 \end{bmatrix}
+\label{eq:diagonal}
+\end{equation}
 $$
 
 Then, we can rewrite the standard form of the $$n$$-dimensional ellipsoid as:
@@ -90,4 +94,86 @@ $$
 ## Projection as Change of Basis
 
 We have already discussed projections of vectors onto other vectors in several places (for example, in [Gram-Schmidt Orthogonalisation]({% post_url 2021-05-27-gram-scmidt-orthogonalisation %})). We can look at vector projection through a different lens, namely as a change in coordinate system.
+
+Consider a vector $$B$$ in the standard basis of $$\mathbb{R}^2$$. We know that the standard basis of $$\mathbb{R}^2$$ is only one of an infinite number of bases we can use. Let us pick another basis $$X`$$ and $$Y'$$. They have to be linearly independent, though they need not be orthogonal to each other. Furthermore, we assume that they are unit vectors, i.e., $$\|X`\|=\|Y`\|=1$$.
+
+Then, the projection coefficient of $$B$$ onto $$X`$$ and $$Y`$$ are:
+
+$$
+\text{proj}_{BX'}=\frac{ {X'}^T B}{ {X'}^T X'}={X'}^T B \text{ (since X' is a unit vector)} \\
+\text{proj}_{BY'}=\frac{ {Y'}^T B}{ {Y'}^T Y'}={Y'}^T B \text{ (since Y' is a unit vector)}
+$$
+
+The situation is as shown below.
+
+![Change of Basis](/assets/images/change-of-basis-2d.png)
+
+These projection coefficients are the coordinates of $$B$$ in the new coordinate system defined by $$X'$$ and $$Y'$$. To recover $$B$$, you can simply multiply out the projections by respective basis vectors $$X'$$ and $$Y'$$.
+
+More generally, for any new basis matrix $$C$$ (assuming the basis vectors are unit vectors), any vector $$V$$ can be written as $$V_C=C^TV$$. Analogous to the above example, we can recover the original vector $$V$$ by writing $$V=C^TVC$$.
+
+
+## Skewed Ellipsoid
+
+Assume an arbitrary point $$X$$ in $$\mathbb{R}^n$$. Let us choose a different basis $$C$$. Then, $$X_C=C^TX$$. An ellipsoid in this new coordinate system (centered at the origin) is then given by:
+
+$$
+{[D^{-1}X_C]}^T [D^{-1}X_C]=K \\
+\Rightarrow {[D^{-1}C^TX]}^T [D^{-1}C^TX]=K
+$$
+
+where $$D^{-1}$$ was already defined as in $$\eqref{eq:diagonal}$$, and $$K$$ is a constant. If the ellipsoid was centered at $$\mu$$, then the above expression becomes:
+
+$$
+\begin{equation}
+{[D^{-1}C^T(X-\mu)]}^T [D^{-1}C^T(X-\mu)]=K
+\label{eq:skewed-ellipsoid}
+\end{equation}
+$$
+
+The situation in $$\mathbb{R}^2$$ is shown below.
+
+![Skewed Ellipsoid](/assets/images/skewed-ellipsoid-2d.png)
+
+## Multivariate Gaussian Distribution
+
+We are now in a position to understand the form of the Multivariate Gaussian Distribution. The standard form of the Multivariate Gaussian Distribution is given by:
+
+$$
+G(X)=C\bullet\text{exp}\left( -\frac{1}{2} {(X-\mu)}^T\Sigma^{-1}(X-\mu) \right)
+$$
+
+where $$\Sigma$$ is the (invertible) covariance matrix. Let us note some specific properties of the covariance matrix before proceeding further.
+
+- The covariance matrix can be diagonalised.
+- The covariance matrix is symmetric. This implies that all its eigenvectors are orthogonal.
+
+We seek to understand the shape of this Gaussian. To do that, let us fix the value of $$G(X)$$ to, say, $$K$$.
+
+$$
+C\bullet \text{exp}\left(-\frac{1}{2} {(X-\mu)}^T \Sigma^{-1} (X-\mu)\right)=K
+$$
+
+Let us express $$\Sigma^{-1}$$ in terms of its eigenvectors.
+
+$$
+\Sigma=VDV^{-1}=VDV^T \\
+\Sigma^{-1}={(VDV^T)}^{-1} \\
+\Sigma^{-1}=V^{-T}D^{-1}V^{-1}=VD^{-1}V^T
+$$
+
+Substituting this result into the original expression, we get:
+
+$$
+C\bullet \text{exp}\left(-\frac{1}{2}{(X-\mu)}^T VD^{-1}V^T (X-\mu)\right)=K \\
+\text{exp}\left(-\frac{1}{2}{(X-\mu)}^T VD^{-\frac{1}{2}} D^{-\frac{1}{2}} V^T (X-\mu)\right) = \frac{K}{C}\\
+{[D^{-\frac{1}{2}} V^T (X-\mu)]}^T [D^{-\frac{1}{2}} V^T (X-\mu)] = -2\text{ ln}\frac{K}{C} = K_0\\
+$$
+
+The above expression corresponds directly to the form of a skewed ellipsoid in $$\eqref{eq:skewed-ellipsoid}$$. This implies that the contour of constant probability of a Multivariate Gaussian Distribution is a skewed ellipsoid.
+
+### Special Case: Independent Random Variables
+
+If the random variables in a Multivariate Gaussian Distribution are independent, then the covariance matrix is essentially a diagonal matrix, and its eigenvectors form the standard basis in $$\mathbb{R}^n$$, thus the eigenvector matrix becomes the identity matrix. This implies that there is effectively no change in the basis, and the ellipsoids of constant probability are not skewed.
+
 
