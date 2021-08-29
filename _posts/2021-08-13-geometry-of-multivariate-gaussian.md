@@ -1,5 +1,5 @@
 ---
-title: "Gaussian Processes: Geometry of the Multivariate Gaussian Distribution"
+title: "Geometry of the Multivariate Gaussian Distribution"
 author: avishek
 usemathjax: true
 tags: ["Theory", "Gaussian Processes", "Probability"]
@@ -10,12 +10,12 @@ Continuing from the roadmap set out in [Road to Gaussian Processes]({% post_url 
 
 To do this, we will cover the following preliminaries.
 
-- Algebraic form of $$n$$-dimensional ellipsoid
+- Algebraic form of the $$n$$-dimensional ellipsoid
 - Projection as Change of Basis
 
-## Algebraic form of $$n$$-dimensional ellipsoid
+## Algebraic form of the $$n$$-dimensional ellipsoid
 
-The standard form of an ellipsoid in $$\mathbb{R}^2$$ is:
+The **standard form of an ellipsoid** in $$\mathbb{R}^2$$ is:
 
 $$
 \frac{ {(x-x_0)}^2}{a^2} + \frac{ {(y-y_0)}^2}{b^2}=C
@@ -63,7 +63,9 @@ Alternatively, we can write:
 
 $$
 \begin{equation}
+\mathbf{
 {[D^{-1}(X-\mu)]}^T [D^{-1}(X-\mu)]=C
+}
 \label{eq:algebraic_n_ellipsoid}
 \end{equation}
 $$
@@ -112,7 +114,11 @@ The situation is as shown below.
 
 These projection coefficients are the coordinates of $$B$$ in the new coordinate system defined by $$X'$$ and $$Y'$$. To recover $$B$$, you can simply multiply out the projections by respective basis vectors $$X'$$ and $$Y'$$.
 
-More generally, for any new basis matrix $$C$$ (assuming the basis vectors are unit vectors), any vector $$V$$ can be written as $$V_C=C^TV$$. Analogous to the above example, we can recover the original vector $$V$$ by writing $$V=C^TVC$$.
+More generally, for any new basis matrix $$C$$ (assuming the basis vectors are unit vectors), any vector $$V$$ can be written as:
+
+$$V_C=C^TV$$
+
+Analogous to the above example, we can recover the original vector $$V$$ by writing $$V=C^TVC$$.
 
 
 ## Geometry of the Tilted Ellipsoid
@@ -139,16 +145,18 @@ The situation in $$\mathbb{R}^2$$ is shown below.
 
 ## Multivariate Gaussian Distribution
 
-We are now in a position to understand the form of the Multivariate Gaussian Distribution. The standard form of the Multivariate Gaussian Distribution is given by:
+We are now in a position to understand the form of the Multivariate Gaussian Distribution. The standard form of the **Multivariate Gaussian Distribution** is given by:
 
 $$
+\mathbf{
 G(X)=C\bullet\text{exp}\left( -\frac{1}{2} {(X-\mu)}^T\Sigma^{-1}(X-\mu) \right)
+}
 $$
 
-where $$\Sigma$$ is the (invertible) covariance matrix. Let us note some specific properties of the covariance matrix before proceeding further.
+where $$\Sigma$$ is the (invertible) **covariance matrix**. Let us note some specific properties of the covariance matrix before proceeding further.
 
 - The covariance matrix can be diagonalised.
-- The covariance matrix is symmetric. This implies that all its eigenvectors are orthogonal.
+- The covariance matrix is **symmetric**. This implies that **all its eigenvectors are orthogonal**.
 
 We seek to understand the shape of this Gaussian. To do that, let us fix the value of $$G(X)$$ to, say, $$K$$.
 
@@ -161,7 +169,8 @@ Let us express $$\Sigma^{-1}$$ in terms of its eigenvectors.
 $$
 \Sigma=VDV^{-1}=VDV^T \\
 \Sigma^{-1}={(VDV^T)}^{-1} \\
-\Sigma^{-1}=V^{-T}D^{-1}V^{-1}=VD^{-1}V^T
+\Sigma^{-1}=V^{-T}D^{-1}V^{-1}=VD^{-1}V^T \\
+\mathbf{\Sigma^{-1}=VD^{-1}V^T}
 $$
 
 Substituting this result into the original expression, we get:
@@ -169,12 +178,14 @@ Substituting this result into the original expression, we get:
 $$
 C\bullet \text{exp}\left(-\frac{1}{2}{(X-\mu)}^T VD^{-1}V^T (X-\mu)\right)=K \\
 \text{exp}\left(-\frac{1}{2}{(X-\mu)}^T VD^{-\frac{1}{2}} D^{-\frac{1}{2}} V^T (X-\mu)\right) = \frac{K}{C}\\
-{[D^{-\frac{1}{2}} V^T (X-\mu)]}^T [D^{-\frac{1}{2}} V^T (X-\mu)] = -2\text{ ln}\frac{K}{C} = K_0\\
+\mathbf{
+{[D^{-\frac{1}{2}} V^T (X-\mu)]}^T [D^{-\frac{1}{2}} V^T (X-\mu)] = -2\text{ ln}\frac{K}{C} = K_0
+}
 $$
 
-The above expression corresponds directly to the form of a tilted ellipsoid in $$\eqref{eq:tilted-ellipsoid}$$. This implies that the contour of constant probability of a Multivariate Gaussian Distribution is a tilted ellipsoid.
+The above expression corresponds directly to the form of a tilted ellipsoid in $$\eqref{eq:tilted-ellipsoid}$$. This implies that the **contour of constant probability of a Multivariate Gaussian Distribution is a tilted ellipsoid**.
 
-The basis for this skew, i.e., the coordinate system used is the set of eigenvectors of the covariance matrix $$\Sigma$$.
+**The basis for this skew, i.e., the coordinate system used is the set of eigenvectors of the covariance matrix $$\Sigma$$.**
 
 For example, in $$\mathbb{R}^2$$, the major and minor axes of the ellipse are oriented in the directions of the eigenvectors, as shown below.
 
@@ -182,6 +193,4 @@ For example, in $$\mathbb{R}^2$$, the major and minor axes of the ellipse are or
 
 ### Special Case: Independent Random Variables
 
-If the random variables in a Multivariate Gaussian Distribution are independent, then the covariance matrix is essentially a diagonal matrix, and its eigenvectors form the standard basis in $$\mathbb{R}^n$$, thus the eigenvector matrix becomes the identity matrix. This implies that there is effectively no change in the basis, and the ellipsoids of constant probability are not tilted.
-
-
+If the random variables in a Multivariate Gaussian Distribution are **independent**, then the **covariance matrix is essentially a diagonal matrix**, and its **eigenvectors form the standard basis in $$\mathbb{R}^n$$**. Thus, the eigenvector matrix becomes the **identity matrix**. This implies that there is effectively no change in the basis, and the ellipsoids of constant probability are not tilted.
