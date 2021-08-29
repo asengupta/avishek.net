@@ -1,12 +1,14 @@
 ---
-title: "Gaussian Processes: The Multivariate Gaussian Distribution"
+title: "Gaussian Processes: Geometry of the Multivariate Gaussian Distribution"
 author: avishek
 usemathjax: true
 tags: ["Theory", "Gaussian Processes", "Probability"]
 draft: false
 ---
 
-Continuing from the roadmap set out in [Road to Gaussian Processes]({% post_url 2021-04-17-road-to-gaussian-processes %}), we begin with the core ideas which underlie this Machine Learning Technique, the Gaussian distribution, specifically the **Multivariate Gaussian** distribution.
+Continuing from the roadmap set out in [Road to Gaussian Processes]({% post_url 2021-04-17-road-to-gaussian-processes %}), we begin with the geometry of the central object which underlies this Machine Learning Technique, the **Multivariate Gaussian** distribution. We will study its form to build up some geometric intuition around its interpretation.
+
+To do this, we will cover the following preliminaries.
 
 - Algebraic form of $$n$$-dimensional ellipsoid
 - Projection as Change of Basis
@@ -113,7 +115,7 @@ These projection coefficients are the coordinates of $$B$$ in the new coordinate
 More generally, for any new basis matrix $$C$$ (assuming the basis vectors are unit vectors), any vector $$V$$ can be written as $$V_C=C^TV$$. Analogous to the above example, we can recover the original vector $$V$$ by writing $$V=C^TVC$$.
 
 
-## Skewed Ellipsoid
+## Geometry of the Tilted Ellipsoid
 
 Assume an arbitrary point $$X$$ in $$\mathbb{R}^n$$. Let us choose a different basis $$C$$. Then, $$X_C=C^TX$$. An ellipsoid in this new coordinate system (centered at the origin) is then given by:
 
@@ -127,13 +129,13 @@ where $$D^{-1}$$ was already defined as in $$\eqref{eq:diagonal}$$, and $$K$$ is
 $$
 \begin{equation}
 {[D^{-1}C^T(X-\mu)]}^T [D^{-1}C^T(X-\mu)]=K
-\label{eq:skewed-ellipsoid}
+\label{eq:tilted-ellipsoid}
 \end{equation}
 $$
 
 The situation in $$\mathbb{R}^2$$ is shown below.
 
-![Skewed Ellipsoid](/assets/images/skewed-ellipsoid-2d.png)
+![Tilted Ellipsoid](/assets/images/tilted-ellipsoid-2d.png)
 
 ## Multivariate Gaussian Distribution
 
@@ -170,10 +172,16 @@ C\bullet \text{exp}\left(-\frac{1}{2}{(X-\mu)}^T VD^{-1}V^T (X-\mu)\right)=K \\
 {[D^{-\frac{1}{2}} V^T (X-\mu)]}^T [D^{-\frac{1}{2}} V^T (X-\mu)] = -2\text{ ln}\frac{K}{C} = K_0\\
 $$
 
-The above expression corresponds directly to the form of a skewed ellipsoid in $$\eqref{eq:skewed-ellipsoid}$$. This implies that the contour of constant probability of a Multivariate Gaussian Distribution is a skewed ellipsoid.
+The above expression corresponds directly to the form of a tilted ellipsoid in $$\eqref{eq:tilted-ellipsoid}$$. This implies that the contour of constant probability of a Multivariate Gaussian Distribution is a tilted ellipsoid.
+
+The basis for this skew, i.e., the coordinate system used is the set of eigenvectors of the covariance matrix $$\Sigma$$.
+
+For example, in $$\mathbb{R}^2$$, the major and minor axes of the ellipse are oriented in the directions of the eigenvectors, as shown below.
+
+![Multivariate Gaussian Constant Probability Contours](/assets/images/multivariate-gaussian-constant-probability-contours.png)
 
 ### Special Case: Independent Random Variables
 
-If the random variables in a Multivariate Gaussian Distribution are independent, then the covariance matrix is essentially a diagonal matrix, and its eigenvectors form the standard basis in $$\mathbb{R}^n$$, thus the eigenvector matrix becomes the identity matrix. This implies that there is effectively no change in the basis, and the ellipsoids of constant probability are not skewed.
+If the random variables in a Multivariate Gaussian Distribution are independent, then the covariance matrix is essentially a diagonal matrix, and its eigenvectors form the standard basis in $$\mathbb{R}^n$$, thus the eigenvector matrix becomes the identity matrix. This implies that there is effectively no change in the basis, and the ellipsoids of constant probability are not tilted.
 
 
