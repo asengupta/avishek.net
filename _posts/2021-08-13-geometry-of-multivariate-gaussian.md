@@ -6,7 +6,7 @@ tags: ["Theory", "Multivariate Gaussian Distribution", "Probability"]
 draft: false
 ---
 
-Continuing from the roadmap set out in [Road to Gaussian Processes]({% post_url 2021-04-17-road-to-gaussian-processes %}), we begin with the geometry of the central object which underlies this Machine Learning Technique, the **Multivariate Gaussian** distribution. We will study its form to build up some geometric intuition around its interpretation.
+Continuing from the roadmap set out in [Road to Gaussian Processes]({% post_url 2021-04-17-road-to-gaussian-processes %}), we begin with the geometry of the central object which underlies this Machine Learning Technique, the **Multivariate Gaussian Distribution**. We will study its form to build up some geometric intuition around its interpretation.
 
 To do this, we will cover the following preliminaries.
 
@@ -191,7 +191,7 @@ $$
 
 The above expression corresponds directly to the form of a tilted ellipsoid in $$\eqref{eq:tilted-ellipsoid}$$. This implies that the **contour of constant probability of a Multivariate Gaussian Distribution is a tilted ellipsoid**.
 
-**The basis for this skew, i.e., the coordinate system used is the set of eigenvectors of the covariance matrix $$\Sigma$$.**
+**The basis for this tilt, i.e., the coordinate system used is the set of eigenvectors of the covariance matrix $$\Sigma$$.**
 
 For example, in $$\mathbb{R}^2$$, the major and minor axes of the ellipse are oriented in the directions of the eigenvectors, as shown below.
 
