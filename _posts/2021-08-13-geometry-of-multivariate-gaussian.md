@@ -2,7 +2,7 @@
 title: "Geometry of the Multivariate Gaussian Distribution"
 author: avishek
 usemathjax: true
-tags: ["Theory", "Gaussian Processes", "Probability"]
+tags: ["Theory", "Multivariate Gaussian Distribution", "Probability"]
 draft: false
 ---
 
@@ -177,10 +177,16 @@ Substituting this result into the original expression, we get:
 
 $$
 C\bullet \text{exp}\left(-\frac{1}{2}{(X-\mu)}^T VD^{-1}V^T (X-\mu)\right)=K \\
-\text{exp}\left(-\frac{1}{2}{(X-\mu)}^T VD^{-\frac{1}{2}} D^{-\frac{1}{2}} V^T (X-\mu)\right) = \frac{K}{C}\\
+\text{exp}\left(-\frac{1}{2}{(X-\mu)}^T VD^{-\frac{1}{2}} D^{-\frac{1}{2}} V^T (X-\mu)\right) = \frac{K}{C}
+$$
+
+$$
+\begin{equation}
 \mathbf{
 {[D^{-\frac{1}{2}} V^T (X-\mu)]}^T [D^{-\frac{1}{2}} V^T (X-\mu)] = -2\text{ ln}\frac{K}{C} = K_0
 }
+\label{eq:constant-probability-ellipse}
+\end{equation}
 $$
 
 The above expression corresponds directly to the form of a tilted ellipsoid in $$\eqref{eq:tilted-ellipsoid}$$. This implies that the **contour of constant probability of a Multivariate Gaussian Distribution is a tilted ellipsoid**.
@@ -193,4 +199,10 @@ For example, in $$\mathbb{R}^2$$, the major and minor axes of the ellipse are or
 
 ### Special Case: Independent Random Variables
 
-If the random variables in a Multivariate Gaussian Distribution are **independent**, then the **covariance matrix is essentially a diagonal matrix**, and its **eigenvectors form the standard basis in $$\mathbb{R}^n$$**. Thus, the eigenvector matrix becomes the **identity matrix**. This implies that there is effectively no change in the basis, and the ellipsoids of constant probability are not tilted.
+If the random variables in a Multivariate Gaussian Distribution are **independent**, then the **covariance matrix is essentially a diagonal matrix**, and its **eigenvectors form the standard basis in $$\mathbb{R}^n$$**. Thus, the eigenvector matrix becomes the **identity matrix**. This implies that there is effectively no change in the basis, and the ellipsoids of constant probability are not tilted, and the form in $$\eqref{eq:constant-probability-ellipse}$$ becomes:
+
+$$
+\mathbf{
+{[D^{-\frac{1}{2}} (X-\mu)]}^T [D^{-\frac{1}{2}} (X-\mu)] = K_0
+}
+$$
