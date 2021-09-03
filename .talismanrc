@@ -5,3 +5,5 @@ fileignoreconfig:
   checksum: ba44ce158841d8038deed6b4fbc2ceaf6915fc317a93d08f50b6663f514fdbb5
 - filename: references.md
   checksum: 70c8baa46a1e827d17f803a131c50aa6613da41687cd82ccd958783b716df3c6
+- filename: _posts/2021-09-02-gaussian-processes.md
+  checksum: 1335b2b3d1825f3cb0aded3bd0cbe67b20378c58dc3d27dca3d99120c9b1c966
