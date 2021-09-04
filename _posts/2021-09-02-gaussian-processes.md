@@ -182,7 +182,7 @@ x-\mu_x \\
 y_0-\mu_y
 \end{bmatrix}
 
-\\-
+-
 
 \frac{ {(y_0-\mu_y)}^2}{\lambda_1 b^2 + \lambda_2 a^2}
 \right)
@@ -204,7 +204,8 @@ x-\mu_x \\
 y_0-\mu_y
 \end{bmatrix}
 }_A
-\\-
+
+-
 
 \frac{ {(y_0-\mu_y)}^2}{\lambda_1 b^2 + \lambda_2 a^2}
 \right)
@@ -257,7 +258,7 @@ Substituting the value of $$A$$ back into $$\eqref{eq:conditional-distribution-d
 
 $$
 \require{cancel}
-P(x|y=y_0)=\frac{K_0}{K_1}\cdot \text{exp}\left( -\frac{1}{2} \frac {\lambda_2 a^2 + \lambda_1 b^2}{\lambda_1\lambda_2} {\left(x-\mu_x-\frac{(y_0-\mu_y)ab(\lambda_1-\lambda_2)}{\lambda_2 a^2 + \lambda_1 b^2}\right)}^2\right)\bullet\text{exp}\left(\cancel{\frac { {(y_0-\mu_y)}^2}{ \lambda_2 a^2 + \lambda_1 b^2}} - \cancel{\frac { {(y_0-\mu_y)}^2}{ \lambda_2 a^2 + \lambda_1 b^2}}\right) \\
+P(x|y=y_0)=\frac{K_0}{K_1}\cdot \text{exp}\left( -\frac{1}{2} \frac {\lambda_2 a^2 + \lambda_1 b^2}{\lambda_1\lambda_2} {\left(x-\mu_x-\frac{(y_0-\mu_y)ab(\lambda_1-\lambda_2)}{\lambda_2 a^2 + \lambda_1 b^2}\right)}^2\right)\cdot\text{exp}\left(\cancel{\frac { {(y_0-\mu_y)}^2}{ \lambda_2 a^2 + \lambda_1 b^2}} - \cancel{\frac { {(y_0-\mu_y)}^2}{ \lambda_2 a^2 + \lambda_1 b^2}}\right) \\
 =\frac{K_0}{K_1}\cdot \text{exp}\left( -\frac{1}{2} \frac {\lambda_2 a^2 + \lambda_1 b^2}{\lambda_1\lambda_2} {\left(x-\mu_x-\frac{(y_0-\mu_y)ab(\lambda_1-\lambda_2)}{\lambda_2 a^2 + \lambda_1 b^2}\right)}^2\right) \\
 =\frac{K_0}{K_1}\cdot \text{exp}\left( -\frac{1}{2} \frac {\lambda_2 a^2 + \lambda_1 b^2}{\lambda_1\lambda_2} {\left(x-\mu_x-\frac{(y_0-\mu_y)\Sigma_{12}}{\Sigma_{22}}\right)}^2\right) \\
 P(x|y=y_0)=\frac{K_0}{K_1}\cdot \text{exp}\left( -\frac{1}{2} {\left(\frac {\lambda_1\lambda_2}{\lambda_2 a^2 + \lambda_1 b^2}\right)}^{-1} {\left(x-\left[\mu_x+\frac{(y_0-\mu_y)\Sigma_{12}}{\Sigma_{22}}\right]\right)}^2\right)
