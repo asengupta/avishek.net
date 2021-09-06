@@ -3,23 +3,23 @@ title: "Gaussian Processes: Theory"
 author: avishek
 usemathjax: true
 tags: ["Theory", "Gaussian Processes", "Probability", "Machine Learning"]
-draft: true
+draft: false
 ---
 
-In this article, we will build up our mathematical understanding of Gaussian Processes, and try to understand how it models uncertainty about data it has not encountered yet, while still being useful for regression.
-Continuing from the roadmap set out in [Road to Gaussian Processes]({% post_url 2021-04-17-road-to-gaussian-processes %}), we begin with the geometry of the central object which underlies this Machine Learning Technique, the **Multivariate Gaussian Distribution**. We will study its form to build up some geometric intuition around its interpretation.
+In this article, we will build up our mathematical understanding of **Gaussian Processes**. We will understand the conditioning operation a bit more, since that is the backbone of inferring the posterior distribution. We will also look at how the covariance matrix evolves as training points are added.
+Continuing from the roadmap set out in [Road to Gaussian Processes]({% post_url 2021-04-17-road-to-gaussian-processes %}) and the intuition we built up in the first pass on Gaussian Processes in [Gaussian Processes: Intuition]({% post_url 2021-09-06-gaussian-processes-intuition %}), the requisite material you should be familiar with, is presented in the following articles.
 
-To do this, we will cover the material in two phases.
+- [Geometry of the Multivariate Gaussian Distribution]({% post_url 2021-08-30-geometry-of-multivariate-gaussian %})
+- [Gaussian Processes: Intuition]({% post_url 2021-09-06-gaussian-processes-intuition %})
 
-The second pass will delve into the mathematical underpinnings necessary to appreciate the technique more rigorously. Specifically, the following material will be covered:
+The following material will be covered:
 
+- Conditioning a Bivariate Gaussian Distribution: Brute Force Derivation
 - Schur Complements and Diagonalisation of Partitioned Matrices
 - Conditioned Distributions as Gaussians
+- Evolution of the Covariance Matrix
 - Sampling from Multivariate Gaussian Distributions
-- Generalising Discrete Covariance Matrices to Kernels
-
-
-This pass will delve into the mathematical underpinnings necessary to appreciate the technique more rigorously.
+- Generalising Discrete Covariance Matrices to Kernels and the Representer Theorem
 
 ## Bivariate Gaussian Distribution: Brute Force Derivation
 
@@ -296,5 +296,6 @@ As you will have also noticed, the derivation quickly becomes very complicated, 
 
 ## Schur Complements and Diagonalisation of Partitioned Matrices
 ## Conditioned Distributions as Gaussians
+## Evolution of the Covariance Matrix
 ## Sampling from Multivariate Gaussian Distributions
-## Generalising Discrete Covariance Matrices to Kernels
+## Generalising Discrete Covariance Matrices to Kernels and the Representer Theorem
