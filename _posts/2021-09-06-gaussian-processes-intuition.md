@@ -102,6 +102,16 @@ The diagram below shows 100 functions sampled from a 100-dimensional Multivariat
 
 ![Conditioned Gaussian Process with 4 Points](/assets/images/clamped-gaussian-process-4-points.png)
 
+The initial covariance matrix (using the **exponentiated quadratic kernel**) looked like this:
+
+![Unclamped Exponentiated Quadratic Kernel](/assets/images/unclamped-exponentiated-quadratic-kernel.png)
+
+After incorporating training data, the covariance matrix looks like so:
+
+![Clamped Exponentiated Quadratic Kernel](/assets/images/clamped-exponentiated-quadratic-kernel.png)
+
+We will discuss how this difference comes about in an upcoming article.
+
 ### Modelling Uncertainty
 
 As it is evident, all the functions that we select (how we does is addressed in the [Mathematical Underpinnings](#second-pass-mathematical-underpinnings) section) pass through our training data. You will also have noticed that those functions assume a range of values for all points between our training data points. This is how uncertainty is modelled in Gaussian Processes: the range of variation outside of our training data, represents our **uncertainty about what data *could* feasibly reside in those regions**. 
@@ -117,3 +127,8 @@ This is the crux of how **Gaussian Processes** work.
 
 ## Kernels and Modelling Domain Knowledge
 
+![Exponentiated Quadratic Kernel](/assets/images/exponentiated-quadratic-kernel.png)
+
+![Periodic Kernel](/assets/images/periodic-kernel.png)
+
+![Periodic Kernel Samples](/assets/images/periodic-kernel-samples-gaussian-process.png)
