@@ -285,7 +285,7 @@ $$
 
 $$
 \begin{equation}
-\Sigma_{x|y=y_0}=\Sigma_{11}-\Sigma_{12}{\Sigma_{12}}^{-1}\Sigma_{21}
+\Sigma_{x|y=y_0}=\Sigma_{11}-\Sigma_{12}{\Sigma_{22}}^{-1}\Sigma_{21}
 \label{eq:multivariate-gaussian-covariance}
 \end{equation}
 $$
@@ -293,6 +293,12 @@ $$
 You can verify that evaluation the expression $$\eqref{eq:multivariate-gaussian-covariance}$$ indeed yields the expression for the Conditional Covariance of the Bivariate Gaussian in $$\eqref{eq:bivariate-gaussian-covariance}$$.
 
 As you will have also noticed, the derivation quickly becomes very complicated, and a general approach is needed to scale the proof to higher dimensions. This is the focus of the next topic.
+
+## Note on Organising the Covariance Matrix
+
+In the examples that we've used to generate the diagrams to build up our intuition so far, all the input points are assumed to be in $$\mathbb{R}$$. Thus, there is a natural ordering of the input points, which is also reflected in their indexing in the covariance matrix. The variables in the covariance matrix (which represent individual input vectors) therefore use the matrix indices as their values. This is not going to be the case for vectors in $$\mathbb{R}^2$$ and above, because there is no natural ordering that would exist between these vectors. In fact, even for $$\mathbb{R}$$, the points need not exist in the matrix in the natural order that they would appear on the number line; all that would be needed then is to have some bookkeeping which maps the matrix indices to the correct vector value on the real number line. This mapping would then be used to do the actual plotting or presentation.
+
+This will be particularly important to keep in mind, when we get into the proofs because we will be shuffling the order of the variables around, depending upon the variables we will be conditioning on.
 
 ## Schur Complements and Diagonalisation of Partitioned Matrices
 ## Conditioned Distributions as Gaussians
