@@ -80,7 +80,7 @@ Allowing correlated random variables in our Gaussian Process results in **smooth
 
 If the covariance matrix has correlations built in, sampling from the Gaussian Process results in functions like this (this specifically uses the exponentiated quadratic/RBF/Gaussian Kernel to calculate correlations, but we will have more to talk about this later).
 
-Let us return to sampling ourfive-dimensional Multivariate Gaussian.None of its random variables are correlated with each other, which is equivalent to having a strictly diagonal covariance matrix. However, if we modify our covariance matrix to have non-zero off-diagonal elements, this becomes equivalent to building correlations between these random variables. The graph below shows five samples drawn from a $$\mathbb{R}^5$$ Multivariate Gaussian with an **exponentiated quadratic kernel** (we will have more to say about kernels in a subsequent article).
+Let us return to sampling our five-dimensional Multivariate Gaussian.None of its random variables are correlated with each other, which is equivalent to having a strictly diagonal covariance matrix. However, if we modify our covariance matrix to have non-zero off-diagonal elements, this becomes equivalent to building correlations between these random variables. The graph below shows five samples drawn from a $$\mathbb{R}^5$$ Multivariate Gaussian with an **exponentiated quadratic kernel** (we will have more to say about kernels in a subsequent article).
 
 ![Correlated Gaussian Process Samples 5-MVN](/assets/images/correlated-5-mvn-gaussian-process.png)
 

@@ -46,17 +46,18 @@ def show_unclamped(number_of_functions, number_of_data_points, kernel, figure, l
 
 
 build_exponentiated_quadratic_covariance = covariance_builder(exponentiated_quadratic)
+build_periodic_covariance = covariance_builder(periodic)
 
 
-def gaussian_processes_demo(number_of_functions, number_of_data_points, figure):
+def gaussian_processes_demo(number_of_functions, number_of_data_points, kernel, figure):
     x = np.linspace(0, number_of_data_points, number_of_data_points, endpoint=False)
     x_training = np.array([10, 50, 80])
     y_training = np.array([1.5, -0.5, -2])
     rest = np.linspace(0, number_of_data_points, number_of_data_points, endpoint=False)
-    sigma_22 = build_exponentiated_quadratic_covariance(x_training, x_training)
-    sigma_11 = build_exponentiated_quadratic_covariance(rest, rest)
-    sigma_21 = build_exponentiated_quadratic_covariance(x_training, rest)
-    sigma_12 = build_exponentiated_quadratic_covariance(rest, x_training)
+    sigma_22 = kernel(x_training, x_training)
+    sigma_11 = kernel(rest, rest)
+    sigma_21 = kernel(x_training, rest)
+    sigma_12 = kernel(rest, x_training)
     sigma_22_inverse = inv(sigma_22)
 
     mu_1 = np.matmul(np.matmul(sigma_12, sigma_22_inverse), y_training)
@@ -93,7 +94,7 @@ plt.figure()
 show_unclamped(5, 100, periodic, plt)
 plt.show()
 plt.figure()
-cov_1, cov_0 = gaussian_processes_demo(100, 100, plt)
+cov_1, cov_0 = gaussian_processes_demo(100, 100, build_exponentiated_quadratic_covariance, plt)
 plt.show()
 plt.figure()
 sns.heatmap(cov_0)
