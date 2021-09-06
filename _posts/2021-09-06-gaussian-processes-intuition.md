@@ -127,8 +127,48 @@ This is the crux of how **Gaussian Processes** work.
 
 ## Kernels and Modelling Domain Knowledge
 
+An important question usually arises during the construction of the covariance matrix, namely, how do we measure the similarity between two points? Using the normal inner product approach is one answer, but it is not the only answer.
+
+If you remember the discussion around Inner Product in [Kernel Functions: Functional Analysis and Linear Algebra Preliminaries]({% post_url 2021-07-17-kernel-functions-functional-analysis-preliminaries %}), any function which satisfies the following properties, can serve as a measure of similarity.
+
+- **Positive Definite**: $$\langle x,x\rangle>0$$ if $$x\neq 0$$
+- **Principle of Indiscernibles**: $$x=0$$ if $$\langle x,x\rangle=0$$
+- **Symmetric**: $$\langle x,y\rangle=\langle y,x\rangle$$
+- **Linear**:
+    - $$\langle \alpha x,y\rangle=\alpha\langle x,y\rangle, \alpha\in\mathbb{R}$$
+    - $$\langle x+y,z\rangle=\langle x,z\rangle+\langle y,z\rangle$$
+
+Accordingly, a variety of functions can serve as measures of similarity: these are commonly referred to as kernels, and they are the same kernels that we have discussed while talking about the construction of **Reproducing Kernel Hilbert Spaces** in [Kernel Functions with Reproducing Kernel Hilbert Spaces]({% post_url 2021-07-20-kernel-functions-rkhs %}).
+
+The important thing to note is that the choice of kernel in a Gaussian Process is a modelling decision that a domain expert can take, to incorporate prior knowledge of the domain into the prediction process. In this manner, domain knowledge can be exploited while setting up a Gaussian Process for Machine Learning.
+
+We will briefly consider two kernels. There may be more material on combining kernels to create new ones, in a future article.
+
+### 1. Radial Basis Function Kernel
+
+We have also encountered this kernel: we have simply referred to it as the **Exponentiated Quadratic Kernel**. It is essentially a Gaussian pressed into service to measure similarity between two points. The covariance matrix formed from such a kernel, looks like the image below.
+
 ![Exponentiated Quadratic Kernel](/assets/images/exponentiated-quadratic-kernel.png)
 
+The expression for the RBF Kernel is obviously a Gaussian.
+
+$$
+K(x,y)=K\cdot \text{exp}\left(-\frac{1}{2}\frac{ {(x-y)}^2}{\sigma^2}\right)
+$$
+
+We have already encountered the types of functions that can be sampled based on this kernel.
+
+### 2. Periodic Kernel
+
+The **Periodic Kernel**, as its name suggests, can be used to model variations which are potentially periodic in nature. Its expression looks like so:
+
+$$
+K(x,y)=\sigma^2\text{exp}\left[-\frac{2}{l^2}\cdot \text{sin}^2\left(\pi\frac{\|x-y\|}{p}\right)\right]
+$$
+
+An example covariance matrix based on a Periodic Kernel, looks like this:
 ![Periodic Kernel](/assets/images/periodic-kernel.png)
+
+Sampling a Multivariate Gaussian with a covariance matrix built based on the **Periodic Kernel**, yields functions like the following:
 
 ![Periodic Kernel Samples](/assets/images/periodic-kernel-samples-gaussian-process.png)
