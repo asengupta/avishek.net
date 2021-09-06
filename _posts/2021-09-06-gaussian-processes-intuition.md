@@ -6,7 +6,7 @@ tags: ["Theory", "Gaussian Processes", "Probability", "Machine Learning"]
 draft: false
 ---
 
-Continuing from the roadmap set out in [Road to Gaussian Processes]({% post_url 2021-04-17-road-to-gaussian-processes %}), we begin with the geometry of the central object which underlies this Machine Learning Technique, the **Multivariate Gaussian Distribution**. We will study its form to build up some geometric intuition around its interpretation.
+In this article, we will build up our intuition of Gaussian Processes, and try to understand how it models uncertainty about data it has not encountered yet, while still being useful for regression. We will also see why the **Covariance Matrix** (and consequently, the **Kernel**) is a fundamental building block of our assumptions around the data we are trying to model.
 
 To do this, we will cover the material in two phases.
 
@@ -114,4 +114,6 @@ This is the crux of how **Gaussian Processes** work.
 - We select a subset of these functions which are constrained to pass through our training data.
 - The regions between (and outside) our training data represent our **uncertainty about what data exists in those regions**.
 - **Conditioning** a Multivariate Gaussian distribution is equivalent to **setting a specific dimension to a specific value** (which is usually a point in the test data set).
+
+## Kernels and Modelling Domain Knowledge
 

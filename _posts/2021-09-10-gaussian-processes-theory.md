@@ -6,6 +6,7 @@ tags: ["Theory", "Gaussian Processes", "Probability", "Machine Learning"]
 draft: true
 ---
 
+In this article, we will build up our mathematical understanding of Gaussian Processes, and try to understand how it models uncertainty about data it has not encountered yet, while still being useful for regression.
 Continuing from the roadmap set out in [Road to Gaussian Processes]({% post_url 2021-04-17-road-to-gaussian-processes %}), we begin with the geometry of the central object which underlies this Machine Learning Technique, the **Multivariate Gaussian Distribution**. We will study its form to build up some geometric intuition around its interpretation.
 
 To do this, we will cover the material in two phases.
