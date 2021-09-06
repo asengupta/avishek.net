@@ -6,6 +6,8 @@ tags: ["Theory", "Gaussian Processes", "Probability", "Machine Learning"]
 draft: false
 ---
 
+![Gaussian Processes Banner](/assets/images/gaussian-processes-header.png)
+
 Continuing from the roadmap set out in [Road to Gaussian Processes]({% post_url 2021-04-17-road-to-gaussian-processes %}), we begin with the geometry of the central object which underlies this Machine Learning Technique, the **Multivariate Gaussian Distribution**. We will study its form to build up some geometric intuition around its interpretation.
 
 To do this, we will cover the material in two phases.
@@ -21,7 +23,7 @@ The second pass will delve into the mathematical underpinnings necessary to appr
 
 # First Pass: Intuition
 
-## Data Generation from Uncorrelated Gaussian Distributions
+## Function Sampling from Uncorrelated Gaussian Distributions
 
 A Gaussian Process is capable of generating an infinite number of functions. The characteristics of these functions are wholly determined by the covariance matrix of a Multivariate Gaussian Distribution. Example characteristics that can be tweaked are how smooth (or how spiky) the functions are, whether they are periodic in nature or not, etc.
 
@@ -65,10 +67,6 @@ $$
 
 then the covariance matrix $$\Sigma$$ is a diagonal matrix.
 
-If the covariance matrix has correlations built in, sampling from the Gaussian Process results in functions like this (this specifically uses the exponentiated quadratic/RBF/Gaussian Kernel to calculate correlations, but we will have more to talk about this later).
-
-![Correlated Gaussian Process Samples](/assets/images/exponentiated-quadratic-samples-gaussian-process.png)
-
 ## Smoother Functions and Correlated Gaussian Random Variables
 Much of the data that we see in the real world is smooth, i.e., predictor values which are close to each other, yield predicted values which are also close to each other, not unlike the definition of continuity in Real Analysis.
 
@@ -83,6 +81,13 @@ Allowing correlated random variables in our Gaussian Process results in smooth f
 - The covariance matrix represents how correlated each dimension is to each other.
 - Conditioning a Multivariate Gaussian distribution is equivalent to setting a specific dimension to a specific value (which is usually a point in the test data set).
 
+If the covariance matrix has correlations built in, sampling from the Gaussian Process results in functions like this (this specifically uses the exponentiated quadratic/RBF/Gaussian Kernel to calculate correlations, but we will have more to talk about this later).
+
+![Correlated Gaussian Process Samples](/assets/images/exponentiated-quadratic-samples-gaussian-process.png)
+
+Once we clamp the Gaussian at certain points, sampling the resulting Multivariate Gaussian Distribution gives us something like the following:
+
+![Conditioned Gaussian Process with 4 Points](/assets/images/clamped-gaussian-process-4-points.png)
 
 # Second Pass: Mathematical Underpinnings
 This pass will delve into the mathematical underpinnings necessary to appreciate the technique more rigorously.
