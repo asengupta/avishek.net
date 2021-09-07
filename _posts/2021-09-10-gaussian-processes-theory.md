@@ -294,13 +294,120 @@ You can verify that evaluation the expression $$\eqref{eq:multivariate-gaussian-
 
 As you will have also noticed, the derivation quickly becomes very complicated, and a general approach is needed to scale the proof to higher dimensions. This is the focus of the next topic.
 
-## Note on Organising the Covariance Matrix
+## Joint Distribution: Organising the Covariance Matrix
 
 In the examples that we've used to generate the diagrams to build up our intuition so far, all the input points are assumed to be in $$\mathbb{R}$$. Thus, there is a natural ordering of the input points, which is also reflected in their indexing in the covariance matrix. The variables in the covariance matrix (which represent individual input vectors) therefore use the matrix indices as their values. This is not going to be the case for vectors in $$\mathbb{R}^2$$ and above, because there is no natural ordering that would exist between these vectors. In fact, even for $$\mathbb{R}$$, the points need not exist in the matrix in the natural order that they would appear on the number line; all that would be needed then is to have some bookkeeping which maps the matrix indices to the correct vector value on the real number line. This mapping would then be used to do the actual plotting or presentation.
 
 This will be particularly important to keep in mind, when we get into the proofs because we will be shuffling the order of the variables around, depending upon the variables we will be conditioning on.
 
-## Schur Complements and Diagonalisation of Partitioned Matrices
+We will now discuss the motivation for partitioning the covariance matrix. Let us assume we have $$N$$ random variables $$x_1$$, $$x_2$$, ..., $$x_N$$. The joint probability distribution of these random variables is then given by the covariance matrix as below:
+
+$$
+\Sigma=
+\begin{bmatrix}
+\kappa(x_1, x_1) && \kappa(x_1, x_2) && \cdots && \kappa(x_1, x_N) \\
+\kappa(x_2, x_1) && \kappa(x_2, x_2) && \cdots && \kappa(x_2, x_N) \\
+\kappa(x_3, x_1) && \kappa(x_3, x_2) && \cdots && \kappa(x_3, x_N) \\
+\vdots && \vdots && \ddots && \vdots \\
+\kappa(x_N, x_1) && \kappa(x_N, x_2) && \cdots && \kappa(x_N, x_N) \\
+\end{bmatrix}
+$$
+
+Now, let us pick an arbitrary set of random variables to fix (i.e., condition on). To be more concrete, the set is $$X_T={x_{T1}, x_{T2}, x_{T3}, ..., x_{Tm}}$$. The variables that we do not condition are $$X_U={x_{U1}, x_{U2}, x_{U3}, ..., x_{Un}}$$.
+
+- It should be obvious that $$m+n=N$$.
+- The indices $$T1, T2, ...$$ are not sequential. Neither are $$U1, U2, ...$$
+
+Now we reorganise the original covariance matrix $$\Sigma$$ by grouping the variables in $$X_U$$ into one submatrix, and the ones in $$X_T$$ into another submatrix. These submatrices form the diagonals of this new block diagonal matrix. Note that functionally, this reorganisation does not affect the properties of $$\Sigma$$; it is still the original covariance matrix; it is just that the indices map to different random variables.
+
+$$
+\begin{equation}
+\Sigma=
+\left[
+\begin{array}{cccc|cccc}
+\kappa(x_{U1}, x_{U1}) & \kappa(x_{U1}, x_{U2}) & \cdots & \kappa(x_{U1}, x_{Un}) & \kappa(x_{U1}, x_{T1}) & \kappa(x_{U1}, x_{T2}) & \cdots & \kappa(x_{Un}, x_{Tm}) \\
+\kappa(x_{U2}, x_{U1}) & \kappa(x_{U2}, x_{U2}) & \cdots & \kappa(x_{U2}, x_{Un}) &  \kappa(x_{U2}, x_{T1}) & \kappa(x_{U2}, x_{T2}) & \cdots & \kappa(x_{Un}, x_{Tm}) \\
+\vdots & \vdots & \ddots & \vdots & \vdots & \vdots & \ddots & \vdots \\
+\kappa(x_{Un}, x_{U1}) & \kappa(x_{Un}, x_{U2}) & \cdots & \kappa(x_{Un}, x_{Un}) & \kappa(x_{Un}, x_{T1}) & \kappa(x_{Un}, x_{T2}) & \cdots & \kappa(x_{Un}, x_{Tm}) \\
+\hline
+\kappa(x_{T1}, x_{U1}) & \kappa(x_{T1}, x_{U2}) & \cdots & \kappa(x_{T1}, x_{Un}) & \kappa(x_{T1}, x_{T1}) & \kappa(x_{T1}, x_{T2}) & \cdots & \kappa(x_{T1}, x_{Tm}) \\
+\kappa(x_{T2}, x_{U1}) & \kappa(x_{T2}, x_{U2}) & \cdots & \kappa(x_{T2}, x_{Un}) & \kappa(x_{T2}, x_{T1}) & \kappa(x_{T2}, x_{T2}) & \cdots & \kappa(x_{T2}, x_{Tm}) \\
+\vdots & \vdots & \ddots & \vdots & \vdots & \vdots & \ddots & \vdots \\
+\kappa(x_{Tm}, x_{U1}) & \kappa(x_{Tm}, x_{U2}) & \cdots & \kappa(x_{Tm}, x_{Un}) & \kappa(x_{Tm}, x_{T1}) & \kappa(x_{Tm}, x_{T2}) & \cdots & \kappa(x_{Tm}, x_{Tm}) \\
+\end{array}
+\right]
+\label{eq:partitioned-joint-distribution}
+\end{equation}
+$$
+
+Written more simply, if we use the following notation:
+
+$$
+\Sigma_{UU}=
+\begin{bmatrix}
+\kappa(x_{U1}, x_{U1}) && \kappa(x_{U1}, x_{U2}) && \cdots && \kappa(x_{U1}, x_{Un}) \\
+\kappa(x_{U2}, x_{U1}) && \kappa(x_{U2}, x_{U2}) && \cdots && \kappa(x_{U2}, x_{Un}) \\
+\vdots && \vdots && \ddots && \vdots \\
+\kappa(x_{Un}, x_{U1}) && \kappa(x_{Un}, x_{U2}) && \cdots && \kappa(x_{Un}, x_{Un}) \\
+\end{bmatrix} \\
+
+\Sigma_{TT}=
+\begin{bmatrix}
+\kappa(x_{T1}, x_{T1}) && \kappa(x_{T1}, x_{T2}) && \cdots && \kappa(x_{T1}, x_{Tm}) \\
+\kappa(x_{T2}, x_{T1}) && \kappa(x_{T2}, x_{T2}) && \cdots && \kappa(x_{T2}, x_{Tm}) \\
+\vdots && \vdots && \ddots && \vdots \\
+\kappa(x_{Tm}, x_{T1}) && \kappa(x_{Tm}, x_{T2}) && \cdots && \kappa(x_{Tm}, x_{Tm}) \\
+\end{bmatrix} \\
+
+\Sigma_{UT}=
+\begin{bmatrix}
+\kappa(x_{U1}, x_{T1}) && \kappa(x_{U1}, x_{T2}) && \cdots && \kappa(x_{Un}, x_{Tm}) \\
+\kappa(x_{U2}, x_{T1}) && \kappa(x_{U2}, x_{T2}) && \cdots && \kappa(x_{Un}, x_{Tm}) \\
+\vdots && \vdots && \ddots && \vdots \\
+\kappa(x_{Un}, x_{T1}) && \kappa(x_{Un}, x_{T2}) && \cdots && \kappa(x_{Un}, x_{Tm}) \\
+\end{bmatrix} \\
+
+\Sigma_{TU}=
+\begin{bmatrix}
+\kappa(x_{T1}, x_{U1}) && \kappa(x_{T1}, x_{U2}) && \cdots && \kappa(x_{T1}, x_{Un}) \\
+\kappa(x_{T2}, x_{U1}) && \kappa(x_{T2}, x_{U2}) && \cdots && \kappa(x_{T2}, x_{Un}) \\
+\vdots && \vdots && \ddots && \vdots \\
+\kappa(x_{Tm}, x_{U1}) && \kappa(x_{Tm}, x_{U2}) && \cdots && \kappa(x_{Tm}, x_{Un}) \\
+\end{bmatrix}
+$$
+
+we can write the partitioned covariance matrix simply as:
+
+$$
+\Sigma=
+\left[
+\begin{array}{c|c}
+\Sigma_{UU} & \Sigma_{UT} \\
+\hline
+\Sigma_{TU} & \Sigma_{TT}
+\end{array}
+\right]
+$$
+
+It is important to note that $$\Sigma_{UT}={\Sigma_{TU}}^T$$.
+
+Now, as part of conditioning the joint distribution, we want to fix the values of $$x\in X_T$$, and consequently derive the distribution of the remaining variables $$x\in X_U$$. For this, we will use the relation between the joint distribution and the conditional distribution as below:
+
+$$
+P(X_U,X_T)=\underbrace{P(X_U|X_T=X_0)}_\text{Conditional Distribution}\cdot \underbrace{P(X_T=X_0)}_\text{Marginal Distribution}
+$$
+
+Given the joint distribution in $$\eqref{eq:partitioned-joint-distribution}$$, we wish to decompose this matrix into the product of the conditional distribution and the marginal distribution.
+
+Since both of these distributions will be Gaussian, they will both take the form of:
+
+$$p(X)=C\cdot {(X-\mu)}^TD^{-1}(X-\mu)$$
+
+Our job is to derive the $$D$$ and $$\mu$$ terms of each of these distributions. To make this decomposition easier, we will need to use the machinery of Schur Complements, as discussed in the next section.
+
+## Mathematical Preliminary: Schur Complements and Diagonalisation of Partitioned Matrices
+
+The motivation for this pa
 ## Conditioned Distributions as Gaussians
 ## Evolution of the Covariance Matrix
 ## Sampling from Multivariate Gaussian Distributions
