@@ -300,7 +300,13 @@ In the examples that we've used to generate the diagrams to build up our intuiti
 
 This will be particularly important to keep in mind, when we get into the proofs because we will be shuffling the order of the variables around, depending upon the variables we will be conditioning on.
 
-We will now discuss the motivation for partitioning the covariance matrix. Let us assume we have $$N$$ random variables $$x_1$$, $$x_2$$, ..., $$x_N$$. The joint probability distribution of these random variables is then given by the covariance matrix as below:
+We will now discuss the motivation for partitioning the covariance matrix. Let us assume we have $$N$$ random variables $$X=\{x_1, x_2, ..., x_N\}$$. The joint probability distribution of these random variables is then given by the covariance matrix as below:
+
+$$
+P(x_1, x_2, \cdots, x_N)=K\cdot\text{exp}\left(-\frac{1}{2}{(X-\mu_0)}^T\Sigma^{-1}(X-\mu_0)\right)
+$$
+
+where the covariance matrix $$\Sigma$$ is defined as below:
 
 $$
 \Sigma=
@@ -313,7 +319,9 @@ $$
 \end{bmatrix}
 $$
 
-Now, let us pick an arbitrary set of random variables to fix (i.e., condition on). To be more concrete, the set is $$X_T={x_{T1}, x_{T2}, x_{T3}, ..., x_{Tm}}$$. The variables that we do not condition are $$X_U={x_{U1}, x_{U2}, x_{U3}, ..., x_{Un}}$$.
+The similarity measure $$\kappa(x,y)$$ is essentially a kernel function.
+
+Now, let us pick an arbitrary set of random variables to fix (i.e., condition on). To be more concrete, the set of variables to condition on is $$X_T={x_{T1}, x_{T2}, x_{T3}, ..., x_{Tm}}$$ (the $$T$$ subscript stands for "Training", since these are usually training data). The remaining variables that we do not condition are $$X_U={x_{U1}, x_{U2}, x_{U3}, ..., x_{Un}}$$ (the $$U$$ subscript stands for "Unconditioned", these points usually end up being test data/real world data).
 
 - It should be obvious that $$m+n=N$$.
 - The indices $$T1, T2, ...$$ are not sequential. Neither are $$U1, U2, ...$$
