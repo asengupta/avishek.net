@@ -598,7 +598,7 @@ P(X_U, X_T)=K\cdot \text{exp}\left[{
 X_U-\mu_U \\
 X_0-\mu_T
 \end{bmatrix}
-}^T \Sigma
+}^T \Sigma^{-1}
 \begin{bmatrix}
 X_U-\mu_U \\
 X_0-\mu_T
@@ -622,10 +622,10 @@ X_U-\mu_U \\
 X_0-\mu_T
 \end{bmatrix}
 }^T
-\begin{bmatrix}
+{\begin{bmatrix}
 \Sigma_{UU} && \Sigma_{UT} \\
 \Sigma_{TU} && \Sigma_{TT} \\
-\end{bmatrix}
+\end{bmatrix}}^{-1}
 \begin{bmatrix}
 X_U-\mu_U \\
 X_0-\mu_T
@@ -636,6 +636,7 @@ $$
 Decomposing $$\Sigma$$ into its Schur Complements gives us the following:
 
 $$
+\begin{equation}
 P(X_U, X_T)=K\cdot \text{exp}\left({
 \begin{bmatrix}
 X_U-\mu_U \\
@@ -644,7 +645,7 @@ X_0-\mu_T
 }^T
 \begin{bmatrix}
 I && 0 \\
--{\Sigma_{TT}}^{-1}\Sigma_{TU} && \Sigma_{TT} \\
+-{\Sigma_{TT}}^{-1}\Sigma_{TU} && I \\
 \end{bmatrix}
 
 \begin{bmatrix}
@@ -653,7 +654,7 @@ S^{-1} && 0 \\
 \end{bmatrix}
 
 \begin{bmatrix}
-I && -\Sigma_{UT}{\Sigma_{TT}}^T \\
+I && -\Sigma_{UT}{\Sigma_{TT}}^{-1} \\
 0 && I \\
 \end{bmatrix}
 
@@ -663,11 +664,186 @@ X_0-\mu_T
 \end{bmatrix}
 
 \right)
+\label{eq:joint-distribution-schur}
+\end{equation}
 $$
 
 where $$S$$ is the **Schur Complement** we have already discussed, and is defined as:
 
 $$S=\Sigma_{UU}-\Sigma_{UT}{\Sigma_{TT}}^{-1}\Sigma_{TU}$$
+
+To simplify the expansion and manage the complexity of the algebraic forms, let us adopt some minimal notation.
+
+$$
+\mathbb{X}_U=X_U-\mu_U \\
+\mathbb{X}_0=X_0-\mu_T \\
+$$
+
+Then, substituting the above into $$\eqref{eq:joint-distribution-schur}$$, we get:
+
+$$
+P(X_U, X_T)=K\cdot \text{exp}\left({
+\begin{bmatrix}
+\mathbb{X}_U \\
+\mathbb{X}_0
+\end{bmatrix}
+}^T
+\begin{bmatrix}
+I && 0 \\
+-{\Sigma_{TT}}^{-1}\Sigma_{TU} && I \\
+\end{bmatrix}
+
+\begin{bmatrix}
+S^{-1} && 0 \\
+0 && {\Sigma_{TT}}^{-1} \\
+\end{bmatrix}
+
+\begin{bmatrix}
+I && -\Sigma_{UT}{\Sigma_{TT}}^{-1} \\
+0 && I \\
+\end{bmatrix}
+
+\begin{bmatrix}
+\mathbb{X}_U \\
+\mathbb{X}_0
+\end{bmatrix}
+
+\right)
+$$
+
+Now, we expand. Note that the next few calculations are simply rough work for you to follow along if you wish to; the final result is where we will make the next logical leap.
+
+$$
+P(X_U, X_T)=K\cdot \text{exp}\left(
+\begin{bmatrix}
+\mathbb{X}_U - \mathbb{X}_0 {\Sigma_{TT}}^{-1} \Sigma_{TU} && \mathbb{X}_0 \\
+\end{bmatrix}
+
+\begin{bmatrix}
+S^{-1} && 0 \\
+0 && {\Sigma_{TT}}^{-1} \\
+\end{bmatrix}
+
+\begin{bmatrix}
+I && -\Sigma_{UT}{\Sigma_{TT}}^{-1} \\
+0 && I \\
+\end{bmatrix}
+
+\begin{bmatrix}
+\mathbb{X}_U \\
+\mathbb{X}_0
+\end{bmatrix}
+
+\right) \\
+
+=K\cdot \text{exp}\left(
+\begin{bmatrix}
+(\mathbb{X}_U - \mathbb{X}_0 {\Sigma_{TT}}^{-1} \Sigma_{TU})S^{-1} && \mathbb{X}_0 {\Sigma_{TT}}^{-1} \\
+\end{bmatrix}
+
+\begin{bmatrix}
+I && -\Sigma_{UT}{\Sigma_{TT}}^{-1} \\
+0 && I \\
+\end{bmatrix}
+
+\begin{bmatrix}
+\mathbb{X}_U \\
+\mathbb{X}_0
+\end{bmatrix}
+
+\right) \\
+
+=K\cdot \text{exp}\left(
+\begin{bmatrix}
+(\mathbb{X}_U - \mathbb{X}_0 {\Sigma_{TT}}^{-1} \Sigma_{TU})S^{-1} && (\mathbb{X}_U - \mathbb{X}_0 {\Sigma_{TT}}^{-1} \Sigma_{TU})S^{-1} \Sigma_{UT} {\Sigma_{TT}}^{-1} + \mathbb{X}_0 {\Sigma_{TT}}^{-1}\\
+\end{bmatrix}
+
+\begin{bmatrix}
+\mathbb{X}_U \\
+\mathbb{X}_0
+\end{bmatrix}
+
+\right) \\
+
+=K\cdot \text{exp}\left(
+(\mathbb{X}_U-\mathbb{X}_0 {\Sigma_{TT}}^{-1} \Sigma_{TU})S^{-1} \mathbb{X}_U - (\mathbb{X}_U-\mathbb{X}_0 {\Sigma_{TT}}^{-1} \Sigma_{TU})S^{-1} \Sigma_{UT} {\Sigma_{TT}}^{-1} \mathbb{X}_0 + \mathbb{X}_0 {\Sigma_{TT}}^{-1} \mathbb{X}_0
+\right) \\
+$$
+
+$$
+\begin{equation}
+=K\cdot \text{exp}\left(
+\mathbb{X}_U S^{-1} \mathbb{X}_U - \mathbb{X}_0 {\Sigma_{TT}}^{-1} \Sigma_{TU} S^{-1} \mathbb{X}_U - \mathbb{X}_U S^{-1} \Sigma_{UT} {\Sigma_{TT}}^{-1} \mathbb{X}_0 + \mathbb{X}_0 {\Sigma_{TT}}^{-1} \Sigma_{TU} S^{-1} \Sigma_{UT} {\Sigma_{TT}}^{-1} \mathbb{X}_0 + \mathbb{X}_0 {\Sigma_{TT}}^{-1} \mathbb{X}_0
+\right)
+\label{eq:joint-distribution-before-rearrangement}
+\end{equation}
+$$
+
+Let us note the following properties:.
+
+$$
+\mathbb{X}_U={\mathbb{X}_U}^T \\
+\mathbb{X}_0={\mathbb{X}_0}^T \\
+{\Sigma_{TT}}^{-1}={ {\Sigma_{TT}}^{-1}}^T \\
+\Sigma_{UT}={\Sigma_TU}^T \\
+S^{-1}={S^{-1}}^T
+$$
+
+Using the above identities, we can rearrange and group terms in $$\eqref{eq:joint-distribution-before-rearrangement}$$ like so:
+
+$$
+P(X_U, X_T)=K\cdot \text{exp}\left(
+\underbrace{
+{\mathbb{X}_U}^T S^{-1} \mathbb{X}_U - {\Sigma_{UT} {\Sigma_{TT}}^{-1} \mathbb{X}_0)}^T (S^{-1} \mathbb{X}_U - {\mathbb{X}_U}^T S^{-1} (\Sigma_{UT} {\Sigma_{TT}}^{-1} \mathbb{X}_0) + {(\Sigma_{UT} {\Sigma_{TT}}^{-1} \mathbb{X}_0)}^T S^{-1} (\Sigma_{UT} {\Sigma_{TT}}^{-1} \mathbb{X}_0)
+}_\text{Square}
++
+\underbrace{
+{\mathbb{X}_0}^T {\Sigma_{TT}}^{-1} \mathbb{X}_0
+}_\text{Square}
+\right)
+$$
+
+The first square is the form of $${(X-Y)}^T D (X-Y)$$, and the second square is simply of the form $$X^T D X$$. Factoring out the squares gives us:
+
+$$
+P(X_U, X_T)=K\cdot \text{exp}\left(
+{(\mathbb{X}_U - \Sigma_{UT} {\Sigma_{TT}}^{-1} \mathbb{X}_0)}^T S^{-1} (\mathbb{X}_U - \Sigma_{UT} {\Sigma_{TT}}^{-1} \mathbb{X}_0) + {\mathbb{X}_0}^T {\Sigma_{TT}}^{-1} \mathbb{X}_0
+\right)
+$$
+
+Substituting back the expressions for $$\mathbb{X}_U$$ and $$\mathbb{X}_0$$, we get:
+
+$$
+P(X_U, X_T)=K\cdot 
+\text{exp}\left[
+{(X_U - (\mu_U + \Sigma_{UT} {\Sigma_{TT}}^{-1} (X_0-\mu_0) ))}^T S^{-1} (X_U - (\mu_U + \Sigma_{UT} {\Sigma_{TT}}^{-1} (X_0-\mu_0) )) + {(X_0-\mu_0)}^T {\Sigma_{TT}}^{-1} (X_0-\mu_0)
+\right] \\
+P(X_U, X_T)=K\cdot
+\underbrace{
+\text{exp}\left[
+{(X_U - (\mu_U + \Sigma_{UT} {\Sigma_{TT}}^{-1} (X_0-\mu_0) ))}^T S^{-1} (X_U - (\mu_U + \Sigma_{UT} {\Sigma_{TT}}^{-1} (X_0-\mu_0) ))\right]
+}_\text{Conditional Distribution} \\
+
+\cdot
+
+\underbrace{
+\text{exp}\left[{(X_0-\mu_0)}^T {\Sigma_{TT}}^{-1} (X_0-\mu_0)
+\right]
+}_\text{Marginal Distribution} \\
+$$
+
+Thus, we have factored out the initial joint distribution into the conditional and marginal distributions. We are mostly interested in the conditional distribution, which is given by:
+
+$$
+P(X_U|X_T)=K_0 \cdot {(X_U-\mu_{U|T})}^T {\Sigma_{U|T}}^{-1} (X_U-\mu')
+$$
+
+where:
+
+$$
+\mu_{U|T}= \mu_U + \Sigma_{UT} {\Sigma_{TT}}^{-1} (X_0-\mu_0) \\
+\Sigma_{U|T}=\Sigma_{UU}-\Sigma_{UT}{\Sigma_{TT}}^{-1}\Sigma_{TU}
+$$
 
 ## Conditioned Distributions as Gaussians
 ## Evolution of the Covariance Matrix
