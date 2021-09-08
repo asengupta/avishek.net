@@ -494,12 +494,12 @@ Substituting $$\eqref{eq:schur-y-1}$$ into $$\eqref{eq:schur-ax-plus-by-equals-m
 $$
 Ax+BD^{-1}n-BD^{-1}Cx=m \\
 (A-BD^{-1}C)x=m-BD^{-1}n \\
-x=(A-BD^{-1}C)(m-BD^{-1}n) \\
+x={(A-BD^{-1}C)}^{-1}(m-BD^{-1}n) \\
 x=S(m-BD^{-1}n) \\
 x=Sm-SBD^{-1}n \\
 $$
 
-where $$S=(A-BD^{-1}C)$$.
+where $$S={(A-BD^{-1}C)}^{-1}$$.
 Substituting this value of $$x$$ in $$\eqref{eq:schur-cx-plus-dy-equals-n}$$, we get:
 
 $$
@@ -513,10 +513,11 @@ Putting these values into $$\eqref{eq:inverse-partitioned-matrix-initial}$$, we 
 
 $$
 \begin{equation}
-{\begin{bmatrix}
+M^{-1}=
+\begin{bmatrix}
 S && -SBD^{-1} \\
 D^{-1}CS && D^{-1}+D^{-1}CSBD^{-1}
-\end{bmatrix}}^{-1}
+\end{bmatrix}
 \begin{bmatrix}
 m \\
 n
@@ -528,6 +529,145 @@ y
 \end{bmatrix}
 \end{equation}
 $$
+
+The game plan is that we'd like to decompose $$M$$ into the following form:
+
+$$
+M^{-1}=LDU
+$$
+
+where
+
+- $$L$$ is a lower triangular matrix
+- $$D$$ is a diagonal matrix
+- U is an upper trianglular matrix
+
+This is not too dissimilar from the $$LDL^T$$ factorisation procedure discussed in [The Cholesky and LDL* Factorisations]({% post_url 2021-07-08-cholesky-ldl-factorisation %}).
+
+With a little bit of trial and error, we can see that $$M$$ can be decomposed into the following matrices:
+
+$$
+\begin{equation}
+\begin{aligned}
+M^{-1}&=
+\begin{bmatrix}
+S && -SBD^{-1} \\
+D^{-1}CS && D^{-1}+D^{-1}CSBD^{-1}
+\end{bmatrix}\\
+&=
+\begin{bmatrix}
+I && 0 \\
+-D^{-1}C && I \\
+\end{bmatrix}
+\begin{bmatrix}
+S && 0 \\
+0 && D^{-1} \\
+\end{bmatrix}
+\begin{bmatrix}
+I && -BD^{-1} \\
+0 && I \\
+\end{bmatrix}
+\end{aligned}
+\label{eq:schur-ldu-d-invertible}
+\end{equation}
+$$
+
+where $$S={(A-BD^{-1}C)}^{-1}$$.
+
+The interesting point to note is that the inverse requires only that $$D$$ is invertible.
+
+$$(A-BD^{-1}C)$$ is called the **Schur Complement**.
+
+Similarly if $$A$$ is invertible, then $$M^{-1}$$ can be alternatively factored out in a similar manner, with its corresponding **Schur Complement** as $$(D-CA^{-1}B)$$. Here again, the matrix inverse depends only upon $$A$$ being invertible.
+
+## Factorisation of the Joint Distribution
+
+Armed with knowledge about Schur Complements, we are ready to investigate the joint distribution using the partitioned covariance matrix that we discussed in [Organising the Covariance Matrix](#joint-distribution-organising-the-covariance-matrix).
+
+The joint probability distribution between $$X_T$$ and $$X_U$$ looks like so:
+
+$$
+P(X_U, X_T)=P(X_U|X_T=X_0)\cdot P(X_T=X_0)
+$$
+
+where $$X_T=X_0$$ is an $$m$$-dimensional vector ($$m\times 1$$).
+
+$$
+P(X_U, X_T)=K\cdot \text{exp}\left[{
+\begin{bmatrix}
+X_U-\mu_U \\
+X_0-\mu_T
+\end{bmatrix}
+}^T \Sigma
+\begin{bmatrix}
+X_U-\mu_U \\
+X_0-\mu_T
+\end{bmatrix}
+\right]
+$$
+
+where $$\Sigma=
+\begin{bmatrix}
+\Sigma_{UU} && \Sigma_{UT} \\
+\Sigma_{TU} && \Sigma_{TT} \\
+\end{bmatrix}
+$$
+
+Thus, the joint distribution becomes:
+
+$$
+P(X_U, X_T)=K\cdot \text{exp}\left({
+\begin{bmatrix}
+X_U-\mu_U \\
+X_0-\mu_T
+\end{bmatrix}
+}^T
+\begin{bmatrix}
+\Sigma_{UU} && \Sigma_{UT} \\
+\Sigma_{TU} && \Sigma_{TT} \\
+\end{bmatrix}
+\begin{bmatrix}
+X_U-\mu_U \\
+X_0-\mu_T
+\end{bmatrix}
+\right)
+$$
+
+Decomposing $$\Sigma$$ into its Schur Complements gives us the following:
+
+$$
+P(X_U, X_T)=K\cdot \text{exp}\left({
+\begin{bmatrix}
+X_U-\mu_U \\
+X_0-\mu_T
+\end{bmatrix}
+}^T
+\begin{bmatrix}
+I && 0 \\
+-{\Sigma_{TT}}^{-1}\Sigma_{TU} && \Sigma_{TT} \\
+\end{bmatrix}
+
+\begin{bmatrix}
+S^{-1} && 0 \\
+0 && {\Sigma_{TT}}^{-1} \\
+\end{bmatrix}
+
+\begin{bmatrix}
+I && -\Sigma_{UT}{\Sigma_{TT}}^T \\
+0 && I \\
+\end{bmatrix}
+
+\begin{bmatrix}
+X_U-\mu_U \\
+X_0-\mu_T
+\end{bmatrix}
+
+\right)
+$$
+
+where $$S$$ is the **Schur Complement** we have already discussed, and is defined as:
+
+$$S=\Sigma_{UU}-\Sigma_{UT}{\Sigma_{TT}}^{-1}\Sigma_{TU}$$
 
 ## Conditioned Distributions as Gaussians
 ## Evolution of the Covariance Matrix
