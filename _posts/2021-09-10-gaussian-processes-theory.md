@@ -7,6 +7,9 @@ draft: false
 ---
 
 In this article, we will build up our mathematical understanding of **Gaussian Processes**. We will understand the conditioning operation a bit more, since that is the backbone of inferring the posterior distribution. We will also look at how the covariance matrix evolves as training points are added.
+
+![Article Banner](/assets/images/clamped-exponentiated-quadratic-kernel.png)
+
 Continuing from the roadmap set out in [Road to Gaussian Processes]({% post_url 2021-04-17-road-to-gaussian-processes %}) and the intuition we built up in the first pass on Gaussian Processes in [Gaussian Processes: Intuition]({% post_url 2021-09-06-gaussian-processes-intuition %}), the requisite material you should be familiar with, is presented in the following articles.
 
 - [Geometry of the Multivariate Gaussian Distribution]({% post_url 2021-08-30-geometry-of-multivariate-gaussian %})
@@ -16,9 +19,7 @@ The following material will be covered:
 
 - Conditioning a Bivariate Gaussian Distribution: Brute Force Derivation
 - Schur Complements and Diagonalisation of Partitioned Matrices
-- Conditioned Distributions as Gaussians
 - Evolution of the Covariance Matrix
-- Sampling from Multivariate Gaussian Distributions
 - Generalising Discrete Covariance Matrices to Kernels and the Representer Theorem
 
 ## Bivariate Gaussian Distribution: Brute Force Derivation
@@ -582,7 +583,7 @@ Similarly if $$A$$ is invertible, then $$M^{-1}$$ can be alternatively factored 
 
 ## Factorisation of the Joint Distribution
 
-Armed with knowledge about Schur Complements, we are ready to investigate the joint distribution using the partitioned covariance matrix that we discussed in [Organising the Covariance Matrix](#joint-distribution-organising-the-covariance-matrix).
+Armed with knowledge of Schur Complements, we are ready to investigate the joint distribution using the partitioned covariance matrix that we discussed in [Organising the Covariance Matrix](#joint-distribution-organising-the-covariance-matrix).
 
 The joint probability distribution between $$X_T$$ and $$X_U$$ looks like so:
 
@@ -841,11 +842,31 @@ $$
 where:
 
 $$
-\mu_{U|T}= \mu_U + \Sigma_{UT} {\Sigma_{TT}}^{-1} (X_0-\mu_0) \\
-\Sigma_{U|T}=\Sigma_{UU}-\Sigma_{UT}{\Sigma_{TT}}^{-1}\Sigma_{TU}
+\begin{equation}
+\mu_{U|T}= \mu_U + \Sigma_{UT} {\Sigma_{TT}}^{-1} (X_0-\mu_0)
+\label{eq:mean-conditional-gaussian-distribution}
+\end{equation}
 $$
 
-## Conditioned Distributions as Gaussians
+$$
+\begin{equation}
+\Sigma_{U|T}=\Sigma_{UU}-\Sigma_{UT}{\Sigma_{TT}}^{-1}\Sigma_{TU}
+\label{eq:covariance-conditional-gaussian-distribution}
+\end{equation}
+$$
+
+There are a few points worth noting from this exercise.
+
+- Conditional Gaussian Distributions are also Gaussian.
+- The variables need to be partitioned, but the variables we are conditioning on can recur in the unconditioned set of variables. What will happen is that those entries will end up with a variance of zero, because we fix them to specific values. They will show up in the heatmap of the new covariance matrix as dark spots. This is discussed a little more in[Evolution of the Covariance Matrix](#evolution-of-the-covariance-matrix).
+
 ## Evolution of the Covariance Matrix
-## Sampling from Multivariate Gaussian Distributions
+
+![Conditioned Gaussian Process with 3 Points](/assets/images/clamped-gaussian-process-3-points.png)
+
+![Unclamped Exponentiated Quadratic Kernel](/assets/images/unclamped-exponentiated-quadratic-kernel.png)
+
+![Clamped Exponentiated Quadratic Kernel](/assets/images/clamped-exponentiated-quadratic-kernel.png)
+
+
 ## Discrete Covariance Matrices, Mercer Kernels and the Representer Theorem
