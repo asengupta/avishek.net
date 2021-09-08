@@ -6,7 +6,7 @@ tags: ["Theory", "Gaussian Processes", "Probability", "Machine Learning"]
 draft: false
 ---
 
-In this article, we will build up our mathematical understanding of **Gaussian Processes**. We will understand the conditioning operation a bit more, since that is the backbone of inferring the posterior distribution. We will also look at how the covariance matrix evolves as training points are added.
+In this article, we will build up our mathematical understanding of **Gaussian Processes**. We will understand the conditioning operation a bit more, since that is the backbone of inferring the **posterior distribution**. We will also look at how the **covariance matrix** evolves as training points are added.
 
 ![Article Banner](/assets/images/clamped-exponentiated-quadratic-kernel.png)
 
@@ -19,12 +19,12 @@ The following material will be covered:
 
 - Conditioning a Bivariate Gaussian Distribution: Brute Force Derivation
 - Schur Complements and Diagonalisation of Partitioned Matrices
+- Factorisation of the Joint Gaussian Probability Distribution
 - Evolution of the Covariance Matrix
-- Generalising Discrete Covariance Matrices to Kernels and the Representer Theorem
 
 ## Bivariate Gaussian Distribution: Brute Force Derivation
 
-Before moving to the generalised method of proof, I felt it instructive to look at the Bivariate Gaussian Distribution. Apart from the fact that the results for the mean and covariance applies to the more general case, it is helpful to see the mechanics of the exercise starting with the eigendecomposed form of the covariance matrix, before introducing Schur Complements for the more general case.
+Before moving to the generalised method of proof, I feel it instructive to look at the **Bivariate Gaussian Distribution**. Apart from the fact that the **results for the mean and covariance apply to the more general case**, it is helpful to see the mechanics of the exercise starting with the eigendecomposed form of the covariance matrix, before introducing **Schur Complements** for the more general case.
 
 To that end, we define the Bivariate Gaussian Distribution as:
 
@@ -62,7 +62,7 @@ $$
 \end{equation}
 $$
 
-Note that $$\Sigma$$ is necessarily symmetric. Furthermore, the covariance matrix can be decomposed into orthonormal eigenvectors like so:
+Note that $$\Sigma$$ is necessarily symmetric. Furthermore, the covariance matrix can be decomposed into **orthonormal eigenvectors** like so:
 
 $$
 \begin{equation}
@@ -86,6 +86,7 @@ a && b \\
 $$
 
 where $$\sqrt{a^2+b^2}=1$$.
+
 Then, multiplying out the expression in $$\eqref{eq:covariance-eigendecomposition}$$ and equating the result to the terms in $$\eqref{eq:covariance-matrix}$$ gives us the following:
 
 $$
@@ -128,7 +129,7 @@ a && b \\
 \end{equation}
 $$
 
-Let us condition on $$y$$, i.e., we set $$y=y_0$$, and derive the resulting one-dimensional probability distribution in $$x$$. The conditioning will then look like:
+Let us condition on $$y$$, i.e., we set $$y=y_0$$, and derive the resulting **one-dimensional probability distribution** in $$x$$. The conditioning will then look like:
 
 $$
 \begin{equation}
@@ -275,7 +276,7 @@ $$
 \end{equation}
 $$
 
-More generally, as we will see in [Factoring the Joint Probability Distribution](#factorisation-of-the-joint-distribution)(and you can verify yourself, especially the covariance expression), the mean and variance of the conditional probability are:
+More generally, as we will see in [Factoring the Joint Probability Distribution](#factorisation-of-the-joint-gaussian-distribution--general-case)(and you can verify yourself, especially the covariance expression), the mean and variance of the conditional probability are:
 
 $$
 \begin{equation}
@@ -291,17 +292,17 @@ $$
 \end{equation}
 $$
 
-You can verify that evaluation the expression $$\eqref{eq:multivariate-gaussian-covariance}$$ indeed yields the expression for the Conditional Covariance of the Bivariate Gaussian in $$\eqref{eq:bivariate-gaussian-covariance}$$.
+You can verify that evaluation the expression $$\eqref{eq:multivariate-gaussian-covariance}$$ indeed yields the expression for the conditioned covariance matrix of the Bivariate Gaussian in $$\eqref{eq:bivariate-gaussian-covariance}$$.
 
 As you will have also noticed, the derivation quickly becomes very complicated, and a general approach is needed to scale the proof to higher dimensions. This is the focus of the next topic.
 
 ## Joint Distribution: Organising the Covariance Matrix
 
-In the examples that we've used to generate the diagrams to build up our intuition so far, all the input points are assumed to be in $$\mathbb{R}$$. Thus, there is a natural ordering of the input points, which is also reflected in their indexing in the covariance matrix. The variables in the covariance matrix (which represent individual input vectors) therefore use the matrix indices as their values. This is not going to be the case for vectors in $$\mathbb{R}^2$$ and above, because there is no natural ordering that would exist between these vectors. In fact, even for $$\mathbb{R}$$, the points need not exist in the matrix in the natural order that they would appear on the number line; all that would be needed then is to have some bookkeeping which maps the matrix indices to the correct vector value on the real number line. This mapping would then be used to do the actual plotting or presentation.
+In the examples that we've used to generate the diagrams to build up our intuition so far, all the input points are assumed to be in $$\mathbb{R}$$. Thus, there is a natural ordering of the input points, which is also reflected in their indexing in the covariance matrix. The variables in the covariance matrix (which represent individual input vectors) therefore **use the matrix indices as their values**. This is not going to be the case for vectors in $$\mathbb{R}^2$$ and above, because **there is no natural ordering that would exist between vectors in higher dimensions**. In fact, even for $$\mathbb{R}$$, the points need not exist in the matrix in the natural order that they would appear on the number line; all that would be needed then is to have some bookkeeping which maps the matrix indices to the correct vector value on the real number line. This mapping would then be used to do the actual plotting or presentation.
 
 This will be particularly important to keep in mind, when we get into the proofs because we will be shuffling the order of the variables around, depending upon the variables we will be conditioning on.
 
-We will now discuss the motivation for partitioning the covariance matrix. Let us assume we have $$N$$ random variables $$X=\{x_1, x_2, ..., x_N\}$$. The joint probability distribution of these random variables is then given by the covariance matrix as below:
+We will now discuss the **motivation for partitioning the covariance matrix**. Let us assume we have $$N$$ random variables $$X=\{x_1, x_2, ..., x_N\}$$. The joint probability distribution of these random variables is then given by the covariance matrix as below:
 
 $$
 P(x_1, x_2, \cdots, x_N)=K\cdot\text{exp}\left(-\frac{1}{2}{(X-\mu_0)}^T\Sigma^{-1}(X-\mu_0)\right)
@@ -327,7 +328,7 @@ Now, let us pick an arbitrary set of random variables to fix (i.e., condition on
 - It should be obvious that $$m+n=N$$.
 - The indices $$T1, T2, ...$$ are not sequential. Neither are $$U1, U2, ...$$
 
-Now we reorganise the original covariance matrix $$\Sigma$$ by grouping the variables in $$X_U$$ into one submatrix, and the ones in $$X_T$$ into another submatrix. These submatrices form the diagonals of this new block diagonal matrix. Note that functionally, this reorganisation does not affect the properties of $$\Sigma$$; it is still the original covariance matrix; it is just that the indices map to different random variables.
+Now we reorganise the original covariance matrix $$\Sigma$$ by grouping the variables in $$X_U$$ into one submatrix, and the ones in $$X_T$$ into another submatrix. These submatrices form the diagonals of this new block diagonal matrix. Note that functionally, this reorganisation does not affect the properties of $$\Sigma$$; it is still the original covariance matrix; it is just that the **indices map to different random variables**.
 
 $$
 \begin{equation}
@@ -406,9 +407,9 @@ $$
 P(X_U,X_T)=\underbrace{P(X_U|X_T=X_0)}_\text{Conditional Distribution}\cdot \underbrace{P(X_T=X_0)}_\text{Marginal Distribution}
 $$
 
-Given the joint distribution in $$\eqref{eq:partitioned-joint-distribution}$$, we wish to decompose this matrix into the product of the conditional distribution and the marginal distribution.
+Given the joint distribution in $$\eqref{eq:partitioned-joint-distribution}$$, we wish to decompose this matrix into the **product of the conditional distribution and the marginal distribution**.
 
-Since both of these distributions will be Gaussian, they will both take the form of:
+Since **both of these distributions will be Gaussian**, they will both take the form of:
 
 $$p(X)=C\cdot {(X-\mu)}^TD^{-1}(X-\mu)$$
 
@@ -416,7 +417,7 @@ Our job is to derive the $$D$$ and $$\mu$$ terms of each of these distributions.
 
 ## Mathematical Preliminary: Schur Complements and Diagonalisation of Partitioned Matrices
 
-We would like to be able to express the inverse of a partitioned matrix in terms of its partitions. Concretely, let us assume that the partitioned matrix is as follows:
+We would like to be able to express **the inverse of a partitioned matrix in terms of its partitions**. Concretely, let us assume that the partitioned matrix is as follows:
 
 $$
 M=
@@ -426,7 +427,7 @@ C && D
 \end{bmatrix}
 $$
 
-We can derive this by mimicking Gaussian Elimination for this matrix. Assume we have the equation:
+We can derive this by mimicking **Gaussian Elimination** for this matrix. Assume we have the equation:
 
 $$
 \begin{bmatrix}
@@ -581,11 +582,11 @@ $$(A-BD^{-1}C)$$ is called the **Schur Complement**.
 
 Similarly if $$A$$ is invertible, then $$M^{-1}$$ can be alternatively factored out in a similar manner, with its corresponding **Schur Complement** as $$(D-CA^{-1}B)$$. Here again, the matrix inverse depends only upon $$A$$ being invertible.
 
-## Factorisation of the Joint Distribution
+## Factorisation of the Joint Gaussian Distribution : General Case
 
-Armed with knowledge of Schur Complements, we are ready to investigate the joint distribution using the partitioned covariance matrix that we discussed in [Organising the Covariance Matrix](#joint-distribution-organising-the-covariance-matrix).
+Armed with knowledge of **Schur Complements**, we are ready to investigate the joint distribution using the partitioned covariance matrix that we discussed in [Organising the Covariance Matrix](#joint-distribution-organising-the-covariance-matrix).
 
-The joint probability distribution between $$X_T$$ and $$X_U$$ looks like so:
+The **joint probability distribution** between $$X_T$$ and $$X_U$$ looks like so:
 
 $$
 P(X_U, X_T)=P(X_U|X_T=X_0)\cdot P(X_T=X_0)
@@ -712,7 +713,7 @@ I && -\Sigma_{UT}{\Sigma_{TT}}^{-1} \\
 \right)
 $$
 
-Now, we expand. Note that the next few calculations are simply rough work for you to follow along if you wish to; the final result is where we will make the next logical leap.
+Now, we expand. Note that the **next few calculations are simply rough work** for you to follow along if you wish to; the final result is where we will make the next logical leap.
 
 $$
 P(X_U, X_T)=K\cdot \text{exp}\left(
@@ -833,7 +834,7 @@ P(X_U, X_T)=K\cdot
 }_\text{Marginal Distribution} \\
 $$
 
-Thus, we have factored out the initial joint distribution into the conditional and marginal distributions. We are mostly interested in the conditional distribution, which is given by:
+**Thus, we have factored out the initial joint distribution into the conditional and marginal distributions.** We are mostly interested in the **conditional distribution**, which is given by:
 
 $$
 P(X_U|X_T)=K_0 \cdot {(X_U-\mu_{U|T})}^T {\Sigma_{U|T}}^{-1} (X_U-\mu')
@@ -858,11 +859,11 @@ $$
 There are a few points worth noting from this exercise.
 
 - Conditional Gaussian Distributions are also Gaussian.
-- The variables need to be partitioned, but the variables we are conditioning on can recur in the unconditioned set of variables. What will happen is that those entries will end up with a variance of zero, because we fix them to specific values. They will show up in the heatmap of the new covariance matrix as dark spots. This is discussed a little more in[Evolution of the Covariance Matrix](#evolution-of-the-covariance-matrix).
+- The variables need to be partitioned, but the **variables we are conditioning on can recur in the unconditioned set of variables**. What will happen is that those entries will end up with a **variance of zero**, because we fix them to specific values. They will show up in the heatmap of the new covariance matrix as dark spots. This is discussed a little more in[Evolution of the Covariance Matrix](#evolution-of-the-covariance-matrix).
 
 ## Evolution of the Covariance Matrix
 
-Recall the example Gaussian Process that we described in [Gaussian Processes: Intuition]({% post_url 2021-09-06-gaussian-processes-intuition %}). We demonstrated it by conditioning on three data points. The function distribution is reproduced below for reference.
+Recall the example **Gaussian Process** that we described in [Gaussian Processes: Intuition]({% post_url 2021-09-06-gaussian-processes-intuition %}). We demonstrated it by conditioning on three data points. The function distribution is reproduced below for reference.
 
 ![Conditioned Gaussian Process with 3 Points](/assets/images/clamped-gaussian-process-3-points.png)
 
@@ -876,14 +877,14 @@ However, once we fix the three points, the covariance matrix starts to look a li
 
 ![Clamped Exponentiated Quadratic Kernel](/assets/images/clamped-exponentiated-quadratic-kernel.png)
 
-If you notice the holes in the diagonal, they correspond directly to the indices (and the position) of the input points for which the distribution was conditioned. The variances at those points go to zero, because the values at those points has now been determined.
+If you notice the holes in the diagonal, **they correspond directly to the indices (and the position) of the input points for which the distribution was conditioned**. The variances at those points go to zero, because the values at those points has now been determined; **hence the dark gaps in those positions of the covariance matrix**.
 
 ## Endnotes
 
 There are a few topics that still need to be discussed in the context of kernels.
 
 - Mercer Kernels
-- Infinite Basis Functions
+- Representation using Infinite Basis Functions
 - Representer Theorem
 
 These may be discussed in a future article.
