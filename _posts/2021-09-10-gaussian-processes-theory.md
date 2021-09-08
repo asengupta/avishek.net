@@ -415,7 +415,120 @@ Our job is to derive the $$D$$ and $$\mu$$ terms of each of these distributions.
 
 ## Mathematical Preliminary: Schur Complements and Diagonalisation of Partitioned Matrices
 
-The motivation for this pa
+We would like to be able to express the inverse of a partitioned matrix in terms of its partitions. Concretely, let us assume that the partitioned matrix is as follows:
+
+$$
+M=
+\begin{bmatrix}
+A && B \\
+C && D
+\end{bmatrix}
+$$
+
+We can derive this by mimicking Gaussian Elimination for this matrix. Assume we have the equation:
+
+$$
+\begin{bmatrix}
+A && B \\
+C && D
+\end{bmatrix}
+\begin{bmatrix}
+x \\
+y
+\end{bmatrix}
+=
+\begin{bmatrix}
+m \\
+n
+\end{bmatrix}
+$$
+
+This expresses $$m$$ and $$n$$ in terms of $$x$$ and $$y$$. We want to express $$x$$ and $$y$$ in terms of $$m$$ and $$n$$, so that we get:
+
+$$
+\begin{equation}
+{\begin{bmatrix}
+A && B \\
+C && D
+\end{bmatrix}}^{-1}
+\begin{bmatrix}
+m \\
+n
+\end{bmatrix}
+=
+\begin{bmatrix}
+x \\
+y
+\end{bmatrix}
+\label{eq:inverse-partitioned-matrix-initial}
+\end{equation}
+$$
+
+The system of linear of equations that we want to solve is:
+
+$$
+\begin{equation}
+Ax+By=m
+\label{eq:schur-ax-plus-by-equals-m}
+\end{equation}
+$$
+
+$$
+\begin{equation}
+Cx+Dy=n
+\label{eq:schur-cx-plus-dy-equals-n}
+\end{equation}
+$$
+
+Assume that $$D$$ is invertible. Then, from $$\eqref{eq:schur-cx-plus-dy-equals-n}$$, we can write $$y$$ as:
+
+$$
+\begin{equation}
+y=D^{-1}(n-Cx)
+\label{eq:schur-y-1}
+\end{equation}
+$$
+
+Substituting $$\eqref{eq:schur-y-1}$$ into $$\eqref{eq:schur-ax-plus-by-equals-m}$$, we get:
+
+$$
+Ax+BD^{-1}n-BD^{-1}Cx=m \\
+(A-BD^{-1}C)x=m-BD^{-1}n \\
+x=(A-BD^{-1}C)(m-BD^{-1}n) \\
+x=S(m-BD^{-1}n) \\
+x=Sm-SBD^{-1}n \\
+$$
+
+where $$S=(A-BD^{-1}C)$$.
+Substituting this value of $$x$$ in $$\eqref{eq:schur-cx-plus-dy-equals-n}$$, we get:
+
+$$
+CS(m-BD^{-1}n)+Dy=n \\
+Dy=n-CS(m-BD^{-1}n) \\
+y=D^{-1}n-D^{-1}CS(m-BD^{-1}n) \\
+y=-D^{-1}CSm + (D^{-1}+D^{-1}CSBD^{-1})n \\
+$$
+
+Putting these values into $$\eqref{eq:inverse-partitioned-matrix-initial}$$, we get:
+
+$$
+\begin{equation}
+{\begin{bmatrix}
+S && -SBD^{-1} \\
+D^{-1}CS && D^{-1}+D^{-1}CSBD^{-1}
+\end{bmatrix}}^{-1}
+\begin{bmatrix}
+m \\
+n
+\end{bmatrix}
+=
+\begin{bmatrix}
+x \\
+y
+\end{bmatrix}
+\end{equation}
+$$
+
 ## Conditioned Distributions as Gaussians
 ## Evolution of the Covariance Matrix
 ## Sampling from Multivariate Gaussian Distributions
