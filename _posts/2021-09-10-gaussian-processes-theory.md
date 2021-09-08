@@ -3,7 +3,7 @@ title: "Gaussian Processes: Theory"
 author: avishek
 usemathjax: true
 tags: ["Theory", "Gaussian Processes", "Probability", "Machine Learning"]
-draft: false
+draft: true
 ---
 
 In this article, we will build up our mathematical understanding of **Gaussian Processes**. We will understand the conditioning operation a bit more, since that is the backbone of inferring the posterior distribution. We will also look at how the covariance matrix evolves as training points are added.
@@ -419,4 +419,4 @@ The motivation for this pa
 ## Conditioned Distributions as Gaussians
 ## Evolution of the Covariance Matrix
 ## Sampling from Multivariate Gaussian Distributions
-## Generalising Discrete Covariance Matrices to Kernels and the Representer Theorem
+## Discrete Covariance Matrices, Mercer Kernels and the Representer Theorem

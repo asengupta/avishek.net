@@ -96,11 +96,11 @@ Now we have access to an infinite set of smooth functions from a (potentially in
 
 At this point, our infinite set of functions have no constraints imposed on them. The constraint we wish to apply is that any **candidate function** for regression must **pass through the set of points in our training data**.
 
-Once we clamp the Multivariate Gaussian at certain points, sampling the resulting Multivariate Gaussian Distribution gives us something like the following diagram. Here, I've chosen four arbitrary training data points to illustrate that the subset of functions we pick, all pass through these training data.
+Once we clamp the Multivariate Gaussian at certain points, sampling the resulting Multivariate Gaussian Distribution gives us something like the following diagram. Here, I've chosen three arbitrary training data points to illustrate that the subset of functions we pick, all pass through these training data.
 
 The diagram below shows 100 functions sampled from a 100-dimensional Multivariate Gaussian.
 
-![Conditioned Gaussian Process with 4 Points](/assets/images/clamped-gaussian-process-4-points.png)
+![Conditioned Gaussian Process with 3 Points](/assets/images/clamped-gaussian-process-3-points.png)
 
 The initial covariance matrix (using the **exponentiated quadratic kernel**) looked like this:
 
