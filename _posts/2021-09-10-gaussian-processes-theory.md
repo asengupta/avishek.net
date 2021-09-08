@@ -275,7 +275,7 @@ $$
 \end{equation}
 $$
 
-More generally, as we will see (and you can verify yourself, especially the covariance expression), the mean and variance of the conditional probability are:
+More generally, as we will see in [Factoring the Joint Probability Distribution](#factorisation-of-the-joint-distribution)(and you can verify yourself, especially the covariance expression), the mean and variance of the conditional probability are:
 
 $$
 \begin{equation}
@@ -862,11 +862,28 @@ There are a few points worth noting from this exercise.
 
 ## Evolution of the Covariance Matrix
 
+Recall the example Gaussian Process that we described in [Gaussian Processes: Intuition]({% post_url 2021-09-06-gaussian-processes-intuition %}). We demonstrated it by conditioning on three data points. The function distribution is reproduced below for reference.
+
 ![Conditioned Gaussian Process with 3 Points](/assets/images/clamped-gaussian-process-3-points.png)
+
+Before there was any conditioning performed, the Gaussian Process was unbiased in terms of the functions it would pick, given the mean and the covariance matrix. Thus, the original covariance matrix (generated with a finite number of points) based on the exponentiated quadratic kernel looked uniform as below.
 
 ![Unclamped Exponentiated Quadratic Kernel](/assets/images/unclamped-exponentiated-quadratic-kernel.png)
 
+It is worth pointing out, that the middle white band represents input points which are closest to each other. The diagonal itself represents the covariance of a point with itself, essentially the variance.
+
+However, once we fix the three points, the covariance matrix starts to look a little different, like below.
+
 ![Clamped Exponentiated Quadratic Kernel](/assets/images/clamped-exponentiated-quadratic-kernel.png)
 
+If you notice the holes in the diagonal, they correspond directly to the indices (and the position) of the input points for which the distribution was conditioned. The variances at those points go to zero, because the values at those points has now been determined.
 
-## Discrete Covariance Matrices, Mercer Kernels and the Representer Theorem
+## Endnotes
+
+There are a few topics that still need to be discussed in the context of kernels.
+
+- Mercer Kernels
+- Infinite Basis Functions
+- Representer Theorem
+
+These may be discussed in a future article.
