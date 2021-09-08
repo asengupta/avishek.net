@@ -3,7 +3,7 @@ title: "Gaussian Processes: Theory"
 author: avishek
 usemathjax: true
 tags: ["Theory", "Gaussian Processes", "Probability", "Machine Learning"]
-draft: true
+draft: false
 ---
 
 In this article, we will build up our mathematical understanding of **Gaussian Processes**. We will understand the conditioning operation a bit more, since that is the backbone of inferring the posterior distribution. We will also look at how the covariance matrix evolves as training points are added.
