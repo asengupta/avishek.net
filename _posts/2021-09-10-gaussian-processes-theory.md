@@ -859,7 +859,7 @@ $$
 There are a few points worth noting from this exercise.
 
 - Conditional Gaussian Distributions are also Gaussian.
-- The variables need to be partitioned, but the **variables we are conditioning on can recur in the unconditioned set of variables**. What will happen is that those entries will end up with a **variance of zero**, because we fix them to specific values. They will show up in the heatmap of the new covariance matrix as dark spots. This is discussed a little more in[Evolution of the Covariance Matrix](#evolution-of-the-covariance-matrix).
+- The variables need to be partitioned, but the **variables we are conditioning on can recur in the unconditioned set of variables**. What will happen is that those entries will end up with a **variance of zero**, because we fix them to specific values. They will show up in the heatmap of the new covariance matrix as dark spots. This is discussed a little more in the section [Evolution of the Covariance Matrix](#evolution-of-the-covariance-matrix).
 
 ## Evolution of the Covariance Matrix
 
