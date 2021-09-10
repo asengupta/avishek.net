@@ -17,7 +17,7 @@ It is also advisable (though not necessary) to review [Kernel Functions with Rep
 
 ## Mercer's Theorem Learning Roadmap
 
-Here is the roadmap for understanding the concepts relating to Mercer's Theorem
+Here is the roadmap for understanding the concepts relating to Mercer's Theorem.
 
 {% mermaid %}
 graph TD;
