@@ -45,12 +45,23 @@ jordan_canonical_form-->spectral_theorem
 spectral_theorem-->mercer_theorem
 function_sequences-->arzela_ascoli_theorem
 arzela_ascoli_theorem-->mercer_theorem
+
 style compact_set fill:#006f00,stroke:#000,stroke-width:2px,color:#fff
 style spectral_theorem fill:#006fff,stroke:#000,stroke-width:2px,color:#fff
 style mercer_theorem fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
 style arzela_ascoli_theorem fill:#8f0ff0,stroke:#000,stroke-width:2px,color:#fff
 {% endmermaid %}
 
+## Sequences and Boundedness
+## Cauchy Sequences
+## Function Sequences
+## Open and Closed Sets
+## Compact Sets and Relatively Compact Subspaces
+## Compact Operators
+## Jordan Canonical Form
+## Arzelà-Ascoli Theorem
+
+## Older Stuff (will be deleted)
 Recall what Mercer's Theorem states:
 
 $$
