@@ -21,6 +21,7 @@ Here is the roadmap for understanding the concepts relating to Mercer's Theorem.
 
 {% mermaid %}
 graph TD;
+sequences[Sequences]
 function_sequences[Function Sequences]
 compact_set[Compact Set]
 compact_operators[Compact Operators]
@@ -35,7 +36,7 @@ spectral_theorem[Spectral Theorem of Compact Operators]
 arzela_ascoli_theorem[Arzelà-Ascoli Theorem]
 mercer_theorem[Mercer's Theorem]
 
-function_sequences-->uniform_convergence-->banach_space-->hilbert_space
+sequences-->function_sequences-->uniform_convergence-->banach_space-->hilbert_space
 compact_set-->relatively_compact_subspace
 relatively_compact_subspace-->compact_operators
 linear_operators-->compact_operators
