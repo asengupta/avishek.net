@@ -37,11 +37,46 @@ $$
 d(x,z) \leq d(x,y) + d(y,z)
 $$
 
-**Thus, the Triangle Inequality can only be satisfied for specific values of $$x$$, $$y$$, and $$z$$; hence $$d(x,y)={(x-y)}^2$$ is not a metric.**
+**Thus, the *Triangle Inequality* can only be satisfied for specific values of $$x$$, $$y$$, and $$z$$; hence $$d(x,y)={(x-y)}^2$$ is not a valid distance metric.**
 
 $$\blacksquare$$
 
 #### 1.1.3. Show that $$d(x,y)=\sqrt{|x-y|}$$ defines a metric on the set of all real numbers.
+**Proof:**
+
+For the distance metric $$d(x,y)=\sqrt{\vert x-y \vert}$$, we need to prove the **Triangle Inequality**:
+
+$$
+d(x,z) \leq d(x,y) + d(y,z)
+$$
+
+We start with the basic **Triangle Inequality** for $$\mathbb{R}$$:
+
+$$
+|x-z| \leq |x-y| + |y-z|
+$$
+
+Adding and subtracting $$2 \sqrt{\vert x-y \vert \vert y-z \vert}$$ on the RHS we get:
+
+$$
+|x-z| \leq |x-y| + |y-z| + 2 \sqrt{\vert x-y \vert \vert y-x \vert} - 2 \sqrt{\vert x-y \vert \vert y-z \vert} \\
+\Rightarrow |x-z| \leq {(\sqrt{\vert x-y \vert} + \sqrt{\vert y-z \vert})}^2 - \underbrace{2 \sqrt{\vert x-y \vert \vert y-z \vert}}_\text{positive}
+$$
+
+Setting $$C=2 \sqrt{\vert x-y \vert \vert y-z \vert}>0$$, we get:
+
+$$
+|x-z| \leq {\left(\sqrt{\vert x-y \vert} + \sqrt{\vert y-z \vert}\right)}^2 - C \\
+\Rightarrow {\left(\sqrt{\vert x-z \vert}\right)}^2 \leq {\left(\sqrt{\vert x-y \vert} + \sqrt{\vert y-z \vert}\right)}^2 - C \\
+\Rightarrow {\left(\sqrt{\vert x-z \vert}\right)}^2 + C \leq {\left(\sqrt{\vert x-y \vert} + \sqrt{\vert y-z \vert}\right)}^2 \\
+\Rightarrow {\left(\sqrt{\vert x-z \vert}\right)}^2 \leq {\left(\sqrt{\vert x-y \vert} + \sqrt{\vert y-z \vert}\right)}^2 \\
+\Rightarrow \sqrt{\vert x-z \vert} \leq \sqrt{\vert x-y \vert} + \sqrt{\vert y-z \vert} \\
+\Rightarrow d(x,z) \leq d(x,y) + d(y,z)
+$$
+
+**Hence, this proves the *Triangle Inequality*, and consequently, $$d(x,y)=\sqrt{\vert x-y \vert}$$ is a valid distance metric.**
+
+$$\blacksquare$$
 
 #### 1.1.5. Let $$d$$ be a metric on $$X$$. Determine all constants $$k$$ such that *(i)* $$kd$$, *(ii)* $$d+k$$ is a metric on $$X$$.
 #### 1.1.6. Show that $$d$$ in 1.1-6 satisfies the triangle inequality.
