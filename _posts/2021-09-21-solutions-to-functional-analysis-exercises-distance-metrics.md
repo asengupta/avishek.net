@@ -6,7 +6,7 @@ tags: ["Mathematics", "Proof", "Functional Analysis"]
 draft: false
 ---
 
-This post lists solutions to many of the Functional Analysis exercises in *Erwin Kreyszig's* **Introductory Functional Analysis with Applications**.
+This post lists solutions to many of the exercises in *Erwin Kreyszig's* **Introductory Functional Analysis with Applications**, as well as some assorted ones.
 
 #### 1.1.2. Does $$d(x,y)={(x-y)}^2$$ define a metric on the set of all real numbers?
 **Proof:**
@@ -119,8 +119,13 @@ Let $$\bar{d}(x,y)=d(x,y) + k$$ be a candidate metric on $$X$$. For it to be a v
 Putting all of these together, we get the condition that $$k=0, k \in \mathbb{R}$$.
 
 #### 1.1.6. Show that $$d$$ in 1.1-6 satisfies the triangle inequality.
+[TODO]
+
 #### 1.1.8. Show that another metric $$\bar{d}$$ on the set $$X$$ in 1.1-7 is defined by $$\bar{d}(x,y)=\int\limits_a^b |x(t) - y(t)| dt$$.
+[TODO]
+
 #### 1.1.9. Show that $$d$$ in 1.1-8 is a metric.
+[TODO]
 
 #### 1.1.10. **(Hamming Distance)** Let $$X$$ be the set of all ordered triples of zeros and ones. Show that $$X$$ consists of eight elements and a metric $$d$$ on $$X$$ is defined by $$d(x,y)=$$ number of places where $$x$$ and $$y$$ have different entries. (This space and similar spaces of $$n$$-tuples play a role in switching and automata theory and coding. $$d(x,y)$$ is called the *Hamming distance* between $$x$$ and $$y$$; cf. the paper by R. W. Hamming (1950) listed in Appendix 3.)
 
@@ -291,8 +296,137 @@ $$
 $$\blacksquare$$
 
 #### 1.1.14. **(Axioms of a metric)** (M1) to (M4) could be replaced by other axioms (without changine the definition). For instance, show that (M3) and (M4) could be obtained from (M2) and $$d(x,y) \leq d(z,x) + d(z,y)$$.
+
+For reference, the axioms **(M1)** to **(M4)** are as follows:
+
+- **(M1)** $$0 \leq d(x,y)<\infty, d(x,y)\in \mathbb{R}$$
+- **(M2)** $$d(x,y)=0$$ if and only if $$x=y$$
+- **(M3)** $$d(x,y)=d(y,x)$$
+- **(M4)** $$d(x,z) \leq d(x,y) + d(y,z)$$
+
+**Proof for (M3):**
+
+The allowed assumptions are:
+
+- **(A1)** $$d(x,y)=0$$ if and only if $$x=y$$
+- **(A2)** $$d(x,y) \leq d(z,x) + d(z,y)$$
+
+
+Set $$z=y$$ in **(A2)**, so that we get:
+
+$$
+\require{cancel}
+\begin{equation}
+d(x,y) \leq d(y,x) + \cancel{d(y,y)} \text{ (by (A1))} \\
+\Rightarrow d(x,y) \leq d(y,x)
+\label{eq:1-1-14-abs-1}
+\end{equation}
+$$
+
+From **(A2)**, we get $$d(y,x)$$ as:
+
+$$
+\begin{equation}
+d(y,x) \leq d(z,y) + d(z,x)
+\label{eq:1-1-14-y-x}
+\end{equation}
+$$
+
+Set $$z=x$$ in $$\eqref{eq:1-1-14-y-x}$$ again, so that we get:
+
+$$
+\begin{equation}
+d(y,x) \leq d(x,y) + \cancel{d(x,x)} \text{ (by (A1))} \\
+\Rightarrow d(y,x) \leq d(x,y) \\
+\Rightarrow d(x,y) \geq d(y,x)
+\label{eq:1-1-14-abs-2}
+\end{equation}
+$$
+
+Summarising the results of $$\eqref{eq:1-1-14-abs-1}$$ and $$\eqref{eq:1-1-14-abs-2}$$, we get:
+
+$$
+d(x,y) \leq d(y,x) \\
+d(x,y) \geq d(y,x)
+$$
+
+This implies that:
+
+$$
+\begin{equation}
+d(x,y)=d(y,x)
+\label{eq:1-1-14-symmetry}
+\end{equation}
+$$
+
+$$\blacksquare$$
+
+**Proof for (M4):**
+
+**(M4)** should immediately follow from $$\eqref{eq:1-1-14-symmetry}$$, since:
+
+$$
+d(x,y) \leq d(z,x) + d(z,y)
+\Rightarrow d(x,y) \leq d(x,z) + d(z,y)
+$$
+
+$$\blacksquare$$
+
 #### 1.1.15. Show that nonnegativity of a metric follows from (M2)to (M4).
+
+**Proof:**
+
+We have to prove that: $$d(x,y) \geq 0$$ follows from **(M2)** and **(M4)**.
+
+- **(M2)** $$d(x,y)=0$$ if and only if $$x=y$$
+- **(M3)** $$d(x,y)=d(y,x)$$
+- **(M4)** $$d(x,z) \leq d(x,y) + d(y,z)$$
+
+From the Triangle Inequality **(M4)**, we have:
+
+$$
+d(x,y) \leq d(x,z) + d(z,y)
+$$
+
+Set $$x=y$$, then we get:
+
+$$
+d(y,y) \leq d(y,z) + d(z,y) \\
+\Rightarrow \underbrace{\cancel{d(y,y)}}_\text{by (M2)} \leq d(y,z) + \underbrace{d(y,z)}_\text{by (M3)} \\
+\Rightarrow 2d(y,z) \geq 0 \\
+\Rightarrow d(y,z) \geq 0
+$$
+
+This proves **(M1)**.
+
+$$\blacksquare$$
 
 ## Assorted Proofs
 
 #### Prove that if $$S$$ is open, $$S'$$ is closed.
+
+**Proof:**
+
+We claim that if $$S$$ is open, $$S'$$ is closed.
+Thus, we'd like to prove that for a sequence $$(x_k) \in S'$$:
+
+$$
+\text{lim}_{k \rightarrow \infty} (x_k)= x_0 \in S'
+$$
+
+We will prove this by contradiction.
+
+Assume that $$x_0 \cancel{\in} S'$$. Then, $$x_0 \in S$$.
+
+Since $$S$$ is open, there exists an $$r>0$$, such that $$d(x_0,p)<r$$; that is, there exists an $$r$$-neighbourhood around $$x_0$$ in $$S$$.
+
+Choose $$\epsilon<r$$, then there exists $$N \in \mathbb{N}$$, such that for all $$k>N$$, $$d(x_k, x_0)<\epsilon<r$$.
+
+Thus, there exist $$x_k$$'s in the $$r$$-neighbourhood of $$x_0$$. **Thus, for $$k>N$$, $$x_k \in S$$, which contradicts our initial assumption that $$(x_k) \in S'$$.**
+
+Thus, x_0 \in S'.
+Since $$(x_k)$$ is an arbitrary sequence in $$S'$$, $$S'$$ contains the limit points of all sequences within it.
+
+**Hence $$S'$$ is closed.**
+
+$$\blacksquare$$
