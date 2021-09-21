@@ -249,8 +249,47 @@ $$
 
 $$\blacksquare$$
 
-
 #### 1.1.13. Using the triangle inequality, show that $$|d(x,z) - d(y,z)| \leq d(x,y)$$.
+
+**Proof:**
+
+We have to show that:
+
+$$
+|d(x,z) - d(y,z)| \leq d(x,y)
+$$
+
+We write the following Triangle Inequality:
+
+$$
+\begin{equation}
+d(x,z) \leq d(x,y) + d(y,z) \\
+\Rightarrow d(x,z) - d(y,z) \leq d(x,y)
+\label{eq:1-1-13-abs-1}
+\end{equation}
+$$
+
+The other Triangle Inequality we write is:
+
+$$
+\begin{equation}
+d(y,z) \leq d(y,x) + d(x,z) \\
+\Rightarrow d(y,z) - d(x,z) \leq d(y,x) \\
+\Rightarrow d(y,z) - d(x,z) \leq d(x,y) \text{(by the Symmetry property of a Distance Metric)}
+\label{eq:1-1-13-abs-2}
+\end{equation}
+$$
+
+Summarising the results of $$\eqref{eq:1-1-13-abs-1}$$ and $$\eqref{eq:1-1-13-abs-2}$$, we get:
+
+$$
+d(x,z) - d(y,z) \leq d(x,y) \\
+d(y,z) - d(x,z) \leq d(x,y) \\
+\Rightarrow \mathbf{|d(x,z) - d(y,z)| \leq d(x,y)}
+$$
+
+$$\blacksquare$$
+
 #### 1.1.14. **(Axioms of a metric)** (M1) to (M4) could be replaced by other axioms (without changine the definition). For instance, show that (M3) and (M4) could be obtained from (M2) and $$d(x,y) \leq d(z,x) + d(z,y)$$.
 #### 1.1.15. Show that nonnegativity of a metric follows from (M2)to (M4).
 
