@@ -118,15 +118,138 @@ Let $$\bar{d}(x,y)=d(x,y) + k$$ be a candidate metric on $$X$$. For it to be a v
 
 Putting all of these together, we get the condition that $$k=0, k \in \mathbb{R}$$.
 
-  
-
-
-
 #### 1.1.6. Show that $$d$$ in 1.1-6 satisfies the triangle inequality.
 #### 1.1.8. Show that another metric $$\bar{d}$$ on the set $$X$$ in 1.1-7 is defined by $$\bar{d}(x,y)=\int\limits_a^b |x(t) - y(t)| dt$$.
 #### 1.1.9. Show that $$d$$ in 1.1-8 is a metric.
+
 #### 1.1.10. **(Hamming Distance)** Let $$X$$ be the set of all ordered triples of zeros and ones. Show that $$X$$ consists of eight elements and a metric $$d$$ on $$X$$ is defined by $$d(x,y)=$$ number of places where $$x$$ and $$y$$ have different entries. (This space and similar spaces of $$n$$-tuples play a role in switching and automata theory and coding. $$d(x,y)$$ is called the *Hamming distance* between $$x$$ and $$y$$; cf. the paper by R. W. Hamming (1950) listed in Appendix 3.)
-#### 1.1.12. **(Triangle inequality)** The triangle inequality has several useful consequences. For instance, using (1), show that $$|d(x,y) - d(z,w)| \leq d(x,z) + d(y,w)$$.
+
+**Proof:**
+
+The set of all ordered triples of zeros and ones, forms a sequence of numbers $$X=[0,7], x_i \in X, x_i \in \mathbb{Z}$$ in their binary form. Thus, it is evident that the number of triples is $$2^3=8$$.
+
+Let $$a,b,c \in {0,1}$$, then each number in this set, can be represented as $$x_i=a+2b+4c$$. Then the suggested distance metric is:
+
+$$
+d(x,y)=|a_x-a_y|+|b_x-b_y|+|c_x-c_y|
+$$
+
+Let $$x_1$$, $$x_2$$, $$x_3$$ be defined as follows:
+
+$$
+x=a_x+2b_x+4c_x \\
+y=a_y+2b_y+4c_y \\
+z=a_z+2b_z+4c_z
+$$
+
+$$
+\begin{align}
+d(x,z) &= |a_x-a_z|+|b_x-b_z|+|c_x-c_z| \\
+&=|a_x-a_y+a_y-a_z|+|b_x-b_y+b_y-b_z|+|c_x-c_y+c_y-c_z|
+\end{align}
+$$
+
+Now we have the following inequalities:
+
+$$
+|a_x-a_y+a_y-a_z| \leq |a_x-a_y|+|a_y-a_z| \\
+|b_x-b_y+b_y-b_z| \leq |b_x-b_y|+|b_y-b_z| \\
+|c_x-c_y+c_y-c_z| \leq |c_x-c_y|+|c_y-c_z|
+$$
+
+Summing up these inequalities, and noting that the LHS resolves to $$d(x,z)$$, we get:
+
+$$
+d(x,z) \leq |a_x-a_y|+|a_y-a_z| + |b_x-b_y|+|b_y-b_z| + |c_x-c_y|+|c_y-c_z| \\
+\Rightarrow d(x,z) \leq (|a_x-a_y|+|b_x-b_y|+|c_x-c_y|) + (|a_y-a_z|+|b_y-b_z|+|c_y-c_z|) \\
+\Rightarrow d(x,z) \leq d(x,y) + d(y,z)
+$$
+
+**Thus, this proves the Triangle Inequality for the Hamming Distance as a metric.**
+
+$$\blacksquare$$
+
+#### 1.1.12. **(Triangle inequality)** The triangle inequality has several useful consequences. For instance, using the generalised triangle inequality, show that $$|d(x,y) - d(z,w)| \leq d(x,z) + d(y,w)$$.
+
+We write the two following triangle inequalities. One involves $$x$$, $$y$$, $$z$$. The other one involves $$w$$, $$y$$, $$z$$.
+
+$$
+d(x,y) \leq d(x,z) + d(z,y)
+$$
+
+$$
+\begin{equation}
+d(z,y) \leq d(z,w) + d(w,y)
+\label{eq:1-1-12-1}
+\end{equation}
+$$
+
+Adding $$d(x,z)$$ to $$\eqref{eq:1-1-12-1}$$, we get:
+
+$$
+d(x,z) + d(z,y) \leq d(x,z) + d(z,w) + d(w,y)
+$$
+
+Thus, we have:
+
+$$
+d(x,y) \leq d(x,z) + d(z,y) \leq  d(x,z) + d(z,w) + d(w,y) \\
+\Rightarrow d(x,y) \leq  d(x,z) + d(z,w) + d(w,y) \\
+\Rightarrow d(x,y) \leq  d(x,z) + d(z,w) + d(y,w)  \text{(by the Symmetry property of a Distance Metric)}
+$$
+
+$$
+\begin{equation}
+d(x,y) - d(z,w) \leq  d(x,z) + d(w,y)
+\label{eq:1-1-12-abs-1}
+\end{equation}
+$$
+
+We write the two following triangle inequalities. One involves $$x$$, $$z$$, $$w$$. The other one involves $$x$$, $$y$$, $$w$$.
+
+$$
+d(z,w) \leq d(z,x) + d(x,w)
+$$
+
+$$
+\begin{equation}
+d(x,w) \leq d(x,y) + d(y,w)
+\label{eq:1-1-12-2}
+\end{equation}
+$$
+
+Adding $$d(z,x)$$ to $$\eqref{eq:1-1-12-2}$$, we get:
+
+$$
+d(z,x) + d(x,w) \leq d(z,x) + d(x,y) + d(y,w)
+$$
+
+Thus, we have:
+
+$$
+d(z,w) \leq d(z,x) + d(x,w) \leq  d(z,x) + d(x,y) + d(y,w) \\
+\Rightarrow d(z,w) \leq  d(z,x) + d(x,y) + d(y,w) \\
+\Rightarrow d(z,w) \leq  d(x,z) + d(x,y) + d(y,w)  \text{(by the Symmetry property of a Distance Metric)}
+$$
+
+$$
+\begin{equation}
+d(z,w) - d(x,y) \leq  d(z,x) + d(y,w)
+\label{eq:1-1-12-abs-2}
+\end{equation}
+$$
+
+Summarising $$\eqref{eq:1-1-12-abs-1}$$ and $$\eqref{eq:1-1-12-abs-2}$$, we get:
+
+$$
+d(x,y) - d(z,w) \leq  d(x,z) + d(y,w) \\
+d(z,w) - d(x,y) \leq  d(x,z) + d(y,w) \\
+\Rightarrow \mathbf{ |d(x,y) - d(z,w)| \leq d(x,z) + d(y,w) }
+$$
+
+$$\blacksquare$$
+
+
 #### 1.1.13. Using the triangle inequality, show that $$|d(x,z) - d(y,z)| \leq d(x,y)$$.
 #### 1.1.14. **(Axioms of a metric)** (M1) to (M4) could be replaced by other axioms (without changine the definition). For instance, show that (M3) and (M4) could be obtained from (M2) and $$d(x,y) \leq d(z,x) + d(z,y)$$.
 #### 1.1.15. Show that nonnegativity of a metric follows from (M2)to (M4).
