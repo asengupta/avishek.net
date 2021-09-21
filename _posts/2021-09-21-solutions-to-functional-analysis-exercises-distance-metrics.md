@@ -79,6 +79,49 @@ $$
 $$\blacksquare$$
 
 #### 1.1.5. Let $$d$$ be a metric on $$X$$. Determine all constants $$k$$ such that *(i)* $$kd$$, *(ii)* $$d+k$$ is a metric on $$X$$.
+
+**(i) Proof:**
+
+Let $$\bar{d}(x,y)=kd(x,y)$$ be a candidate metric on $$X$$. For it to be a valid distance metric, it must satisfy the four axioms of a metric, i.e.:
+
+- $$\bar{d}(x,y)>0$$ if $$x \neq y$$: For this to hold for $$x \neq y$$, we must have $$k>0, k \in \mathbb{R}$$.
+- $$\bar{d}(x,y)=0$$ if and only if $$x=y$$: For this to hold, we can have $$k \in \mathbb{R}$$.
+- $$\bar{d}(x,y)=\bar{d}(y,x)$$: For this to hold, we can have $$k \in \mathbb{R}$$.
+- $$\bar{d}(x,z) \leq \bar{d}(x,y) + \bar{d}(y,z)$$: For this, if we multiply the original, valid Triangle Inequality by $$k$$ on both sides, we have the following:
+  
+  $$
+  kd(x,z) \leq k[d(x,y) + d(y,z)] \\
+  \Rightarrow kd(x,z) \leq kd(x,y) + kd(y,z) \\
+  \Rightarrow \bar{d}(x,z) \leq \bar{d}(x,y) + \bar{d}(y,z)
+  $$
+
+  proving that the **Triangle Inequality** holds for $$\bar{d}$$ for any $$k \in \mathbb{R}$$.
+
+Putting all of these together, we get the condition that $$k>0, k \in \mathbb{R}$$.
+
+**(ii) Proof:**
+
+Let $$\bar{d}(x,y)=d(x,y) + k$$ be a candidate metric on $$X$$. For it to be a valid distance metric, it must satisfy the four axioms of a metric, i.e.:
+
+- $$\bar{d}(x,y)>0$$ if $$x \neq y$$: For this to hold for $$x \neq y$$, we must have $$k>0, k \in \mathbb{R}$$.
+- $$\bar{d}(x,y)=0$$ if and only if $$x=y$$: For this to hold, we must have $$d(x,y)+k=0$$. Since $$d(x,y)=0$$ already, $$k=0, k \in \mathbb{R}$$.
+- $$\bar{d}(x,y)=\bar{d}(y,x)$$: For this to hold, we can have $$k \in \mathbb{R}$$.
+- $$\bar{d}(x,z) \leq \bar{d}(x,y) + \bar{d}(y,z)$$: For this, we can note the following:
+  
+  $$
+  d(x,z) + k \leq k[d(x,y) + d(y,z)] + 2k \\
+  \Rightarrow d(x,z) + k \leq [d(x,y) + k] + [d(y,z) + k] \\
+  \Rightarrow \bar{d}(x,z) \leq \bar{d}(x,y) + \bar{d}(y,z)
+  $$
+
+  proving that the **Triangle Inequality** holds for $$\bar{d}$$ for any $$k \in \mathbb{R}$$.
+
+Putting all of these together, we get the condition that $$k=0, k \in \mathbb{R}$$.
+
+  
+
+
+
 #### 1.1.6. Show that $$d$$ in 1.1-6 satisfies the triangle inequality.
 #### 1.1.8. Show that another metric $$\bar{d}$$ on the set $$X$$ in 1.1-7 is defined by $$\bar{d}(x,y)=\int\limits_a^b |x(t) - y(t)| dt$$.
 #### 1.1.9. Show that $$d$$ in 1.1-8 is a metric.
