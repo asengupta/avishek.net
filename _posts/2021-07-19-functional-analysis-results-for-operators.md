@@ -2,7 +2,7 @@
 title: "Functional Analysis: Norms, Operators, and Some Theorems"
 author: avishek
 usemathjax: true
-tags: ["Mathematics", "Theory", "Operator Theory", "Functional Analysis"]
+tags: ["Mathematics", "Theory", "Operator Theory", "Functional Analysis", "Pure Mathematics"]
 draft: false
 ---
 This article expands the groundwork laid in [Kernel Functions: Functional Analysis and Linear Algebra Preliminaries]({% post_url 2021-07-17-kernel-functions-functional-analysis-preliminaries %}) to discuss some more properties and proofs for some of the properties of functions that we will use in future discussions on **Kernel Methods** in Machine Learning, including (but not restricted to) the construction of **Reproducing Kernel Hilbert Spaces**. 

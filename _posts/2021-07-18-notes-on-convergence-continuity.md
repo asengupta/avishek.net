@@ -2,7 +2,7 @@
 title: "Functional and Real Analysis Notes"
 author: avishek
 usemathjax: true
-tags: ["Mathematics", "Theory", "Notes", "Functional Analysis"]
+tags: ["Mathematics", "Theory", "Notes", "Functional Analysis", "Pure Mathematics"]
 draft: false
 ---
 

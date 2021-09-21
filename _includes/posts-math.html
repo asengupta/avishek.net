@@ -1,0 +1,16 @@
+<h1>Pure Mathematics</h1>
+
+<ul>
+  {% for post in site.posts %}
+    {% if post.tags contains 'Pure Mathematics' and post.draft == false %}
+      {% assign author = site.authors | where: 'short_name', post.author | first %}
+        <li>
+          <h2><a href="{{ post.url }}">{{ post.title }}</a></h2>
+          <i>{{ post.date | date: "%-d %B %Y" }}</i>
+          <br></br>
+          {{ post.excerpt }}
+          <hr/>
+        </li>
+    {% endif %}
+  {% endfor %}
+</ul>

@@ -2,7 +2,7 @@
 title: "Real Analysis: Patterns for Proving Irrationality of Square Roots"
 author: avishek
 usemathjax: true
-tags: ["Real Analysis", "Mathematics", "Proof"]
+tags: ["Real Analysis", "Mathematics", "Proof", "Pure Mathematics"]
 ---
 ld
 Continuing on my journey through **Real Analysis**, we will focus here on common **proof patterns** which apply to **irrational square roots**.

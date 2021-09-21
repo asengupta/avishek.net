@@ -2,7 +2,7 @@
 title: "Solutions to Functional Analysis Exercises : Distance Metrics"
 author: avishek
 usemathjax: true
-tags: ["Mathematics", "Proof", "Functional Analysis"]
+tags: ["Mathematics", "Proof", "Functional Analysis", "Pure Mathematics"]
 draft: false
 ---
 

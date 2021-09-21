@@ -4,6 +4,8 @@
   link: /blog.html
 - name: Foundations of Machine Learning
   link: /ml-foundations.html
+- name: Mathematics
+  link: /maths.html
 - name: Foundations of Distributed Systems
   link: /distributed-systems-foundations.html
 - name: Engineering

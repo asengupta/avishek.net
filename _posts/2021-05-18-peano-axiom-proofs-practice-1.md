@@ -2,7 +2,7 @@
 title: "Real Analysis Proofs #1"
 author: avishek
 usemathjax: true
-tags: ["Real Analysis", "Mathematics", "Proof"]
+tags: ["Real Analysis", "Mathematics", "Proof", "Pure Mathematics"]
 ---
 
 Since I'm currently self-studying **Real Analysis**, I'll be listing down proofs I either initially had trouble understanding, or enjoyed proving, here. These are very mathematical posts, and are for personal documentation, mostly.
