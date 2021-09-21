@@ -2,7 +2,7 @@
 title: "Mercer's Theorem: Mathematical Preliminaries "
 author: avishek
 usemathjax: true
-tags: ["Mathematics", Theory", "Functional Analysis", "Mercer's Theorem"]
+tags: ["Mathematics", "Theory", "Functional Analysis", "Mercer's Theorem"]
 draft: false
 ---
 This article lays the ground for taking a second perspective to **Kernel Functions** using **Mercer's Theorem**. We discussed this theorem in [Functional Analysis: Norms, Operators, and Some Theorems]({% post_url 2021-07-19-functional-analysis-results-for-operators %}) briefly. We will see that Mercer's Theorem applies somewhat more directly to the characterisation of Kernel Functions, and there is no need for an elaborate construction, like we do for **Reproducing Kernel Hilbert Spaces**. Before we do that, this post will lay out the mathematical concepts necessary for understanding the proof behind Mercer's Theorem.
