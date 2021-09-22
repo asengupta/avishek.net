@@ -6,7 +6,7 @@ tags: ["Mathematics", "Proof", "Functional Analysis", "Pure Mathematics"]
 draft: false
 ---
 
-This post lists solutions to many of the exercises in *Erwin Kreyszig's* **Introductory Functional Analysis with Applications**, as well as some assorted ones.
+This post lists solutions to many of the exercises in the **Distance Metrics section 1.1** of *Erwin Kreyszig's* **Introductory Functional Analysis with Applications**, as well as some assorted ones.
 
 #### 1.1.2. Does $$d(x,y)={(x-y)}^2$$ define a metric on the set of all real numbers?
 **Proof:**

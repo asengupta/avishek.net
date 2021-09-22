@@ -95,11 +95,11 @@ $$
 = \sum_{i=1}^n \frac{ {(x_i-\mu_i)}^2}{\lambda_i^2}=C
 $$
 
-## Projection as Change of Basis
+## Projection as Change of Basis for an Orthonormal Basis
 
 We have already discussed projections of vectors onto other vectors in several places (for example, in [Gram-Schmidt Orthogonalisation]({% post_url 2021-05-27-gram-scmidt-orthogonalisation %})). We can look at vector projection through a different lens, namely as a change in coordinate system.
 
-Consider a vector $$B$$ in the standard basis of $$\mathbb{R}^2$$. We know that the standard basis of $$\mathbb{R}^2$$ is only one of an infinite number of bases we can use. Let us pick another basis $$X`$$ and $$Y'$$. They have to be linearly independent, though they need not be orthogonal to each other. Furthermore, we assume that they are unit vectors, i.e., $$\|X`\|=\|Y`\|=1$$.
+Consider a vector $$B$$ in the standard basis of $$\mathbb{R}^2$$. We know that the standard basis of $$\mathbb{R}^2$$ is only one of an infinite number of bases we can use. Let us pick another orthogonal basis $$X`$$ and $$Y'$$. They have to be linearly independent. Furthermore, we assume that they are unit vectors, i.e., $$\|X`\|=\|Y`\|=1$$.
 
 Then, the projection coefficient of $$B$$ onto $$X`$$ and $$Y`$$ are:
 
@@ -120,6 +120,26 @@ $$V_C=C^TV$$
 
 Analogous to the above example, we can recover the original vector $$V$$ by writing $$V=C^TVC$$.
 
+### Notes: Change of Basis for a Non-Orthogonal Basis
+
+The reason we chose an orthonormal basis for our illustration is because a change of basis of a non-orthogonal basis cannot be represented by a vertical projection. The situation qwith a non-orthogonal basis is shown below.
+
+![Non-orthogonal Basis Change](/assets/images/non-orthogonal-basis-change.png)
+
+In that case, we use the identity:
+
+$$
+B_1 v_1=B_2 v_2
+$$
+
+In the case of $$B_1$$ being the standard basis (identity matrix), we get:
+
+$$
+B_2 v_2=v_1 \\
+\Rightarrow v_2={B_2}^{-1} v_1
+$$
+
+You should notice that since in the special orthogonal case we discussed above, $${B_2}^{-1}={B_2}^T$$, and the above identity reduces to the vertical projection case we talked about above.
 
 ## Geometry of the Tilted Ellipsoid
 
