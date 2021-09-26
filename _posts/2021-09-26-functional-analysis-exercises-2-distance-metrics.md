@@ -106,7 +106,7 @@ The above follows from $$\eqref{eq:conjugate-exponents-property-1}$$.
 
 Let $$\alpha, \beta >0: \alpha, \beta \in \mathbb{R}$$, then in $$\mathbb{R}^2$$, $$\alpha\beta$$ describes the area of a rectangle. Let us plot the graph of $$u=t^{p-1}$$ for $$p=2$$, so that $$u=t$$.
 
-If we integrate $$\int\limits_0^\alpha u.dt=\int\limits_0^\alpha t^{p-1}.dt$$, and $$\int\limits_0^\alpha t.du=\int\limits_0^\alpha u^{q-1}.du$$, we can compute an area like this:
+If we integrate $$\displaystyle\int\limits_0^\alpha u.dt=\int\limits_0^\alpha t^{p-1}.dt$$, and $$\displaystyle\int\limits_0^\alpha t.du=\int\limits_0^\alpha u^{q-1}.du$$, we can compute an area like this:
 
 $$
 \begin{align}
@@ -159,6 +159,99 @@ which induces the distance metric between two sequences $$\xi, \eta \in \ell_p$$
 $$
 d(\xi,\eta)={\left(\sum\limits_{i=1}^\infty{|\xi_i-\eta_i|}^p\right)}^{\frac{1}{p}}
 $$
+
+Pick any $$\xi,\eta\in\ell^p$$.
+
+Let us pick any two corresponding terms in $$\xi$$ and $$\eta$$, and let $$\alpha=\vert\xi_i\vert$$ and $$\beta_i=\vert\eta\vert$$, since we cannot guarantee these terms will be positive.
+
+Then, from **Young's Inequality** $$\eqref{eq:youngs-inequality}$$, we get:
+
+
+$$
+|\xi_i||\eta_i| \leq \frac{ {|\xi_i|}^p}{p} + \frac{ {|\eta_i|}^q}{q} \\
+\Rightarrow |\xi_i\eta_i| \leq \frac{ {|\xi_i|}^p}{p} + \frac{ {|\eta_i|}^q}{q}
+$$
+
+Summing over all $$i$$, we get:
+
+$$
+\begin{equation}
+\displaystyle\sum\limits_{i=1}^\infty|\xi_i\eta_i| \leq \frac{\sum\limits_{i=1}^\infty{|\xi_i|}^p}{p} + \frac{\sum\limits_{i=1}^\infty{|\eta_i|}^q}{q}
+\label{eq:holders-youngs-inequality-application}
+\end{equation}
+$$
+
+What we'd like to do is prove that: $$\displaystyle\sum\limits_{i=1}^\infty\vert\xi_i\eta_i\vert \leq 1$$. The only identity immediately available is the conjugate exponent identity, namely:
+
+$$
+\frac{1}{p} + \frac{1}{q} = 1
+$$
+
+In order to be able to set the RHS of $$\eqref{eq:holders-youngs-inequality-application}$$, we need the following condition:
+
+$$
+\begin{equation}
+\displaystyle\sum\limits_{i=1}^\infty{ {\vert\xi_i\vert}^p}=\displaystyle\sum_{i=1}^\infty{ {\vert\eta_i\vert}^q}=1
+\label{eq:holders-unity-condition}
+\end{equation}
+$$
+
+Let us then assume $$\eqref{eq:holders-unity-condition}$$. Then, $$\eqref{eq:holders-youngs-inequality-application}$$ becomes:
+
+$$
+\begin{equation}
+\displaystyle\sum\limits_{i=1}^\infty|\xi_i\eta_i| \leq 1
+\label{eq:holders-less-than-unity-condition}
+\end{equation}
+$$
+
+We need to determine wha sort of $$\xi$$ and $$\eta$$ can satisfy this condition. Let's take $$\xi$$ as an example. We have:
+
+$$
+\xi=(\xi_1, \xi_2, \cdots)
+$$
+
+Remember the norm for $$\ell^p$$ spaces? Here it is again:
+
+$$
+\|\bullet\|={\left(\sum\limits_{i=1}^\infty{|\xi_i|}^p\right)}^{\frac{1}{p}}
+$$
+
+If we divide each term in $$\xi$$ by its norm:
+
+$$
+\begin{equation}
+\xi_i = \frac{\bar\xi_i}{ {\left(\sum\limits_{i=1}^\infty{|\bar{\xi_i}|}^p\right)}^{\frac{1}{p}}}
+\label{eq:holders-sequence-scale-factor}
+\end{equation}
+$$
+
+Then, from $$\eqref{eq:holders-unity-condition}$$, we get:
+
+$$
+\displaystyle\sum\limits_{i=1}^\infty{ {|\xi_i|}^p}=\frac{1}{ \sum\limits_{i=1}^\infty{|\bar{\xi_i}|}^p} \left({|\bar{\xi_1}|}^p + {|\bar{\xi_2}|}^p + \cdots\right) \\
+=\frac{\sum\limits_{i=1}^\infty{|\bar{\xi_i}|}^p}{\sum\limits_{i=1}^\infty{|\bar{\xi_i}|}^p}
+= 1
+$$
+
+which satisfies condition $$\eqref{eq:holders-unity-condition}$$, regardless of which sequence $$\bar{\xi}$$ we choose from $$\ell^p$$.
+
+Applying the same logic to $$\eta_i$$, and substituting $$\eqref{eq:holders-sequence-scale-factor}$$ into $$\eqref{eq:holders-less-than-unity-condition}$$, we get:
+
+$$
+\displaystyle\sum\limits_{i=1}^\infty |\bar\xi_i \bar\eta_i| \leq {\left(\displaystyle\sum\limits_{i=1}^\infty{ {|\bar\xi_i|}^p}\right)}^{\frac{1}{p}} \bullet {\left(\displaystyle\sum\limits_{i=1}^\infty{ {|\bar\eta_i|}^q}\right)}^{\frac{1}{q}}
+$$
+
+Removing the overbars from $$\bar\xi_i$$ $$\bar\eta_i$$ to indicate any two sequences in an $$\ell^p$$ space, we get:
+
+$$
+\begin{equation}
+\displaystyle\sum\limits_{i=1}^\infty |\xi_i \eta_i| \leq {\left(\displaystyle\sum\limits_{i=1}^\infty{ {|\xi_i|}^p}\right)}^{\frac{1}{p}} \bullet {\left(\displaystyle\sum\limits_{i=1}^\infty{ {|\eta_i|}^q}\right)}^{\frac{1}{q}}
+\label{eq:holders-inequality}
+\end{equation}
+$$
+
+The result $$\eqref{eq:holders-inequality}$$ is referred to as **Hölder's Inequality**. This will be used to prove **Minkowski's Inequality** next.
 
 ## Minkowski's Inequality
 
