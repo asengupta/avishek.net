@@ -6,7 +6,7 @@ tags: ["Mathematics", "Proof", "Functional Analysis", "Pure Mathematics"]
 draft: false
 ---
 
-This post lists solutions to many of the exercises in the **Distance Metrics section 1.1** of *Erwin Kreyszig's* **Introductory Functional Analysis with Applications**, as well as some assorted ones.
+This post lists solutions to many of the exercises in the **Distance Metrics section 1.2** of *Erwin Kreyszig's* **Introductory Functional Analysis with Applications**. This also includes proofs of **Hölder's Inequality** and **Minkowski's Inequality**.
 
 #### 1.2.1. Show that in 1.2-1 we can obtain another metric by replacing $$\frac{1}{2^i}$$ with $$\mu_i>0$$ such that $$\sum\mu_i$$ converges.
 #### 1.2.2. Using (6), show that the geometric mean of two positive numbers does not exceed the arithmetic mean.
@@ -63,3 +63,8 @@ $$
 $$
 \bar{d}(x,y)=max[d_1(x_1,y_1), d_1(x_2,y_2)]
 $$
+
+## Hölder's Inequality
+
+## Minkowski's Inequality
+
