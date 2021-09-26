@@ -201,3 +201,88 @@ The result $$\eqref{eq:holders-inequality}$$ is referred to as **Hölder's Inequ
 
 ## Minkowski's Inequality
 
+**Minkowski's Inequality** is a generalisation of the **Triangle Inequality**. As usual, we assume $$\xi, \eta \in \ell^p$$. We start with writing (for economy of notation):
+
+$$
+\omega_i=|\xi_i+\eta_i| \\
+\Rightarrow {\omega_i}^p={|\xi_i+\eta_i|}^p \\
+\Rightarrow {\omega_i}^p=\omega^{p-1}|\xi_i+\eta_i|
+$$
+
+Summing up over $$i$$, we get:
+
+$$
+\begin{equation}
+\displaystyle\sum\limits_{i=1}^\infty{\omega_i}^p = \displaystyle\sum\limits_{i=1}^\infty \omega^{p-1}|\xi_i+\eta_i|
+\label{eq:minkowski-separated-summed}
+\end{equation}
+$$
+
+Now applying the **Triangle Inequality** to the second term on the RHS of $$\eqref{eq:minkowski-separated-summed}$$, we get:
+
+$$
+\begin{equation}
+\displaystyle\sum\limits_{i=1}^\infty{\omega_i}^p = \displaystyle\sum\limits_{i=1}^\infty\omega^{p-1} \bullet \underbrace{|\xi_i+\eta_i|}_\text{Apply Triangle Inequality} \\
+\Rightarrow \displaystyle\sum\limits_{i=1}^\infty{\omega_i}^p \leq \displaystyle\sum\limits_{i=1}^\infty\omega^{p-1}(|\xi_i|+|\eta_i|) \\
+\Rightarrow \displaystyle\sum\limits_{i=1}^\infty{\omega_i}^p \leq \displaystyle\sum\limits_{i=1}^\infty\omega^{p-1} |\xi_i| + \displaystyle\sum\limits_{i=1}^\infty\omega^{p-1} |\eta_i| \\
+\label{eq:minkowski-separated-summed-inequality}
+\end{equation}
+$$
+
+Apply **Hölder's Inequality** $$\eqref{eq:holders-inequality}$$ to each term on the RHS individually in $$\eqref{eq:minkowski-separated-summed-inequality}$$, we have:
+
+$$
+\displaystyle\sum\limits_{i=1}^\infty\omega^{p-1} |\xi_i| \leq \displaystyle\sum\limits_{i=1}^\infty|\omega^{p-1} \xi_i| \leq {\left[\displaystyle\sum\limits_{i=1}^\infty{\left({|\omega_i|}^{p-1}\right)}^q\right]}^\frac{1}{q} {\left[\displaystyle\sum\limits_{i=1}^\infty{|\xi_i|}^p\right]}^\frac{1}{p} \\
+
+\displaystyle\sum\limits_{i=1}^\infty\omega^{p-1} |\xi_i| \leq \displaystyle\sum\limits_{i=1}^\infty|\omega^{p-1} \xi_i| \leq {\left[\displaystyle\sum\limits_{i=1}^\infty{\left({|\omega_i|}^{p-1}\right)}^q\right]}^\frac{1}{q} {\left[\displaystyle\sum\limits_{i=1}^\infty{|\eta_i|}^p\right]}^\frac{1}{p}
+$$
+
+Note that since $$p$$ and $$q$$ are conjugate exponents, we can write:
+
+$$
+p=pq-q
+$$
+
+Then the above inequalities simplify to:
+
+$$
+\begin{equation}
+\displaystyle\sum\limits_{i=1}^\infty\omega^{p-1} |\xi_i| \leq \displaystyle\sum\limits_{i=1}^\infty|\omega^{p-1} \xi_i| \leq {\left[\displaystyle\sum\limits_{i=1}^\infty{|\omega_i|}^p\right]}^\frac{1}{q} {\left[\displaystyle\sum\limits_{i=1}^\infty{|\xi_i|}^p\right]}^\frac{1}{p}
+\label{eq:minkowski-holder-inequality-1}
+\end{equation}
+$$
+
+$$
+\begin{equation}
+\displaystyle\sum\limits_{i=1}^\infty\omega^{p-1} |\xi_i| \leq \displaystyle\sum\limits_{i=1}^\infty|\omega^{p-1} \xi_i| \leq {\left[\displaystyle\sum\limits_{i=1}^\infty|{\omega_i|}^p\right]}^\frac{1}{q} {\left[\displaystyle\sum\limits_{i=1}^\infty{|\eta_i|}^p\right]}^\frac{1}{p}
+\label{eq:minkowski-holder-inequality-2}
+\end{equation}
+$$
+
+Applying $$\eqref{eq:minkowski-holder-inequality-1}$$ and $$\eqref{eq:minkowski-holder-inequality-2}$$ to $$\eqref{eq:minkowski-separated-summed-inequality}$$, we get:
+
+$$
+\displaystyle\sum\limits_{i=1}^\infty{\omega_i}^p \leq 
+{\left[\displaystyle\sum\limits_{i=1}^\infty{|\omega_i|}^p\right]}^\frac{1}{q} {\left[\displaystyle\sum\limits_{i=1}^\infty{|\xi_i|}^p\right]}^\frac{1}{p}
++
+{\left[\displaystyle\sum\limits_{i=1}^\infty|{\omega_i|}^p\right]}^\frac{1}{q} {\left[\displaystyle\sum\limits_{i=1}^\infty{|\eta_i|}^p\right]}^\frac{1}{p} \\
+
+\displaystyle\sum\limits_{i=1}^\infty{\omega_i}^p \leq
+{\left[\displaystyle\sum\limits_{i=1}^\infty{|\omega_i|}^p\right]}^\frac{1}{q} \left({\left[\displaystyle\sum\limits_{i=1}^\infty{|\xi_i|}^p\right]}^\frac{1}{p} + {\left[\displaystyle\sum\limits_{i=1}^\infty{|\eta_i|}^p\right]}^\frac{1}{p}\right) \\
+
+{\left[\displaystyle\sum\limits_{i=1}^\infty{|\omega_i|}^p\right]}^{1-\frac{1}{q}} \leq
+ {\left[\displaystyle\sum\limits_{i=1}^\infty{|\xi_i|}^p\right]}^\frac{1}{p} + {\left[\displaystyle\sum\limits_{i=1}^\infty{|\eta_i|}^p\right]}^\frac{1}{p}
+$$
+
+Again, noting from the conjugate exponent identity that $$1-\frac{1}{q}=\frac{1}{p}$$, we get:
+
+$$
+\begin{equation}
+{\left[\displaystyle\sum\limits_{i=1}^\infty{|\omega_i|}^p\right]}^\frac{1}{p} \leq
+{\left[\displaystyle\sum\limits_{i=1}^\infty{|\xi_i|}^p\right]}^\frac{1}{p} + {\left[\displaystyle\sum\limits_{i=1}^\infty{|\eta_i|}^p\right]}^\frac{1}{p}
+\label{eq:minkowski-inequality}
+\end{equation}
+$$
+
+$$\eqref{eq:minkowski-inequality}$$ is referred to as **Minkowski's Inequality**.
+
