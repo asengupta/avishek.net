@@ -3,7 +3,7 @@ title: "Functional Analysis Exercises 2 : Distance Metrics"
 author: avishek
 usemathjax: true
 tags: ["Mathematics", "Proof", "Functional Analysis", "Pure Mathematics"]
-draft: false
+draft: true
 ---
 
 This post lists solutions to many of the exercises in the **Distance Metrics section 1.2** of *Erwin Kreyszig's* **Introductory Functional Analysis with Applications**.
