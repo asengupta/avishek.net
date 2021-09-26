@@ -13,10 +13,9 @@ Continuing my self-study of **Functional Analysis**, this post describes proofs 
 
 The paths of the proofs closely follow *Erwin Kreyszig's* **Introductory Functional Analysis with Applications**.
 
-
 ## Young's Inequality
 
-We begin with the idea of conjugate exponents, which we call $$p$$ and $$q$$, related like so:
+We begin with the idea of **conjugate exponents**, which we call $$p$$ and $$q$$, related like so:
 
 $$
 \frac{1}{p} + \frac{1}{q} = 1 \\
@@ -152,7 +151,7 @@ $$
 \end{equation}
 $$
 
-We need to determine wha sort of $$\xi$$ and $$\eta$$ can satisfy this condition. Let's take $$\xi$$ as an example. We have:
+We need to determine what sort of $$\xi$$ and $$\eta$$ can satisfy this condition. Let's take $$\xi$$ as an example. We have:
 
 $$
 \xi=(\xi_1, \xi_2, \cdots)
