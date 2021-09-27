@@ -199,12 +199,12 @@ $$
 
 The result $$\eqref{eq:holders-inequality}$$ is referred to as **Hölder's Inequality**.
 
-In the case of $$p=2$$, $$q=2$$; this special case is called the **Cauchy-Schwartz Inequality**, which is:
+In the case of $$p=2$$, $$q=2$$; this special case is called the **Cauchy-Schwarz Inequality**, which is:
 
 $$
 \begin{equation}
 \displaystyle\sum\limits_{i=1}^\infty |\xi_i \eta_i| \leq \sqrt{\left(\displaystyle\sum\limits_{i=1}^\infty{ {|\xi_i|}^2}\right) \bullet \left(\displaystyle\sum\limits_{i=1}^\infty{ {|\eta_i|}^2}\right)}
-\label{eq:cauchy-schwartz-inequality}
+\label{eq:cauchy-schwarz-inequality}
 \end{equation}
 $$
 

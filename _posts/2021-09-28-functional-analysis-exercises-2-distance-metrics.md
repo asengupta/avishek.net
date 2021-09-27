@@ -105,6 +105,9 @@ This proves that the Geometric Mean of two numbers cannot exceed their Arithmeti
 
 #### 1.2.3. Show that the Cauchy-Schwarz inequality (11) implies
   $${(|\xi| + \cdots + |\xi|)}^2 \leq n ({|\xi|}^2 + \cdots + {|\xi|}^2)$$.
+
+**Proof**: The Cauchy-Schwarz
+
 #### 1.2.4. (Space $$\ell^p$$) Find a sequence which converges to 0, but is not in any space $$\ell^p$$, where $$1\leq p<+\infty$$.
 #### 1.2.5. Find a sequence $$x$$ which is in $$\ell^p$$ with p>1 but $$\require{cancel} x\cancel{\in}\ell^1$$.
 #### 1.2.6. **(Diameter, bounded set)** The diameter $$\delta(A)$$ of a nonempty set A in a  metric space $$(X, d)$$ is defined to be $$\delta(A) = \text{sup} d(x,y)$$. A is said to be bounded if $$\delta(A)<\infty$$. Show that $$A\subset B$$ implies $$\delta(A)\leq \delta(B)$$.
