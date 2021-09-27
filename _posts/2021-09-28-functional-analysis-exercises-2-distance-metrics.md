@@ -103,10 +103,28 @@ $$
 
 This proves that the Geometric Mean of two numbers cannot exceed their Arithmetic Mean.
 
-#### 1.2.3. Show that the Cauchy-Schwarz inequality (11) implies
-  $${(|\xi| + \cdots + |\xi|)}^2 \leq n ({|\xi|}^2 + \cdots + {|\xi|}^2)$$.
+$$\blacksquare$$
 
-**Proof**: The Cauchy-Schwarz
+#### 1.2.3. Show that the Cauchy-Schwarz inequality (11) implies
+  $${(|\xi_1| + \cdots + |\xi_n|)}^2 \leq n ({|\xi_1|}^2 + \cdots + {|\xi_n|}^2)$$.
+
+**Proof**: The Cauchy-Schwarz Inequality is :
+
+$$
+\displaystyle\sum_{i=1}^n |x_i y_i| \leq {\left( \displaystyle\sum_{i=1}^n {|x_i|}^2 \right)}^\frac{1}{2}
+\bullet
+{\left( \displaystyle\sum_{i=1}^n {|y_i|}^2 \right)}^\frac{1}{2}
+$$
+
+Set $$y_i=1$$, so that we get:
+
+$$
+\displaystyle\sum_{i=1}^n |x_i| \leq {\left( \displaystyle\sum_{i=1}^n {|x_i|}^2 \right)}^\frac{1}{2} \\
+\Rightarrow {\left(\displaystyle\sum_{i=1}^n |x_i|\right)}^2 \leq \displaystyle\sum_{i=1}^n {|x_i|}^2 \\
+\Rightarrow {(|x_1| + \cdots + |x_n|)}^2 \leq n ({|x_1|}^2 + \cdots + {|x_n|}^2)
+$$
+
+$$\blacksquare$$
 
 #### 1.2.4. (Space $$\ell^p$$) Find a sequence which converges to 0, but is not in any space $$\ell^p$$, where $$1\leq p<+\infty$$.
 #### 1.2.5. Find a sequence $$x$$ which is in $$\ell^p$$ with p>1 but $$\require{cancel} x\cancel{\in}\ell^1$$.
