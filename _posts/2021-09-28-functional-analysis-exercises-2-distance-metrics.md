@@ -127,7 +127,44 @@ $$
 $$\blacksquare$$
 
 #### 1.2.4. (Space $$\ell^p$$) Find a sequence which converges to 0, but is not in any space $$\ell^p$$, where $$1\leq p<+\infty$$.
+
+**Answer:**
+
+$$(x_k)=\frac{1}{n}$$ is the key to creating sequences which converge, but whose corresponding series are not summable. The issue is that you cannot just use $$(x_k)=\frac{1}{n}$$ because for $$p>1$$, we have $$S_k=\displaystyle\sum {\left(\frac{1}{n}\right)}^p$$ will converge, and obviously we do not want that.
+The trick is to introduce a numerator which will clearly show divergence of the series (using the Ratio Test for example), but then write the series as the **numerator** number of $$\frac{1}{n}$$ terms.
+
+Let us take a simple example: consider the sequence $$(x_k)=\frac{n+1}{n}$$. The series is then written as:
+
+$$
+x_k=\{2, \frac{3}{2}, \frac{4}{3}, \frac{5}{4}, \frac{6}{5}, \cdots \}
+$$
+
+But the above could also be written like so:
+
+$$
+y_k=\{\underbrace{\frac{1}{1}, \frac{1}{1}}_{\text{Two }1}, \underbrace{\frac{1}{2}, \frac{1}{2}, \frac{1}{2}}_{\text{Three }\frac{1}{2}}, \underbrace{\frac{1}{3}, \frac{1}{3}, \frac{1}{3}, \frac{1}{3}}_{\text{Four }\frac{1}{3}}, \underbrace{\frac{1}{4}, \frac{1}{4}, \frac{1}{4}, \frac{1}{4}, \frac{1}{4}}_{\text{Five }\frac{1}{4}}, \cdots \}
+$$
+
+This shows that the limit of this sequence is zero, even though the "parent" series is clearly not summable. Breaking up the terms of a divergent series to create a new sequence which has a finite limit is the key idea here.
+
+However, in the above example, the choice of numerator $$n+1$$ does not pass the Ratio Test for divergence, because $$\frac{x_{k+1}}{x_k}=\frac{n^2+2n}{n^2+2n+1}<1$$. We will thus need a bigger numerator. An additive factor will not do, because for all $$K>0$$, we will get $$\frac{x_{k+1}}{x_k}=\frac{2n}{n+1}>1$$, for $$n>1$$, which is always going to be the case for our series..
+
+An exponential factor like $$2^n$$ will work as the numberator, because then we have $$\frac{x_{k+1}}{x_k}=\frac{n^2+2n}{n^2+2n+1}<1$$
+**Note:** $$(n+1)$$ is not the only choice for a numerator. Anything that is clearly bigger than the denominator should do. $$2^n$$, for example is also a valid choice. The choice will affect how many $$\frac{1}{n}$$ terms will appear from each term in the original series.
+
+$$
+z_k=\{\underbrace{\frac{1}{1}, \frac{1}{1}}_{\text{Two }1}, \underbrace{\frac{1}{2}, \frac{1}{2}, \frac{1}{2}, \frac{1}{2}}_{\text{Four }\frac{1}{2}}, \underbrace{\frac{1}{3}, \frac{1}{3}, \frac{1}{3}, \frac{1}{3}, \frac{1}{3}, \frac{1}{3}, \frac{1}{3}, \frac{1}{3}}_{\text{Eight }\frac{1}{3}}, \cdots \}
+$$
+
+$$z_k$$ is an example of a sequence which converges to zero, but whose series diverges for all $$p \geq 1$$.
+
 #### 1.2.5. Find a sequence $$x$$ which is in $$\ell^p$$ with p>1 but $$\require{cancel} x\cancel{\in}\ell^1$$.
+
+**Answer:**
+
+$$(x_i)=\frac{1}{i}$$ converges to 0.
+$$\displaystyle\sum_{i=1}^\infty{(\frac{1}{i})}^p$$ diverges to $$\infty$$ for $$p\leq 1$$, and thus violates the condition for a sequence in $$\ell^p$$ spaces, i.e. $$\displaystyle\sum_{i=1}^\infty{\vert\xi_i\vert}^p<\infty$$ for $$p \leq 1$$.
+
 #### 1.2.6. **(Diameter, bounded set)** The diameter $$\delta(A)$$ of a nonempty set A in a  metric space $$(X, d)$$ is defined to be $$\delta(A) = \text{sup} d(x,y)$$. A is said to be bounded if $$\delta(A)<\infty$$. Show that $$A\subset B$$ implies $$\delta(A)\leq \delta(B)$$.
 #### 1.2.7. Show that $$\delta(A)=0$$ *(cf. Prob. 6)* if and only if A consists of a single point.
 #### 1.2.8. **(Distance between sets)** The distance $$D(A,B)$$ between two nonempty subsets $$A$$ and $$B$$ of a metric space $$(X, d)$$ is defined to be:
