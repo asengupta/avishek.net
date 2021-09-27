@@ -167,14 +167,14 @@ $$\displaystyle\sum_{i=1}^\infty{(\frac{1}{i})}^p$$ diverges to $$\infty$$ for $
 
 #### 1.2.6. **(Diameter, bounded set)** The diameter $$\delta(A)$$ of a nonempty set A in a  metric space $$(X, d)$$ is defined to be $$\delta(A) = \text{sup } d(x,y)$$. A is said to be bounded if $$\delta(A)<\infty$$. Show that $$A\subset B$$ implies $$\delta(A)\leq \delta(B)$$.
 
-**Proof**
+**Proof:**
 
 By the definition of set membership, we can say that if $$x,y \in A$$, and $$A\subset B$$, then $$x,y \in B$$.
 
 Consider the set of all distances in $$A$$ and $$B$$, like so:
 
 $$
-\Delta_A={d(x,y): x,y \in A}
+\Delta_A={d(x,y): x,y \in A} \\
 \Delta_B={d(u,v): u,v \in B}
 $$
 
@@ -202,7 +202,7 @@ $$
 \end{equation}
 $$
 
-Putting $$\eqrefeq:diameter-A-in-DeltaB{}$$ and $$\eqref{eq:diameter-B-sup-DeltaB}$$ together, implies that:
+Putting $$\eqref{eq:diameter-A-in-DeltaB}$$ and $$\eqref{eq:diameter-B-sup-DeltaB}$$ together, implies that:
 
 $$
 \delta(A) \leq \delta(B)
@@ -213,6 +213,32 @@ $$
 $$\blacksquare$$
 
 #### 1.2.7. Show that $$\delta(A)=0$$ *(cf. Prob. 6)* if and only if A consists of a single point.
+
+**Proof:**
+
+Assume $$A=\{x\}$$.  
+Then the set $$\Delta_A={d(x,x)}$$.  
+Therefore $$\delta(A)=\text{sup} \Delta_A=d(x,x)$$.
+
+By the definition of a distance metric, $$d(x,x)=0$$.
+
+Thus, we get:
+
+$$
+\delta(A)=0
+$$
+
+For the "only if" side of implication, Let $$\delta(A)=\text{sup } \Delta_A=0$$.
+
+By the definition of a distance metric, $$d(x,y)\geq 0$$.  
+Thus, all other elements of $$\Delta_A$$ have to be zero. This implies there is only one element in $$\Delta_A={0}$$.  
+Therefore, distances between all points $$x \in A$$ must be zero.  
+
+By the definition of a distance metric, $$d(x,y)=0$$ if $$x=y$$.
+
+Therefore, all points must be equal to each other, i.e., there is only one point in $$A$$.
+
+$$\blacksquare$$
 
 #### 1.2.8. **(Distance between sets)** The distance $$D(A,B)$$ between two nonempty subsets $$A$$ and $$B$$ of a metric space $$(X, d)$$ is defined to be:
 
