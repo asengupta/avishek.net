@@ -84,6 +84,24 @@ $$\blacksquare$$
 
 #### 1.2.2. Using (6), show that the geometric mean of two positive numbers does not exceed the arithmetic mean.
 
+**Proof**:
+From the identity involving conjugate exponents, we know that:
+
+$$
+\alpha \beta \leq \frac{\alpha^p}{p} + \frac{\beta^q}{q} \\
+\Rightarrow 2\alpha \beta \leq \frac{\alpha^p}{p} + \frac{\beta^q}{q} + \alpha \beta
+$$
+
+Set $$p=2$$, then we get $$q=2$$, so that we get:
+
+$$
+2\alpha \beta \leq \frac{\alpha^2}{2} + \frac{\beta^2}{2} + \alpha \beta \\
+\Rightarrow 4\alpha \beta \leq \alpha^2 + \beta^2 + 2\alpha \beta \\
+\Rightarrow \alpha \beta \leq {\left(\frac{\alpha + \beta}{2}\right)}^2 \\
+\Rightarrow \sqrt{\alpha \beta} \leq \frac{\alpha + \beta}{2}
+$$
+
+This proves that the Geometric Mean of two numbers cannot exceed their Arithmetic Mean.
 
 #### 1.2.3. Show that the Cauchy-Schwarz inequality (11) implies
   $${(|\xi| + \cdots + |\xi|)}^2 \leq n ({|\xi|}^2 + \cdots + {|\xi|}^2)$$.
