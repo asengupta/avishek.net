@@ -165,8 +165,55 @@ $$z_k$$ is an example of a sequence which converges to zero, but whose series di
 $$(x_i)=\frac{1}{i}$$ converges to 0.
 $$\displaystyle\sum_{i=1}^\infty{(\frac{1}{i})}^p$$ diverges to $$\infty$$ for $$p\leq 1$$, and thus violates the condition for a sequence in $$\ell^p$$ spaces, i.e. $$\displaystyle\sum_{i=1}^\infty{\vert\xi_i\vert}^p<\infty$$ for $$p \leq 1$$.
 
-#### 1.2.6. **(Diameter, bounded set)** The diameter $$\delta(A)$$ of a nonempty set A in a  metric space $$(X, d)$$ is defined to be $$\delta(A) = \text{sup} d(x,y)$$. A is said to be bounded if $$\delta(A)<\infty$$. Show that $$A\subset B$$ implies $$\delta(A)\leq \delta(B)$$.
+#### 1.2.6. **(Diameter, bounded set)** The diameter $$\delta(A)$$ of a nonempty set A in a  metric space $$(X, d)$$ is defined to be $$\delta(A) = \text{sup } d(x,y)$$. A is said to be bounded if $$\delta(A)<\infty$$. Show that $$A\subset B$$ implies $$\delta(A)\leq \delta(B)$$.
+
+**Proof**
+
+By the definition of set membership, we can say that if $$x,y \in A$$, and $$A\subset B$$, then $$x,y \in B$$.
+
+Consider the set of all distances in $$A$$ and $$B$$, like so:
+
+$$
+\Delta_A={d(x,y): x,y \in A}
+\Delta_B={d(u,v): u,v \in B}
+$$
+
+Since $$x,y\in A \Rightarrow x,y \in B$$, all $$d(x,y):x,y \in A$$ must exist in \Delta_B. Thus, we have:
+
+$$
+\Delta_A \subset \Delta_B
+$$
+
+Thus, $$\delta(A)=\text{sup } \Delta_A$$ exists in $$\Delta_B$$, i.e.,
+
+$$
+\begin{equation}
+\delta(A) \in \Delta_B
+\label{eq:diameter-A-in-DeltaB}
+\end{equation}
+$$
+
+By the definition of the diameter of a bounded set, we have:
+
+$$
+\begin{equation}
+\delta_B=\text{sup } \Delta_B
+\label{eq:diameter-B-sup-DeltaB}
+\end{equation}
+$$
+
+Putting $$\eqrefeq:diameter-A-in-DeltaB{}$$ and $$\eqref{eq:diameter-B-sup-DeltaB}$$ together, implies that:
+
+$$
+\delta(A) \leq \delta(B)
+$$
+
+**Verbal Reasoning**: $$\delta(A)$$ is *a* member of $$B$$, while $$\delta(B)$$ is the least upper bound of $$B$$, thus $$\delta(A)$$ has to be less than or, at the most, equal to this least upper bound $$\delta(B)$$.
+
+$$\blacksquare$$
+
 #### 1.2.7. Show that $$\delta(A)=0$$ *(cf. Prob. 6)* if and only if A consists of a single point.
+
 #### 1.2.8. **(Distance between sets)** The distance $$D(A,B)$$ between two nonempty subsets $$A$$ and $$B$$ of a metric space $$(X, d)$$ is defined to be:
 
 $$D(A,B) = \text{inf } d(a, b)$$.
