@@ -55,10 +55,10 @@ Let $$\alpha, \beta >0: \alpha, \beta \in \mathbb{R}$$, then in $$\mathbb{R}^2$$
 If we integrate $$\displaystyle\int\limits_0^\alpha u.dt=\int\limits_0^\alpha t^{p-1}.dt$$, and $$\displaystyle\int\limits_0^\alpha t.du=\int\limits_0^\alpha u^{q-1}.du$$, we can compute an area like this:
 
 $$
-\begin{align}
+\begin{align*}
 S &= \int\limits_0^\alpha t^{p-1}.dt + \int\limits_0^\alpha u^{q-1}.du \\
 &= \frac{\alpha^2}{2} + \frac{\beta^2}{2}
-\end{align}
+\end{align*}
 $$
 
 ![Linear Conjugate Exponents](/assets/images/linear-conjugate-exponents.png)

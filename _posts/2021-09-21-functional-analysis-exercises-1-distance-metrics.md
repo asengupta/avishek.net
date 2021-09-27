@@ -148,10 +148,10 @@ z=a_z+2b_z+4c_z
 $$
 
 $$
-\begin{align}
+\begin{align*}
 d(x,z) &= |a_x-a_z|+|b_x-b_z|+|c_x-c_z| \\
 &=|a_x-a_y+a_y-a_z|+|b_x-b_y+b_y-b_z|+|c_x-c_y+c_y-c_z|
-\end{align}
+\end{align*}
 $$
 
 Now we have the following inequalities:

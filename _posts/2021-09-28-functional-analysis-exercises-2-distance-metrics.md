@@ -3,12 +3,84 @@ title: "Functional Analysis Exercises 2 : Distance Metrics"
 author: avishek
 usemathjax: true
 tags: ["Mathematics", "Proof", "Functional Analysis", "Pure Mathematics"]
-draft: true
+draft: false
 ---
 
 This post lists solutions to many of the exercises in the **Distance Metrics section 1.2** of *Erwin Kreyszig's* **Introductory Functional Analysis with Applications**.
 
 #### 1.2.1. Show that in 1.2-1 we can obtain another metric by replacing $$\frac{1}{2^i}$$ with $$\mu_i>0$$ such that $$\sum\mu_i$$ converges.
+
+**Proof**: The space referred to is the space of all bounded and unbounded sequences.
+
+The candidate metric is defined as:
+
+$$
+d(x,y)=\displaystyle\sum_{i=1}^\infty \mu_i\frac{|x_i-y_i|}{1+|x_i-y_i|}
+$$
+
+**(M1)** $$d(x,y)$$ is bounded, non-negative, and real.
+
+We know that $$\displaystyle\sum_{i=1}^\infty \mu_i$$ converges, thus if we prove $$\lambda_i \mu_i<mu_i$$, we will have proved that $$\displaystyle\sum_{i=1}^\infty \lambda_i \mu_i$$ converges, and is thus real, bounded.
+
+Indeed, if we examine $$d(x,y)$$, we can make the following observation:
+
+$$
+d(x,y)=\displaystyle\sum_{i=1}^\infty \mu_i\underbrace{\frac{|x_i-y_i|}{1+|x_i-y_i|}}_{0\leq\lambda<1}
+$$
+
+Thus, $$d(x,y)$$ is bounded and real. $$d(x,y)$$ is also nonnegative because $$0\leq\lambda<1$$ and $$\mu_i>0$$.
+
+**(M2)** This is evident since:
+
+$$
+d(x,x)=\displaystyle\sum_{i=1}^\infty \mu_i\frac{|x_i-x_i|}{1+|x_i-x_i|}=0
+$$
+
+**(M3)** This is easily seen since the modulus sign guarantees that:$$\vert x_i-y_i\vert=\vert y_i-x_i \vert$$, and thus $$d(x,y)=d(y,x)$$.
+
+**(M4)**
+
+For convenience of notation, let us denote use the following notation:
+
+$$
+A=|x_i-y_i| \\
+B=|y_i-z_i| \\
+C=|z_i-x_i|
+$$
+
+We'd like to prove that:
+
+$$
+\require{cancel}
+\frac{A}{1+A} \leq \frac{B}{1+B} + \frac{C}{1+C} \\
+= \frac{B+C+2BC}{(1+B)(1+C)} \\
+\Rightarrow A(1+B)(1+C) \leq (B+C+2BC)(1+A) \\
+\Rightarrow A+\cancel{CA}+\cancel{AB}+\cancel{ABC} \leq B+C+2BC+\cancel{AB}+\cancel{CA}+\cancel{2}ABC \\
+\Rightarrow A \leq B+C+2BC+ABC \\
+\Rightarrow |x_i-y_i| \leq |x_i-z_i|+|z_i-y_i|+2BC+ABC
+$$
+
+Thus, we need to prove that:
+
+$$
+|x_i-y_i| \leq |x_i-z_i|+|z_i-y_i|+2BC+ABC
+$$
+
+where $$A,B,C \geq 0$$.
+
+We already know from the **Triangle Inequality** that:
+
+$$
+\begin{align*}
+|x_i-y_i| &= |x_i-z_i+z_i-y_i| \\
+|x_i-y_i| &\leq |x_i-z_i|+|z_i-y_i| \\
+\Rightarrow |x_i-y_i| &\leq |x_i-z_i|+|z_i-y_i|+2BC+ABC
+\end{align*}
+$$
+
+Thus $$d(x,y)$$ is a metric.
+
+$$\blacksquare$$
 
 #### 1.2.2. Using (6), show that the geometric mean of two positive numbers does not exceed the arithmetic mean.
 
