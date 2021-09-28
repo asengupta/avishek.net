@@ -17,7 +17,7 @@ For reference, the axioms **(M1)** to **(M4)** for a distance metric are as foll
 
 #### 1.2.1. Show that in 1.2-1 we can obtain another metric by replacing $$\frac{1}{2^i}$$ with $$\mu_i>0$$ such that $$\sum\mu_i$$ converges.
 
-**Proof**: The space referred to is the space of all bounded and unbounded sequences.
+**Proof:** The space referred to is the space of all bounded and unbounded sequences.
 
 The candidate metric is defined as:
 
@@ -102,13 +102,13 @@ $$
 \Rightarrow d(x,y) \leq d(x,z) + d(z,y)
 $$
 
-Thus $$d(x,y)$$ is a metric.
+Thus, $$d(x,y)$$ is a metric.
 
 $$\blacksquare$$
 
 #### 1.2.2. Using (6), show that the geometric mean of two positive numbers does not exceed the arithmetic mean.
 
-**Proof**:
+**Proof:**
 From the identity involving conjugate exponents, we know that:
 
 $$
@@ -132,7 +132,7 @@ $$\blacksquare$$
 #### 1.2.3. Show that the Cauchy-Schwarz inequality (11) implies
   $${(|\xi_1| + \cdots + |\xi_n|)}^2 \leq n ({|\xi_1|}^2 + \cdots + {|\xi_n|}^2)$$.
 
-**Proof**: The Cauchy-Schwarz Inequality is :
+**Proof:** The Cauchy-Schwarz Inequality is :
 
 $$
 \displaystyle\sum_{i=1}^n |x_i y_i| \leq {\left( \displaystyle\sum_{i=1}^n {|x_i|}^2 \right)}^\frac{1}{2}
@@ -240,6 +240,8 @@ $$\blacksquare$$
 
 **Proof:**
 
+We prove the **"if"** side of the claim first.
+
 Assume $$A=\{x\}$$.  
 Then the set $$\Delta_A={d(x,x)}$$.  
 Therefore $$\delta(A)=\text{sup} \Delta_A=d(x,x)$$.
@@ -254,7 +256,7 @@ $$
 
 $$\blacksquare$$
 
-For the "only if" side of implication, Let $$\delta(A)=\text{sup } \Delta_A=0$$.
+For the **"only if"** side of implication, Let $$\delta(A)=\text{sup } \Delta_A=0$$.
 
 By the definition of a distance metric, $$d(x,y)\geq 0$$.  
 Thus, all other elements of $$\Delta_A$$ have to be zero. This implies there is only one element in $$\Delta_A={0}$$.  
@@ -273,7 +275,7 @@ $$D(A,B) = \text{inf } d(a, b)$$.
 
 #### Show that $$D$$ does not define a metric on the power set of $$X$$. (For this reason we use another symbol, $$D$$, but one that still reminds us of $$d$$.)
 
-**Proof**
+**Proof:**
 Consider $$A={3,4}$$, and $$B={4,5}$$.  
 Then, we have:
 
@@ -292,7 +294,7 @@ $$\blacksquare$$
 
 #### 1.2.9. If An $$A \cap B \neq \emptyset$$, show that $$D(A,B) = 0$$ in Prob. 8. What about the converse?
 
-**Proof**
+**Proof:**
 
 Let $$\Delta_{XY}=\{d(x,y):x \in A\, y \in B\}$$
 
@@ -304,7 +306,7 @@ Since a distance metric must be nonnegative, $$D(A,B)=\text{inf }\Delta_{XY}=0$$
 
 $$\blacksquare$$
 
-The converse is not true. To see why this is not true, remember that the infimum/supremum of a set does *not* have to belong to that set. Therefore, two sets can have the same infimum/supremum while still having their intersection be the null set.
+The converse is not true. To see why this is not true, remember that **the infimum/supremum of a set does *not* have to belong to that set**. Therefore, two sets can have the same infimum/supremum while still having their intersection be the null set.
 
 Thus, consider the set formed by the sequence $$\{\frac{1}{2^n}\}$$. Then $$X=\{\frac{1}{2^n}\}$$ The infimum (and the limit point) of $$X$$ is $$0$$.
 
@@ -417,7 +419,7 @@ This is evident if we set $$d(x,y)=0$$ in the definition of $$\bar{d}(x,y)$$.
 
 **(M3)** $$d(x,y)=d(y,x)$$
 
-Since $$d(x,y)$$ is symmetric, substituting $$d(y,x)$$ in the definition of \bar{d}(x,y) shows that it is symmetric also.
+Since $$d(x,y)$$ is symmetric, substituting $$d(y,x)$$ in the definition of $$\bar{d}(x,y)$$ shows that it is symmetric also.
 
 **(M4)** $$d(x,y) \leq d(x,z) + d(z,y)$$
 
@@ -545,7 +547,7 @@ This is evident if we set $$x=y$$, then we have $$d_1(x,x)=d_2(x,x)=0$$ and thus
 
 **(M3)** $$\bar{d}(x,y)=\bar{d}(y,x)$$
 
-Since $$d_1(x,y)$$ and $$d_2(x,y)$$ are symmetric, substituting $$d_1(y,x)$$ and $$d_2(y,x)$$ in the definition of \bar{d}(x,y) shows that it is symmetric also.
+Since $$d_1(x,y)$$ and $$d_2(x,y)$$ are symmetric, substituting $$d_1(y,x)$$ and $$d_2(y,x)$$ in the definition of $$\bar{d}(x,y)$$ shows that it is symmetric also.
 
 **(M4)** $$\bar{d}(x,y) \leq \bar{d}(x,z) + \bar{d}(z,y)$$
 
@@ -594,7 +596,7 @@ This is evident if we set $$x=y$$, then we have $$d_1(x,x)=d_2(x,x)=0$$ and thus
 
 **(M3)** $$\bar{d}(x,y)=\bar{d}(y,x)$$
 
-Since $$d_1(x,y)$$ and $$d_2(x,y)$$ are symmetric, substituting $$d_1(y,x)$$ and $$d_2(y,x)$$ in the definition of \bar{d}(x,y) shows that it is symmetric also.
+Since $$d_1(x,y)$$ and $$d_2(x,y)$$ are symmetric, substituting $$d_1(y,x)$$ and $$d_2(y,x)$$ in the definition of $$\bar{d}(x,y)$$ shows that it is symmetric also.
 
 **(M4)** $$\bar{d}(x,y) \leq \bar{d}(x,z) + \bar{d}(z,y)$$
 
@@ -698,22 +700,24 @@ This is evident if we set $$x=y$$, then we have $$d_1(x,x)=d_2(x,x)=0$$ and thus
 
 **(M3)** $$\bar{d}(x,y)=\bar{d}(y,x)$$
 
-Since $$d_1(x,y)$$ and $$d_2(x,y)$$ are symmetric, substituting $$d_1(y,x)$$ and $$d_2(y,x)$$ in the definition of \bar{d}(x,y) shows that it is symmetric also.
+Since $$d_1(x,y)$$ and $$d_2(x,y)$$ are symmetric, substituting $$d_1(y,x)$$ and $$d_2(y,x)$$ in the definition of $$\bar{d}(x,y)$$ shows that it is symmetric also.
 
 **(M4)** $$\bar{d}(x,y) \leq \bar{d}(x,z) + \bar{d}(z,y)$$
 
 We have:
 
 $$
-\bar{d}(x,z)=max[d_1(x_1,z_1), d_2(x_2,z_2)] \\
-\bar{d}(z,y)=max[d_1(z_1,y_1), d_2(z_2,y_2)]
+\bar{d}(x,y)=\text{max}[d_1(x_1,y_1), d_2(x_2,y_2)] \\
+\bar{d}(x,z)=\text{max}[d_1(x_1,z_1), d_2(x_2,z_2)] \\
+\bar{d}(z,y)=\text{max}[d_1(z_1,y_1), d_2(z_2,y_2)]
 $$
 
 Adding the above gives us:
 
 $$
 \begin{equation}
-\bar{d}(x,z) + \bar{d}(z,y) = max[d_1(x_1,z_1), d_2(x_2,z_2)] + max[d_1(z_1,y_1), d_2(z_2,y_2)]
+\bar{d}(x,y)=\text{max}[d_1(x_1,y_1), d_2(x_2,y_2)] \\
+\bar{d}(x,y) \leq \text{max}[d_1(x_1,z_1)+d_1(z_1,y_1), d_2(x_2,z_2)+d_2(z_2,y_2)]
 \label{eq:1-2-15-max}
 \end{equation}
 $$
@@ -723,24 +727,51 @@ We'd like to relate the above to the candidate metric. To do that, we need to fi
 To do this, let us observe that:
 
 $$
-a \leq max(a,b) \\
-c \leq max(c,d) \\
-
-\Rightarrow a+c \leq max(a,b) + max(c,d)
+\begin{equation}
+a \leq \text{max}(a,b) \\
+c \leq \text{max}(c,d) \\
+\Rightarrow a+c \leq \text{max}(a,b) + \text{max}(c,d)
+\label{eq:1-2-15-a-plus-c}
+\end{equation}
 $$
 
 Similarly:
 
 $$
-b+d \leq max(a,b) + max(c,d)
+\begin{equation}
+b+d \leq \text{max}(a,b) + \text{max}(c,d)
+\label{eq:1-2-15-b-plus-d}
+\end{equation}
+$$
+
+Thus, if we take the maximum of the left hand side of $$\eqref{eq:1-2-15-a-plus-c}$$ and $$\eqref{eq:1-2-15-b-plus-d}$$, we get:
+
+$$
+\text{max}(a+c,b+d) \leq \text{max}(a,b) + \text{max}(c,d)
 $$
 
 Substituting the above results back into $$\eqref{eq:1-2-15-max}$$, we get:
 
 $$
-\bar{d}(x,z) + \bar{d}(z,y) \leq max(d_1(x_1,z_1) + d_1(z_1,y_1), max(d_2(x_2,z_2) + d_2(z_2,y_2))
+\begin{equation}
+\bar{d}(x,y) \leq \text{max}[d_1(x_1,z_1)+d_1(z_1,y_1), d_2(x_2,z_2)+d_2(z_2,y_2)] \\
+\leq \text{max}(d_1(x_1,z_1), d_2(x_2,z_2)) + \text{max}(d_1(z_1,y_1), d_2(z_2,y_2))
+\label{eq:1-2-15-penultimate}
+\end{equation}
 $$
 
+We note that:
+
 $$
-\bar{d}(x,y)=max[d_1(x_1,y_1), d_2(x_2,y_2)]
+\bar{d}(x,z) + \bar{d}(z,y) = \text{max}[d_1(x_1,z_1), d_2(x_2,z_2)] + max[d_1(z_1,y_1), d_2(z_2,y_2)]
 $$
+
+Substituting the above equality into $$\eqref{eq:1-2-15-penultimate}$$, we directly get:
+
+$$
+\bar{d}(x,y) \leq \bar{d}(x,z) + \bar{d}(z,y)
+$$
+
+Thus, $$\bar{d}$$ is a valid distance metric.
+
+$$\blacksquare$$
