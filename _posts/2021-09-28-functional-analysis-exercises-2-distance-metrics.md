@@ -537,7 +537,7 @@ $$
 \therefore 0<\bar{d}(x,y)<\infty
 $$
 
-Thus, \bar{d}(x,y) is nonegative and bounded, by its definition.
+Thus, $$\bar{d}(x,y)$$ is nonegative and bounded, by its definition.
 
 **(M2)** $$\bar{d}(x,y)=0$$ if and only if $$x=y$$
 
@@ -586,7 +586,7 @@ $$
 \therefore 0<\bar{d}(x,y)<\infty
 $$
 
-Thus, \bar{d}(x,y) is nonegative and bounded, by its definition.
+Thus, $$\bar{d}(x,y)$$ is nonegative and bounded, by its definition.
 
 **(M2)** $$\bar{d}(x,y)=0$$ if and only if $$x=y$$
 
