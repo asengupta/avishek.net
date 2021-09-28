@@ -413,11 +413,11 @@ $$d(x,y)$$ is already a metric. Thus, $$d(x,y)$$ is nonnegative and bounded. The
 
 **(M2)** $$d(x,y)=0$$ if and only if $$x=y$$
 
-This is evident if we set $$d(x,y)=0$$ in the definition of \bar{d}(x,y).
+This is evident if we set $$d(x,y)=0$$ in the definition of $$\bar{d}(x,y)$$.
 
 **(M3)** $$d(x,y)=d(y,x)$$
 
-Since $$d(x,y)$$ is symmetric, substituting $$d(y,x)$$ in the definition of \bar{d}(x,y) hows that it is symmetric also.
+Since $$d(x,y)$$ is symmetric, substituting $$d(y,x)$$ in the definition of \bar{d}(x,y) shows that it is symmetric also.
 
 **(M4)** $$d(x,z) \leq d(x,y) + d(y,z)$$
 
@@ -477,13 +477,94 @@ $$\blacksquare$$
 
 #### 1.2.12. Show that the union of two bounded sets A and B in a metric space is a bounded set. (Definition in Prob. 6.)
 
+Let us define three sets of metrics:
+
+$$
+\Delta_A=\{d(x,y):x,y \in A\} \\ 
+\Delta_B=\{d(x,y):x,y \in B\} \\ 
+\Delta_{AB}=\{d(x,y):x \in A,y \in B\} \\ 
+$$
+
+Verbally,
+- $$\Delta_A$$ is the set of all distances between points in $$A$$. $$\Delta_A$$ is bounded because $$A$$ is bounded by definition, therefore $$\delta(A)=\text{sup }\Delta_A<\infty$$.
+- $$\Delta_B$$ is the set of all distances between points in $$B$$. $$\Delta_B$$ is bounded because $$B$$ is bounded by definition, therefore $$\delta(B)=\text{sup }\Delta_B<\infty$$.
+- $$\Delta_{AB}$$ is the set of all distances between points in $$A$$ and points in $$B$$.
+
+Then the set of all distances between points in $$C=A \cup B$$ is $$\Delta_C=\Delta_A \cap \Delta_B \cap \Delta_{AB}$$.
+
+By definition, diameter of $$C$$ is:
+
+$$
+\delta(A \cup B) = \text{inf } \Delta_C
+$$
+
+From the axioms of the metric $$d$$, we note that $$\forall d(x,y) \in \Delta_A, \Delta_B, \Delta_{AB}, d(x,y)<\infty$$.
+
+Then, we can deduce the following:
+
+$$
+\delta(A \cup B) = \text{inf } \Delta_C = \text{inf } \{d(x,y): d(x,y) \in \Delta_A, \Delta_B, \Delta_{AB}\} \\
+\Rightarrow \delta(A \cup B) < \infty
+$$
+
+Hence, the union of two bounded sets is bounded.
+
+$$\blacksquare$$
+
 #### 1.2.13. **(Product of metric spaces)** The Cartesian product $$X = X_1 \times X_2$$ of two    metric spaces $$(X_1,d_1)$$ and $$(X_2,d_2)$$ can be made into a metric space $$(X,d)$$ in many ways. For instance, show that a metric $$d$$ is defined by
 
 $$
-\bar{d}(x,y)=d_1(x_1,y_1) + d_1(x_2,y_2)
+\bar{d}(x,y)=d_1(x_1,y_1) + d_2(x_2,y_2)
 $$
 
 #### where $$x=(x_1,x_2)$$, $$y=(y_1,y_2)$$.
+
+$$Proof:$$
+
+The candidate distance metric is:
+
+$$
+\bar{d}(x,y)=d_1(x_1,y_1) + d_2(x_2,y_2)
+$$
+
+where $$d_1$$ and $$d_2$$ are already valid distance metrics.
+
+**(M1)** $$0 \leq \bar{d}(x,y)<\infty, \bar{d}(x,y)\in \mathbb{R}$$
+
+Because $$d_1$$ and $$d_2$$ are already valid metrics. Thus $$0<d_1(x,y)<\infty$$ and $$0<d_2(x,y)<\infty$$.
+
+$$
+\therefore 0<\bar{d}(x,y)<\infty
+$$
+
+Thus, \bar{d}(x,y) is nonegative and bounded, by its definition.
+
+**(M2)** $$\bar{d}(x,y)=0$$ if and only if $$x=y$$
+
+This is evident if we set $$x=y$$, then we have $$d_1(x,x)=d_2(x,x)=0$$ and thus $$\bar{d}(x,y)=0$$.
+
+**(M3)** $$\bar{d}(x,y)=\bar{d}(y,x)$$
+
+Since $$d_1(x,y)$$ and $$d_2(x,y)$$ are symmetric, substituting $$d_1(y,x)$$ and $$d_2(y,x)$$ in the definition of \bar{d}(x,y) shows that it is symmetric also.
+
+**(M4)** $$\bar{d}(x,z) \leq \bar{d}(x,y) + \bar{d}(y,z)$$
+
+$$
+d_1(x_1,y_1) \leq d_1(x_1,z_1) + d_1(z_1, y_1) \\
+d_2(x_2,y_2) \leq d_2(x_2,z_2) + d_2(z_2, y_2) \\
+$$
+
+Summing the above two identities, we see:
+
+$$
+d_1(x_1,y_1) + d_2(x_2,y_2) \leq d_1(x_1,z_1) + d_1(z_1, y_1) + d_2(x_2,z_2) + d_2(z_2, y_2) \\
+\Rightarrow \underbrace{d_1(x_1,y_1) + d_2(x_2,y_2)}_{\bar{d}(x_2,z_2)} \leq \underbrace{d_1(x_1,z_1) + d_2(x_2,z_2)}_{\bar{d}(x,z)} + \underbrace{d_1(z_1, y_1) + d_2(z_2, y_2)}_{\bar{d}(z,y)} \\
+\Rightarrow \bar{d}(x,y) \leq d_1(x,z) + d_2(z,y)
+$$
+
+Hence, $$\bar{d}$$ is a valid distance metric.
+
+$$\blacksquare$$
 
 #### 1.2.14. Show that another metric on $$X$$ in Prob. 13 is defined by
 
