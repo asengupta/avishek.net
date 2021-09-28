@@ -336,6 +336,44 @@ $$
 |D(x,B) - D(y,B)| \leq d(x, y)
 $$.
 
+**Proof:**
+
+We have, from the **Triangle Inequality**,
+
+$$
+\begin{equation}
+d(x,b) \leq d(x,y) + d(y,b) \\
+\Rightarrow d(x,b)-d(y,b) \leq d(x,y)
+\label{eq:1-2-10-1}
+\end{equation}
+$$
+
+We also have:
+
+$$
+\begin{equation}
+d(y,b) \leq d(y,x) + d(x,b) \\
+\Rightarrow d(y,b) \leq d(x,y) + d(x,b) \\
+\Rightarrow d(y,b)-d(x,b) \leq d(x,y)
+\label{eq:1-2-10-2}
+\end{equation}
+$$
+
+From the results of $$\eqref{eq:1-2-10-1}$$ and $$\eqref{eq:1-2-10-2}$$, we get:
+
+$$
+|d(x,b)-d(y,b)| \leq d(x,y)
+$$
+
+This is true for all $$d(x,b)$$ and $$d(y,b)$$, including their infimums, i.e.:
+
+$$
+|\text{inf } d(x,b)-\text{inf } d(y,b)| \leq d(x,y) \\
+\Rightarrow |D(x,B)-D(y,B)| \leq d(x,y)
+$$
+
+$$\blacksquare$$
+
 #### 1.2.11. If $$(X,d)$$ is any metric space, show that another metric on $$X$$ is defined by
 
 $$
