@@ -37,22 +37,26 @@ $$
 
 Thus, $$d(x,y)$$ is bounded and real. $$d(x,y)$$ is also nonnegative because $$0\leq\lambda<1$$ and $$\mu_i>0$$.
 
-**(M2)** This is evident since:
+**(M2)** $$d(x,y)=0$$ if and only if $$x=y$$.
+
+This is evident since:
 
 $$
 d(x,x)=\displaystyle\sum_{i=1}^\infty \mu_i\frac{|x_i-x_i|}{1+|x_i-x_i|}=0
 $$
 
-**(M3)** This is easily seen since the modulus sign guarantees that:$$\vert x_i-y_i\vert=\vert y_i-x_i \vert$$, and thus $$d(x,y)=d(y,x)$$.
+**(M3)** $$d(x,y)=d(y,x)$$
 
-**(M4)**
+This is easily seen since the modulus sign guarantees that:$$\vert x_i-y_i\vert=\vert y_i-x_i \vert$$, and thus $$d(x,y)=d(y,x)$$.
+
+**(M4)** $$d(x,z) \leq d(x,y) + d(y,z)$$
 
 For convenience of notation, let us denote use the following notation:
 
 $$
 A=|x_i-y_i| \\
 B=|y_i-z_i| \\
-C=|z_i-x_i|
+C=|z_i-y_i|
 $$
 
 We'd like to prove that:
@@ -83,6 +87,19 @@ $$
 |x_i-y_i| &\leq |x_i-z_i|+|z_i-y_i| \\
 \Rightarrow |x_i-y_i| &\leq |x_i-z_i|+|z_i-y_i|+2BC+ABC
 \end{align*}
+$$
+
+Thus, we have:
+
+$$
+\frac{A}{1+A} \leq \frac{B}{1+B} + \frac{C}{1+C}
+$$
+
+Multiplying throughout by $$\mu_i$$, and summing over $$i$$, we have:
+
+$$
+\displaystyle\sum_{i=1}^\infty\mu_i\frac{A}{1+A} \leq \sum_{i=1}^\infty\mu_i\frac{B}{1+B} + \sum_{i=1}^\infty\mu_i\frac{C}{1+C} \\
+\Rightarrow d(x,y) \leq d(x,z) + d(z,y)
 $$
 
 Thus $$d(x,y)$$ is a metric.
@@ -381,6 +398,82 @@ $$
 $$
 
 #### and $$X$$ is bounded in the metric $$\bar{d}$$.
+
+**Proof:**
+
+The candidate metric is defined as:
+
+$$
+\bar{d}(x,y)=\frac{d(x,y)}{1+d(x,y)}
+$$
+
+**(M1)** $$0 \leq d(x,y)<\infty, d(x,y)\in \mathbb{R}$$
+
+$$d(x,y)$$ is already a metric. Thus, $$d(x,y)$$ is nonnegative and bounded. Then \bar{d}(x,y) is also nonegative and bounded, by its definition.
+
+**(M2)** $$d(x,y)=0$$ if and only if $$x=y$$
+
+This is evident if we set $$d(x,y)=0$$ in the definition of \bar{d}(x,y).
+
+**(M3)** $$d(x,y)=d(y,x)$$
+
+Since $$d(x,y)$$ is symmetric, substituting $$d(y,x)$$ in the definition of \bar{d}(x,y) hows that it is symmetric also.
+
+**(M4)** $$d(x,z) \leq d(x,y) + d(y,z)$$
+
+For convenience of notation, let us denote use the following notation:
+
+$$
+A=d(x,y) \\
+B=d(x,z) \\
+C=d(z,y)
+$$
+
+We'd like to prove that:
+
+$$
+\require{cancel}
+\frac{A}{1+A} \leq \frac{B}{1+B} + \frac{C}{1+C} \\
+= \frac{B+C+2BC}{(1+B)(1+C)} \\
+\Rightarrow A(1+B)(1+C) \leq (B+C+2BC)(1+A) \\
+\Rightarrow A+\cancel{CA}+\cancel{AB}+\cancel{ABC} \leq B+C+2BC+\cancel{AB}+\cancel{CA}+\cancel{2}ABC \\
+\Rightarrow A \leq B+C+2BC+ABC \\
+\Rightarrow d(x,y) \leq d(x,z)+d(z,y)+2BC+ABC
+$$
+
+Thus, we need to prove that:
+
+$$
+d(x,y) \leq d(x,z)+d(z,y)+2BC+ABC
+$$
+
+where $$A,B,C \geq 0$$.
+
+We already know from the **Triangle Inequality** that:
+
+$$
+\begin{align*}
+d(x,y) &\leq d(x,z)+d(z,y) \\
+\Rightarrow d(x,y) &\leq d(x,z)+d(z,y)+2BC+ABC
+\end{align*}
+$$
+
+Thus, we have:
+
+$$
+\frac{A}{1+A} \leq \frac{B}{1+B} + \frac{C}{1+C}
+$$
+
+Multiplying throughout by $$\mu_i$$, and summing over $$i$$, we have:
+
+$$
+\displaystyle\sum_{i=1}^\infty\mu_i\frac{A}{1+A} \leq \sum_{i=1}^\infty\mu_i\frac{B}{1+B} + \sum_{i=1}^\infty\mu_i\frac{C}{1+C} \\
+\Rightarrow \bar{d}(x,y) \leq \bar{d}(x,z) + \bar{d}(z,y)
+$$
+
+Thus $$d(x,y)$$ is a metric.
+
+$$\blacksquare$$
 
 #### 1.2.12. Show that the union of two bounded sets A and B in a metric space is a bounded set. (Definition in Prob. 6.)
 
