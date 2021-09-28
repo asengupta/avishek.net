@@ -519,7 +519,7 @@ $$
 
 #### where $$x=(x_1,x_2)$$, $$y=(y_1,y_2)$$.
 
-$$Proof:$$
+**Proof:**
 
 The candidate distance metric is:
 
@@ -568,9 +568,103 @@ $$\blacksquare$$
 
 #### 1.2.14. Show that another metric on $$X$$ in Prob. 13 is defined by
 
+**Proof:**
+
+The candidate distance metric is:
+
 $$
-\bar{d}(x,y)=\sqrt{ {d_1(x_1,y_1)}^2 + {d_1(x_2,y_2)}^2}
+\bar{d}(x,y)=\sqrt{ {d_1(x_1,y_1)}^2 + {d_2(x_2,y_2)}^2}
 $$
+
+where $$d_1$$ and $$d_2$$ are already valid distance metrics.
+
+**(M1)** $$0 \leq \bar{d}(x,y)<\infty, \bar{d}(x,y)\in \mathbb{R}$$
+
+Because $$d_1$$ and $$d_2$$ are already valid metrics. Thus $$0<d_1(x,y)<\infty$$ and $$0<d_2(x,y)<\infty$$.
+
+$$
+\therefore 0<\bar{d}(x,y)<\infty
+$$
+
+Thus, \bar{d}(x,y) is nonegative and bounded, by its definition.
+
+**(M2)** $$\bar{d}(x,y)=0$$ if and only if $$x=y$$
+
+This is evident if we set $$x=y$$, then we have $$d_1(x,x)=d_2(x,x)=0$$ and thus $$\bar{d}(x,y)=0$$.
+
+**(M3)** $$\bar{d}(x,y)=\bar{d}(y,x)$$
+
+Since $$d_1(x,y)$$ and $$d_2(x,y)$$ are symmetric, substituting $$d_1(y,x)$$ and $$d_2(y,x)$$ in the definition of \bar{d}(x,y) shows that it is symmetric also.
+
+**(M4)** $$\bar{d}(x,z) \leq \bar{d}(x,y) + \bar{d}(y,z)$$
+
+We have:
+
+$$
+\begin{equation}
+{\bar{d}(x,z)}^2={d_1(x_1,z_1)}^2 + {d_2(x_2,z_2)}^2
+\label{eq:rhs-1}
+\end{equation}
+$$
+
+$$
+\begin{equation}
+{\bar{d}(z,y)}^2={d_1(z_1,y_1)}^2 + {d_2(z_2,y_2)}^2
+\label{eq:rhs-2}
+\end{equation}
+$$
+
+We also have the following two identities:
+
+$$
+d_1(x_1,y_1) \leq d_1(x_1,z_1) + d_1(z_1,y_1) \\
+{d_1(x_1,y_1)}^2 \leq {d_1(x_1,z_1)}^2 + {d_1(z_1,y_1)}^2 + 2d_1(x_1,z_1) d_1(z_1,y_1) \\
+$$
+
+$$
+d_2(x_2,y_2) \leq d_2(x_2,z_2) + d_2(z_2,y_2) \\
+{d_2(x_2,y_2)}^2 \leq {d_2(x_2,z_2)}^2 + {d_2(z_2,y_2)}^2 + 2d_2(x_2,z_2) d_2(z_2,y_2) \\
+$$
+
+If we add $$\eqref{eq:rhs-1}$$ and $$\eqref{eq:rhs-2}$$, we get:
+
+$$
+{\bar{d}(x,z)}^2 + {\bar{d}(z,y)}^2 = {d_1(x_1,z_1)}^2 + {d_2(x_2,z_2)}^2 + {d_1(z_1,y_1)}^2 + {d_2(z_2,y_2)}^2 + 2d_1(x_1,z_1) d_1(z_1,y_1) + 2d_2(x_2,z_2) d_2(z_2,y_2) \\
+{\bar{d}(x,z)}^2 + {\bar{d}(z,y)}^2 = \underbrace{ {d_1(x_1,z_1)}^2 + {d_1(z_1,y_1)}^2}_{\geq {d_1(x_1,y_1)}^2} + \underbrace{ {d_2(x_2,z_2)}^2 + {d_2(z_2,y_2)}^2}_{\geq {d_2(x_2,y_2)}^2} + 2d_1(x_1,z_1) d_1(z_1,y_1) + 2d_2(x_2,z_2) d_2(z_2,y_2) \\
+{d_1(x_1,y_1)}^2 + {d_2(x_2,y_2)}^2 \leq {\bar{d}(x,z)}^2 + {\bar{d}(z,y)}^2 + 2d_1(x_1,z_1) d_1(z_1,y_1) + 2d_2(x_2,z_2) d_2(z_2,y_2) \\
+{\bar{d}(x,y)}^2 \leq {\bar{d}(x,z)}^2 + {\bar{d}(z,y)}^2 + 2d_1(x_1,z_1) d_1(z_1,y_1) + 2d_2(x_2,z_2) d_2(z_2,y_2)
+$$
+
+The last two terms on the right can be written in an indexed form as below:
+
+$$
+\begin{equation}
+{\bar{d}(x,y)}^2 \leq {\bar{d}(x,z)}^2 + {\bar{d}(z,y)}^2 + 2 \displaystyle\sum_{i=1}^2 d_i(x_i,z_i) d_i(z_i,y_i)
+\label{eq:indexed-form}
+\end{equation}
+$$
+
+Applying the **Cauchy-Scharz Inequality** to the last term on the RHS, we get:
+
+$$
+\begin{align*}
+\sum_{i=1}^2 d_i(x_i,z_i) d_i(z_i,y_i) &\leq {\left(\sum_{i=1}^2 {d_i(x_i,z_i)}^2\right)}^\frac{1}{2} {\left(\sum_{i=1}^2 {d_i(z_i,y_i)}^2\right)}^\frac{1}{2} \\
+&= {\left({d_1(x_1, z_1)}^2 + {d_2(x_2, z_2)}^2\right)}^\frac{1}{2} {\left({d_1(z_1, y_1)}^2 + {d_2(z_2, y_2)}^2\right)}^\frac{1}{2} \\
+&= \bar{d}(x,z) \bullet \bar{d}(z,y)
+\end{align*}
+$$
+
+Then, substituting the result above back into $$\eqref{eq:indexed-form}$$, we get:
+
+$$
+{\bar{d}(x,y)}^2 \leq {\bar{d}(x,z)}^2 + {\bar{d}(z,y)}^2 + 2 \bar{d}(x,z) \bar{d}(z,y) \\
+\Rightarrow {\bar{d}(x,y)}^2 \leq {(\bar{d}(x,z) + \bar{d}(z,y))}^2 \\
+\Rightarrow \bar{d}(x,y) \leq \bar{d}(x,z) + \bar{d}(z,y)
+$$
+
+Thus, $$\bar{d}$$ is a valid distance metric.
+
+$$\blacksquare$$
 
 #### 1.2.15. Show that a third metric on $$X$$ in Prob. 13 is defined by
 
