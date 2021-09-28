@@ -106,6 +106,8 @@ Thus, $$d(x,y)$$ is a metric.
 
 $$\blacksquare$$
 
+---
+
 #### 1.2.2. Using (6), show that the geometric mean of two positive numbers does not exceed the arithmetic mean.
 
 **Proof:**
@@ -129,6 +131,8 @@ This proves that the Geometric Mean of two numbers cannot exceed their Arithmeti
 
 $$\blacksquare$$
 
+---
+
 #### 1.2.3. Show that the Cauchy-Schwarz inequality (11) implies
   $${(|\xi_1| + \cdots + |\xi_n|)}^2 \leq n ({|\xi_1|}^2 + \cdots + {|\xi_n|}^2)$$.
 
@@ -149,6 +153,8 @@ $$
 $$
 
 $$\blacksquare$$
+
+---
 
 #### 1.2.4. (Space $$\ell^p$$) Find a sequence which converges to 0, but is not in any space $$\ell^p$$, where $$1\leq p<+\infty$$.
 
@@ -181,6 +187,8 @@ z_k=\{\underbrace{\frac{1}{1}, \frac{1}{1}}_{\text{Two }1}, \underbrace{\frac{1}
 $$
 
 $$z_k$$ is an example of a sequence which converges to zero, but whose series diverges for all $$p \geq 1$$.
+
+---
 
 #### 1.2.5. Find a sequence $$x$$ which is in $$\ell^p$$ with p>1 but $$\require{cancel} x\cancel{\in}\ell^1$$.
 
@@ -236,6 +244,8 @@ $$
 
 $$\blacksquare$$
 
+---
+
 #### 1.2.7. Show that $$\delta(A)=0$$ *(cf. Prob. 6)* if and only if A consists of a single point.
 
 **Proof:**
@@ -268,6 +278,8 @@ Therefore, all points must be equal to each other, i.e., there is only one point
 
 $$\blacksquare$$
 
+---
+
 #### 1.2.8. **(Distance between sets)** The distance $$D(A,B)$$ between two nonempty subsets $$A$$ and $$B$$ of a metric space $$(X, d)$$ is defined to be:
 
 
@@ -292,6 +304,8 @@ However, $$P(A) \neq P(B)$$.
 Thus, property **(M1)** of the distance metric is violated, and $$D$$ is not a valid distance metric on the power set of $$X$$.
 
 $$\blacksquare$$
+
+---
 
 #### 1.2.9. If An $$A \cap B \neq \emptyset$$, show that $$D(A,B) = 0$$ in Prob. 8. What about the converse?
 
@@ -346,6 +360,8 @@ $$
 
 $$\blacksquare$$
 
+---
+
 #### 1.2.10. The distance $$D(x,B)$$ from a point $$x$$ to a non-empty subset $$B$$ of $$(X,d)$$ is defined to be
 
 $$D(x,B)= \text{inf } d(x, b)$$
@@ -393,6 +409,8 @@ $$
 $$
 
 $$\blacksquare$$
+
+---
 
 #### 1.2.11. If $$(X,d)$$ is any metric space, show that another metric on $$X$$ is defined by
 
@@ -478,6 +496,8 @@ Thus $$d(x,y)$$ is a metric.
 
 $$\blacksquare$$
 
+---
+
 #### 1.2.12. Show that the union of two bounded sets A and B in a metric space is a bounded set. (Definition in Prob. 6.)
 
 Let us define three sets of metrics:
@@ -513,6 +533,8 @@ $$
 Hence, the union of two bounded sets is bounded.
 
 $$\blacksquare$$
+
+---
 
 #### 1.2.13. **(Product of metric spaces)** The Cartesian product $$X = X_1 \times X_2$$ of two    metric spaces $$(X_1,d_1)$$ and $$(X_2,d_2)$$ can be made into a metric space $$(X,d)$$ in many ways. For instance, show that a metric $$d$$ is defined by
 
@@ -568,6 +590,8 @@ $$
 Hence, $$\bar{d}$$ is a valid distance metric.
 
 $$\blacksquare$$
+
+---
 
 #### 1.2.14. Show that another metric on $$X$$ in Prob. 13 is defined by
 
@@ -668,6 +692,8 @@ $$
 Thus, $$\bar{d}$$ is a valid distance metric.
 
 $$\blacksquare$$
+
+---
 
 #### 1.2.15. Show that a third metric on $$X$$ in Prob. 13 is defined by
 
