@@ -8,6 +8,13 @@ draft: false
 
 This post lists solutions to many of the exercises in the **Distance Metrics section 1.2** of *Erwin Kreyszig's* **Introductory Functional Analysis with Applications**.
 
+For reference, the axioms **(M1)** to **(M4)** for a distance metric are as follows:
+
+- **(M1)** $$0 \leq d(x,y)<\infty, d(x,y)\in \mathbb{R}$$
+- **(M2)** $$d(x,y)=0$$ if and only if $$x=y$$
+- **(M3)** $$d(x,y)=d(y,x)$$
+- **(M4)** $$d(x,z) \leq d(x,y) + d(y,z)$$
+
 #### 1.2.1. Show that in 1.2-1 we can obtain another metric by replacing $$\frac{1}{2^i}$$ with $$\mu_i>0$$ such that $$\sum\mu_i$$ converges.
 
 **Proof**: The space referred to is the space of all bounded and unbounded sequences.
@@ -228,6 +235,8 @@ $$
 \delta(A)=0
 $$
 
+$$\blacksquare$$
+
 For the "only if" side of implication, Let $$\delta(A)=\text{sup } \Delta_A=0$$.
 
 By the definition of a distance metric, $$d(x,y)\geq 0$$.  
@@ -242,11 +251,80 @@ $$\blacksquare$$
 
 #### 1.2.8. **(Distance between sets)** The distance $$D(A,B)$$ between two nonempty subsets $$A$$ and $$B$$ of a metric space $$(X, d)$$ is defined to be:
 
+
 $$D(A,B) = \text{inf } d(a, b)$$.
 
 #### Show that $$D$$ does not define a metric on the power set of $$X$$. (For this reason we use another symbol, $$D$$, but one that still reminds us of $$d$$.)
 
-#### 1.2.9. If An $$B \cap P$$, show that $$D(A,B) = 0$$ in Prob. 8. What about the converse?
+**Proof**
+Consider $$A={3,4}$$, and $$B={4,5}$$.  
+Then, we have:
+
+$$
+P(A)=\{\emptyset,\{3\}, \{4\}\, \{3,4\}\} \\
+P(B)=\{\emptyset,\{4\}, \{5\}\, \{4,5\}\}
+$$
+
+Then $$D(P(A),P(B))=\text{inf } d(a,b)=0$$
+
+However, $$P(A) \neq P(B)$$.
+
+Thus, property **(M1)** of the distance metric is violated, and $$D$$ is not a valid distance metric on the power set of $$X$$.
+
+$$\blacksquare$$
+
+#### 1.2.9. If An $$A \cap B \neq \emptyset$$, show that $$D(A,B) = 0$$ in Prob. 8. What about the converse?
+
+**Proof**
+
+Let $$\Delta_{XY}=\{d(x,y):x \in A\, y \in B\}$$
+
+Let $$A \cap B \neq \emptyset$$, then there exists at least one element $$p\in A,B$$.
+
+Then, $$d(p,p) \in \Delta_{XY}$$ and $$d(p,p)=0$$.
+
+Since a distance metric must be nonnegative, $$D(A,B)=\text{inf }\Delta_{XY}=0$$
+
+$$\blacksquare$$
+
+The converse is not true. To see why this is not true, remember that the infimum/supremum of a set does *not* have to belong to that set. Therefore, two sets can have the same infimum/supremum while still having their intersection be the null set.
+
+Thus, consider the set formed by the sequence $$\{\frac{1}{2^n}\}$$. Then $$X=\{\frac{1}{2^n}\}$$ The infimum (and the limit point) of $$X$$ is $$0$$.
+
+Now consider a second set $$Y={0}$$.
+
+Then, let $$\Delta_{XY}$$ is the set of all distances between $$X$$ and $$Y$$, defined as:
+
+$$
+\begin{align*}
+\Delta_{XY}&=\{d(x,y):x \in A, y \in B\} \\
+&=\Bigl\{\frac{1}{2} - 0, \frac{1}{2^2} - 0, \frac{1}{2^3} - 0, \frac{1}{2^4} - 0, ...\Bigr\} \\
+&=\Bigl\{\frac{1}{2}, \frac{1}{2^2}, \frac{1}{2^3}, \frac{1}{2^4}, ...\Bigr\}
+\end{align*}
+$$
+
+We know then that:
+
+$$
+\text{lim }_{n\rightarrow\infty}\frac{1}{2^n}=0 \\
+\Rightarrow \text{lim }_{n\rightarrow\infty}\Delta_{XY}=0 \\
+$$
+
+In this case, $$\Delta_{XY}$$ has no Least Upper Bound. Then, $$D{X,Y}$$ is:
+
+$$
+D(X,Y)=\text{inf }\Delta_{XY}=0 \\
+$$
+
+This is a case where $$D(X,y)=0$$, even though $$X\cap Y=\emptyset$$.  
+Thus, we see that:
+
+$$
+\require{cancel}
+D(X,Y)=0 \cancel\Rightarrow X\cap Y \neq \emptyset
+$$
+
+$$\blacksquare$$
 
 #### 1.2.10. The distance $$D(x,B)$$ from a point $$x$$ to a non-empty subset $$B$$ of $$(X,d)$$ is defined to be
 
