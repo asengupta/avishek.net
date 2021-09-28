@@ -6,7 +6,7 @@ tags: ["Mathematics", "Proof", "Functional Analysis", "Pure Mathematics"]
 draft: false
 ---
 
-This post lists solutions to many of the exercises in the **Distance Metrics section 1.2** of *Erwin Kreyszig's* **Introductory Functional Analysis with Applications**.
+This post lists solutions to many of the exercises in the **Distance Metrics section 1.2** of *Erwin Kreyszig's* **Introductory Functional Analysis with Applications**. This is a work in progress, and proofs may be refined over time.
 
 For reference, the axioms **(M1)** to **(M4)** for a distance metric are as follows:
 
