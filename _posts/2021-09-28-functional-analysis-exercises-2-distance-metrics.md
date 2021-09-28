@@ -10,10 +10,10 @@ This post lists solutions to many of the exercises in the **Distance Metrics sec
 
 For reference, the axioms **(M1)** to **(M4)** for a distance metric are as follows:
 
-- **(M1)** $$0 \leq d(x,y)<\infty, d(x,y)\in \mathbb{R}$$
-- **(M2)** $$d(x,y)=0$$ if and only if $$x=y$$
-- **(M3)** $$d(x,y)=d(y,x)$$
-- **(M4)** $$d(x,y) \leq d(x,z) + d(z,y)$$
+- **(M1)** **Nonnegative, Real, and Bounded:** $$0 \leq d(x,y)<\infty, d(x,y)\in \mathbb{R}$$
+- **(M2)** **Principle of Indiscernibles:** $$d(x,y)=0$$ if and only if $$x=y$$
+- **(M3)** **Symmetry:** $$d(x,y)=d(y,x)$$
+- **(M4)** **Triangle Inequality:** $$d(x,y) \leq d(x,z) + d(z,y)$$
 
 #### 1.2.1. Show that in 1.2-1 we can obtain another metric by replacing $$\frac{1}{2^i}$$ with $$\mu_i>0$$ such that $$\sum\mu_i$$ converges.
 
@@ -276,6 +276,7 @@ $$D(A,B) = \text{inf } d(a, b)$$.
 #### Show that $$D$$ does not define a metric on the power set of $$X$$. (For this reason we use another symbol, $$D$$, but one that still reminds us of $$d$$.)
 
 **Proof:**
+
 Consider $$A={3,4}$$, and $$B={4,5}$$.  
 Then, we have:
 
