@@ -13,7 +13,7 @@ For reference, the axioms **(M1)** to **(M4)** for a distance metric are as foll
 - **(M1)** $$0 \leq d(x,y)<\infty, d(x,y)\in \mathbb{R}$$
 - **(M2)** $$d(x,y)=0$$ if and only if $$x=y$$
 - **(M3)** $$d(x,y)=d(y,x)$$
-- **(M4)** $$d(x,z) \leq d(x,y) + d(y,z)$$
+- **(M4)** $$d(x,y) \leq d(x,z) + d(z,y)$$
 
 #### 1.2.1. Show that in 1.2-1 we can obtain another metric by replacing $$\frac{1}{2^i}$$ with $$\mu_i>0$$ such that $$\sum\mu_i$$ converges.
 
@@ -49,7 +49,7 @@ $$
 
 This is easily seen since the modulus sign guarantees that:$$\vert x_i-y_i\vert=\vert y_i-x_i \vert$$, and thus $$d(x,y)=d(y,x)$$.
 
-**(M4)** $$d(x,z) \leq d(x,y) + d(y,z)$$
+**(M4)** $$d(x,y) \leq d(x,z) + d(z,y)$$
 
 For convenience of notation, let us denote use the following notation:
 
@@ -419,7 +419,7 @@ This is evident if we set $$d(x,y)=0$$ in the definition of $$\bar{d}(x,y)$$.
 
 Since $$d(x,y)$$ is symmetric, substituting $$d(y,x)$$ in the definition of \bar{d}(x,y) shows that it is symmetric also.
 
-**(M4)** $$d(x,z) \leq d(x,y) + d(y,z)$$
+**(M4)** $$d(x,y) \leq d(x,z) + d(z,y)$$
 
 For convenience of notation, let us denote use the following notation:
 
@@ -547,7 +547,7 @@ This is evident if we set $$x=y$$, then we have $$d_1(x,x)=d_2(x,x)=0$$ and thus
 
 Since $$d_1(x,y)$$ and $$d_2(x,y)$$ are symmetric, substituting $$d_1(y,x)$$ and $$d_2(y,x)$$ in the definition of \bar{d}(x,y) shows that it is symmetric also.
 
-**(M4)** $$\bar{d}(x,z) \leq \bar{d}(x,y) + \bar{d}(y,z)$$
+**(M4)** $$\bar{d}(x,y) \leq \bar{d}(x,z) + \bar{d}(z,y)$$
 
 $$
 d_1(x_1,y_1) \leq d_1(x_1,z_1) + d_1(z_1, y_1) \\
@@ -596,7 +596,7 @@ This is evident if we set $$x=y$$, then we have $$d_1(x,x)=d_2(x,x)=0$$ and thus
 
 Since $$d_1(x,y)$$ and $$d_2(x,y)$$ are symmetric, substituting $$d_1(y,x)$$ and $$d_2(y,x)$$ in the definition of \bar{d}(x,y) shows that it is symmetric also.
 
-**(M4)** $$\bar{d}(x,z) \leq \bar{d}(x,y) + \bar{d}(y,z)$$
+**(M4)** $$\bar{d}(x,y) \leq \bar{d}(x,z) + \bar{d}(z,y)$$
 
 We have:
 
@@ -669,5 +669,78 @@ $$\blacksquare$$
 #### 1.2.15. Show that a third metric on $$X$$ in Prob. 13 is defined by
 
 $$
-\bar{d}(x,y)=max[d_1(x_1,y_1), d_1(x_2,y_2)]
+\bar{d}(x,y)=max[d_1(x_1,y_1), d_2(x_2,y_2)]
+$$
+
+**Proof:**
+
+The candidate distance metric is:
+
+$$
+\bar{d}(x,y)=max[d_1(x_1,y_1), d_2(x_2,y_2)]
+$$
+
+where $$d_1$$ and $$d_2$$ are already valid distance metrics.
+
+**(M1)** $$0 \leq \bar{d}(x,y)<\infty, \bar{d}(x,y)\in \mathbb{R}$$
+
+Because $$d_1$$ and $$d_2$$ are already valid metrics. Thus $$0<d_1(x,y)<\infty$$ and $$0<d_2(x,y)<\infty$$.
+
+$$
+\therefore 0<\bar{d}(x,y)<\infty
+$$
+
+Thus, $$\bar{d}(x,y)$$ is nonegative and bounded, by its definition.
+
+**(M2)** $$\bar{d}(x,y)=0$$ if and only if $$x=y$$
+
+This is evident if we set $$x=y$$, then we have $$d_1(x,x)=d_2(x,x)=0$$ and thus $$\bar{d}(x,y)=0$$.
+
+**(M3)** $$\bar{d}(x,y)=\bar{d}(y,x)$$
+
+Since $$d_1(x,y)$$ and $$d_2(x,y)$$ are symmetric, substituting $$d_1(y,x)$$ and $$d_2(y,x)$$ in the definition of \bar{d}(x,y) shows that it is symmetric also.
+
+**(M4)** $$\bar{d}(x,y) \leq \bar{d}(x,z) + \bar{d}(z,y)$$
+
+We have:
+
+$$
+\bar{d}(x,z)=max[d_1(x_1,z_1), d_2(x_2,z_2)] \\
+\bar{d}(z,y)=max[d_1(z_1,y_1), d_2(z_2,y_2)]
+$$
+
+Adding the above gives us:
+
+$$
+\begin{equation}
+\bar{d}(x,z) + \bar{d}(z,y) = max[d_1(x_1,z_1), d_2(x_2,z_2)] + max[d_1(z_1,y_1), d_2(z_2,y_2)]
+\label{eq:1-2-15-max}
+\end{equation}
+$$
+
+We'd like to relate the above to the candidate metric. To do that, we need to find some way to group $$d_1(x_1,z_1)$$ and $$d_1(z_1,y_1)$$ together; currently they are stuck in separate "maximum" expressions.
+
+To do this, let us observe that:
+
+$$
+a \leq max(a,b) \\
+c \leq max(c,d) \\
+
+\Rightarrow a+c \leq max(a,b) + max(c,d)
+$$
+
+Similarly:
+
+$$
+b+d \leq max(a,b) + max(c,d)
+$$
+
+Substituting the above results back into $$\eqref{eq:1-2-15-max}$$, we get:
+
+$$
+\bar{d}(x,z) + \bar{d}(z,y) \leq max(d_1(x_1,z_1) + d_1(z_1,y_1), max(d_2(x_2,z_2) + d_2(z_2,y_2))
+$$
+
+$$
+\bar{d}(x,y)=max[d_1(x_1,y_1), d_2(x_2,y_2)]
 $$
