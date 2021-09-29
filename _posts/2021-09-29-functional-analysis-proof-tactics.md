@@ -6,7 +6,7 @@ tags: ["Mathematics", "Proof", "Functional Analysis", "Pure Mathematics"]
 draft: false
 ---
 
-This article represents a collection of my ongoing notes on proof tactics I've found useful when I've been stuck trying to solve proof exercises. I aim to continue documenting these in as much detail as possible. For now, here is a sketch of some of them.
+This article represents a (very short) collection of my ongoing notes on proof tactics I've found useful when I've been stuck trying to solve proof exercises. I aim to continue documenting these in as much detail as possible. For now, here is a sketch of some of them.
 
 - Work backwards from what the exercise requires you to prove.
 - For **Triangle Inequality** proofs, look for opportunities to break up $$\vert x-y \vert$$ into $$\vert x-z+z-y\vert \leq \vert x-z \vert + \vert z-y \vert $$.
@@ -18,3 +18,4 @@ This article represents a collection of my ongoing notes on proof tactics I've f
   $$x_1y_1+x_2y_2+...=\sum x_i y_i \leq {\left(\sum x_i^p\right)}^\frac{1}{p}{\left(\sum y_i^p\right)}^\frac{1}{p}$$
 - If a constant term appears in the numerator of one term and the denominator of another, like $$\frac{x}{\lambda}+\lambda y$$, try to select $$\lambda=\sqrt{\frac{x}{y}}$$, so that you can get $$\sqrt{xy}+\sqrt{xy}=2\sqrt{xy}$$.
 - Use loose equalities, i.e., if $$x+y \leq z, x,y,z \geq 0$$, then $$x \leq z$$.
+- More to come!
