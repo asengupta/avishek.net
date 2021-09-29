@@ -210,7 +210,7 @@ $$
 \Delta_B={d(u,v): u,v \in B}
 $$
 
-Since $$x,y\in A \Rightarrow x,y \in B$$, all $$d(x,y):x,y \in A$$ must exist in \Delta_B. Thus, we have:
+Since $$x,y\in A \Rightarrow x,y \in B$$, all $$d(x,y):x,y \in A$$ must exist in $$\Delta_B$$. Thus, we have:
 
 $$
 \Delta_A \subset \Delta_B
@@ -698,7 +698,7 @@ $$\blacksquare$$
 #### 1.2.15. Show that a third metric on $$X$$ in Prob. 13 is defined by
 
 $$
-\bar{d}(x,y)=max[d_1(x_1,y_1), d_2(x_2,y_2)]
+\bar{d}(x,y)=\text{max}[d_1(x_1,y_1), d_2(x_2,y_2)]
 $$
 
 **Proof:**
@@ -706,7 +706,7 @@ $$
 The candidate distance metric is:
 
 $$
-\bar{d}(x,y)=max[d_1(x_1,y_1), d_2(x_2,y_2)]
+\bar{d}(x,y)=\text{max}[d_1(x_1,y_1), d_2(x_2,y_2)]
 $$
 
 where $$d_1$$ and $$d_2$$ are already valid distance metrics.
@@ -749,7 +749,7 @@ $$
 \end{equation}
 $$
 
-We'd like to relate the above to the candidate metric. To do that, we need to find some way to group $$d_1(x_1,z_1)$$ and $$d_1(z_1,y_1)$$ together; currently they are stuck in separate "maximum" expressions.
+We'd like to relate the above to the candidate metric. To do that, we need to find some way to group $$d_1(x_1,z_1)$$ and $$d_2(z_2,y_2)$$ together; currently they are stuck in separate "maximum" expressions.
 
 To do this, let us observe that:
 
@@ -790,7 +790,7 @@ $$
 We note that:
 
 $$
-\bar{d}(x,z) + \bar{d}(z,y) = \text{max}[d_1(x_1,z_1), d_2(x_2,z_2)] + max[d_1(z_1,y_1), d_2(z_2,y_2)]
+\bar{d}(x,z) + \bar{d}(z,y) = \text{max}[d_1(x_1,z_1), d_2(x_2,z_2)] + \text{max}[d_1(z_1,y_1), d_2(z_2,y_2)]
 $$
 
 Substituting the above equality into $$\eqref{eq:1-2-15-penultimate}$$, we directly get:
