@@ -60,7 +60,36 @@ $$\blacksquare$$
 
 #### 1.3.2. What is an open ball $$B(x_0;1)$$ on $$\mathbb{R}$$? In $$\mathbb{C}$$? (Cf. 1.1-5.) In $$\mathbb{C}[a,b]$$? (Cf. 1.1-7.) Explain Fig. 8.
 
+**Answer:**
+
+The open ball $$B(x_0;1)$$ on $$\mathbb{R}$$ is the open interval $$(x_0-1,x_0+1)$$.  
+The open ball $$B(x_0;1)$$ on $$\mathbb{C}$$ is the unit disk centered at $$x_0$$, excluding its circumference.  
+The open ball $$B(x_0;1)$$ in $$\mathbb{C}[a,b]$$ is the set of functions $$x(t)$$ which satisfy the condition $$\text{sup }\vert x_0(t)-x(t)\vert < 1$$.
+
 #### 1.3.3. Consider $$C[0,2\pi]$$ and determine the smallest $$r$$ such that $$y \in \bar{B}(x;r)$$, where $$x(t)=\text{sin }t$$ and $$y(t)=\text{cos }t$$.
+
+**Answer:**
+
+The center of the ball is $$x=\text{cos } t$$. The point $$y=\text{cos } t$$ needs to be in this ball. This gives us the condition that the $$y$$ can at most be on the boundary of the ball. The radius of this minimal ball then becomes:
+
+$$
+r_{xy}(t)=x-y=\text{sin } t-\text{cos } t
+$$
+
+We need to minimise the above expression, thus differentiating $$r_{xy}$$ with respect to $$t$$ and setting it to zero, we get:
+
+$$
+\frac{dr_{xy}(t)}{t}=\text{cos } t+\text{sin } t=0 \\
+\Rightarrow \text{tan } t = -1 \\
+\Rightarrow t = -\frac{\pi}{4}
+$$
+
+Plugging this value back into that of $$r_{xy}$$, we get:
+
+$$
+\text{min } r_{xy}=-\sqrt{2} \\
+|\text{min } r_{xy}|=\sqrt{2}
+$$
 
 #### 1.3.4. Show that any nonempty set $$A\subset (X,d)$$ is open if and only if it is a union of open balls.
 
