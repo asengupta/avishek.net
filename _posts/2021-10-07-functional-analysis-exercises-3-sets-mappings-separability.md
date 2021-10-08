@@ -189,6 +189,23 @@ $$\blacksquare$$
 
 #### 1.3.10. A point $$x$$ not belonging to a closed set $$M \subset (X, d)$$ always has a nonzero distance from $$M$$. To prove this, show that $$x \in \bar{A}$$ if and only if $$D(x, A) = 0$$ (cf. Prob. 10, Sec. 1.2); here $$A$$ is any nonempty subset of $$X$$.
 
+**Proof:**
+
+We know that $$D(x, A)=\text{inf } d(x,y), y \in M$$.
+
+Assume that $$x\in A$$. Since d(x,x)=0, we have $$D(x,A)=\text{inf } d(x,y), y \in A = d(x,x) = 0$$
+
+Conversely, assume that $$D(x,A)=0$$. Since $$d(x,y)=0$$ if $$x=y$$, from the definition of $$D(x,A)=\text{inf } d(x,y), y \in A$$, the value of $$y$$ for which $$d(x,y)=0$$ has to be $$x$$. That is, $$y=x$$. Since $$y \in A$$ by definition, we conclude that $$x \in A$$.
+
+$$\blacksquare$$
+
+**Alternative Proof**
+Since $$X$$ does not belong to the closed set $$A$$, it belongs to the open set $$A'$$. Thus, there exists an $$\epsilon>0$$ for which the following open ball exists: $$B_\epsilon(x,r)\in A'$$.
+
+Any larger ball would intersect with the set $$A$$. Since $$\epsilon>0$$, there is always a nonzero distance between $$x$$ and $$A$$.
+
+$$\blacksquare$$
+
 #### 1.3.11. **(Boundary)** A boundary point $$x$$ of a set $$A \subset (X, d)$$ is a point of $$X$$ (which may or may not belong to $$A$$) such that every neighbourhood of $$x$$ contains points of $$A$$ as well as points not belonging to $$A$$; and the boundary (or frontier) of $$A$$ is the set of all boundary points of $$A$$. Describe the boundary of 
   **(a) the intervals $$(-1,1)$$, $$[-1,1)$$, $$[-1,1]$$ on $$\mathbb{R}$$**  
   **(b) the set of all rational numbers on $$\mathbb{R}$$**  
