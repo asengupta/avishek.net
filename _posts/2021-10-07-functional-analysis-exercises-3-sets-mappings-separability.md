@@ -93,15 +93,38 @@ $$
 
 #### 1.3.4. Show that any nonempty set $$A\subset (X,d)$$ is open if and only if it is a union of open balls.
 
+**Proof**:
+
+An open ball is defined as:
+
+$$
+B(x_0,r)=\{x: d(x,x_0)<r, x \in X\}
+$$
+
+[TODO]
+
 #### 1.3.5. It is important to realise that certain sets may be open and closed at the same time. (a) Show that this is always the case for $$X$$ and $$\emptyset$$. (b) Show that in a discrete metric space $$X$$ (cf. 1.1-8), every subset is open and closed.
 
+**Proof:**
+
+The empty set $$\emptyset$$ has no elements, and thus contains (vacuously) all its limit points, and is thus closed. All the elements in $$\emptyset$$ contain (vacuously) open balls around them, and thus the empty set is also open.
+
+Since $$X$$ is the complement of $$\emptyset$$, it is also open and closed by the same token.
+
 #### 1.3.6. If $$x_0$$ is an accumulation point of a set $$A \subset (X,d)$$, show that any neighbourhood of $$x_0$$ contains infinitely many points of $$A$$.
+
+**Proof:**
+
+An accumulation point for a set $$U$$ contains at least one $$x \in U$$ in every neighbourhood. Since we can always find a smaller neighbourhood than the one chosen, we can find an infinite number of neighbourhood smaller than an arbitrary neighbourhood, hence that neighbourhood will contain an infinite number of points.
 
 #### 1.3.7. Describe the closure of each of the following subsets:  
   **(a) The integers on $$\mathbb{R}$$**  
   **(b) the rational numbers on $$\mathbb{R}$$**  
   **(c) the complex numbers with rational real and imagin~ parts in $$\mathbb{C}$$, (d) the disk $${z: \vert z \vert < 1}\subset C$$.**  
 
+**Answer:**
+
+The integers 
 #### 1.3.8. Show that the closure $$\bar{B(xo; r)}$$ of an open ball $$B(xo; r)$$ in a metric space can differ from the closed ball $$\bar{B}(xo; r)$$.
 
 #### 1.3.9. Show that $$A \subset \bar{A}$$, $$\bar{\bar{A}} = \bar{A}$$, $$\bar{A \cup B} = \bar{A} \cup \bar{B}$$, $$\bar{A \cap B} \subset \bar{A} \cap \bar{B}$$.
