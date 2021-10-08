@@ -221,6 +221,8 @@ $$\blacksquare$$
 
 #### 1.3.13. Show that a metric space $$X$$ is separable if and only if $$X$$ has a countable subset $$Y$$ with the following property. For every $$ \epsilon > 0$$ and every $$x \in X$$ there is a $$y \in Y$$ such that $$d(x, y) < \epsilon$$.
 
+**Proof:**
+
 #### 1.3.14. (Continuous mapping) Show that a mapping $$T: X \rightarrow Y$$ is continuous if and only if the inverse image of any closed set $$M \subset Y$$ is a closed set in X.
 
 #### 1.3.15. Show that the image of an open set under a continuous mapping need not be open. 
