@@ -211,6 +211,12 @@ $$\blacksquare$$
   **(b) the set of all rational numbers on $$\mathbb{R}$$**  
   **(c) the disks $${z : \vert z \vert < 1} \subset C$$ and $${z : \vert z \vert \leq 1} \subset C$$.**  
 
+**Answer:**
+
+(a) The boundary of $$(-1,1)$$, $$[-1,1)$$, $$[-1,1]$$ is $$\{-1,1\}$$.  
+(b) Every neighbourhood of a rational definitely contains a real number. The boundary point itself counts as a point in the set in its neighbourhood. Thus, the boundary in this case is $$\mathbb{R}$$.  
+(c) The unit circle centered at the origin is the boundary in both cases.
+
 #### 1.3.12. **(Space $$B[a, b]$$)** Show that $$B[a, b]$$, $$a < b$$, is not separable. (Cf. 1.2-2.)
 
 #### 1.3.13. Show that a metric space $$X$$ is separable if and only if $$X$$ has a countable subset $$Y$$ with the following property. For every $$ \epsilon > 0$$ and every $$x \in X$$ there is a $$y \in Y$$ such that $$d(x, y) < \epsilon$$.
