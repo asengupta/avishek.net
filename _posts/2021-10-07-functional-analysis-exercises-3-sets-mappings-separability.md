@@ -146,7 +146,31 @@ The closed ball around $$x_0$$ is $$d(x,x_0)\leq 1$$, which is everything, but i
 The situation is shown below:
   ![Pathological Open Ball Closed Ball Discrete Metric](/assets/images/pathological-open-ball-closed-ball-discrete-metric.png)
 
-#### 1.3.9. Show that $$A \subset \bar{A}$$, $$\bar{\bar{A}} = \bar{A}$$, $$\bar{A \cup B} = \bar{A} \cup \bar{B}$$, $$\bar{A \cap B} \subset \bar{A} \cap \bar{B}$$.
+#### 1.3.9. Show that $$A \subset \bar{A}$$, $$\overline{\overline A} = \bar{A}$$, $$\overline{A \cup B} = \bar{A} \cup \bar{B}$$, $$\overline{A \cap B} \subset \bar{A} \cap \bar{B}$$.
+
+**Proof:**
+The closure of the set $$A$$ contains the set $$A$$ as well as its limit points. By that definition, we can say that $$A \subset \bar{A}$$.
+
+$$\blacksquare$$
+
+Suppose additional limit points exist for $$\bar{A}$$ which are then in $$\overline\overline{A}$$. Take such a limit point $$x$$. Since $$x$$ is a limit point of $$\bar{A}$$, then it must have at least one limit point $$y$$ in an $$\epsilon$$-neighbourhood.
+
+We consider two cases.
+
+- $$y$$ is in $$A$$. Then $$\overline\overline{A}$$ is a limit point of $$A$$ and thus must exist in $$\bar{A}$$.
+- $$y$$ is a limit point of $$A$$. Then, $$y$$ itself must also have a point $$z$$ in $$A$$ in an arbitrary $$\epsilon$$-neightbourhood. Then, the **Triangle Inequality** gives us:
+  $$
+  d(x,z) \leq d(x,y) + d(y,z)
+  $$
+  We have $$d(x,y)<\epsilon$$ and $$d(y,z)<\epsilon$$, therefore we get:
+  $$
+  d(x,z)<2\epsilon
+  $$
+  Thus, we can conclude that $$x$$ also has a point in $$A$$ in an arbitrary $$2\epsilon$$ neighbourhood, and is thus also a limit point of $$A$$, and thus has to exist in $$\bar{A}$$.
+
+Thus, all limit points of $$\bar{A}$$ exist in $$\bar{A}$$, and hence we can conclude that $$\overline{\overline A} = \bar{A}$$.
+
+$$\blacksquare$$
 
 #### 1.3.10. A point $$x$$ not belonging to a closed set $$M \subset (X, d)$$ always has a nonzero distance from $$M$$. To prove this, show that $$x \in \bar{A}$$ if and only if $$D(x, A) = 0$$ (cf. Prob. 10, Sec. 1.2); here $$A$$ is any nonempty subset of $$X$$.
 
