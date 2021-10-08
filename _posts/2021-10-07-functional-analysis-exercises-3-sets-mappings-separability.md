@@ -219,6 +219,25 @@ $$\blacksquare$$
 
 #### 1.3.12. **(Space $$B[a, b]$$)** Show that $$B[a, b]$$, $$a < b$$, is not separable. (Cf. 1.2-2.)
 
+**Proof:**
+
+Choose the family of functions as below:
+
+$$
+f_n(x)=\begin{cases} 0 & \text{ if } x=n \\
+                     1 & \text{ if } x \neq n
+       \end{cases}, n \in \mathbb{R}
+$$
+
+Then the $$d(f_m(x), f_n(x))=\text{sup } \vert f_m(x)-f_n(x)\vert = 1 $$ unless $$m=n$$. Therefore, all distinct functions in this family (examples are $$f_{2.5}(x)$$ and $$f_\sqrt{2}(x)$$) are separated by $$1$$.
+
+The number of these functions is uncountable, since $$n$$ corresponds to the real number line.
+Each of these functions can be represented by a point in $$B[a, b]$$ space, separated by $$1$$. An open ball of \frac{1}{2} around each of them do not intersect each other.
+
+For $$B[a, b]$$ to be separable, a countable set, say $$M$$, must be dense in $$B[a, b]$$. For this, each ball must contain at least one element of $$M$$. Since the number of balls is uncountable, $$M$$ is also uncountable, and thus $$B[a, b]$$ is not separable.
+
+$$\blacksquare$$
+
 #### 1.3.13. Show that a metric space $$X$$ is separable if and only if $$X$$ has a countable subset $$Y$$ with the following property. For every $$ \epsilon > 0$$ and every $$x \in X$$ there is a $$y \in Y$$ such that $$d(x, y) < \epsilon$$.
 
 **Proof:**
@@ -249,6 +268,27 @@ If $$x$$ is equal to a member of $$Y$$, then every neighbourhood of this $$x$$ c
 $$\blacksquare$$
 
 #### 1.3.14. (Continuous mapping) Show that a mapping $$T: X \rightarrow Y$$ is continuous if and only if the inverse image of any closed set $$M \subset Y$$ is a closed set in X.
+
+**Proof**
+
+Assume that the image $$Y$$ and its pre-image $$X$$ are closed sets.
+Then $$X'$$ and $$Y'$$ are open sets.
+
+We know that: $$X'=TX'=Y'$$, i.e.: $$T:X' \rightarrow Y'$$.
+
+We know that if the inverse image of an open set is open, the function is continuous. Thus, $$T$$ is continuous.
+
+$$\blacksquare$$
+
+Conversely, assume that the image $$Y$$ is closed, and $$T$$ is continuous.
+Then $$Y'$$ is an open set.
+
+Since $$T$$ is continuous, $$T^{-1}Y'$$ is also open.
+Since $$Y'=TX'$$, we have $$X'=T^{-1}Y'$$.Hence, $$X'$$ is open.
+
+It follows then that $$X$$ is closed.
+
+$$\blacksquare$$
 
 #### 1.3.15. Show that the image of an open set under a continuous mapping need not be open. 
 
