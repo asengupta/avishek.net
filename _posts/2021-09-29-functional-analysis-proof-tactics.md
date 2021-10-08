@@ -35,4 +35,4 @@ For now, here is a sketch of some of them.
   This works when the distance metric is a "sup" metric like in $$l^\infty$$ space.
   The set is also uncountable, since there are uncountable number of such sequences, and thus can be paired with arbitrary sets to disprove separability.
 - **Proofs about closed sets can be simplified by considering known properties of open sets, and then taking their duals.** The direct proof would involve proving properties about sequences which converge to limits, and assuming those limits are contained in closed sets.
-- For establishing set membership relations, start with assuming one side (say, the left side), then breaking it down into cases. Then, expand membership into the right hand side.
+- **For establishing set membership relations**, start with assuming one side (say, the left side), then breaking it down into cases. Then, expand membership into the right hand side.

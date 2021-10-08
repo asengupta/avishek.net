@@ -33,13 +33,13 @@ $$\blacksquare$$
 The definition of a closed ball is:
 
 $$
-\bar{B}(x_0,r)=\{x: d(x,x_0)\leq r, x \in X\}
+\overline{B}(x_0,r)=\{x: d(x,x_0)\leq r, x \in X\}
 $$
 
-Then the complement of $$\bar{B}(x_0,r)$$ becomes:
+Then the complement of $$\overline{B}(x_0,r)$$ becomes:
 
 $$
-U=\bar{B}(x_0,r)'=\{x: d(x,x_0)>r, x \in X\}
+U=\overline{B}(x_0,r)'=\{x: d(x,x_0)>r, x \in X\}
 $$
 
 This implies that every point in the complement of the closed ball (call it $$U$$) is separated from $$x_0$$ by some distance $$r+\epsilon$$, $$\epsilon \geq 0$$. Assume such a point $$p$$, then we have $$d(p,x_0)=r+\epsilon$$. Assume a point $$y$$ in an open ball of radius $$\epsilon$$ centered on $$p$$. We then have: $$d(y,p)<\epsilon$$. Then we can see that:
@@ -53,7 +53,7 @@ $$
 
 Thus, an open ball $$\{y: d(y,x)<\epsilon, y \in U\}$$ can exist around any $$x \in U$$. Thus, $$U$$ is an open set.
 
-The complement of the open set $$U$$ is the open set $$\bar{B}(x_0,r)$$.
+The complement of the open set $$U$$ is the open set $$\overline{B}(x_0,r)$$.
 Hence, a closed ball is a closed set.
 
 $$\blacksquare$$
@@ -66,7 +66,7 @@ The open ball $$B(x_0;1)$$ on $$\mathbb{R}$$ is the open interval $$(x_0-1,x_0+1
 The open ball $$B(x_0;1)$$ on $$\mathbb{C}$$ is the unit disk centered at $$x_0$$, excluding its circumference.  
 The open ball $$B(x_0;1)$$ in $$\mathbb{C}[a,b]$$ is the set of functions $$x(t)$$ which satisfy the condition $$\text{sup }\vert x_0(t)-x(t)\vert < 1$$.
 
-#### 1.3.3. Consider $$C[0,2\pi]$$ and determine the smallest $$r$$ such that $$y \in \bar{B}(x;r)$$, where $$x(t)=\text{sin }t$$ and $$y(t)=\text{cos }t$$.
+#### 1.3.3. Consider $$C[0,2\pi]$$ and determine the smallest $$r$$ such that $$y \in \overline{B}(x;r)$$, where $$x(t)=\text{sin }t$$ and $$y(t)=\text{cos }t$$.
 
 **Answer:**
 
@@ -132,7 +132,7 @@ An accumulation point for a set $$U$$ contains at least one $$x \in U$$ in every
 
 (d) The closure of $${z: \vert z \vert < 1}\subset C$$ is the unit disk centered at the origin (including the circumference).
 
-#### 1.3.8. Show that the closure $$\bar{B(x_0; r)}$$ of an open ball $$B(x_0; r)$$ in a metric space can differ from the closed ball $$\bar{B}(x_0; r)$$.
+#### 1.3.8. Show that the closure $$\overline{B(x_0; r)}$$ of an open ball $$B(x_0; r)$$ in a metric space can differ from the closed ball $$\overline{B}(x_0; r)$$.
 
 **Proof:**
 
@@ -140,25 +140,25 @@ We use a counter-example to prove this.
 
 We describe the pathological case where the closure of an open ball is not the closed ball.
 
-In a **Discrete Metric Space**, an **open ball** around an element $$x_0$$ is $$d(x,x_0)<1$$ is $$X=\{x_0\}$$. Since there is no other $$x$$ within every *any* neightbourhood of $$x_0$$, which is not $$x_0$$ itself, $$X=\{x0\}$$ has no limit points. Then $$X=\{x_0\}$$ vacuously contains all its limit points (of which there are actually none, so the empty set is the set of limit points). Thus, $$\bar{X}=\{x_0\}$$ is its own closure.  
-The closed ball around $$x_0$$ is $$d(x,x_0)\leq 1$$, which is everything, but it is not the same as $$\bar{X}=\{x_0\}$$.
+In a **Discrete Metric Space**, an **open ball** around an element $$x_0$$ is $$d(x,x_0)<1$$ is $$X=\{x_0\}$$. Since there is no other $$x$$ within every *any* neightbourhood of $$x_0$$, which is not $$x_0$$ itself, $$X=\{x0\}$$ has no limit points. Then $$X=\{x_0\}$$ vacuously contains all its limit points (of which there are actually none, so the empty set is the set of limit points). Thus, $$\overline{X}=\{x_0\}$$ is its own closure.  
+The closed ball around $$x_0$$ is $$d(x,x_0)\leq 1$$, which is everything, but it is not the same as $$\overline{X}=\{x_0\}$$.
 
 The situation is shown below:
   ![Pathological Open Ball Closed Ball Discrete Metric](/assets/images/pathological-open-ball-closed-ball-discrete-metric.png)
 
-#### 1.3.9. Show that $$A \subset \bar{A}$$, $$\overline{\overline A} = \bar{A}$$, $$\overline{A \cup B} = \bar{A} \cup \bar{B}$$, $$\overline{A \cap B} \subset \bar{A} \cap \bar{B}$$.
+#### 1.3.9. Show that $$A \subset \overline{A}$$, $$\overline{\overline A} = \overline{A}$$, $$\overline{A \cup B} = \overline{A} \cup \overline{B}$$, $$\overline{A \cap B} \subset \overline{A} \cap \overline{B}$$.
 
 (This proof is due to *Strichartz*)  
 **Proof:**
-The closure of the set $$A$$ contains the set $$A$$ as well as its limit points. By that definition, we can say that $$A \subset \bar{A}$$.
+The closure of the set $$A$$ contains the set $$A$$ as well as its limit points. By that definition, we can say that $$A \subset \overline{A}$$.
 
 $$\blacksquare$$
 
-Suppose additional limit points exist for $$\bar{A}$$ which are then in $$\overline{\overline A}$$. Take such a limit point $$x$$. Since $$x$$ is a limit point of $$\bar{A}$$, then it must have at least one limit point $$y$$ in an $$\epsilon$$-neighbourhood.
+Suppose additional limit points exist for $$\overline{A}$$ which are then in $$\overline{\overline A}$$. Take such a limit point $$x$$. Since $$x$$ is a limit point of $$\overline{A}$$, then it must have at least one limit point $$y$$ in an $$\epsilon$$-neighbourhood.
 
 We consider two cases.
 
-- **$$y$$ is in $$A$$:** Then $$\overline{\overline A}$$ is a limit point of $$A$$ and thus must exist in $$\bar{A}$$.
+- **$$y$$ is in $$A$$:** Then $$\overline{\overline A}$$ is a limit point of $$A$$ and thus must exist in $$\overline{A}$$.
 - **$$y$$ is a limit point of $$A$$:** Then, $$y$$ itself must also have a point $$z$$ in $$A$$ in an arbitrary $$\epsilon$$-neightbourhood. Then, the **Triangle Inequality** gives us:
   $$
   d(x,z) \leq d(x,y) + d(y,z)
@@ -168,9 +168,9 @@ We consider two cases.
   d(x,z)<2\epsilon
   $$
   
-  Thus, we can conclude that $$x$$ also has a point in $$A$$ in an arbitrary $$2\epsilon$$ neighbourhood, and is thus also a limit point of $$A$$, and thus has to exist in $$\bar{A}$$.
+  Thus, we can conclude that $$x$$ also has a point in $$A$$ in an arbitrary $$2\epsilon$$ neighbourhood, and is thus also a limit point of $$A$$, and thus has to exist in $$\overline{A}$$.
 
-Thus, all limit points of $$\bar{A}$$ exist in $$\bar{A}$$, and hence we can conclude that $$\overline{\overline A} = \bar{A}$$.
+Thus, all limit points of $$\overline{A}$$ exist in $$\overline{A}$$, and hence we can conclude that $$\overline{\overline A} = \overline{A}$$.
 
 $$\blacksquare$$
 
@@ -179,15 +179,15 @@ Shuffling two sequences $$<x_1>$$ and $$<x_2>$$ with limit points $$L_1$$ and $$
 Consider any two sequences $$<x_1>\in A$$ and $$<x_2>\in B$$ with limit points $$L_1$$ and $$L_2$$. Then let $$<x_3>\in A \cup B$$ be the result of any shuffling of these two sequences. Then $$<x_3>$$ will have limit points $$L_1$$ and $$L_2$$, and thus the closure of $$A \cup B$$ will contain $$L_1$$ and $$L_2$$, and no new limit points.
 
 If either sequence does not converge to a limit, no new limit points are introduced during the union.
-Thus, we have proven that combining two sequences does not introduce any new limit points in the resulting sequence. Then it follows that: $$\overline{A \cup B} = \bar{A} \cup \bar{B}$$
+Thus, we have proven that combining two sequences does not introduce any new limit points in the resulting sequence. Then it follows that: $$\overline{A \cup B} = \overline{A} \cup \overline{B}$$
 
 $$\blacksquare$$
 
-$$\bar{A} \cap \bar{B}$$ is a closed set, since $$\bar{A}$$ and $$\bar{B}$$ are closed sets, and it contains $$A \cap B$$. Also, $$\overline{A \cap B}$$ is the smallest closed set covering $$A \cap B$$. Thus $$\overline{A \cap B} \subset \bar{A} \cap \bar{B}$$.
+$$\overline{A} \cap \overline{B}$$ is a closed set, since $$\overline{A}$$ and $$\overline{B}$$ are closed sets, and it contains $$A \cap B$$. Also, $$\overline{A \cap B}$$ is the smallest closed set covering $$A \cap B$$. Thus $$\overline{A \cap B} \subset \overline{A} \cap \overline{B}$$.
 
 $$\blacksquare$$
 
-#### 1.3.10. A point $$x$$ not belonging to a closed set $$M \subset (X, d)$$ always has a nonzero distance from $$M$$. To prove this, show that $$x \in \bar{A}$$ if and only if $$D(x, A) = 0$$ (cf. Prob. 10, Sec. 1.2); here $$A$$ is any nonempty subset of $$X$$.
+#### 1.3.10. A point $$x$$ not belonging to a closed set $$M \subset (X, d)$$ always has a nonzero distance from $$M$$. To prove this, show that $$x \in \overline{A}$$ if and only if $$D(x, A) = 0$$ (cf. Prob. 10, Sec. 1.2); here $$A$$ is any nonempty subset of $$X$$.
 
 **Proof:**
 
@@ -225,18 +225,18 @@ $$\blacksquare$$
 
 Assume that $$X$$ has a countable subset $$Y$$ with the following property: for every $$ \epsilon > 0$$ and every $$x \in X$$ there is a $$y \in Y$$ such that $$d(x, y) < \epsilon$$.
 
-This means, every neighbourhood of $$x \in X$$ contains a $$y \in Y$$. This $$x$$ may not actually exist in $$Y$$. Then $$x$$ is a limit point of $$M$$. Since $$x$$ is arbitrary, the entire metric space $$X$$ consists of limit points of $$M$$, and thus $$X \subset \bar{Y}$$ (since $$\bar{Y}$$ could conceivably consist of more limit points not in $$X$$).
+This means, every neighbourhood of $$x \in X$$ contains a $$y \in Y$$. This $$x$$ may not actually exist in $$Y$$. Then $$x$$ is a limit point of $$M$$. Since $$x$$ is arbitrary, the entire metric space $$X$$ consists of limit points of $$M$$, and thus $$X \subset \overline{Y}$$ (since $$\overline{Y}$$ could conceivably consist of more limit points not in $$X$$).
 
 We know that $$X$$, being a metric space, is closed (and open, but that is not of interest here).
-However, we also know that $$\bar{Y}$$ is the smallest closed set covering $$Y$$. This implies that $$\bar{Y} \subset X$$.
+However, we also know that $$\overline{Y}$$ is the smallest closed set covering $$Y$$. This implies that $$\overline{Y} \subset X$$.
 
 Putting the above set membership relations together, we get:
 
-$$\bar{Y}=X$$
+$$\overline{Y}=X$$
 
 $$\blacksquare$$
 
-Assume that the metric space $$X$$ is separable. Then $$\bar{Y}=X$$.
+Assume that the metric space $$X$$ is separable. Then $$\overline{Y}=X$$.
 
 Let $$x \in X$$. Then, there are two possibilities.
 
