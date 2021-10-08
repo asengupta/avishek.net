@@ -37,6 +37,7 @@ title: Book References
 - **Principles of Topology**: *Fred H. Croom*
 - **The Way of Analysis**: *Robert S. Strichartz*
 - **Functional Analysis**: *Joseph Muscat*
+- **Introductory Functional Analysis with Applications**: *Erwin Kreyszig*
 - **Functional Analysis for Physics and Engineering**: *Hiroyuki Shima*
 - **Linear Algebra: Theory, Intuition, Code** : *Mike X Cohen*
 - **Introduction to Linear Algebra** : *Gilbert Strang*

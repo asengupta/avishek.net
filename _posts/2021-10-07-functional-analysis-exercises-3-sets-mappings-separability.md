@@ -148,6 +148,7 @@ The situation is shown below:
 
 #### 1.3.9. Show that $$A \subset \bar{A}$$, $$\overline{\overline A} = \bar{A}$$, $$\overline{A \cup B} = \bar{A} \cup \bar{B}$$, $$\overline{A \cap B} \subset \bar{A} \cap \bar{B}$$.
 
+(This proof is due to *Strichartz*)  
 **Proof:**
 The closure of the set $$A$$ contains the set $$A$$ as well as its limit points. By that definition, we can say that $$A \subset \bar{A}$$.
 
@@ -177,10 +178,14 @@ Shuffling two sequences $$<x_1>$$ and $$<x_2>$$ with limit points $$L_1$$ and $$
 
 Consider any two sequences $$<x_1>\in A$$ and $$<x_2>\in B$$ with limit points $$L_1$$ and $$L_2$$. Then let $$<x_3>\in A \cup B$$ be the result of any shuffling of these two sequences. Then $$<x_3>$$ will have limit points $$L_1$$ and $$L_2$$, and thus the closure of $$A \cup B$$ will contain $$L_1$$ and $$L_2$$, and no new limit points.
 
-Thus, we have proven that combining two sets does not introduce any new limit points in the resulting set. Then it follows that: $$\overline{A \cup B} = \bar{A} \cup \bar{B}$$
+If either sequence does not converge to a limit, no new limit points are introduced during the union.
+Thus, we have proven that combining two sequences does not introduce any new limit points in the resulting sequence. Then it follows that: $$\overline{A \cup B} = \bar{A} \cup \bar{B}$$
 
 $$\blacksquare$$
 
+$$\bar{A} \cap \bar{B}$$ is a closed set, since $$\bar{A}$$ and $$\bar{B}$$ are closed sets, and it contains $$A \cap B$$. Also, $$\overline{A \cap B}$$ is the smallest closed set covering $$A \cap B$$. Thus $$\overline{A \cap B} \subset \bar{A} \cap \bar{B}$$.
+
+$$\blacksquare$$
 
 #### 1.3.10. A point $$x$$ not belonging to a closed set $$M \subset (X, d)$$ always has a nonzero distance from $$M$$. To prove this, show that $$x \in \bar{A}$$ if and only if $$D(x, A) = 0$$ (cf. Prob. 10, Sec. 1.2); here $$A$$ is any nonempty subset of $$X$$.
 

@@ -34,4 +34,4 @@ For now, here is a sketch of some of them.
   Then $$d(x_1,x_2) : x_1,x_2 \in X = \begin{cases} 1 & \text{ if } x_1 \neq x_2 \\ 0 & \text{ if } x_1=x_2 \end{cases}$$
   The set is also uncountable, since there are uncountable number of such sequences, and thus can be paired with arbitrary sets to disprove separability.
 - **Proofs about closed sets can be simplified by considering known properties of open sets, and then taking their duals.** The direct proof would involve proving properties about sequences which converge to limits, and assuming those limits are contained in closed sets.
-
+- For establishing set membership relations, start with assuming one side (say, the left side), then breaking it down into cases. Then, expand membership into the right hand side.
