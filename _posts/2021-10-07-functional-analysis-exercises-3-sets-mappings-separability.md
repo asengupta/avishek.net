@@ -223,6 +223,35 @@ $$\blacksquare$$
 
 **Proof:**
 
+Assume that $$X$$ has a countable subset $$Y$$ with the following property: for every $$ \epsilon > 0$$ and every $$x \in X$$ there is a $$y \in Y$$ such that $$d(x, y) < \epsilon$$.
+
+This means, every neighbourhood of $$x \in X$$ contains a $$y \in Y$$. This $$x$$ may not actually exist in $$Y$$. Then $$x$$ is a limit point of $$M$$. Since $$x$$ is arbitrary, the entire metric space $$X$$ consists of limit points of $$M$$, and thus $$X \subset \bar{Y}$$ (since $$\bar{Y}$$ could conceivably consist of more limit points not in $$X$$).
+
+We know that $$X$$, being a metric space, is closed (and open, but that is not of interest here).
+However, we also know that $$\bar{Y}$$ is the smallest closed set covering $$Y$$. This implies that $$\bar{Y} \subset X$$.
+
+Putting the above set membership relations together, we get:
+
+$$\bar{Y}=X$$
+
+$$\blacksquare$$
+
+Assume that the metric space $$X$$ is separable. Then $$\bar{Y}=X$$.
+
+Let $$x \in X$$. Then, there are two possibilities.
+
+- $$x$$ is a limit point of $$Y$$.
+- $$x$$ is equal to a member of $$Y$$.
+
+If $$x$$ is a limit point of $$Y$$, then every neighbourhood of this $$x$$ contains a point $$y \in Y$$, and we are done.
+If $$x$$ is equal to a member of $$Y$$, then every neighbourhood of this $$x$$ contains a point $$y \in Y$$ by default, since $$x=y$$.
+
+$$\blacksquare$$
+
 #### 1.3.14. (Continuous mapping) Show that a mapping $$T: X \rightarrow Y$$ is continuous if and only if the inverse image of any closed set $$M \subset Y$$ is a closed set in X.
 
 #### 1.3.15. Show that the image of an open set under a continuous mapping need not be open. 
+
+**Answer:**
+
+$$f(x)=1, x \in (0,1)$$ is one such example, since the image of $$f(x)$$ is $$\{1\}$$, which is closed (its complement $$(-\infty,1) \cup (1, +\infty)$$ is open), even though the domain $$(0,1)$$ is open.
