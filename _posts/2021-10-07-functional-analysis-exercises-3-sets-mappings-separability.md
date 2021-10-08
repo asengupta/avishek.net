@@ -120,12 +120,31 @@ An accumulation point for a set $$U$$ contains at least one $$x \in U$$ in every
 #### 1.3.7. Describe the closure of each of the following subsets:  
   **(a) The integers on $$\mathbb{R}$$**  
   **(b) the rational numbers on $$\mathbb{R}$$**  
-  **(c) the complex numbers with rational real and imagin~ parts in $$\mathbb{C}$$, (d) the disk $${z: \vert z \vert < 1}\subset C$$.**  
+  **(c) the complex numbers with rational real and imaginary parts in $$\mathbb{C}$$, (d) the disk $${z: \vert z \vert < 1}\subset C$$.**  
 
 **Answer:**
 
-The integers 
-#### 1.3.8. Show that the closure $$\bar{B(xo; r)}$$ of an open ball $$B(xo; r)$$ in a metric space can differ from the closed ball $$\bar{B}(xo; r)$$.
+(a) Any sequence of integers can only have an integer as its limit point. Thus, all the limit points are the integers themselves. Thus, the closure of the integers on $$\mathbb{R}$$ is the set of integers themselves $$\mathbb{Z}$$.
+
+(b) All real numbers are defined as the limit point of sequences of rational numbers. Thus the closure must include the rational numbers $$\mathbb{Q}$$, as well as the real numbers. Thus the closure is $$\mathbb{R}$$.
+
+(c) Looking at (b) above, we can conclude that the closure is $$\mathbb{C}$$.
+
+(d) The closure of $${z: \vert z \vert < 1}\subset C$$ is the unit disk centered at the origin (including the circumference).
+
+#### 1.3.8. Show that the closure $$\bar{B(x_0; r)}$$ of an open ball $$B(x_0; r)$$ in a metric space can differ from the closed ball $$\bar{B}(x_0; r)$$.
+
+**Proof:**
+
+We use a counter-example to prove this.
+
+We describe the pathological case where the closure of an open ball is not the closed ball.
+
+In a **Discrete Metric Space**, an **open ball** around an element $$x_0$$ is $$d(x,x_0)<1$$ is $$X=\{x_0\}$$. Since there is no other $$x$$ within every *any* neightbourhood of $$x_0$$, which is not $$x_0$$ itself, $$X=\{x0\}$$ has no limit points. Then $$X=\{x_0\}$$ vacuously contains all its limit points (of which there are actually none, so the empty set is the set of limit points). Thus, $$\bar{X}=\{x_0\}$$ is its own closure.  
+The closed ball around $$x_0$$ is $$d(x,x_0)\leq 1$$, which is everything, but it is not the same as $$\bar{X}=\{x_0\}$$.
+
+The situation is shown below:
+  ![Pathological Open Ball Closed Ball Discrete Metric](/assets/images/pathological-open-ball-closed-ball-discrete-metric.png)
 
 #### 1.3.9. Show that $$A \subset \bar{A}$$, $$\bar{\bar{A}} = \bar{A}$$, $$\bar{A \cup B} = \bar{A} \cup \bar{B}$$, $$\bar{A \cap B} \subset \bar{A} \cap \bar{B}$$.
 
