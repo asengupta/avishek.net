@@ -153,12 +153,12 @@ The closure of the set $$A$$ contains the set $$A$$ as well as its limit points.
 
 $$\blacksquare$$
 
-Suppose additional limit points exist for $$\bar{A}$$ which are then in $$\overline\overline{A}$$. Take such a limit point $$x$$. Since $$x$$ is a limit point of $$\bar{A}$$, then it must have at least one limit point $$y$$ in an $$\epsilon$$-neighbourhood.
+Suppose additional limit points exist for $$\bar{A}$$ which are then in $$\overline{\overline A}$$. Take such a limit point $$x$$. Since $$x$$ is a limit point of $$\bar{A}$$, then it must have at least one limit point $$y$$ in an $$\epsilon$$-neighbourhood.
 
 We consider two cases.
 
-- $$y$$ is in $$A$$. Then $$\overline\overline{A}$$ is a limit point of $$A$$ and thus must exist in $$\bar{A}$$.
-- $$y$$ is a limit point of $$A$$. Then, $$y$$ itself must also have a point $$z$$ in $$A$$ in an arbitrary $$\epsilon$$-neightbourhood. Then, the **Triangle Inequality** gives us:
+- **$$y$$ is in $$A$$:** Then $$\overline{\overline A}$$ is a limit point of $$A$$ and thus must exist in $$\bar{A}$$.
+- **$$y$$ is a limit point of $$A$$:** Then, $$y$$ itself must also have a point $$z$$ in $$A$$ in an arbitrary $$\epsilon$$-neightbourhood. Then, the **Triangle Inequality** gives us:
   $$
   d(x,z) \leq d(x,y) + d(y,z)
   $$
@@ -166,11 +166,21 @@ We consider two cases.
   $$
   d(x,z)<2\epsilon
   $$
+  
   Thus, we can conclude that $$x$$ also has a point in $$A$$ in an arbitrary $$2\epsilon$$ neighbourhood, and is thus also a limit point of $$A$$, and thus has to exist in $$\bar{A}$$.
 
 Thus, all limit points of $$\bar{A}$$ exist in $$\bar{A}$$, and hence we can conclude that $$\overline{\overline A} = \bar{A}$$.
 
 $$\blacksquare$$
+
+Shuffling two sequences $$<x_1>$$ and $$<x_2>$$ with limit points $$L_1$$ and $$L_2$$ respectively, yields a sequence $$x_3$$ with two limit points $$L_1$$ and $$L_2$$.
+
+Consider any two sequences $$<x_1>\in A$$ and $$<x_2>\in B$$ with limit points $$L_1$$ and $$L_2$$. Then let $$<x_3>\in A \cup B$$ be the result of any shuffling of these two sequences. Then $$<x_3>$$ will have limit points $$L_1$$ and $$L_2$$, and thus the closure of $$A \cup B$$ will contain $$L_1$$ and $$L_2$$, and no new limit points.
+
+Thus, we have proven that combining two sets does not introduce any new limit points in the resulting set. Then it follows that: $$\overline{A \cup B} = \bar{A} \cup \bar{B}$$
+
+$$\blacksquare$$
+
 
 #### 1.3.10. A point $$x$$ not belonging to a closed set $$M \subset (X, d)$$ always has a nonzero distance from $$M$$. To prove this, show that $$x \in \bar{A}$$ if and only if $$D(x, A) = 0$$ (cf. Prob. 10, Sec. 1.2); here $$A$$ is any nonempty subset of $$X$$.
 
