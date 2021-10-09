@@ -101,7 +101,21 @@ $$
 B(x_0,r)=\{x: d(x,x_0)<r, x \in X\}
 $$
 
-[TODO]
+Assume that $$A$$ is open. Then every point $$x$$ in it has an open ball around it, such that $$B_\epsilon(x,r) \subset A$$ for some $$\epsilon>0$$. Hence, the union of open balls $$\bigcup\limits_i B_i(x_i, r) \subset A$$.
+
+Also, all the open balls in $$\bigcup\limits_i B_i(x_i, r)$$ contain all the points in $$A$$. We can say $$x \in \bigcup\limits_i B_i(x_i, r), x \in A$$. Thus the union "covers" $$A$$, or contains $$A$$. Thus, $$A \subset \bigcup\limits_i B_i(x_i, r)$$
+
+Putting the above set relations together, we get:
+
+$$
+A=\bigcup\limits_i B_i(x_i, r)
+$$
+
+$$\blacksquare$$
+
+Assume that $$A$$ is a union of open balls $$\bigcup\limits_i B_i(x_i, r)$$. Then any point $$p$$ in a given ball $$B_i(x_i,r)$$ with a radius of, say, $$\epsilon$$, can have an open ball around it of radius $$\epsilon'=\text{min }\left(\displaystyle\frac{d(p,xi)}{2}, \frac{\epsilon-d(p,x_i)}{2}\right)$$, while being a member of $$A$$. Since $$p$$ is an arbitrary point in $$A$$, $$A$$ is an open set.
+
+$$\blacksquare$$
 
 #### 1.3.5. It is important to realise that certain sets may be open and closed at the same time. (a) Show that this is always the case for $$X$$ and $$\emptyset$$. (b) Show that in a discrete metric space $$X$$ (cf. 1.1-8), every subset is open and closed.
 
@@ -232,7 +246,7 @@ $$
 Then the $$d(f_m(x), f_n(x))=\text{sup } \vert f_m(x)-f_n(x)\vert = 1 $$ unless $$m=n$$. Therefore, all distinct functions in this family (examples are $$f_{2.5}(x)$$ and $$f_\sqrt{2}(x)$$) are separated by $$1$$.
 
 The number of these functions is uncountable, since $$n$$ corresponds to the real number line.
-Each of these functions can be represented by a point in $$B[a, b]$$ space, separated by $$1$$. An open ball of \frac{1}{2} around each of them do not intersect each other.
+Each of these functions can be represented by a point in $$B[a, b]$$ space, separated by $$1$$. An open ball of $$\frac{1}{2}$$ around each of them do not intersect each other.
 
 For $$B[a, b]$$ to be separable, a countable set, say $$M$$, must be dense in $$B[a, b]$$. For this, each ball must contain at least one element of $$M$$. Since the number of balls is uncountable, $$M$$ is also uncountable, and thus $$B[a, b]$$ is not separable.
 
