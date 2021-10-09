@@ -41,6 +41,8 @@ $$
 
 $$\blacksquare$$
 
+---
+
 #### 1.1.3. Show that $$d(x,y)=\sqrt{|x-y|}$$ defines a metric on the set of all real numbers.
 **Proof:**
 
@@ -77,6 +79,8 @@ $$
 **Hence, this proves the *Triangle Inequality*, and consequently, $$d(x,y)=\sqrt{\vert x-y \vert}$$ is a valid distance metric.**
 
 $$\blacksquare$$
+
+---
 
 #### 1.1.5. Let $$d$$ be a metric on $$X$$. Determine all constants $$k$$ such that *(i)* $$kd$$, *(ii)* $$d+k$$ is a metric on $$X$$.
 
@@ -118,14 +122,22 @@ Let $$\bar{d}(x,y)=d(x,y) + k$$ be a candidate metric on $$X$$. For it to be a v
 
 Putting all of these together, we get the condition that $$k=0, k \in \mathbb{R}$$.
 
+---
+
 #### 1.1.6. Show that $$d$$ in 1.1-6 satisfies the triangle inequality.
 [TODO]
+
+---
 
 #### 1.1.8. Show that another metric $$\bar{d}$$ on the set $$X$$ in 1.1-7 is defined by $$\bar{d}(x,y)=\int\limits_a^b |x(t) - y(t)| dt$$.
 [TODO]
 
+---
+
 #### 1.1.9. Show that $$d$$ in 1.1-8 is a metric.
 [TODO]
+
+---
 
 #### 1.1.10. **(Hamming Distance)** Let $$X$$ be the set of all ordered triples of zeros and ones. Show that $$X$$ consists of eight elements and a metric $$d$$ on $$X$$ is defined by $$d(x,y)=$$ number of places where $$x$$ and $$y$$ have different entries. (This space and similar spaces of $$n$$-tuples play a role in switching and automata theory and coding. $$d(x,y)$$ is called the *Hamming distance* between $$x$$ and $$y$$; cf. the paper by R. W. Hamming (1950) listed in Appendix 3.)
 
@@ -173,6 +185,8 @@ $$
 **Thus, this proves the Triangle Inequality for the Hamming Distance as a metric.**
 
 $$\blacksquare$$
+
+---
 
 #### 1.1.12. **(Triangle inequality)** The triangle inequality has several useful consequences. For instance, using the generalised triangle inequality, show that $$|d(x,y) - d(z,w)| \leq d(x,z) + d(y,w)$$.
 
@@ -254,6 +268,8 @@ $$
 
 $$\blacksquare$$
 
+---
+
 #### 1.1.13. Using the triangle inequality, show that $$|d(x,z) - d(y,z)| \leq d(x,y)$$.
 
 **Proof:**
@@ -294,6 +310,8 @@ d(y,z) - d(x,z) \leq d(x,y) \\
 $$
 
 $$\blacksquare$$
+
+---
 
 #### 1.1.14. **(Axioms of a metric)** (M1) to (M4) could be replaced by other axioms (without changine the definition). For instance, show that (M3) and (M4) could be obtained from (M2) and $$d(x,y) \leq d(z,x) + d(z,y)$$.
 
@@ -372,6 +390,8 @@ $$
 
 $$\blacksquare$$
 
+---
+
 #### 1.1.15. Show that nonnegativity of a metric follows from (M2)to (M4).
 
 **Proof:**
@@ -400,6 +420,8 @@ $$
 This proves **(M1)**.
 
 $$\blacksquare$$
+
+---
 
 ## Assorted Proofs
 

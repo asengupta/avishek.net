@@ -58,6 +58,8 @@ Hence, a closed ball is a closed set.
 
 $$\blacksquare$$
 
+---
+
 #### 1.3.2. What is an open ball $$B(x_0;1)$$ on $$\mathbb{R}$$? In $$\mathbb{C}$$? (Cf. 1.1-5.) In $$\mathbb{C}[a,b]$$? (Cf. 1.1-7.) Explain Fig. 8.
 
 **Answer:**
@@ -65,6 +67,8 @@ $$\blacksquare$$
 The open ball $$B(x_0;1)$$ on $$\mathbb{R}$$ is the open interval $$(x_0-1,x_0+1)$$.  
 The open ball $$B(x_0;1)$$ on $$\mathbb{C}$$ is the unit disk centered at $$x_0$$, excluding its circumference.  
 The open ball $$B(x_0;1)$$ in $$\mathbb{C}[a,b]$$ is the set of functions $$x(t)$$ which satisfy the condition $$\text{sup }\vert x_0(t)-x(t)\vert < 1$$.
+
+---
 
 #### 1.3.3. Consider $$C[0,2\pi]$$ and determine the smallest $$r$$ such that $$y \in \overline{B}(x;r)$$, where $$x(t)=\text{sin }t$$ and $$y(t)=\text{cos }t$$.
 
@@ -90,6 +94,8 @@ $$
 \text{min } r_{xy}=-\sqrt{2} \\
 |\text{min } r_{xy}|=\sqrt{2}
 $$
+
+---
 
 #### 1.3.4. Show that any nonempty set $$A\subset (X,d)$$ is open if and only if it is a union of open balls.
 
@@ -117,6 +123,8 @@ Assume that $$A$$ is a union of open balls $$\bigcup\limits_i B_i(x_i, r)$$. The
 
 $$\blacksquare$$
 
+---
+
 #### 1.3.5. It is important to realise that certain sets may be open and closed at the same time. (a) Show that this is always the case for $$X$$ and $$\emptyset$$. (b) Show that in a discrete metric space $$X$$ (cf. 1.1-8), every subset is open and closed.
 
 **Proof:**
@@ -125,11 +133,15 @@ The empty set $$\emptyset$$ has no elements, and thus contains (vacuously) all i
 
 Since $$X$$ is the complement of $$\emptyset$$, it is also open and closed by the same token.
 
+---
+
 #### 1.3.6. If $$x_0$$ is an accumulation point of a set $$A \subset (X,d)$$, show that any neighbourhood of $$x_0$$ contains infinitely many points of $$A$$.
 
 **Proof:**
 
 An accumulation point for a set $$U$$ contains at least one $$x \in U$$ in every neighbourhood. Since we can always find a smaller neighbourhood than the one chosen, we can find an infinite number of neighbourhood smaller than an arbitrary neighbourhood, hence that neighbourhood will contain an infinite number of points.
+
+---
 
 #### 1.3.7. Describe the closure of each of the following subsets:  
   **(a) The integers on $$\mathbb{R}$$**  
@@ -146,6 +158,8 @@ An accumulation point for a set $$U$$ contains at least one $$x \in U$$ in every
 
 (d) The closure of $${z: \vert z \vert < 1}\subset C$$ is the unit disk centered at the origin (including the circumference).
 
+---
+
 #### 1.3.8. Show that the closure $$\overline{B(x_0; r)}$$ of an open ball $$B(x_0; r)$$ in a metric space can differ from the closed ball $$\overline{B}(x_0; r)$$.
 
 **Proof:**
@@ -159,6 +173,8 @@ The closed ball around $$x_0$$ is $$d(x,x_0)\leq 1$$, which is everything, but i
 
 The situation is shown below:
   ![Pathological Open Ball Closed Ball Discrete Metric](/assets/images/pathological-open-ball-closed-ball-discrete-metric.png)
+
+---
 
 #### 1.3.9. Show that $$A \subset \overline{A}$$, $$\overline{\overline A} = \overline{A}$$, $$\overline{A \cup B} = \overline{A} \cup \overline{B}$$, $$\overline{A \cap B} \subset \overline{A} \cap \overline{B}$$.
 
@@ -201,6 +217,8 @@ $$\overline{A} \cap \overline{B}$$ is a closed set, since $$\overline{A}$$ and $
 
 $$\blacksquare$$
 
+---
+
 #### 1.3.10. A point $$x$$ not belonging to a closed set $$M \subset (X, d)$$ always has a nonzero distance from $$M$$. To prove this, show that $$x \in \overline{A}$$ if and only if $$D(x, A) = 0$$ (cf. Prob. 10, Sec. 1.2); here $$A$$ is any nonempty subset of $$X$$.
 
 **Proof:**
@@ -220,6 +238,8 @@ Any larger ball would intersect with the set $$A$$. Since $$\epsilon>0$$, there 
 
 $$\blacksquare$$
 
+---
+
 #### 1.3.11. **(Boundary)** A boundary point $$x$$ of a set $$A \subset (X, d)$$ is a point of $$X$$ (which may or may not belong to $$A$$) such that every neighbourhood of $$x$$ contains points of $$A$$ as well as points not belonging to $$A$$; and the boundary (or frontier) of $$A$$ is the set of all boundary points of $$A$$. Describe the boundary of 
   **(a) the intervals $$(-1,1)$$, $$[-1,1)$$, $$[-1,1]$$ on $$\mathbb{R}$$**  
   **(b) the set of all rational numbers on $$\mathbb{R}$$**  
@@ -230,6 +250,8 @@ $$\blacksquare$$
 (a) The boundary of $$(-1,1)$$, $$[-1,1)$$, $$[-1,1]$$ is $$\{-1,1\}$$.  
 (b) Every neighbourhood of a rational definitely contains a real number. The boundary point itself counts as a point in the set in its neighbourhood. Thus, the boundary in this case is $$\mathbb{R}$$.  
 (c) The unit circle centered at the origin is the boundary in both cases.
+
+---
 
 #### 1.3.12. **(Space $$B[a, b]$$)** Show that $$B[a, b]$$, $$a < b$$, is not separable. (Cf. 1.2-2.)
 
@@ -251,6 +273,8 @@ Each of these functions can be represented by a point in $$B[a, b]$$ space, sepa
 For $$B[a, b]$$ to be separable, a countable set, say $$M$$, must be dense in $$B[a, b]$$. For this, each ball must contain at least one element of $$M$$. Since the number of balls is uncountable, $$M$$ is also uncountable, and thus $$B[a, b]$$ is not separable.
 
 $$\blacksquare$$
+
+---
 
 #### 1.3.13. Show that a metric space $$X$$ is separable if and only if $$X$$ has a countable subset $$Y$$ with the following property. For every $$ \epsilon > 0$$ and every $$x \in X$$ there is a $$y \in Y$$ such that $$d(x, y) < \epsilon$$.
 
@@ -281,6 +305,8 @@ If $$x$$ is equal to a member of $$Y$$, then every neighbourhood of this $$x$$ c
 
 $$\blacksquare$$
 
+---
+
 #### 1.3.14. (Continuous mapping) Show that a mapping $$T: X \rightarrow Y$$ is continuous if and only if the inverse image of any closed set $$M \subset Y$$ is a closed set in X.
 
 **Proof**
@@ -303,6 +329,8 @@ Since $$Y'=TX'$$, we have $$X'=T^{-1}Y'$$.Hence, $$X'$$ is open.
 It follows then that $$X$$ is closed.
 
 $$\blacksquare$$
+
+---
 
 #### 1.3.15. Show that the image of an open set under a continuous mapping need not be open. 
 
