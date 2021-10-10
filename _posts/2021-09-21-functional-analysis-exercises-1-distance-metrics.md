@@ -6,7 +6,7 @@ tags: ["Mathematics", "Proof", "Functional Analysis", "Pure Mathematics"]
 draft: false
 ---
 
-This post lists solutions to many of the exercises in the **Distance Metrics section 1.1** of *Erwin Kreyszig's* **Introductory Functional Analysis with Applications**, as well as some assorted proofs. This is definitely a work in progress, and proofs may be refined or added over time.
+This post lists solutions to many of the exercises in the **Distance Metrics section 1.1** of *Erwin Kreyszig's* **Introductory Functional Analysis with Applications**. This is definitely a work in progress, and proofs may be refined or added over time.
 
 #### 1.1.2. Does $$d(x,y)={(x-y)}^2$$ define a metric on the set of all real numbers?
 **Proof:**
@@ -418,37 +418,5 @@ d(y,y) \leq d(y,z) + d(z,y) \\
 $$
 
 This proves **(M1)**.
-
-$$\blacksquare$$
-
----
-
-## Assorted Proofs
-
-#### Prove that if $$S$$ is open, $$S'$$ is closed.
-
-**Proof:**
-
-We claim that if $$S$$ is open, $$S'$$ is closed.
-Thus, we'd like to prove that for a sequence $$(x_k) \in S'$$:
-
-$$
-\text{lim}_{k \rightarrow \infty} (x_k)= x_0 \in S'
-$$
-
-We will prove this by contradiction.
-
-Assume that $$x_0 \cancel{\in} S'$$. Then, $$x_0 \in S$$.
-
-Since $$S$$ is open, there exists an $$r>0$$, such that $$d(x_0,p)<r$$; that is, there exists an $$r$$-neighbourhood around $$x_0$$ in $$S$$.
-
-Choose $$\epsilon<r$$, then there exists $$N \in \mathbb{N}$$, such that for all $$k>N$$, $$d(x_k, x_0)<\epsilon<r$$.
-
-Thus, there exist $$x_k$$'s in the $$r$$-neighbourhood of $$x_0$$. **Thus, for $$k>N$$, $$x_k \in S$$, which contradicts our initial assumption that $$(x_k) \in S'$$.**
-
-Thus, x_0 \in S'.
-Since $$(x_k)$$ is an arbitrary sequence in $$S'$$, $$S'$$ contains the limit points of all sequences within it.
-
-**Hence $$S'$$ is closed.**
 
 $$\blacksquare$$
