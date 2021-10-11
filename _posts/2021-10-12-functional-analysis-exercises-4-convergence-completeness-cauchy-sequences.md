@@ -29,7 +29,7 @@ d(x,y) \leq d(x,x_p) + d(x_p,y) \\
 $$
 
 
-Both $$d(x,x_p)$$ and $$d(x_{n_m},y)$$ can be made as small as possible, since $$(x_n)$$ and $$(x_{n_k})$$ converge, implying that $$d(x,y)$$ is smaller than any positive value
+Both $$d(x,x_p)$$ and $$d(x_{n_m},y)$$ can be made as small as possible, since $$(x_n)$$ and $$(x_{n_k})$$ converge, implying that $$d(x,y)$$ is smaller than any positive value. Thus:
 
 $$
 d(x,y) \leq d(x,x_p) + d(x_{n_m},y) \\
@@ -43,6 +43,39 @@ $$\blacksquare$$
 
 ---
 #### 1.4.2. If $$(x_n)$$ is Cauchy and has a convergent subsequence, say, $$x_n \rightarrow x$$, show that $$(x_n)$$ is convergent with the limit $$x$$.
+
+**Proof:**
+
+Suppose $$(x_n)$$ is Cauchy. Let $$(x_{n_k})$$ be a subsequence. Let $$x_{n_m}$$ correspond to $$x_i$$.
+
+- Since $$(x_{n_k})$$ is convergent, $$\forall \epsilon>0, \exists M$$, such that $$d(x_{n_k},x)<\epsilon$$ for $$n>M$$.
+- Since $$(x_n)$$ is convergent, $$\forall \epsilon>0, \exists N$$, such that $$d(x_i,x_j)<\epsilon$$ for $$i,j>N$$.
+
+Pick $$N_0=\text{max}(M,N)$$. Then the above two statements become:
+
+- Since $$(x_{n_k})$$ is convergent, $$\forall \epsilon>0, \exists N_0$$, such that $$d(x_{n_i},x)<\epsilon$$ for $$i>N_0$$.
+- Since $$(x_n)$$ is convergent, $$\forall \epsilon>0, \exists N_0$$, such that $$d(x_i,x_j)<\epsilon$$ for $$i,j>N_0$$.
+
+(Note that we picked the same $$i$$ for both $$(x_n)$$ and $$(x_{n_k})$$ because any value greater than $$N_0$$ will fulfil the above conditions, so we might as well pick the same index. For any index $$i$$, we can use $$x_i$$ and $$x_{n_i}$$ interchangeably, since they index the same element in both the sequence and the subsequence.)
+
+By the **Triangle Inequality**, we have:
+
+$$
+d(x_j,x) \leq d(x_j, x_i) + d(x_i,x) \\
+\Rightarrow d(x_j,x) \leq d(x_j, x_i) + d(x_{n_i},x) \\
+\Rightarrow d(x_j,x) \leq \epsilon + \epsilon \\
+\Rightarrow d(x_j,x) < 2\epsilon
+$$
+
+$$\epsilon$$ can be made as small as possible, implying that $$d(x_j,x)$$ is smaller than any positive value. Thus:
+
+$$
+d(x_j,x)=0
+$$
+
+Hence, $$(x_n)$$ is convergent with the limit $$x$$.
+
+$$\blacksquare$$
 
 ---
 #### 1.4.3. Show that $$x_n \rightarrow x$$ if and only if for every neighborhood $$V$$ of $$x$$ there is an integer $$n_0$$ such that $$x_n \in V$$ for all $$n > n_0$$.
