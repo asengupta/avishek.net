@@ -245,6 +245,87 @@ $$\blacksquare$$
 ---
 #### 1.4.9. Using Prob. 8, show that the metric spaces in Probs. 13 to 15, Sec. 1.2, have the same Cauchy sequences.
 
+The three distance metrics mentioned are:
+
+- $$d_1(x,y)=d(x_1,x_2)+d(y_1,y_2)$$
+- $$d_2(x,y)=\sqrt{ {d(x_1,x_2)}^2+{d(y_1,y_2)}^2}$$
+- $$d_{max}(x,y)=\text{max } [d(x_1,x_2),d(y_1,y_2)]$$
+
+**Proof:**
+
+For $$d_1$$ and $$d_2$$, let's determine the conditions.
+
+$$
+x+y \leq \sqrt{x^2+y^2} \\
+x^2+y^2+2xy \leq x^2+y^2
+$$
+
+This gives us $$2xy \leq 0$$, so that's invalid; if we however we introduce a $$\sqrt{2}$$ on the right hand side, we get:
+
+$$
+x+y \leq \sqrt{2(x^2+y^2)} \\
+x^2+y^2+2xy \leq 2x^2+2y^2 \\
+x^2+y^2-2xy \geq 0
+$$
+
+which works. For the reverse inequality $$x+y \geq \sqrt{x^2+y^2}$$, note that we immediately get $$2xy>0$$, which works, so we can write the combined inequalities as:
+
+$$
+\sqrt{x^2+y^2} \leq x+y \leq \sqrt{2} \sqrt{x^2+y^2} \\
+\Rightarrow d_2(x,y) \leq d_1(x,y) \leq \sqrt{2} d_2(x,y)
+$$
+
+For $$d_1$$ and $$d_max$$, note that $$x+y> \geq \text{max }(x,y)$$ and $$2 \text{max }(x,y) \geq x+y$$
+
+Then, we get:
+
+$$
+\text{max }(x,y) \leq x+y \leq 2 \text{ max }(x,y) \\
+\Rightarrow d_{max}(x,y) \leq d_1(x,y) \leq 2 d_{ max}(x,y)
+$$
+
+For $$d_2$$ and $$d_max$$, note that $$x^2+y^2> \geq {\text{max }(x,y)}^2$$ and $$2 {\text{ max }(x,y)}^2 \geq x^2+y^2$$
+
+Then, we get:
+
+$$
+\text{max }(x,y) \leq \sqrt{x^2+y^2} \leq 2 \text{ max }(x,y) \\
+\Rightarrow d_{max}(x,y) \leq d_2(x,y) \leq 2 d_{max}(x,y)
+$$
+
+$$\blacksquare$$
+
 ---
 #### 1.4.10. Using the completeness of $$\mathbb{R}$$, prove completeness of $$\mathbb{C}$$.
 
+**Proof:**
+
+Assume $$\mathbb{R}$$ is complete.
+
+Assume two Cauchy Sequences in $$\mathbb{R}$$:
+
+- $$(x_n)=x_1,x_2,\cdots$$ converges to $$x$$.
+- $$(y_n)=y_1,y_2,\cdots$$ converges to $$y$$.
+
+Construct a sequence in $$\mathbb{C}$$, like so:
+
+$$
+(z_n)=x_1+iy_1,x_2+iy_2,\cdots
+$$
+
+Assume the distance metric for $$\mathbb{Z}$$ is $$d(z_1,z_2)=\sqrt{ {(x_1-x_2)}^2 + {(y_1-y_2)}^2}$$.
+
+- $$\forall \epsilon>0, \exists M$$ such that $$x_m-x<\frac{\epsilon}{\sqrt{2}}$$ for $$m>M$$
+- $$\forall \epsilon>0, \exists N$$ such that $$x_m-x<\frac{\epsilon}{\sqrt{2}}$$ for $$m>N$$
+
+Pick $$N_0=\text{max }(M,N)$$, so that the above holds true for $$N_0$$.
+
+Pick $$z_i$$ so that $$i>N_0$$. Assume $$z=x+iy$$. Then, we have:
+
+$$
+d(z_i,z)=\sqrt{ {(x_i-x)}^2 + {(y_i-y)}^2}<\epsilon
+$$
+
+Then, for an arbitrary $$\epsilon$$, there exists $$N_0$$, such that $$d(z_i,z)<\epsilon$$. Furthermore $$z \in \mathbb{C}$$. Thus, $$\mathbb{C}$$ contains the limits of all its Cauchy sequences. Thus, it is a closed set; hence it is a complete metric space.
+
+$$\blacksquare$$
