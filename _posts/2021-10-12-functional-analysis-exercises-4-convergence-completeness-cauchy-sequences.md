@@ -42,6 +42,7 @@ Thus, $$x=y$$, i.e., $$x_{n_k}$$ has the same limit as $$(x_n)$$.
 $$\blacksquare$$
 
 ---
+
 #### 1.4.2. If $$(x_n)$$ is Cauchy and has a convergent subsequence, say, $$x_n \rightarrow x$$, show that $$(x_n)$$ is convergent with the limit $$x$$.
 
 **Proof:**
@@ -78,16 +79,87 @@ Hence, $$(x_n)$$ is convergent with the limit $$x$$.
 $$\blacksquare$$
 
 ---
+
 #### 1.4.3. Show that $$x_n \rightarrow x$$ if and only if for every neighborhood $$V$$ of $$x$$ there is an integer $$n_0$$ such that $$x_n \in V$$ for all $$n > n_0$$.
 
----
-#### 1.4.4. (Boundedness) Show that a Cauchy sequence is bounded.
+**Proof:**
+
+Suppose that $$x_n \rightarrow x$$. Then $$\forall \epsilon>0, \exists N_0$$, such that $$d(x_n,x)<\epsilon$$ for all $$n>N_0$$. This implies that a neighbourhood $$V_\epsilon$$ of $$x$$ exists, which contains all $$x_{n>N_0}$$. Since there are an infinite number of values for $$\epsilon$$, it follows that this applies to every neighbourhood of $$x$$.
+
+Conversely, suppose that for every neighborhood $$V$$ of $$x$$ there is an integer $$n_0$$ such that $$x_n \in V$$ for all $$n > n_0$$. Assume each neighbourhood has a size of $$\epsilon$$. Thus, $$x_n \in V$$ implies that $$d(x_n,x)<\epsilon$$. Then, we can restate this as the following: $$\forall \epsilon>0, \exists N_0$$, such that $$d(x_n,x)<\epsilon$$ for all $$n>N_0$$.
+
+$$\blacksquare$$
 
 ---
+
+#### 1.4.4. (Boundedness) Show that a Cauchy sequence is bounded.
+
+**Proof:**
+
+By definition, for a Cauchy sequence, we have: $$\forall \epsilon>0, \exists N_0$$, such that $$d(x_m,x_n)<\epsilon$$ for all $m,n>N_0$$.
+
+Choose $$\epsilon=1$$. Then, assume the value of $$N_0$$ to be $$N_1$$. For any $$d(x_a,x_b)$$, we have:
+
+- $$a<b \leq N_0$$: Then $$d(x_a,x_b) \leq a = max[d(x_a,x_0), d(x_a,x_1), \cdots, d(x_a,x_{N_1})]$$
+- $$N_0<a<b$$: Then $$d(x_a,x_b) < \epsilon = 1$$
+- $$a \leq N_0<b$$: By the **Triangle Inequality**, we have: $$d(x_a,x_b) \leq d(x_a,x_{N_1}) + d(x_{N_1}, x_b) < a + 1$$
+
+Combining these upper bounds, we get: $$\text{sup } d(x_a,x_b) < a+1$$
+
+$$\blacksquare$$
+
+---
+
 #### 1.4.5. Is boundedness of a sequence in a metric space sufficient for the sequence to be Cauchy? Convergent?
+
+**Answer:**
+
+Consider the discrete metric on $$\mathbb{R}$$. If we have a sequence $$(x_n)=0,1,0,1,\cdots$$, then the series is bounded because $$\text{sup } d(x_m, x_n)=1$$, but for $$\epsilon=\frac{1}{2}$$, there is no $$N$$ for which $$d(x_m,x_n)<\epsilon$$ for $$m,n>N$$. Thus, the sequence is not Cauchy, though it is bounded.
+
+Convergence is sufficient for a sequence to be Cauchy. For convergence, we have the condition: if $$x_n \rightarrow x$$, $$\forall \epsilon>0, \exists N_0$$, such that $$d(x_n,x)<\epsilon$$ for all $$n>N_0$$.
+
+Consider $$m,n>N_0$$. Then, by the **Triangle Inequality**, we have:
+
+$$
+d(x_m,x_n) \leq d(x_m,x) + d(x,x_n) < \epsilon + \epsilon = 2 \epsilon
+$$
+
+thus proving the Cauchy criterion.
 
 ---
 #### 1.4.6. If $$(x_n)$$ and $$(y_n)$$ are Cauchy sequences in a metric space $$(X, d)$$, show that $$(a_n)$$, where $$a_n = d(x_n, y_n)$$, converges. Give illustrative examples.
+
+**Proof:**
+
+$$
+d(x_m,x_n)<\epsilon \\
+d(y_m,y_n)<\epsilon
+$$
+
+Then, we have:
+
+$$
+d(x_m,y_m) \leq d(x_m,x_n) + d(x_n,y_n) + d(y_n,y_m) \\
+\Rightarrow d(x_m,y_m) - d(x_n,y_n) \leq d(x_m,x_n) + d(y_n,y_m)
+\Rightarrow d(x_m,y_m) - d(x_n,y_n) < 2 \epsilon
+$$
+
+Similarly, we have:
+
+$$
+d(x_n,y_n) \leq d(x_n,x_m) + d(x_m,y_m) + d(y_m,y_n) \\
+\Rightarrow d(x_n,y_n) - d(x_m,y_m) < 2 \epsilon
+$$
+
+The above inequalities imply that:
+$$
+\vert d(x_m,y_m) - d(x_n,y_n) \vert < 2 \epsilon \\
+d[d(x_m,y_m) - d(x_n,y_n)] < 2 \epsilon
+$$
+
+This implies that $$a_n=d(x_n,y_n)$$ is Cauchy, and thus converges.
+
+$$\blacksquare$$
 
 ---
 #### 1.4.7. Give an indirect proof of Lemma 1.4-2(b).
