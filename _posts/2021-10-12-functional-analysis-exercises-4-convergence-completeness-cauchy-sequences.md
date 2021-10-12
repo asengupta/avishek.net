@@ -175,7 +175,7 @@ We have $$x_n \rightarrow x$$ and $$y_n \rightarrow y$$. Then $$(x_n)$$ and $$(y
 - $$\forall \epsilon/2>0, \exists M$$ such that $$d(x_m,x_n)<\epsilon/2$$ for $$m,n>M$$
 - $$\forall \epsilon/2>0, \exists N$$ such that $$d(y_m,y_n)<\epsilon/2$$ for $$m,n>N$$
 
-Taking $$N_0=max(M,N)$$, the above statements become:
+Taking $$N_0=\text{max }(M,N)$$, the above statements become:
 
 $$\forall \epsilon/2>0, \exists N_0$$ such that $$d(x_m,x_n)<\epsilon/2$$ and $$d(y_m,y_n)<\epsilon/2$$ for $$m,n>N_0$$, i.e., $$d(x_m,x_n)+d(y_m,y_n)<\epsilon/2+\epsilon/2=\epsilon$$
 
@@ -204,6 +204,43 @@ $$\blacksquare$$
 
 ---
 #### 1.4.8. If $$d_1$$ and $$d_2$$ are metrics on the same set $$X$$ and there are positive numbers $$a$$ and $$b$$ such that for all $$x, y \in X$$, $$a.d_1(x,y) \leq d_2(x,y) \leq b.d_1(x,y)$$, show that the Cauchy sequences in $$(X, d_1)$$ and $$(X, d_2)$$ are the same.
+
+**Proof:**
+
+We wish to show that if $$L_1$$ is the limit of a Cauchy sequence in $$(X,d_1)$$ (call it $$x_n(d_1)$$)and $$L_2$$ is the limit of a Cauchy sequence in $$(X,d_2)$$ (call it $$x_n(d_2)$$), then $$L_1=L_2$$.
+
+We have $$\forall x, y \in X$$, $$a.d_1(x,y) \leq d_2(x,y) \leq b.d_1(x,y)$$.
+
+Then, the **Triangle Inequality** gives us:
+
+$$
+d_1(L_1,L_2) \leq d_1(L_1,x) + d_1(x,L_2)
+$$
+
+Applying the given metric constraints:
+
+$$
+d_1(L_1,L_2) \leq d_1(L_1,x) + \frac{1}{a} d_2(x,L_2)
+$$
+
+We know that $$x_n(d_1) \rightarrow L_1$$ and $$x_n(d_2) \rightarrow L_2$$, therefore. If we have the following:
+
+- $$\forall \epsilon>0, \exists M$$ such that $$d_1(x_m(d_1),L_1)<\epsilon$$ for $$m>M$$
+- $$\forall \epsilon>0, \exists N$$ such that $$d_1(x_m(d_2),L_2)<\epsilon$$ for $$m>N$$
+
+Pick $$N_0=\text{max }(M,N)$$, so that the above holds true for $$N_0$$.
+
+Then $$d_1(L_1,x_{N_0})<\epsilon$$ and $$d_2(L_2,x_{N_0})<\epsilon$$, so that we get:
+
+$$
+d_1(L_1,L_2) < \epsilon \left(1+\frac{1}{a} \right)
+$$
+
+Since the above is true for all $$\epsilon>0$$, we can conclude that $$d_1(L_1,L_2)=0$$. Hence $$L_1=L_2$$.
+
+The same procedure can also be showing using $$d_2$$.
+
+$$\blacksquare$$
 
 ---
 #### 1.4.9. Using Prob. 8, show that the metric spaces in Probs. 13 to 15, Sec. 1.2, have the same Cauchy sequences.
