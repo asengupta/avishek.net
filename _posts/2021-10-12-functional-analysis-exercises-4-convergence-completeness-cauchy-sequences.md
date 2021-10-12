@@ -127,6 +127,7 @@ $$
 thus proving the Cauchy criterion.
 
 ---
+
 #### 1.4.6. If $$(x_n)$$ and $$(y_n)$$ are Cauchy sequences in a metric space $$(X, d)$$, show that $$(a_n)$$, where $$a_n = d(x_n, y_n)$$, converges. Give illustrative examples.
 
 **Proof:**
@@ -140,7 +141,7 @@ Then, we have:
 
 $$
 d(x_m,y_m) \leq d(x_m,x_n) + d(x_n,y_n) + d(y_n,y_m) \\
-\Rightarrow d(x_m,y_m) - d(x_n,y_n) \leq d(x_m,x_n) + d(y_n,y_m)
+\Rightarrow d(x_m,y_m) - d(x_n,y_n) \leq d(x_m,x_n) + d(y_n,y_m) \\
 \Rightarrow d(x_m,y_m) - d(x_n,y_n) < 2 \epsilon
 $$
 
@@ -148,6 +149,7 @@ Similarly, we have:
 
 $$
 d(x_n,y_n) \leq d(x_n,x_m) + d(x_m,y_m) + d(y_m,y_n) \\
+d(x_n,y_n) - d(x_m,y_m) \leq d(x_n,x_m) + d(y_m,y_n) \\
 \Rightarrow d(x_n,y_n) - d(x_m,y_m) < 2 \epsilon
 $$
 
@@ -162,7 +164,43 @@ This implies that $$a_n=d(x_n,y_n)$$ is Cauchy, and thus converges.
 $$\blacksquare$$
 
 ---
+
 #### 1.4.7. Give an indirect proof of Lemma 1.4-2(b).
+**Lemma 1.4-2(b)** is: Let $$X=(X,d)$$ be a metric space. Then, if $$x_n \rightarrow x$$ and $$y_n \rightarrow y$$, then $$d(x_n,y_n) \rightarrow d(x,y)$$.
+
+**Proof:**
+
+We have $$x_n \rightarrow x$$ and $$y_n \rightarrow y$$. Then $$(x_n)$$ and $$(y_n)$$ are Cauchy. Thus the following two statements hold true:
+
+- $$\forall \epsilon/2>0, \exists M$$ such that $$d(x_m,x_n)<\epsilon/2$$ for $$m,n>M$$
+- $$\forall \epsilon/2>0, \exists N$$ such that $$d(y_m,y_n)<\epsilon/2$$ for $$m,n>N$$
+
+Taking $$N_0=max(M,N)$$, the above statements become:
+
+$$\forall \epsilon/2>0, \exists N_0$$ such that $$d(x_m,x_n)<\epsilon/2$$ and $$d(y_m,y_n)<\epsilon/2$$ for $$m,n>N_0$$, i.e., $$d(x_m,x_n)+d(y_m,y_n)<\epsilon/2+\epsilon/2=\epsilon$$
+
+We will prove the result using proof by contradiction.
+
+Suppose $$(a_n)=(d(x_n,y_n))$$
+Suppose the claim is not true. Then, $$\require{cancel} a_n \cancel\rightarrow a$$, thus $$(a_n)$$ is not Cauchy. This implies that: $$\exists \epsilon$$ such that $$\forall N$$, we have $$d(a_m, a_n)>\epsilon$$ for all $$m,n>N$$.
+
+By the **Triangle Inequality**, we have:
+
+$$
+d(x_m,y_m) \leq d(x_m,x_n) + d(x_n,y_n) + d(y_n,y_m) \\
+\Rightarrow d(x_m,x_n) + d(y_n,y_m) \geq d(x_m,y_m) - d(x_n,y_n) \\
+\Rightarrow d(x_m,x_n) + d(y_n,y_m) > \epsilon \\
+$$
+
+This is then true for arbitrary $$\epsilon$$. But, this implies that for all $$N$$, we cannot make $$d(x_m,x_n)+d(y_m,y_n)<\epsilon$$. This is a contradiction, since by assumption, we have 
+
+$$
+d(x_m,x_n)+d(y_m,y_n)<\epsilon
+$$
+
+Thus $$(a_n)$$ is Cauchy, and is thus a convergent sequence.
+
+$$\blacksquare$$
 
 ---
 #### 1.4.8. If $$d_1$$ and $$d_2$$ are metrics on the same set $$X$$ and there are positive numbers $$a$$ and $$b$$ such that for all $$x, y \in X$$, $$a.d_1(x,y) \leq d_2(x,y) \leq b.d_1(x,y)$$, show that the Cauchy sequences in $$(X, d_1)$$ and $$(X, d_2)$$ are the same.
