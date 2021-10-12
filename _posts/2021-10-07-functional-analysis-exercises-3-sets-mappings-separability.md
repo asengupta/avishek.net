@@ -2,7 +2,7 @@
 title: "Functional Analysis Exercises 3 : Sets, Continuous Mappings, and Separability"
 author: avishek
 usemathjax: true
-tags: ["Mathematics", "Proof", "Functional Analysis", "Pure Mathematics"]
+tags: ["Mathematics", "Proof", "Functional Analysis", "Pure Mathematics", "Kreyszig"]
 draft: false
 ---
 

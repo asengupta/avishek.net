@@ -2,7 +2,7 @@
 title: "Functional Analysis Exercises 4 : Convergence, Cauchy Sequences, and Completeness"
 author: avishek
 usemathjax: true
-tags: ["Mathematics", "Proof", "Functional Analysis", "Pure Mathematics"]
+tags: ["Mathematics", "Proof", "Functional Analysis", "Pure Mathematics", "Kreyszig"]
 draft: false
 ---
 
