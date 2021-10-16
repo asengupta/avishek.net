@@ -8,9 +8,14 @@ draft: false
 
 This post lists solutions to the exercises in the **Completeness Proofs section 1.5** of *Erwin Kreyszig's* **Introductory Functional Analysis with Applications**. This is a work in progress, and proofs may be refined over time.
 
-#### 1.5.1 Let $$a,b \in \mathbb{R}$$ and $$a<b$$. Show that the open interval $$(a,b)$$ is an incomplete subspace of $$\mathbb{R}$$, whereas the clOsed interval $$[a, b]$$ is complete.
+#### 1.5.1 Let $$a,b \in \mathbb{R}$$ and $$a<b$$. Show that the open interval $$(a,b)$$ is an incomplete subspace of $$\mathbb{R}$$, whereas the closed interval $$[a, b]$$ is complete.
 **Proof:**
 
+$$(a,b)$$ is not a closed set, since the limits of Cauchy sequences which converge to $$a$$ and $$b$$ are not contained in $$(a,b)$$. Thus $$(a,b)$$ is not complete.
+
+$$[a,b]$$ is a closed set since it contains the limits of all the Cauchy sequences which converge, including $$a$$ and $$b$$. Thus, $$[a.b]$$ is a complete metric space.
+
+$$\blacksquare$$
 
 #### 1.5.2 Let $$X$$ be the space of all ordered n-tuples $$x = (\zeta_1, \cdots, \zeta_n)$$ of real numbers and $$d(x,y)=\text{max }_j \vert \zeta_j-\eta_j\vert$$ where $$y=(\eta_j)$$. Show that $$(X,d)$$ is complete.
 **Proof:**
