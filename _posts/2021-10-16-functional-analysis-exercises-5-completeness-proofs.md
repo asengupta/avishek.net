@@ -84,3 +84,4 @@ This post lists solutions to the exercises in the **Completeness Proofs section 
   **is Cauchy but does not converge.**
 
 **Proof:**
+
