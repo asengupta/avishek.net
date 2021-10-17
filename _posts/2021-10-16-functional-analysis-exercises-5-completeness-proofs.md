@@ -38,7 +38,17 @@ $$\blacksquare$$
 #### 1.5.3 Let $$M \subset l^\infty$$ be the subspace consisting of all sequences $$x = (\zeta_j)$$ with at most finitely many nonzero terms. Find a Cauchy sequence in $$M$$ which does not converge in $$M$$, so that $$M$$ is not complete.
 **Proof:**
 
+$$l^\infty$$ is the space of all bounded sequences. Let there be a Cauchy sequence $$(x_n)$$, where the $$n$$th sequence has $$n$$ terms $$1,\frac{1}{2},\frac{1}{3},\frac{1}{4,\cdots,\frac{1}{n}}$$.
 
+This is a Cauchy sequence because for any $$m,n>N$$, we have $$d(x^m,x^n)=\text{sup }\vert x^m_j - x^n_j\vert=\frac{1}{\text{min }(m,n)+1}$$ and $${min }(m,n)$$ can be made as large as possible to make $$\epsilon$$ as small as possible (by the Archimedean Principle).
+
+The limit of the Cauchy sequence is the infinite sequence $$1, \frac{1}{2}, \frac{1}{3}, \cdots$$. Call it $$x$$.
+
+The distance between any $$(x^n)$$ and $$x$$ will be $$\frac{1}{n+1}$$. However, $$x$$ is not contained in $$M$$, since $$x$$ does not have finitely many nonzero terms.
+
+Thus, $$M \subset l^\infty$$ is not a complete subset.
+
+$$\blacksquare$$
 
 #### 1.5.4 Show that $$M$$ in Prob. 3 is not complete by applying Theorem 1.4-7.
 **Proof:**
