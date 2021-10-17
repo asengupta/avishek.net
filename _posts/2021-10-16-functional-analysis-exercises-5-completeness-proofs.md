@@ -17,25 +17,25 @@ $$[a,b]$$ is a closed set since it contains the limits of all the Cauchy sequenc
 
 $$\blacksquare$$
 
-#### 1.5.2 Let $$X$$ be the space of all ordered n-tuples $$x = (\zeta_1, \cdots, \zeta_n)$$ of real numbers and $$d(x,y)=\text{max }_j \vert \zeta_j-\eta_j\vert$$ where $$y=(\eta_j)$$. Show that $$(X,d)$$ is complete.
+#### 1.5.2 Let $$X$$ be the space of all ordered n-tuples $$x = (\xi_1, \cdots, \xi_n)$$ of real numbers and $$d(x,y)=\text{max }_j \vert \xi_j-\eta_j\vert$$ where $$y=(\eta_j)$$. Show that $$(X,d)$$ is complete.
 **Proof:**
 
-Consider a Cauchy sequence of ordered n-tuples $$(\zeta^m)$$ \in X. By the Cauchy criterion, we have:
+Consider a Cauchy sequence of ordered n-tuples $$(\xi^m)$$ \in X. By the Cauchy criterion, we have:
 
 $$
-d(\zeta^m, \zeta^n)=\text{max }|\zeta^m_j - \zeta^n_j|<\epsilon
+d(\xi^m, \xi^n)=\text{max }|\xi^m_j - \xi^n_j|<\epsilon
 $$
 
-This implies that $$\vert\zeta^m_j - \zeta^n_j\vert < \epsilon$$.  
-For a fixed $$j$$, we have a sequence of reals $$\zeta^1_j, \zeta^2_j, \cdots$$ which is then a Cauchy sequence, and because of the completeness of $$\mathbb{R}$$, this sequence converges to $$L_j \in \mathbb{R}$$.
+This implies that $$\vert\xi^m_j - \xi^n_j\vert < \epsilon$$.  
+For a fixed $$j$$, we have a sequence of reals $$\xi^1_j, \xi^2_j, \cdots$$ which is then a Cauchy sequence, and because of the completeness of $$\mathbb{R}$$, this sequence converges to $$L_j \in \mathbb{R}$$.
 
-Then, we have for any $$m,j$$, $$\vert\zeta^m_j - L_j\vert < \epsilon$$. It follows then that $$\text{max }\vert\zeta^m_j - L_j\vert < \epsilon$$. This implies that the n-tuple formed by $$(L)=L_1,L_2,\cdots,L_n$$ is the limit of the Cauchy sequence $$(\zeta^m)$$. Since $$(\zeta^m)$$ was arbitrary, every Cauchy sequence in this space converges to a limit. Also, $$L \in X$$, hence the limit is contained within this metric space.
+Then, we have for any $$m,j$$, $$\vert\xi^m_j - L_j\vert < \epsilon$$. It follows then that $$\text{max }\vert\xi^m_j - L_j\vert < \epsilon$$. This implies that the n-tuple formed by $$(L)=L_1,L_2,\cdots,L_n$$ is the limit of the Cauchy sequence $$(\xi^m)$$. Since $$(\xi^m)$$ was arbitrary, every Cauchy sequence in this space converges to a limit. Also, $$L \in X$$, hence the limit is contained within this metric space.
 
 Hence, this is a complete metric space.
 
 $$\blacksquare$$
 
-#### 1.5.3 Let $$M \subset l^\infty$$ be the subspace consisting of all sequences $$x = (\zeta_j)$$ with at most finitely many nonzero terms. Find a Cauchy sequence in $$M$$ which does not converge in $$M$$, so that $$M$$ is not complete.
+#### 1.5.3 Let $$M \subset l^\infty$$ be the subspace consisting of all sequences $$x = (\xi_j)$$ with at most finitely many nonzero terms. Find a Cauchy sequence in $$M$$ which does not converge in $$M$$, so that $$M$$ is not complete.
 **Proof:**
 
 $$l^\infty$$ is the space of all bounded sequences. Let there be a Cauchy sequence $$(x_n)$$, where the $$n$$th sequence has $$n$$ terms $$1,\frac{1}{2},\frac{1}{3},\frac{1}{4,\cdots,\frac{1}{n}}$$.
@@ -168,18 +168,132 @@ $$\blacksquare$$
 
 #### 1.5.10  (Discrete metric) Show that a discrete metric space (cf. 1.1-8) is complete.
 **Proof:**
+The discrete metric is defined as:
 
+$$d(x,y)=\begin{cases}
+0 & \text{if } x=y \\
+1 & \text{if } x \neq y
+\end{cases}$$
 
+The only Cauchy sequences in $$X$$ with this metric are those which yield to subsequences $$a,a,a,\cdots$$. The limit of such a Cauchy sequence is $$a \in X$$. Thus the limit exists and is contained by the set $$X$$.
 
-#### 1.5.11  (Space s) Show that in the space $$s$$ (cf. 1.2-1) we have $$x_n \rightarrow x$$ if and only if $$\zeta^{(n)}_j \rightarrow \zeta_j$$ for all $$j = 1, 2, \cdots$$ , where $$x_n=(\zeta^{(n)}_j)$$ and $$x=(\zeta_j)$$.
+$$\blacksquare$$
+
+#### 1.5.11  (Space s) Show that in the space $$s$$ (cf. 1.2-1) we have $$x_n \rightarrow x$$ if and only if $$\xi^{(n)}_j \rightarrow \xi_j$$ for all $$j = 1, 2, \cdots$$ , where $$x_n=(\xi^{(n)}_j)$$ and $$x=(\xi_j)$$.
 **Proof:**
 
+The space $$s$$ consists of all bounded and unbounded sequences with the metric:
 
+$$
+d(x,y)=\displaystyle\sum\frac{1}{2^i}\frac{|x_i-y_i|}{1+|x_i-y_i|}
+$$
+
+Assume $$x_n \rightarrow x$$, so that $$d(\xi^n,\xi)<\epsilon/2$$.
+Then, by the **Triangle Inequality**, we have:
+
+$$
+d(\xi^m,\xi^n) \leq d(\xi^m,\xi) + d(\xi, \xi^n) < \epsilon/2 + \epsilon/2 = \epsilon
+$$
+
+Thus, the Cauchy criterion also holds, so that:
+$$
+d(\xi^m,\xi^n)=\displaystyle\sum\frac{1}{2^j} \frac{|\xi^m_j-\xi^n_j|}{1+|\xi^m_j-\xi^n_j|} < \epsilon
+$$
+
+Denote $$D_j=\vert\xi^m_j-\xi_j\vert$$ for simplicity, so that we get:
+
+We also note that $$\displaystyle\sum\frac{1}{2^j}=1$$, so that we can write the following:
+$$
+\displaystyle\sum\frac{1}{2^j} \frac{D_j}{1+D_j} < \epsilon\sum\frac{1}{2^j} \\
+\Rightarrow \displaystyle\sum\frac{1}{2^j} \frac{D_j}{1+D_j} < \sum\frac{\epsilon}{2^j}
+$$
+
+Comparing term by term, we can say that:
+
+$$
+\frac{D_j}{1+D_j}<\epsilon \\
+\Rightarrow D_j<\epsilon(1+D_j) \\
+\Rightarrow D_j(1-\epsilon)<\epsilon \\
+\Rightarrow D_j<\frac{\epsilon}{1-\epsilon}
+$$
+
+Note that $$\epsilon<1$$ simply because $$\frac{D_j}{1+D_j}<1$$ and $$\frac{1}{2^j}<1$$.
+Setting $$\epsilon=\frac{1}{k}$$, we get:
+
+$$
+\frac{\epsilon}{1-\epsilon}=\frac{\frac{1}{n}}{1-\frac{1}{n}} = \frac{1}{n-1}
+$$
+
+Thus, $$D_j$$ can be made as small as needed by choosing a large $$n$$, i.e., small $$\epsilon$$, i.e.:
+
+$$
+\vert\xi^m_j-\xi\vert < \epsilon_0
+$$
+
+This implies that, for an arbitrary $$j$$:
+
+$$\xi^{(n)}_j \rightarrow \xi_j$$
+
+$$\blacksquare$$
+
+Conversely, assume that $$\xi^{(n)}_j \rightarrow \xi_j$$ for $$j=1,2,\cdots$$.
+
+This implies that:
+
+$$
+\vert\xi^m_j-\xi_j\vert < \epsilon_0
+$$
+
+Assume there is a sequence $$\xi_1, \xi_j, \cdots$$.
+
+We can see that:
+
+$$
+\frac{|\xi^m_j-\xi_j|}{1+|\xi^m_j-\xi_j|}<|\xi^m_j-\xi_j|<\epsilon<1
+$$
+
+Multiplying both sides by $$\frac{1}{2^n}$$, we get:
+
+$$
+\frac{1}{2^j}\frac{|\xi^m_j-\xi_j|}{1+|\xi^m_j-\xi_j|}<\frac{1}{2^j} \epsilon
+$$
+
+Summing to $$\infty$$, we get:
+
+$$
+\sum\frac{1}{2^j}\frac{|\xi^m_j-\xi_j|}{1+|\xi^m_j-\xi_j|}<\sum\frac{1}{2^j} \epsilon \\
+\Rightarrow d(\xi^m,\xi) < \epsilon\sum\frac{1}{2^j} \\
+\Rightarrow d(\xi^m,\xi) < \epsilon
+$$
+
+This implies that:
+
+$$
+\xi^m \rightarrow \xi
+$$
+
+$$\blacksquare$$
 
 #### 1.5.12  Using Prob. 11, show that the sequence space $$s$$ in 1.2-1 is complete.
 **Proof:**
 
+Assume a Cauchy sequence in the space $$s$$. Since it is a Cauchy sequence, we have:
 
+$$
+d(\xi^m,\xi_n) < \epsilon
+$$
+
+By the previous problem, this would imply that 
+
+$$
+\vert\xi^m_j-\xi^n_j\vert < \epsilon
+$$
+
+For a fixed $$j$$, we thus have a Cauchy sequence of reals. Since $$\mathbb{R}$$ is complete, this sequence converges so that $$\xi^n_j \rightarrow \xi_j$$.
+
+By the previous problem, this implies that the Cauchy sequence in the space $$s$$ converges to a limit $$\xi$$. Moreover, $$\xi \in s$$. Hence $$s$$ is a complete metric space.
+
+$$\blacksquare$$
 
 #### 1.5.13  Show that in 1.5-9, another Cauchy sequence is $$(x_n)$$, where $$x_n(t)=n \text{ if } 0 \leq t \leq n^{-2}$$ and $$x_n(t)=t^{-\frac{1}{2}} \text{ if } n^{-2} \leq t \leq 1$$.
 **Proof:**
@@ -191,9 +305,9 @@ $$\blacksquare$$
 
 
 
-#### 1.5.15  Let $$X$$ be the metric space of all real sequences $$x=(\zeta_j)$$ each of which has only finitely many nonzero terms, and $$d(x,y)=\displaystyle\sum \vert \zeta_j - \eta_j \vert$$, where $$y = (\eta_j)$$. Note that this is a finite sum but the number of terms depends on $$x$$ and $$y$$. Show that $$(x_n)$$ with $$x_n = (\zeta^{(n)}_j)$$,
+#### 1.5.15  Let $$X$$ be the metric space of all real sequences $$x=(\xi_j)$$ each of which has only finitely many nonzero terms, and $$d(x,y)=\displaystyle\sum \vert \xi_j - \eta_j \vert$$, where $$y = (\eta_j)$$. Note that this is a finite sum but the number of terms depends on $$x$$ and $$y$$. Show that $$(x_n)$$ with $$x_n = (\xi^{(n)}_j)$$,
 
-  $$\zeta^{(n)}_j=j^{-2}$$ for $$j=1,\cdots,n$$ and $$\zeta^{(n)}_j=0$$ for $$j>n$$
+  $$\xi^{(n)}_j=j^{-2}$$ for $$j=1,\cdots,n$$ and $$\xi^{(n)}_j=0$$ for $$j>n$$
 
   **is Cauchy but does not converge.**
 
