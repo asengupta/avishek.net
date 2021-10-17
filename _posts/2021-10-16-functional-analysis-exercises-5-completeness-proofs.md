@@ -20,7 +20,20 @@ $$\blacksquare$$
 #### 1.5.2 Let $$X$$ be the space of all ordered n-tuples $$x = (\zeta_1, \cdots, \zeta_n)$$ of real numbers and $$d(x,y)=\text{max }_j \vert \zeta_j-\eta_j\vert$$ where $$y=(\eta_j)$$. Show that $$(X,d)$$ is complete.
 **Proof:**
 
+Consider a Cauchy sequence of ordered n-tuples $$(\zeta^m)$$ \in X. By the Cauchy criterion, we have:
 
+$$
+d(\zeta^m, \zeta^n)=\text{max }|\zeta^m_j - \zeta^n_j|<\epsilon
+$$
+
+This implies that $$\vert\zeta^m_j - \zeta^n_j\vert < \epsilon$$.  
+For a fixed $$j$$, we have a sequence of reals $$\zeta^1_j, \zeta^2_j, \cdots$$ which is then a Cauchy sequence, and because of the completeness of $$\mathbb{R}$$, this sequence converges to $$L_j \in \mathbb{R}$$.
+
+Then, we have for any $$m,j$$, $$\vert\zeta^m_j - L_j\vert < \epsilon$$. It follows then that $$\text{max }\vert\zeta^m_j - L_j\vert < \epsilon$$. This implies that the n-tuple formed by $$(L)=L_1,L_2,\cdots,L_n$$ is the limit of the Cauchy sequence $$(\zeta^m)$$. Since $$(\zeta^m)$$ was arbitrary, every Cauchy sequence in this space converges to a limit. Also, $$L \in X$$, hence the limit is contained within this metric space.
+
+Hence, this is a complete metric space.
+
+$$\blacksquare$$
 
 #### 1.5.3 Let $$M \subset l^\infty$$ be the subspace consisting of all sequences $$x = (\zeta_j)$$ with at most finitely many nonzero terms. Find a Cauchy sequence in $$M$$ which does not converge in $$M$$, so that $$M$$ is not complete.
 **Proof:**
