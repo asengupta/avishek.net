@@ -142,7 +142,29 @@ $$\blacksquare$$
 #### 1.5.9 In 1.5-5 we referred to the following theorem of calculus. If a sequence $$(x_m)$$ of continuous functions on $$[a,b]$$ converges on $$[a,b]$$ and the convergence is uniform on $$[a,b]$$, then the limit function $$x$$ is continuous on $$[a,b]$$. Prove this theorem.
 **Proof:**
 
+A sequence of functions $$(f_n)=f_1,f_2,\cdots$$ is uniformly convergent onto a limit function $$f$$ if $$\forall \epsilon>0, \exists N$$, such that $$\vert f_n(x)-f(x) \vert < \epsilon$$ for all $$x$$ and $$n>N$$.
 
+A function is continuous at a point $$x_0$$ if $$\forall \epsilon>0, \exists \delta>0$$ such that $$\vert x-x_0 \vert <\delta \Rightarrow \vert f(x)- f(x_0)\vert < \epsilon$$.
+
+Choose a function $$f_n$$ where $$n>N$$. Fix a point $$x_0$$. Then, because of uniform convergence, we have:
+
+$$
+d[f(x_0),f_n(x_0)]<\epsilon \\
+d[f_n(x),f(x)]<\epsilon
+$$
+
+Since $$f_n$$ is continuous, it is also continuous at $$x_0$$, pick an $$\epsilon>0$$ such that $$d[f_n(x), f_n(x_0)]<\epsilon$$.
+
+Then, by the **Triangle Inequality**, we have:
+
+$$
+d[f(x),f(x_0)] \leq d[f(x),f_n(x)] + d[f_n(x),f_n(x_0)] + d[f_n(x_0),f(x_0)] \\
+\Rightarrow d[f(x),f(x_0)] < \epsilon + \epsilon + \epsilon = 3 \epsilon
+$$
+
+This shows that the limit function $$f$$ is also continuous.
+
+$$\blacksquare$$
 
 #### 1.5.10  (Discrete metric) Show that a discrete metric space (cf. 1.1-8) is complete.
 **Proof:**
