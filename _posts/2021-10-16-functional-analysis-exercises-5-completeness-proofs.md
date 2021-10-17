@@ -53,12 +53,18 @@ $$\blacksquare$$
 #### 1.5.4 Show that $$M$$ in Prob. 3 is not complete by applying Theorem 1.4-7.
 **Proof:**
 
+The limit of the Cauchy sequence in $$M$$ described in the previous problem, does not belong to $$M$$, thus $$M$$ is not a closed subset, and is thus not complete.
 
+$$\blacksquare$$
 
 #### 1.5.5 Show that the set $$X$$ of all integers with metric $$d$$ defined by $$d(m,n) = \vert m-n\vert$$ is a complete metric space.
 **Proof:**
 
+The only possible Cauchy sequences in this set are the ones ultimately yielding to the subsequence $$a,a,a,\cdots, a \in \mathbb{Z}$$, because only then will the Cauchy criterion of $$d(x_m,x_n)<\epsilon, m,n>N$$ hold.
 
+Thus, every Cauchy sequence in this set has as its limit $$x \in \mathbb{Z}$$. Thus, the set of all integers contains the limits of all its Cauchy sequences, and is thus a complete metric space.
+
+$$\blacksquare$$
 
 #### 1.5.6 Show that the set of all real numbers constitutes an incomplete metric space if we choose $$d(x,y) = \vert \text{arc tan } x - \text{arc tan } y \vert$$.
 **Proof:**
