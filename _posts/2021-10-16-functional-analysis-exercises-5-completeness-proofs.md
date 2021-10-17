@@ -22,7 +22,7 @@ $$\blacksquare$$
 #### 1.5.2 Let $$X$$ be the space of all ordered n-tuples $$x = (\xi_1, \cdots, \xi_n)$$ of real numbers and $$d(x,y)=\text{max }_j \vert \xi_j-\eta_j\vert$$ where $$y=(\eta_j)$$. Show that $$(X,d)$$ is complete.
 **Proof:**
 
-Consider a Cauchy sequence of ordered n-tuples $$(\xi^m)$$ \in X. By the Cauchy criterion, we have:
+Consider a Cauchy sequence of ordered n-tuples $$(\xi^m) \in X$$. By the Cauchy criterion, we have:
 
 $$
 d(\xi^m, \xi^n)=\text{max }|\xi^m_j - \xi^n_j|<\epsilon
