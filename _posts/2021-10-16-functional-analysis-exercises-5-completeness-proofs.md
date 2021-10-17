@@ -99,13 +99,47 @@ $$
 d(x_m,x_n) \leq d(x_m,x) + d(x,x_n) < \frac{\epsilon}{2} + \frac{\epsilon}{2} = \epsilon
 $$
 
-Hence $$(x_n)$$ is Cauchy. However, this Cauchy does not converge in $$\mathbb{Z}_+$$
-#### 1.5.8 (Space $$C[a, b]$$) Show that the subspace $$Y \subset C[a, b]$$ consisting of all $$x \in C[a, b]$$ such that $$x(a) = x(b)$$ is complete.
+Hence $$(x_n)$$ is Cauchy. However, this Cauchy does not converge in $$\mathbb{Z}_+$$, because there is no element in the set where $$\frac{1}{x_m}=0$$.
+
+$$\blacksquare$$
+
+#### 1.5.8 (Space $$C[a, b]$$) Show that the subspace $$Y \subset C[a,b]$$ consisting of all $$x \in C[a, b]$$ such that $$x(a) = x(b)$$ is complete.
 **Proof:**
 
+The distance metric on $$C[a.b]$$ is defined as: $$d(f_1,f_2)=\text{sup }\vert f_1(x), f_2(x)\vert$$. We assume a Cauchy sequence of functions $$(f_n)=f_1,f_2,f_3,\cdots$$.
 
+We have, by the Cauchy criterion:
 
-#### 1.5.9 In 1.5-5 we referred to the following theorem of calculus. If a sequence $$(xm)$$ of continuous functions on $$[a,b]$$ converges on $$[a,b]$$ and the convergence is uniform on $$[a,b]$$, then the limit function $$x$$ is continuous on $$[a,b]$$. Prove this theorem.
+$$
+d(f_m(x),f_n(x))<\epsilon \\
+\Rightarrow \text{sup } |f_m(x) - f_n(x)| < \epsilon \\
+\Rightarrow |f_m(x) - f_n(x)| < \epsilon
+$$
+
+Fix $$x=t$$ such that $$f_1(t), f_2(t), \cdots$$ forms a Cauchy sequence in $$\mathbb{R}$$ since $$\vert f_m(t) - f_n(t) \vert < \epsilon$$. Since $$\mathbb{R}$$ is complete, this sequence also converges to a real number $$f_L(t)$$.
+
+Since $$t$$ is arbitrary, all the limits of all $$t \in [a,b]$$ form the values of a limit function; call it $$f_L(x)$$.
+
+Since this limit function exists, we have:
+
+$$
+d(f_n(x),d_L(x))<\epsilon
+$$
+
+Since we know that $$d(f_n(a), f_n(b))=0$$, the above reduces to:
+
+$$
+d(f_L(a), f_L(b)) \leq d(f_L(a), f_n(a)) + d(f_n(a), f_n(b)) + d(f_n(b),f_L(b)) \\
+\Rightarrow d(f_L(a), f_L(b)) \leq \epsilon + 0 + \epsilon = 2 \epsilon
+$$
+
+Since $$d(f_L(a), f_L(b))<2 \epsilon$$ for all $$\epsilon>0$$, it follows that $$d(f_L(a), f_L(b))=0$$. Thus $$f_L$$ is contained in the set of all $$x \in C[a, b]$$ such that $$x(a) = x(b)$$ is complete.
+
+Hence this subset is complete.
+
+$$\blacksquare$$
+
+#### 1.5.9 In 1.5-5 we referred to the following theorem of calculus. If a sequence $$(x_m)$$ of continuous functions on $$[a,b]$$ converges on $$[a,b]$$ and the convergence is uniform on $$[a,b]$$, then the limit function $$x$$ is continuous on $$[a,b]$$. Prove this theorem.
 **Proof:**
 
 
