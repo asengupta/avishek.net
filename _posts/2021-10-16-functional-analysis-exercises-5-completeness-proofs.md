@@ -17,6 +17,8 @@ $$[a,b]$$ is a closed set since it contains the limits of all the Cauchy sequenc
 
 $$\blacksquare$$
 
+---
+
 #### 1.5.2 Let $$X$$ be the space of all ordered n-tuples $$x = (\xi_1, \cdots, \xi_n)$$ of real numbers and $$d(x,y)=\text{max }_j \vert \xi_j-\eta_j\vert$$ where $$y=(\eta_j)$$. Show that $$(X,d)$$ is complete.
 **Proof:**
 
@@ -35,12 +37,14 @@ Hence, this is a complete metric space.
 
 $$\blacksquare$$
 
+---
+
 #### 1.5.3 Let $$M \subset l^\infty$$ be the subspace consisting of all sequences $$x = (\xi_j)$$ with at most finitely many nonzero terms. Find a Cauchy sequence in $$M$$ which does not converge in $$M$$, so that $$M$$ is not complete.
 **Proof:**
 
-$$l^\infty$$ is the space of all bounded sequences. Let there be a Cauchy sequence $$(x_n)$$, where the $$n$$th sequence has $$n$$ terms $$1,\frac{1}{2},\frac{1}{3},\frac{1}{4,\cdots,\frac{1}{n}}$$.
+$$l^\infty$$ is the space of all bounded sequences. Let there be a Cauchy sequence $$(x_n)$$, where the $$n$$th sequence has $$n$$ terms $$1,\frac{1}{2},\frac{1}{3},\frac{1}{4},\cdots,\frac{1}{n}$$.
 
-This is a Cauchy sequence because for any $$m,n>N$$, we have $$d(x^m,x^n)=\text{sup }\vert x^m_j - x^n_j\vert=\frac{1}{\text{min }(m,n)+1}$$ and $${min }(m,n)$$ can be made as large as possible to make $$\epsilon$$ as small as possible (by the Archimedean Principle).
+This is a Cauchy sequence because for any $$m,n>N$$, we have $$d(x^m,x^n)=\text{sup }\vert x^m_j - x^n_j\vert=\displaystyle\frac{1}{\text{min }(m,n)+1}$$ and $$\text{min }(m,n)$$ can be made as large as possible to make $$\epsilon$$ as small as possible (by the Archimedean Principle).
 
 The limit of the Cauchy sequence is the infinite sequence $$1, \frac{1}{2}, \frac{1}{3}, \cdots$$. Call it $$x$$.
 
@@ -50,12 +54,16 @@ Thus, $$M \subset l^\infty$$ is not a complete subset.
 
 $$\blacksquare$$
 
+---
+
 #### 1.5.4 Show that $$M$$ in Prob. 3 is not complete by applying Theorem 1.4-7.
 **Proof:**
 
 The limit of the Cauchy sequence in $$M$$ described in the previous problem, does not belong to $$M$$, thus $$M$$ is not a closed subset, and is thus not complete.
 
 $$\blacksquare$$
+
+---
 
 #### 1.5.5 Show that the set $$X$$ of all integers with metric $$d$$ defined by $$d(m,n) = \vert m-n\vert$$ is a complete metric space.
 **Proof:**
@@ -65,6 +73,8 @@ The only possible Cauchy sequences in this set are the ones ultimately yielding 
 Thus, every Cauchy sequence in this set has as its limit $$x \in \mathbb{Z}$$. Thus, the set of all integers contains the limits of all its Cauchy sequences, and is thus a complete metric space.
 
 $$\blacksquare$$
+
+---
 
 #### 1.5.6 Show that the set of all real numbers constitutes an incomplete metric space if we choose $$d(x,y) = \vert \text{arc tan } x - \text{arc tan } y \vert$$.
 **Proof:**
@@ -84,6 +94,8 @@ Then $$(x_n)$$ has a limit at $$\infty$$. However, $$\mathbb{R}$$ does not conta
 
 $$\blacksquare$$
 
+---
+
 #### 1.5.7 Let $$X$$ be the set of all positive integers and $$d(m,n)=\vert m^{-1}-n^{-1}\vert$$. Show that $$(X,d)$$ is not complete.
 **Proof:**
 
@@ -102,6 +114,8 @@ $$
 Hence $$(x_n)$$ is Cauchy. However, this Cauchy does not converge in $$\mathbb{Z}_+$$, because there is no element in the set where $$\frac{1}{x_m}=0$$.
 
 $$\blacksquare$$
+
+---
 
 #### 1.5.8 (Space $$C[a, b]$$) Show that the subspace $$Y \subset C[a,b]$$ consisting of all $$x \in C[a, b]$$ such that $$x(a) = x(b)$$ is complete.
 **Proof:**
@@ -139,6 +153,8 @@ Hence this subset is complete.
 
 $$\blacksquare$$
 
+---
+
 #### 1.5.9 In 1.5-5 we referred to the following theorem of calculus. If a sequence $$(x_m)$$ of continuous functions on $$[a,b]$$ converges on $$[a,b]$$ and the convergence is uniform on $$[a,b]$$, then the limit function $$x$$ is continuous on $$[a,b]$$. Prove this theorem.
 **Proof:**
 
@@ -166,6 +182,8 @@ This shows that the limit function $$f$$ is also continuous.
 
 $$\blacksquare$$
 
+---
+
 #### 1.5.10  (Discrete metric) Show that a discrete metric space (cf. 1.1-8) is complete.
 **Proof:**
 The discrete metric is defined as:
@@ -178,6 +196,8 @@ $$d(x,y)=\begin{cases}
 The only Cauchy sequences in $$X$$ with this metric are those which yield to subsequences $$a,a,a,\cdots$$. The limit of such a Cauchy sequence is $$a \in X$$. Thus the limit exists and is contained by the set $$X$$.
 
 $$\blacksquare$$
+
+---
 
 #### 1.5.11  (Space s) Show that in the space $$s$$ (cf. 1.2-1) we have $$x_n \rightarrow x$$ if and only if $$\xi^{(n)}_j \rightarrow \xi_j$$ for all $$j = 1, 2, \cdots$$ , where $$x_n=(\xi^{(n)}_j)$$ and $$x=(\xi_j)$$.
 **Proof:**
@@ -274,6 +294,8 @@ $$
 
 $$\blacksquare$$
 
+---
+
 #### 1.5.12  Using Prob. 11, show that the sequence space $$s$$ in 1.2-1 is complete.
 **Proof:**
 
@@ -294,6 +316,8 @@ For a fixed $$j$$, we thus have a Cauchy sequence of reals. Since $$\mathbb{R}$$
 By the previous problem, this implies that the Cauchy sequence in the space $$s$$ converges to a limit $$\xi$$. Moreover, $$\xi \in s$$. Hence $$s$$ is a complete metric space.
 
 $$\blacksquare$$
+
+---
 
 #### 1.5.13  Show that in 1.5-9, another Cauchy sequence is $$(x_n)$$, where $$x_n(t)=n \text{ if } 0 \leq t \leq n^{-2}$$ and $$x_n(t)=t^{-\frac{1}{2}} \text{ if } n^{-2} \leq t \leq 1$$.
 **Proof:**
@@ -330,10 +354,24 @@ Thus $$(x_n)$$ is a Cauchy sequence.
 
 $$\blacksquare$$
 
+---
+
 #### 1.5.14  Show that the Cauchy sequence in Prob. 13 does not converge.
 **Proof:**
 
+Assume that the limit of $$x_n$$ exists, and is $$x(t)$$. Thus, as $$n \rightarrow \infty$$, $$d(x_m(t),x(t)) \rightarrow 0$$, implying that the integral above approaches zero. Since, all the integrands are positive, each of them should individually approach zero.
 
+Then, we get, in the limit of $$n \rightarrow \infty$$:
+
+$$
+\int\limits_0^0 |n-x(t)| dt + \int\limits_0^{\frac{1}{m^2}} |m-x(t)| dt + \int\limits_{\frac{1}{m^2}}^1 |\frac{1}{\sqrt t}-x(t)| dt \\
+$$
+
+The three terms above should individually go to zero. Thus, the third term implies that $$x(t)=\frac{1}{\sqrt t}$$.
+
+$$x(t)$$ should be in the space of continuous functions. However $$x(t)=\frac{1}{\sqrt t}$$ is not defined for $$t=0$$. Thus, $$x(t)$$ is not continuous, and this Cauchy sequence in $$C[0,1]$$ does not converge.
+
+---
 
 #### 1.5.15  Let $$X$$ be the metric space of all real sequences $$x=(\xi_j)$$ each of which has only finitely many nonzero terms, and $$d(x,y)=\displaystyle\sum \vert \xi_j - \eta_j \vert$$, where $$y = (\eta_j)$$. Note that this is a finite sum but the number of terms depends on $$x$$ and $$y$$. Show that $$(x_n)$$ with $$x_n = (\xi^{(n)}_j)$$,
 
@@ -343,3 +381,21 @@ $$\blacksquare$$
 
 **Proof:**
 
+Consider the space of sequences $$(x_n)=\frac{1}{1},\frac{1}{2^2},\frac{1}{3^2},\cdots,\frac{1}{n^2},0,0,\cdots$$.
+
+We have $$d(x_m,x_n)=\displaystyle\sum\limits_{j=m+1}^n \frac{1}{j^2}$$.
+Since $$\displaystyle\sum\limits_{j=1}^\infty \frac{1}{j^2}$$ is bounded, $$\displaystyle\sum\limits_{j=n}^\infty \frac{1}{j^2}$$ can be made as small as needed, by choosing a large $$m$$, thus we have:
+
+$$
+\displaystyle\sum\limits_{j=m+1}^n \frac{1}{j^2}<\displaystyle\sum\limits_{j=m+1}^\infty \frac{1}{j^2}<\epsilon.
+$$
+
+Thus, this sequence is Cauchy.
+
+Assume a limit exists, then $$d(x_n,x) \rightarrow 0$$ as $$n \rightarrow \infty$$.
+
+Then $$\require{cancel} d(x_n,x)=\displaystyle\sum\limits_{j=n+1}^\infty \frac{1}{j^2} \cancel\rightarrow 0$$
+
+which is a contradiction. Thus, this limit does not exist in $$X$$, and thus $$X$$ is not a complete metric space.
+
+$$\blacksquare$$
