@@ -69,13 +69,37 @@ $$\blacksquare$$
 #### 1.5.6 Show that the set of all real numbers constitutes an incomplete metric space if we choose $$d(x,y) = \vert \text{arc tan } x - \text{arc tan } y \vert$$.
 **Proof:**
 
+Note that $$\text{arc tan }_{n\rightarrow\infty} n=\frac{\pi}{2}$$.
 
+We need to find a Cauchy sequence which has a limit not contained in $$\mathbb{R}$$. 
+
+Assume $$(x_n)=n$$
+We note that $$\text{arc tan } x \rightarrow \frac{\pi}{2}$$ as $$x \rightarrow \infty$$. Then $$\vert \text{arc tan } x - \frac{\pi}{2} \vert < \frac{\epsilon}{2}$$. Then, we use this to prove that $$(x_n)$$ is Cauchy using the **Triangle Inequality**. That is:
+
+$$
+d(x_m,x_n) \leq d(x_m,x) + d(x,x_n) = \frac{\epsilon}{2} + \frac{\epsilon}{2} = \epsilon
+$$
+
+Then $$(x_n)$$ has a limit at $$\infty$$. However, $$\mathbb{R}$$ does not contain $$\infty$$. Thus, this set if an incomplete metric space.
+
+$$\blacksquare$$
 
 #### 1.5.7 Let $$X$$ be the set of all positive integers and $$d(m,n)=\vert m^{-1}-n^{-1}\vert$$. Show that $$(X,d)$$ is not complete.
 **Proof:**
 
+Let there be a sequence $$(x_n)=n$$. The distance $$d(x_n,x)=\vert \frac{1}{x_n} - \frac{1}{x} \vert$$ as $$x \rightarrow \infty$$ approaches $$\frac{1}{n}$$ which can be made as small as needed by choosing a large enough $$n$$. Thus we have:
 
+$$
+d(x_n,x)=\vert \frac{1}{x_n} - \frac{1}{x} \vert < \epsilon
+$$
 
+Then, by the **Triangle Inequality**, we have:
+
+$$
+d(x_m,x_n) \leq d(x_m,x) + d(x,x_n) < \frac{\epsilon}{2} + \frac{\epsilon}{2} = \epsilon
+$$
+
+Hence $$(x_n)$$ is Cauchy. However, this Cauchy does not converge in $$\mathbb{Z}_+$$
 #### 1.5.8 (Space $$C[a, b]$$) Show that the subspace $$Y \subset C[a, b]$$ consisting of all $$x \in C[a, b]$$ such that $$x(a) = x(b)$$ is complete.
 **Proof:**
 
