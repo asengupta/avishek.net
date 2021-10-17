@@ -298,7 +298,37 @@ $$\blacksquare$$
 #### 1.5.13  Show that in 1.5-9, another Cauchy sequence is $$(x_n)$$, where $$x_n(t)=n \text{ if } 0 \leq t \leq n^{-2}$$ and $$x_n(t)=t^{-\frac{1}{2}} \text{ if } n^{-2} \leq t \leq 1$$.
 **Proof:**
 
+![Diagram for this Problem](/assets/images/cauchy-function-convergence.png)
 
+We prove that this sequence is Cauchy. The distance metric is defined as:
+
+$$
+d(x,y)=\int\limits_0^1 |x(t) - y(t)| dt
+$$
+
+$$
+d(x_m,x_n)=\int\limits_0^1 |x_m(t) - x_n(t)| dt \\
+= \int\limits_0^{\frac{1}{n^2}} |x_m(t) - x_n(t)| dt + \int\limits_{\frac{1}{n^2}}^{\frac{1}{m^2}} |x_m(t) - x_n(t)| dt + \int\limits_{\frac{1}{m^2}}^1 |x_m(t) - x_n(t)| dt \\
+= \int\limits_0^{\frac{1}{n^2}} |n-m| dt + \int\limits_{\frac{1}{n^2}}^{\frac{1}{m^2}} |m-\frac{1}{\sqrt t}| dt + \int\limits_{\frac{1}{m^2}}^1 |\frac{1}{\sqrt t}-\frac{1}{\sqrt t}| dt \\
+= \int\limits_0^{\frac{1}{n^2}} (n-m) dt + \int\limits_{\frac{1}{n^2}}^{\frac{1}{m^2}} (\frac{1}{\sqrt t}-m) dt + \int\limits_{\frac{1}{m^2}}^1 |\frac{1}{\sqrt t}-\frac{1}{\sqrt t}| dt \\
+$$
+
+Note above that for the middle term $$\frac{1}{\sqrt t}>m$$, thus the terms are flipped.
+
+Assuming $$m<n$$, we get:
+
+$$
+\require{cancel}
+(n-m)(\frac{1}{n^2} - 0) + m(\frac{1}{n^2} - \frac{1}{m^2}) - (\frac{2}{n} - \frac{2}{m}) + 0 \\
+= \frac{1}{n} - \cancel{\frac{m}{n^2}} + \cancel{\frac{m}{n^2}} -\frac{1}{m} - \frac{2}{n} + \frac{2}{m} \\
+= \frac{1}{m} - \frac{1}{n}=\frac{n-m}{mn}
+$$
+
+Assume you keep $$n-m=K$$, then you can make $$d(x_m, x_n)<\epsilon$$ by choosing suitable $$m,n$$ so that the product $$mn$$ is as large as needed.
+
+Thus $$(x_n)$$ is a Cauchy sequence.
+
+$$\blacksquare$$
 
 #### 1.5.14  Show that the Cauchy sequence in Prob. 13 does not converge.
 **Proof:**
