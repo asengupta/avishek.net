@@ -371,6 +371,8 @@ The three terms above should individually go to zero. Thus, the third term impli
 
 $$x(t)$$ should be in the space of continuous functions. However $$x(t)=\frac{1}{\sqrt t}$$ is not defined for $$t=0$$. Thus, $$x(t)$$ is not continuous, and this Cauchy sequence in $$C[0,1]$$ does not converge.
 
+$$\blacksquare$$
+
 ---
 
 #### 1.5.15  Let $$X$$ be the metric space of all real sequences $$x=(\xi_j)$$ each of which has only finitely many nonzero terms, and $$d(x,y)=\displaystyle\sum \vert \xi_j - \eta_j \vert$$, where $$y = (\eta_j)$$. Note that this is a finite sum but the number of terms depends on $$x$$ and $$y$$. Show that $$(x_n)$$ with $$x_n = (\xi^{(n)}_j)$$,
