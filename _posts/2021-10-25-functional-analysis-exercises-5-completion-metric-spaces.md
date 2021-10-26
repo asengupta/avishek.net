@@ -255,17 +255,27 @@ Taking limits on both sides, we get:
 
 $$
 \text{lim}_{n \rightarrow \infty} d(x_m',x_n') \leq \underbrace{\text{lim}_{n \rightarrow \infty} d(x_m',x_m)}_\text{0 because equivalent} + \underbrace{\text{lim}_{n \rightarrow \infty} d(x_m,x_n)}_\text{0 because Cauchy} + \underbrace{\text{lim}_{n \rightarrow \infty} d(x_n,x_n')}_\text{0 because equivalent} \\
-=0
 $$
 
+Since distance metric has to be nonnegative, we conclude that:
+
+$$
+\text{lim}_{n \rightarrow \infty} d(x_m',x_n')=0
+$$
 
 $$\blacksquare$$
 
 ---
 
-#### 1.6.13 (Pseudometric) A finite pseudometric on a set $$X$$ is a function $$d: X \times X \rightarrow R$$ satisfying (M1), (M3), (M4), Sec. 1.1, and (M2*) $$d(x,x)=O$$. What is the difference between a metric and a pseudometric? Show that $$d(x,y)=\vert \xi_i - \eta_i\vert $$ Till defines a pseudometric on the set of all ordered pairs of real numbers, where x = (\xi_i,\xi_2), y = (\eta_1,\eta_2). (We mention that some authors use the term semimetric instead of pseudometric.)
+#### 1.6.13 (Pseudometric) A finite pseudometric on a set $$X$$ is a function $$d: X \times X \rightarrow R$$ satisfying (M1), (M3), (M4), Sec. 1.1, and (M2*) $$d(x,x)=0$$. What is the difference between a metric and a pseudometric? Show that $$d(x,y)=\vert \xi_1 - \eta_1\vert $$ defines a pseudometric on the set of all ordered pairs of real numbers, where $$x = (\xi_1,\xi_2), y = (\eta_1,\eta_2)$$. (We mention that some authors use the term semimetric instead of pseudometric.)
 
 **Proof:**
+
+**(M1)** We know that $$d(x,y)=\vert \xi_1 - \eta_1\vert $$ is always nonnegative, real-valued, and finite.  
+**(M3)** Because $$d(x,y)=\vert \xi_1 - \eta_1\vert $$ has a modulus sign, we always have: $$\vert \xi_1 - \eta_1\vert = \vert \eta_1 - \xi_1\vert $$, and thus we have symmetry.  
+**(M4)** We have: $$d(x,y)=\vert \xi_1 - \eta_1\vert = \vert \xi_1 - \kappa_1 + \kappa_1 - \eta_1\vert \leq \vert \xi_1 - \kappa_1 \vert + \vert \kappa_1 - \eta_1\vert$$. Thus, the **Triangle Inequaity** is shown.
+
+**(Modified M2)** An example pair which satisfies this condition is $$(1,2)$$ and $$(1,3)$$. We see that any pair $$(\kappa,\xi)$$ and $$(\kappa,\eta)$$ will satisfy **(Modified M2)**. We see that if $$x_1=(\kappa,\xi)$$ and $$x_2=(\kappa,\eta)$$, then $$d(x,y)=\vert \kappa - \kappa\vert=0$$.
 
 $$\blacksquare$$
 
@@ -274,10 +284,15 @@ $$\blacksquare$$
 #### 1.6.14 Does $$d(x,y)=\int\limits_a^b\vert x(t)-y(t)\vert dt$$ define a metric or pseudometric on $$X$$ if $$X$$ is (i) the set of all real-valued continuous functions on $$[a,b]$$, (ii) the set of all real-value Riemann integrable functions on $$[a,b]$$?
 **Proof:**
 
+**[TODO]**
+
 $$\blacksquare$$
 
 ---
 
 #### 1.6.15 If $$(X,d)$$ is a pseudometric space, we call a set $$B(x_0; r) = {x \in X : d(x,x_0) < r} (r>O)$$ an open ball in $$X$$ with center $$x_0$$ and radius $$r$$. (Note that this is analogous to 1.3-1.) What are open balls of radius $$1$$ in Prob. 13?
 
-$$\blacksquare$$
+**Answer:**
+
+The open ball in this case is a vertical rectangles with open width 2 centered at $$x_0$$.
+
