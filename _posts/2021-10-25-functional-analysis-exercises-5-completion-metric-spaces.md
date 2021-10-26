@@ -63,13 +63,57 @@ $$\blacksquare$$
 #### 1.6.5 (Homeomorphism) A homeomorphism is a continuous bijective mapping $$T: X \rightarrow Y$$ whose inverse is continuous; the metric spaces $$X$$ and $$Y$$ are then said to be homeomorphic. (a) Show that if $$X$$ and $$Y$$ are isometric, they are homeomorphic. (b) Illustrate with an example that a complete and an incomplete metric space may be homeomorphic.
 **Proof:**
 
+Consider a Cauchy sequence $$(x_n)$$ in $$X$$. Then, we have, $$\forall \epsilon>0$$, $$\exists N$$, such that $$d(x_m,x_n) < \epsilon$$ for all $$m,n>N$$.
+
+Let $$T:X \rightarrow Y$$. Since $$X$$ is isometric to $$Y$$, we have:
+
+$$
+d(x_m,x_n)=d(Tx_m,Tx_n) < \epsilon
+$$
+
+This implies that for every $$\epsilon>0$$, there exists a $$\delta>0$$, such that $$d(x_m,x_n) < \delta \Rightarrow d(Tx_m,Tx_n) < \epsilon$$. In this case $$\delta=\epsilon$$. Thus, $$T$$ is continuous at $$x_n$$.
+
+The above argument can be used for $$T^{-1}$$ to prove that it is also continuous.
+
+To prove injectivity, we note that $$x \neq y \Rightarrow d(x,y) \neq 0 \Rightarrow \Rightarrow d(Tx,Ty) \neq 0 \Rightarrow Tx \neq Ty$$.
+
+To prove surjectivity, we pick a point $$y \in Y$$. Assume $$x_1 \in X$$. Then, by isometry we must have: d(y,Tx_1)=d(x, x_1), where $$x \in X$$. Thus, there is a corresponding preimage for every $$y \in Y$$.
+
 $$\blacksquare$$
+
+Consider the $$f:(0,1) \rightarrow \mathbb{R}$$ defined as $$f(x)=x$$. Then $$f(x)$$ and its inverse are continuous and bijective. $$(0,1)$$ is an incomplete metric space and $$\mathbb{R}$$ is complete.
 
 ---
 
 #### 1.6.6 Show that $$C[0,1]$$ and $$C[a,b]$$ are isometric.
 **Proof:**
 
+We note that $$f(t)=\displaystyle\frac{t-a}{b-a}, a \neq b$$ is a mapping $$f: [a,b] \rightarrow [0,1]$$, and that $$f^{-1}(t)=a+(b-a)t$$ is a mapping $$f^{-1}: [0,1] \rightarrow [a,b]$$.
+
+We note that $$f$$ and $$f^{-1}$$ are bijections.
+The distance metric in $$C$$ is defined as $$d(x,y)=\text{sup }\vert x(t) - y(t) \vert$$.
+
+Define a mapping $$T:C_{t \in [0,1]}(t) \rightarrow C_{t \in [a,b]}(f^{-1}(t))$$
+
+Think of $$C(f(t)$$ as the original function applied to $$[0,1]$$ even though the input $$t \in [a,b]$$. Then, practically we have $$C_{t \in [0,1]}(t)=C_{t \in [a,b]}(f(t))$$.
+
+Then:
+
+$$
+d(Tx,Ty)=\text{sup }_{[a,b]} |x(f(t)) - y(f(t))|=\text{sup }_{[0,1]} |x(t) - y(t)|=d(x,y)
+$$
+
+Thus, $$T$$ preserves distances.
+
+To prove injectivity, suppose $$Tx=Ty$$, then we have:
+
+$$
+d(Tx,Ty)=\text{sup }_{[a,b]} |x(f(t)) - y(f(t))|=0 \\
+\Rightarrow \text{sup }_{[0,1]} |x(t) - y(t)|=d(x,y)=0 \\
+\Rightarrow x=y
+$$
+
+For surjectivity, we note that for an arbitrary function $$y(f(t)) \in C[a,b]$$, we always have $$x(t) \in C[0,1]$$, since $$T^{-1}x=x(f^{-1}(f(t)))=x(t)$$.
 
 $$\blacksquare$$
 
@@ -78,12 +122,39 @@ $$\blacksquare$$
 #### 1.6.7 If $$(X,d)$$ is complete, show that $$(X,\tilde{d})$$, where $$\tilde{d} = d/(l + d)$$, is complete.
 **Proof:**
 
+Let $$(x_n)$$ be a Cauchy sequence in $$(X,\bar{d})$$, so that we have, $$\forall \epsilon>0, \exists N$$, such that $$d(x_m,x_n) < \epsilon$$ for all $$m,n>N$$.
+
+Then, we have:
+
+$$
+\frac{d(x_m,x_n)}{1+d(x_m,x_n)} < \epsilon \\
+d(x_m,x_n) < \epsilon + \epsilon d(x_m,x_n) \\
+d(x_m,x_n)(1-\epsilon) < \epsilon \\
+d(x_m,x_n) < \frac{\epsilon}{1-\epsilon}
+$$
+
+Set $$\epsilon=\frac{1}{k}$$, so that we get:
+
+$$
+{d}(x_m,x_n) < \frac{1}{k-1} \\
+$$
+
+$$k$$ can be made as large as needed to make $$\epsilon$$ as small as needed. Thus, the sequence $$(x_n)$$ is Cauchy in $$(X,d)$$, and thus has a limit $$x$$, i.e., $$x_n \rightarrow x$$.
+
+Then, $$d(x_n,x)<\epsilon$$.
+
+$$
+\bar{d}(x_n,x)<d(x_n,x)<\epsilon
+$$
+
 $$\blacksquare$$
 
 ---
 
 #### 1.6.8 Show that in Prob. 7, completeness of $$(X,\tilde{d})$$ implies completeness of $$(X,d)$$.
 **Proof:**
+Suppose $$(X,\tilde{d})$$ is complete. Then, we have:
+
 
 
 $$\blacksquare$$
@@ -99,15 +170,61 @@ $$\blacksquare$$
 ---
 
 #### 1.6.10  If $$(x_n)$$ and $$(x_n')$$ are convergent sequences in a metric space $$(X,d)$$ and have the same limit $$l$$, show that they satisfy (1).
+
+(1) defines equivalence of two sequences as $$(x_n)\tilde(x_n') \Rightarrow \text{lim }_{n \rightarrow \infty} d(x_n,x_n')=0$$.
+
 **Proof:**
+
+Since $$(x_n)$$ and $$(x_n')$$ are convergent, we have, $$\forall \epsilon>0, \exists N_1, N_2$$ such that $$d(x_m,l)<\epsilon$$ and $$d(x_n',l)<\epsilon$$, for $$m>N_1, n>N_2$$. Choose $$N=\text{max}(N_1,N_2)$$, so that we have $$d(x_n,l)<\epsilon$$ and $$d(x_n',l)<\epsilon$$ for all $$n>N$$.
+
+$$
+d(x_n,x_n') \leq d(x_n,l) + d(l,x_n') < \epsilon+\epsilon=2 \epsilon \\
+\Rightarrow \text{lim}_{n \rightarrow \infty} d(x_n,x_n') = 0
+$$
 
 $$\blacksquare$$
 
 ---
 
 #### 1.6.11   Show that (1) defines an equivalence relation on the set of all Cauchy sequences of elements of $$X$$.
+
+(1) defines equivalence of two sequences as $$(x_n)\tilde{}(x_n') \Rightarrow \text{lim }_{n \rightarrow \infty} d(x_n,x_n')=0$$.
+
 **Proof:**
 
+We will check for the following properties:
+
+- Reflexive
+- Symmetric
+- Transitive
+
+We know that $$d(x_n,x_n)=0$$ always because of the **Principle of Indiscernibles**. Thus, we get:
+
+$$\text{lim}_{n \rightarrow \infty} d(x_n,x_n)=0$$
+
+By the **Symmetry Property** of a distance metric, we know that $$d(x_n,x_n')=d(x_n',x_n)$$. Thus if we have $$\text{lim}_{n \rightarrow \infty} d(x_n,x_n')=0$$, then we also have:
+
+$$\text{lim}_{n \rightarrow \infty} d(x_n',x_n)=0$$
+
+By the **Triangle Inequality**, we have:
+
+$$
+d(x_n,z_n)<d(x_n,y_n)+d(y_n,z_n)
+$$
+
+Taking limits, we get:
+
+$$
+\text{lim}_{n \rightarrow \infty} d(x_n,z_n) \leq \text{lim}_{n \rightarrow \infty} d(x_n,y_n) + \text{lim}_{n \rightarrow \infty} d(y_n,z_n)
+$$
+
+If we have $$\text{lim}_{n \rightarrow \infty} d(x_n,y_n)=0$$ and $$\text{lim}_{n \rightarrow \infty} d(y_n,z_n)=0$$, we get:
+
+$$
+\text{lim}_{n \rightarrow \infty} d(x_n,z_n) \leq 0
+$$
+
+Since distances are always nonnegative, we have: $$\text{lim}_{n \rightarrow \infty} d(x_n,z_n) = 0$$.
 
 $$\blacksquare$$
 
@@ -116,12 +233,37 @@ $$\blacksquare$$
 #### 1.6.12   If $$(x_n)$$ is Cauchy in $$(X,d)$$ and $$(x_n')$$ in $$X$$ satisfies (1), show that $$(x_n')$$ is Cauchy in $$X$$.
 **Proof:**
 
+Since $$(x_n)$$ is Cauchy, we have, $$\forall \epsilon>0, \exists N$$ such that $$d(x_m,x_n)<\epsilon$$ for $$m,n>N$$.
+
+$$
+d(x_m,x_n) < \epsilon
+$$
+
+We also have $$(x_n)$$ and $$(x_n')$$ being equivalent, so we can write:
+
+$$
+\text{lim}_{n \rightarrow \infty} d(x_n,x_n') = 0
+$$
+
+By the **Triangle Inequality**, we have:
+
+$$
+d(x_m',x_n') \leq d(x_m',x_m) + d(x_m,x_n) + d(x_n,x_n')
+$$
+
+Taking limits on both sides, we get:
+
+$$
+\text{lim}_{n \rightarrow \infty} d(x_m',x_n') \leq \underbrace{\text{lim}_{n \rightarrow \infty} d(x_m',x_m)}_\text{0 because equivalent} + \underbrace{\text{lim}_{n \rightarrow \infty} d(x_m,x_n)}_\text{0 because Cauchy} + \underbrace{\text{lim}_{n \rightarrow \infty} d(x_n,x_n')}_\text{0 because equivalent} \\
+=0
+$$
+
 
 $$\blacksquare$$
 
 ---
 
-#### 1.6.13   (pseudometric) A finite pseudometric on a set X is a function d: X x X ~ R satisfying (Ml), (M3), (M4), Sec. 1.1, and (M2*) d(x,x)=O. What is the difference between a metric and a pseudometric? Show that d(x, y) = 1{;1 - Till defines a pseudometric on the set of all ordered pairs of real numbers, where x = ({;1. {;2), y = (1)1. 1)2)' (We mention that some authors use the term semimetric instead of pseudometric.)
+#### 1.6.13 (Pseudometric) A finite pseudometric on a set $$X$$ is a function $$d: X \times X \rightarrow R$$ satisfying (M1), (M3), (M4), Sec. 1.1, and (M2*) $$d(x,x)=O$$. What is the difference between a metric and a pseudometric? Show that $$d(x,y)=\vert \xi_i - \eta_i\vert $$ Till defines a pseudometric on the set of all ordered pairs of real numbers, where x = (\xi_i,\xi_2), y = (\eta_1,\eta_2). (We mention that some authors use the term semimetric instead of pseudometric.)
 
 **Proof:**
 
@@ -129,13 +271,13 @@ $$\blacksquare$$
 
 ---
 
-#### 1.6.14  Does d(x, y)= fIX(t)-y(t)1 dt define a metric or pseudometric on X if X is (i) the set of all real-valued continuous functions on [a, b], (ii) the set of all real-value Riemann integrable functions on [a, b]?
+#### 1.6.14 Does $$d(x,y)=\int\limits_a^b\vert x(t)-y(t)\vert dt$$ define a metric or pseudometric on $$X$$ if $$X$$ is (i) the set of all real-valued continuous functions on $$[a,b]$$, (ii) the set of all real-value Riemann integrable functions on $$[a,b]$$?
 **Proof:**
 
 $$\blacksquare$$
 
 ---
 
-#### 1.6.15  If (X, d) is a pseudometric space, we call a set B(xo; r) = {x E X I d(x, xo) < r} (r>O) an open ball in X with center Xo and radius r. (Note that this is analogous to 1.3-1.) What are open balls of radius 1 in Prob. 13?
+#### 1.6.15 If $$(X,d)$$ is a pseudometric space, we call a set $$B(x_0; r) = {x \in X : d(x,x_0) < r} (r>O)$$ an open ball in $$X$$ with center $$x_0$$ and radius $$r$$. (Note that this is analogous to 1.3-1.) What are open balls of radius $$1$$ in Prob. 13?
 
 $$\blacksquare$$
