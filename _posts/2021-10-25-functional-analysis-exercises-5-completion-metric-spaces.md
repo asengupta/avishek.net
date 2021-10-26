@@ -3,7 +3,7 @@ title: "Functional Analysis Exercises 6 : Completion of Metric Spaces"
 author: avishek
 usemathjax: true
 tags: ["Mathematics", "Proof", "Functional Analysis", "Pure Mathematics", "Kreyszig"]
-draft: false
+draft: true
 ---
 
 This post lists solutions to the exercises in the **Completion of Metric Spaces section 1.6** of *Erwin Kreyszig's* **Introductory Functional Analysis with Applications**. This is a work in progress, and proofs may be refined over time.
