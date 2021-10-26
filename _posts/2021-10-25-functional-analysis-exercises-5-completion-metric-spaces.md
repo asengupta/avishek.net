@@ -40,6 +40,22 @@ $$\blacksquare$$
 #### 1.6.4 If $$X_1$$ and $$X_2$$ are isometric and $$X_1$$ is complete, show that $$X_2$$ is complete.
 **Proof:**
 
+Assume $$x,y \in X_1$$, and let $$T:X_1 \rightarrow X_2$$. Since $$X_1$$ and $$X_2$$ are isometric, we have:
+
+$$
+d(x,y)=\bar{d}(Tx,Ty)
+$$
+
+We know that $$X_1$$ is complete: let us assume, for an arbitrary $$\epsilon$$, a point $$x_1 \in X_1$$ lying in the $$\epsilon$$-neighbourhood of a limit point $$x \in X_1$$. Then, we have:
+
+$$
+d(x,x_1)=d(Tx,Tx_1) < \epsilon
+$$
+
+Thus, for an arbitrary $$\epsilon$$, there is a point $$Tx \in X_2$$ which has a point $$Tx_1$$ in its $$\epsilon$$-neighbourhood as well. Thus, $$Tx$$ is a limit point of $$X_2$$ as well. Since $$Tx \in X_2$$ for all $$x \in X_1$$, $$X_2$$ contains all its limit points as well.
+
+Thus, $$X_2$$ is complete.
+
 $$\blacksquare$$
 
 ---
