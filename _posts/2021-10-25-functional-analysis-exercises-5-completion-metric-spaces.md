@@ -3,7 +3,7 @@ title: "Functional Analysis Exercises 6 : Completion of Metric Spaces"
 author: avishek
 usemathjax: true
 tags: ["Mathematics", "Proof", "Functional Analysis", "Pure Mathematics", "Kreyszig"]
-draft: true
+draft: false
 ---
 
 This post lists solutions to the exercises in the **Completion of Metric Spaces section 1.6** of *Erwin Kreyszig's* **Introductory Functional Analysis with Applications**. This is a work in progress, and proofs may be refined over time.
@@ -11,13 +11,18 @@ This post lists solutions to the exercises in the **Completion of Metric Spaces 
 #### 1.6.1 Show that if a subspace $$Y$$ of a metric space consists of finitely manypoints, then $$Y$$ is complete.
 **Proof:**
 
+By definition, a limit point $$L$$ of the set $$Y$$ has at least one point $$x \neq L$$ within every neightbourhood $$\epsilon$$. Since $$Y$$ has a finite number of points, then it has no limit points, and thus (vacuously) contains all its limit points.
+
+Thus, $$Y$$ is a complete metric subspace.
+
 $$\blacksquare$$
 
 ---
 
-#### 1.6.2 What is the completion of $$(X, d)$$, where $$X$$ is the set of all rational numbers and $$d(x,y)=\vert x-y \vert$$?
+#### 1.6.2 What is the completion of $$(X,d)$$, where $$X$$ is the set of all rational numbers and $$d(x,y)=\vert x-y \vert$$?
 
 **Proof:**
+The completion of $$(X,d)$$, where $$X$$ is the set of all rational numbers and $$d(x,y)=\vert x-y \vert$$, is $$\mathbb{R}$$, since every real number is the limit of a sequence of rational numbers.
 
 $$\blacksquare$$
 
@@ -26,6 +31,7 @@ $$\blacksquare$$
 #### 1.6.3. What is the completion of a discrete metric space $$X$$? (Cf. 1.1-8.).
 
 **Proof:**
+A discrete metric space $$X$$ has no limit points, since no point in it has at least one point in every neighbourhood $$\epsilon$$. Thus, it vacuously contains all its limit points. Thus, the completion of the discrete metric space $$X$$ is itself.
 
 $$\blacksquare$$
 
