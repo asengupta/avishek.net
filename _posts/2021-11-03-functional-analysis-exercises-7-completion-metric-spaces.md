@@ -14,7 +14,7 @@ The requirements for a space to be a vector space are:
 - **(VA1)** Symmetric with respect to addition, i.e., $$x+y=y+x, x,y \in X$$
 - **(VA2)** Existence of identity element, i.e., $$x+\theta=x, x,\theta \in X$$
 - **(VA3)** Existence of inverse element, i.e., $$x+(-x)=\theta, x,\theta \in X$$
-- **(VA4)** Associative with respect to addition, i.e., $$x+(y+z)-=(x+y)+z, x,y,z \in X$$
+- **(VA4)** Associative with respect to addition, i.e., $$x+(y+z)=(x+y)+z, x,y,z \in X$$
 
 - **(VM1)** Associative with respect to scalar multiplication, i.e., $$\alpha (\beta x) = (\alpha \beta) x, x \in X, \alpha, \beta \in \mathbb{R}$$
 - **(VM2)** Existence of identity element, i.e., $$\alpha_0 x=x, x \in X, \alpha_0=1 \in \mathbb{R}$$
@@ -25,7 +25,33 @@ The requirements for a space to be a vector space are:
 #### 2.1.1 Show that the set of all real numbers, with the usual addition and multiplication, constitutes a one-dimensional real vector space, and the set of all complex numbers constitutes a one-dimensional complex vector space.
 **Proof:**
 
-[Easy. TODO]
+Consider $$\mathbb{R}$$.
+
+- **(VA1)** Symmetric with respect to addition, i.e., $$x+y=y+x, x,y \in \mathbb{R}$$
+- **(VA2)** Existence of identity element, i.e., $$x+0=x, x,0 \in \mathbb{R}$$
+- **(VA3)** Existence of inverse element, i.e., $$x+(-x)=0, x,0 \in \mathbb{R}$$
+- **(VA4)** Associative with respect to addition, i.e., $$x+(y+z)=(x+y)+z, x,y,z \in \mathbb{R}$$
+
+- **(VM1)** Associative with respect to scalar multiplication, i.e., $$\alpha (\beta x) = (\alpha \beta) x, x \in X, \alpha, \beta \in \mathbb{R}$$
+- **(VM2)** Existence of identity element, i.e., $$1x=x, x \in X, 1 \in \mathbb{R}$$
+- **(VM3)** Distributive with respect to addition of scalars, i.e., $$(\alpha + \beta) x=\alpha x + \beta x, x \in X, \alpha, \beta \in \mathbb{R}$$
+- **(VM4)** Distributive with respect to addition of vectors, i.e., $$\alpha (x+y)=\alpha x + \alpha y, x,y \in X, \alpha \in \mathbb{R}$$
+
+$$\blacksquare$$
+
+Consider $$\mathbb{C}$$.
+
+- **(VA1)** Symmetric with respect to addition, i.e., $$(a+ib)+(c+id)=(c+id)+(a+ib)=(a+c) + i(b+d), a+ib,c+id \in \mathbb{C}$$
+- **(VA2)** Existence of identity element, i.e., $$(a+ib)+(0_0i)=a+ib, a+ib, c+id \in \mathbb{C}$$
+- **(VA3)** Existence of inverse element, i.e., $$(a+ib)+(-a-ib)=0+0i, x,0 \in \mathbb{C}$$
+- **(VA4)** Associative with respect to addition, i.e., $$x_1+ix_2+(y_1+iy_2+z_1+iz_2)  \\
+  =(x_1+ix_2+y_1+iy_2)+z_1+iz_2  \\
+  =(x_1+y_1+z_1)+i(x_2+y_2+z_2), x_1+ix_2,y_1+iy_2,z_1+iz_2 \in \mathbb{C}$$
+
+- **(VM1)** Associative with respect to scalar multiplication, i.e., $$\alpha (\beta x) = (\alpha \beta) x, x \in X, \alpha, \beta \in \mathbb{R}$$
+- **(VM2)** Existence of identity element, i.e., $$(1+0i)(a+ib)=a+ib, a+ib \in \mathbb{C}$$
+- **(VM3)** Distributive with respect to addition of scalars, i.e., $$(\alpha + \beta) x=\alpha x + \beta x, x \in X, \alpha, \beta \in \mathbb{R}$$
+- **(VM4)** Distributive with respect to addition of vectors, i.e., $$\alpha (x+y)=\alpha x + \alpha y, x,y \in X, \alpha \in \mathbb{R}$$
 
 $$\blacksquare$$
 
