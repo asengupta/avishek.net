@@ -201,8 +201,29 @@ $$\blacksquare$$
 
 ---
 
-#### 2.1.5 s. Show that $${x_1, \cdots, x_n}$$, where $$x_j(t) = t^j$$ , is a linearly independent set in the space $$C[a,b]$$.
+#### 2.1.5 s. Show that $${x_1, \cdots, x_n}$$, where $$x_j(t) = t^j$$, is a linearly independent set in the space $$C[a,b]$$.
 **Proof:**
+
+A set $$\{x_1, x_2, \cdots, x_n\}$$ is linearly independent if:
+
+$$
+\alpha_1 x_1 + \alpha_2 x_2 + \cdots \alpha_n x_n = x_0
+$$
+
+only for all $$\alpha_i=0$$.
+
+Any linear combination of the given set, call it $$X$$, is given by:
+
+$$
+f(t)=\alpha_1 t^1 + \alpha_2 t^2 + \cdots + \alpha_n t^n
+$$
+
+To prove that $$X$$ is linearly independent, we need to prove that that the zero vector $$f(t)=0=f_0(t)$$ is not possible for any combination of $$\alpha_i$$.
+
+This is a polynomial of degree $$n$$. Fix all $$\alpha_i$$, with not all of them zero.  
+By the **Fundamental Theorem of Algebra**, we know that it can have at most $$n$$ roots of this polynomial. Thus, there are at most $$n$$ values of $$t$$ for which $$f(t)=0$$. Thus, it is not zero for the remaining uncountable values of $$t \in [a,b]$$, therefore for an arbitrary combination of $$\alpha_i$$, $$f(t) \neq f_0(t)$$.
+
+Thus, $$X$$ is a linearly independent set.
 
 $$\blacksquare$$
 
@@ -211,33 +232,96 @@ $$\blacksquare$$
 #### 2.1.6 Show that in an $$n$$-dimensional vector space $$X$$, the representation of any $$x$$ as a linear combination of given basis vectors $$e_1, \cdots, e_n$$ is unique.
 **Proof:**
 
+Assume that $$x=\alpha_1 e_1 + \alpha_2 e_2 + \cdots + \alpha_n e_n$$.
+Assume that $$x$$ can also be represented by a different linear combination $$\beta_i$$, such that:
+
+$$x=\beta_1 e_1 + \beta_2 e_2 + \cdots + \beta_n e_n$$
+
+Then we have:
+
+$$
+\alpha_1 e_1 + \alpha_2 e_2 + \cdots + \alpha_n e_n=\beta_1 e_1 + \beta_2 e_2 + \cdots + \beta_n e_n \\
+(\alpha_1 e_1 + \alpha_2 e_2 + \cdots + \alpha_n e_n)+(-\beta_1 e_1) +(-\beta_2 e_2) + \cdots + (-\beta_n e_n)=\beta_1 e_1 + \beta_2 e_2 + \cdots + \beta_n e_n + (-\beta_1 e_1) +(-\beta_2 e_2) + \cdots + (-\beta_n e_n) \\
+(\alpha_1 - \beta_1) e_1 + (\alpha_2 - \beta_2) e_2 + \cdots + (\alpha_n -\beta_n) e_n =(\beta_1 - \beta_1) e_1 + (\beta_2 - \beta_2) e_2 + \cdots + (\beta_n - \beta_n) e_n  \\
+(\alpha_1 - \beta_1) e_1 + (\alpha_2 - \beta_2) e_2 + \cdots + (\alpha_n -\beta_n) e_n =0 e_1 + 0 e_2 + \cdots + 0 e_n  \\
+$$
+
+Then equating the coefficients on both sides, we get:
+
+$$
+\alpha_i-\beta_i=0 \\
+\alpha_i=\beta_i
+$$
+
+Thus, the representation of any $$x$$ as a linear combination of given basis vectors $$e_1, \cdots, e_n$$ is unique.
+
 $$\blacksquare$$
 
 ---
 
 #### 2.1.7 Let $$\{e_1, \cdots, e_n\}$$ be a basis for a complex vector space $$X$$. Find a basis for $$X$$ regarded as a real vector space. What is the dimension of $$X$$ in either case?
-**Proof:**
+**Answer:**
 
-$$\blacksquare$$
+A complex vector space is a vector space whose field of scalars is the complex numbers. Then any vector $$x$$ in this complex vector space is representable as:
+
+$$
+x=(a_1 + ib_1) e_1 + (a_2 + ib_2) e_2 + \cdots + (a_n + ib_n) e_n \\
+=(a_1 e_1 + a_2 e_2 + \cdots + a_n e_n) + (b_1 ie_1 + b_2 ie_2 + \cdots + b_n ie_n)
+$$
+
+The basis for $$X$$ regarded as a real vector space are:
+
+$$
+(e_1, e_2, \cdots, e_n, ie_1, ie_2, \cdots, ie_n)
+$$
+
+The dimension of the complex space is $$n$$.  
+The dimension of the complex space regarded as a real vector space is $$2n$$.
 
 ---
 
 #### 2.1.8 If $$M$$ is a linearly dependent set in a complex vector space $$X$$, is $$M$$ linearly dependent in $$X$$, regarded as a real vector space?
 **Proof:**
 
-$$\blacksquare$$
+Consider the set $$\{u=i,v=-1\}$$. This is a linearly dependent set because $$iv=u$$, since $$i.i=-1$$. But there is no $$\alpha \in \mathbb{C}$$ which gives $$\alpha u=v$$, i.e., $$\alpha i=-1$$.
 
----
-
-#### 2.1.9 On a fixed interval $$[a,b] \subset \mathbb{R}$$, consider the set $$X$$ consisting of all polynomials with real coefficients and of degree not exceeding a given $$n$$, and the polynomial $$x=0$$ (for which a degree is not defined in the usual discussion of degree). Show that $$X$$, with the usual addition and the usual mUltiplication by real numbers, is a real vector space of dimension $$n+1$$. Find a basis for $$X$$. Show that we can obtain a complex vector space $$\tilde{X}$$ in a similar fashion if we let those coefficients be complex. Is $$X$$ a subspace of $$\tilde{X}$$?
-**Proof:**
+Thus, $$X$$, regarded as a real vector space, is not necessarily dependent.
 
 $$\blacksquare$$
 
 ---
 
-#### 2.1.10 If $$Y$$ and $$Z$$ are subspaces of a vector space $$X$$, show that $$Y\capZ$$ is a subspace of $$X$$, but $$Y\cupZ$$ need not be one. Give examples.
+#### 2.1.9 On a fixed interval $$[a,b] \subset \mathbb{R}$$, consider the set $$X$$ consisting of all polynomials with real coefficients and of degree not exceeding a given $$n$$, and the polynomial $$x=0$$ (for which a degree is not defined in the usual discussion of degree). Show that $$X$$, with the usual addition and the usual multiplication by real numbers, is a real vector space of dimension $$n+1$$. Find a basis for $$X$$. Show that we can obtain a complex vector space $$\tilde{X}$$ in a similar fashion if we let those coefficients be complex. Is $$X$$ a subspace of $$\tilde{X}$$?
 **Proof:**
+
+A polynomial not exceeding degree $$n$$ is given as: $$f(x)=\sum\limits_{i=0}^n \alpha_i x^i$$.
+
+$$\blacksquare$$
+
+---
+
+#### 2.1.10 If $$Y$$ and $$Z$$ are subspaces of a vector space $$X$$, show that $$Y\cap Z$$ is a subspace of $$X$$, but $$Y\cup Z$$ need not be one. Give examples.
+**Proof:**
+
+We have, for all $$\alpha, \beta \in \mathbb{R}$$:
+
+$$
+\alpha y_1 + \beta y_2 \in Y \\
+\alpha z_1 + \beta z_2 \in Z
+$$
+
+Assume $$x \in Y \cap Z$$.  
+Then $$x \in Y$$ and $$x \in Z$$.  
+Then $$\alpha x_1 + \beta x_2 \in Y$$ and $$\alpha x_1 + \beta x_2 \in Z$$.  
+Then $$\alpha x_1 + \beta x_2 \in Y \cap Z$$
+
+Thus, $$Y \cap Z$$ is a subspace of $$X$$.
+
+$$\blacksquare$$
+
+In $$\mathbb{R}^2$$, the vector space with the basis vector $$u=(1,0)$$ and the vector space with the basis vector $$v=(0,1)$$ gives two vector spaces $$Y$$ and $$Z$$. Choose $$\alpha=1$$, $$\beta=1$$, then $$\alpha u + \beta v = (1,1)$$ does not belong to $$Y \cup Z$$.
+
+Thus, $$Y \cap Z$$ is not necessarily a subspace of $$X$$.
 
 $$\blacksquare$$
 
