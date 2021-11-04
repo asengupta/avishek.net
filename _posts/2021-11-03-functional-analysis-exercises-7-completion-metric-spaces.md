@@ -125,9 +125,9 @@ $$
 ---
 
 #### 2.1.4 Which of the following subsets of $$\mathbb{R}^3$$ constitute a subspace of $$\mathbb{R}^3$$? [Here, $$x = (\xi_1, \xi_2, \xi_3)$$.]
-  **(a) All $$x$$ with $$\xi_1=\xi_2$$ and $$\xi_3=O$$.**
-  **(b) All $$x$$ with $$\xi_1=\xi_2+1$$.**
-  **(c) All $$x$$ with positive $$\xi_1$$, $$\xi_2$$, $$\xi_3$$.**
+  **(a) All $$x$$ with $$\xi_1=\xi_2$$ and $$\xi_3=O$$.**  
+  **(b) All $$x$$ with $$\xi_1=\xi_2+1$$.**  
+  **(c) All $$x$$ with positive $$\xi_1$$, $$\xi_2$$, $$\xi_3$$.**  
   **(d) All $$x$$ with $$\xi_1-\xi_2+\xi_3=k=\text{const}$$.**
 
 **Proof:**

@@ -30,6 +30,6 @@ mermaid:
   src: '/assets/javascript/mermaid.min.js'
 
 theme: jekyll-theme-minimal
-title: A Fish without a Bicycle
+title: Total Internal Reflection
 description: Technology and Art
 markdown: kramdown
