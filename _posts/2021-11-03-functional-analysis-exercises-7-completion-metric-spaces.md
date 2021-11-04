@@ -1,5 +1,5 @@
 ---
-title: "Functional Analysis Exercises 7 : Vector Space"
+title: "Functional Analysis Exercises 7 : Vector Spaces"
 author: avishek
 usemathjax: true
 tags: ["Mathematics", "Proof", "Functional Analysis", "Pure Mathematics", "Kreyszig"]
@@ -8,7 +8,21 @@ draft: false
 
 This post lists solutions to the exercises in the **Vector Space section 2.1** of *Erwin Kreyszig's* **Introductory Functional Analysis with Applications**. This is a work in progress, and proofs may be refined over time.
 
-#### 2.1. Show that if a subspace $$Y$$ of a metric space consists of finitely manypoints, then $$Y$$ is complete.
+### Notes
+The requirements for a space to be a vector space are:
+
+- **(VA1)** Symmetric with respect to addition, i.e., $$x+y=y+x, x,y \in X$$
+- **(VA2)** Existence of identity element, i.e., $$x+x_{0+}=x, x,x_{0+} \in X$$
+- **(VA3)** Existence of inverse element, i.e., $$x+x_-=x_0, x,x_-,x_0 \in X$$
+- **(VA4)** Associative with respect to addition, i.e., $$x+(y+z)-=(x+y)+z, x,y,z \in X$$
+
+- **(VM1)** Associative with respect to scalar multiplication, i.e., $$\alpha (\beta x) = (\alpha \beta) x, x \in X, \alpha, \beta \in \mathbb{R}$$
+- **(VM2)** Existence of identity element, i.e., $$\alpha_0 x=x, x \in X, \alpha_0 \in \mathbb{R}$$
+- **(VM3)** Distributive with respect to addition of scalars, i.e., $$(\alpha + \beta) x=\alpha x + \beta x, x \in X, \alpha, \beta \in \mathbb{R}$$
+- **(VM4)** Distributive with respect to addition of vectors, i.e., $$\alpha (x+y)=\alpha x + \alpha y, x,y \in X, \alpha \in \mathbb{R}$$
+
+
+#### 2.1. Show that if a subspace $$Y$$ of a metric space consists of finitely many points, then $$Y$$ is complete.
 **Proof:**
 
 $$\blacksquare$$
