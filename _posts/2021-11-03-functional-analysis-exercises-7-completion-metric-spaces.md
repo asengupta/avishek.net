@@ -327,8 +327,26 @@ $$\blacksquare$$
 
 ---
 
-#### 2.1.11 If $$M \neq \emptyset$$ is any subset of a vector space $$$$, show that span $$M$$ is a subspace of $$X$$.
+#### 2.1.11 If $$M \neq \emptyset$$ is any subset of a vector space $$X$$, show that span $$M$$ is a subspace of $$X$$.
 **Proof:**
+
+Let $$M \subset X$$. Let $$e_1, e_2, \cdots, e_n \in M$$. Then, the span of $$M$$ is $$\sum\limits_{i=1}^n\alpha_i e_n$$.
+
+Then, every $$x=\sum\limits_{i=1}^n\alpha_i e_n, x \in M$$. Pick any two arbitrary points in $$M$$, so that:
+
+$$
+x_1=\sum\limits_{i=1}^n\alpha_i e_i \\
+x_2=\sum\limits_{i=1}^n\beta_i e_i \\
+$$
+
+Then, we get:
+
+$$
+ax_1+bx_2=\sum\limits_{i=1}^n a\alpha_i e_i + \sum\limits_{i=1}^n b\beta_i e_i \\
+=\sum\limits_{i=1}^n (a\alpha_i+b\beta_i) e_i = \sum\limits_{i=1}^n k_i e_i \in M
+$$
+
+Thus, span $$M$$ is a subspace of $$X$$.
 
 $$\blacksquare$$
 
@@ -337,13 +355,135 @@ $$\blacksquare$$
 #### 2.1.12 Show that the set of all real two-rowed square matrices forms a vector space $$X$$. What is the zero vector in $$X$$? Determine dim $$X$$. Find a basis for $$X$$. Give examples of subspaces of X. Do the symmetric matrices $$x \in X$$ form a subspace? The singular matrices?
 **Proof:**
 
+A real-valued $$2 \times 2$$ matrix is of the form:
+
+$$
+\begin{bmatrix}
+a && b \\
+c && d
+\end{bmatrix}
+$$
+
+Assume $$x_1$$, $$x_2$$ as below:
+
+$$
+x_1=\begin{bmatrix}
+a && b \\
+c && d
+\end{bmatrix}\\
+
+x_2=\begin{bmatrix}
+p && q \\
+q && s
+\end{bmatrix}
+$$
+
+Then, we have:
+
+$$
+\alpha x_1 + \beta x_2 = \alpha \begin{bmatrix}
+a && b \\
+c && d
+\end{bmatrix}
++
+\beta \begin{bmatrix}
+p && q \\
+r && s
+\end{bmatrix} \\
+
+= \begin{bmatrix}
+\alpha a && \alpha b \\
+\alpha c && \alpha d
+\end{bmatrix}
++
+\begin{bmatrix}
+\beta p && \beta q \\
+\beta r && \beta s
+\end{bmatrix} \\
+
+= \begin{bmatrix}
+\alpha a + \beta p && \alpha b + \beta q \\
+\alpha c + \beta r && \alpha d + \beta s
+\end{bmatrix}
+$$
+
+This is also a $$2 \times 2$$ matrix, thus the set of all real two-rowed square matrices forms a vector space.
+
+The zero vector of $$X$$ is $$\begin{bmatrix}
+0 && 0 \\
+0 && 0
+\end{bmatrix}$$
+
+The dimension of $$X$$ is 4. A possible basis for $$X$$ is:
+
+$$
+\begin{bmatrix}
+1 && 0 \\
+0 && 0
+\end{bmatrix},
+\begin{bmatrix}
+0 && 1 \\
+0 && 0
+\end{bmatrix},
+\begin{bmatrix}
+0 && 0 \\
+1 && 0
+\end{bmatrix},
+\begin{bmatrix}
+0 && 0 \\
+0 && 1
+\end{bmatrix}
+$$
+
+An example of a subspace of $$X$$ is $$\begin{bmatrix}
+k && 0 \\
+0 && 0
+\end{bmatrix}, k \in \mathbb{R}
+$$.
+
+Yes, the symmetric matrices form a subspace.
+No, the singular matrices do not form a subspace. Here is a counter-example. Take $$x$$ and $$y$$ to be as follows:
+
+$$
+x=\begin{bmatrix}
+2 && 6 \\
+4 && 12
+\end{bmatrix},
+y=\begin{bmatrix}
+1 && 1 \\
+1 && 1
+\end{bmatrix}
+$$
+
+The determinants for both $$x$$ and $$y$$ are zero, thus, they are singular.
+
+Then, setting $$\alpha=1$$, $$\beta=1$$, we get:
+
+$$
+\alpha x + \beta = \begin{bmatrix}
+2 && 6 \\
+4 && 12
+\end{bmatrix}
++
+\begin{bmatrix}
+1 && 1 \\
+1 && 1
+\end{bmatrix}=
+\begin{bmatrix}
+3 && 7 \\
+5 && 13
+\end{bmatrix}
+$$
+
+The determinant of the result is $$39-35=4 \neq 0$$, thus it is not a singular matrix.
+
 $$\blacksquare$$
 
 ---
 
 #### 2.1.13 (Product) Show that the Cartesian product $$X = X_1 \times X_2$$ of two vector spaces over the same field becomes a vector space if. we define the two algebraic operations by  
   $$(x_1. x_2) + (y_1, y_2) = (x_1 +y_1. x_2 + y_2)$$,  
-  $\alpha(x_1, x_2) = (\alpha x_1, \alpha x_2)$$.
+  $$\alpha(x_1, x_2) = (\alpha x_1, \alpha x_2)$$.
 
 **Proof:**
 
