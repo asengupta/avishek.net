@@ -22,13 +22,6 @@ The requirements for a space to be a vector space are:
 - **(VM4)** Distributive with respect to addition of vectors, i.e., $$\alpha (x+y)=\alpha x + \alpha y, x,y \in X, \alpha \in \mathbb{R}$$
 
 
-#### 2.1. Show that if a subspace $$Y$$ of a metric space consists of finitely many points, then $$Y$$ is complete.
-**Proof:**
-
-$$\blacksquare$$
-
----
-
 #### 2.1.1 Show that the set of all real numbers, with the usual addition and multiplication, constitutes a one-dimensional real vector space, and the set of all complex numbers constitutes a one-dimensional complex vector space.
 **Proof:**
 
