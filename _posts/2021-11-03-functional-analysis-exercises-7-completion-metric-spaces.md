@@ -125,17 +125,81 @@ $$
 ---
 
 #### 2.1.4 Which of the following subsets of $$\mathbb{R}^3$$ constitute a subspace of $$\mathbb{R}^3$$? [Here, $$x = (\xi_1, \xi_2, \xi_3)$$.]
-  **(a) All $$x$$ with $$\xi_1=\xi_2$$ and $$\xi_3=O$$.**  
+  **(a) All $$x$$ with $$\xi_1=\xi_2$$ and $$\xi_3=0$$.**  
   **(b) All $$x$$ with $$\xi_1=\xi_2+1$$.**  
   **(c) All $$x$$ with positive $$\xi_1$$, $$\xi_2$$, $$\xi_3$$.**  
   **(d) All $$x$$ with $$\xi_1-\xi_2+\xi_3=k=\text{const}$$.**
 
-**Proof:**
+**Answer:**
+
+For a subset to be a subspace, it needs to satisfy the following criterion:
+
+$$
+\alpha x + \beta y \in X, \alpha, \beta \in \mathbb{R}
+$$
+
+**(a)** Consider two arbitrary members $$x=(\xi, \xi, 0)$$ and $$y=(\eta, \eta, 0)$$ of the given subset (call it $$X$$).
+
+Then, we have:
+
+$$
+\alpha x + \beta y=\alpha (\xi, \xi, 0) + \beta (\eta, \eta, 0) \\
+= (\alpha\xi, \alpha\xi, \alpha 0) + (\beta\eta, \beta\eta, \beta 0) \\
+= (\alpha\xi + \beta\eta, \alpha\xi + \beta\eta, \alpha 0 + \beta 0) \\
+= (\alpha\xi + \beta\eta, \alpha\xi + \beta\eta, 0)  \in X
+$$
+
+Thus, $$X$$ is a subspace of $$\mathbb{R}^3$$.
+
+**(b)** Consider two arbitrary members $$x=(\xi+1, \xi, 0)$$ and $$y=(\eta+1, \eta, 0)$$ of the given subset (call it $$X$$).
+
+Then, we have:
+
+$$
+\require{cancel}
+\alpha x + \beta y=\alpha (\xi+1, \xi, 0) + \beta (\eta+1, \eta, 0) \\
+= (\alpha\xi + \alpha, \alpha\xi, \alpha 0) + (\beta\eta + \beta, \beta\eta, \beta 0) \\
+= [(\alpha\xi + \beta\eta) + (\alpha + \beta), (\alpha\xi + \beta\eta), \alpha 0 + \beta 0] \\
+= [(\alpha\xi + \beta\eta) + (\alpha + \beta), (\alpha\xi + \beta\eta), 0] \cancel{\in} X\\
+$$
+
+Thus, $$X$$ is not a subspace of $$\mathbb{R}^3$$.
+
+**(c)** Consider two arbitrary members $$x=(\xi_1, \xi_2, \xi_3)$$ and $$y=(\eta_1, \eta_2, \eta_3)$$ of the given subset (call it $$X$$), with $$\xi_i,\eta_i \geq 0$$.
+
+Then, we have:
+
+$$
+\alpha x + \beta y=\alpha (\xi_1, \xi_2, \xi_3) + \beta (\eta_1, \eta_2, \eta_3) \\
+= (\alpha\xi_1, \alpha\xi_2, \alpha\xi_3) + (\beta\eta_1, \beta\eta_2, \beta\eta_3) \\
+= (\alpha\xi_1 + \beta\eta_1, \alpha\xi_2 + \beta\eta_2, \alpha\xi_3 + \beta\eta_3)
+$$
+
+Choose any $$\xi_1>\eta_1$$, and $$\alpha=-1$$, $$\beta=1$$. Then, we have:
+
+$$
+\require{cancel}
+\alpha\xi_1 + \beta\eta_1 = -\xi_1 + \eta_1 < 0 \cancel\in X
+$$
+
+Thus, $$X$$ is not a subspace of $$\mathbb{R}^3$$.
+
+**(d)** Consider two arbitrary members $$x=(\xi_1, \xi_2, k-\xi_1+\xi_2)$$ and $$y=(\eta_1, \eta_2, k-\eta_1+\eta_2)$$ of the given subset (call it $$X$$).
+
+Then we have:
+
+$$
+\require{cancel}
+\alpha x + \beta y=\alpha (\xi_1, \xi_2, k-\xi_1+\xi_2) + \beta (\eta_1, \eta_2, k-\eta_1+\eta_2) \\
+= [\alpha\xi_1, \alpha\xi_2, \alpha(k-\xi_1+\xi_2)] + [\beta\eta_1, \beta\eta_2, \beta(k-\eta_1+\eta_2)] \\
+= [\alpha\xi_1 + \beta\eta_1, \alpha\xi_2 + \beta\eta_2, (\alpha + \beta) k - (\alpha\xi_1 + \beta\eta_1) + (\alpha\xi_2 + \beta\eta_2)] \cancel\in X
+$$
+
+Thus, $$X$$ is not a subspace of $$\mathbb{R}^3$$.
 
 $$\blacksquare$$
 
 ---
-
 
 #### 2.1.5 s. Show that $${x_1, \cdots, x_n}$$, where $$x_j(t) = t^j$$ , is a linearly independent set in the space $$C[a,b]$$.
 **Proof:**
