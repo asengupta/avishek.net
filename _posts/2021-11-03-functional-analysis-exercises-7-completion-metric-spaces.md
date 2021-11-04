@@ -25,6 +25,8 @@ The requirements for a space to be a vector space are:
 #### 2.1.1 Show that the set of all real numbers, with the usual addition and multiplication, constitutes a one-dimensional real vector space, and the set of all complex numbers constitutes a one-dimensional complex vector space.
 **Proof:**
 
+[Easy. TODO]
+
 $$\blacksquare$$
 
 ---
@@ -487,6 +489,8 @@ $$\blacksquare$$
 
 **Proof:**
 
+[Easy. TODO]
+
 $$\blacksquare$$
 
 ---
@@ -505,12 +509,36 @@ $$\blacksquare$$
 
 **Proof:**
 
+To prove that the cosets form a partition of $$X$$, we need to prove that an arbitrary element $$x \in X$$ belongs to one and only one coset.
+
+Suppose $$x \in X$$ belongs to two cosets $$u+Y$$ and $$v+Y$$. Then, we have from the definition:
+
+$$
+x=v|v=u+y_1,y \in Y \\
+x=v|v=v+y_2,y \in Y
+$$
+
+Then, we have:
+
+$$
+u+y_1=v+y_2 \\
+u-v=y_2-y_1 \in Y\\
+$$
+
+Then $$u-v \in Y$$. Then $$u-v=y_0, y_0 \in Y$$.  
+Then $$u=v+y_0$$, where $$y_0 \in Y$$. Then $$u \in v+Y$$. Since $$u \in u+Y$$, $$u+Y$$ and $$v+Y$$ are the same coset.
+
 $$\blacksquare$$
+
+[Easy to prove that it's a vector space. TODO]
 
 ---
 
-#### 2.1.15 Let $$X=\mathbb{R}^3$$ and $$Y=\{(\xi_1,0,0) \vert \xi \in \mathbb{R}\}$$. Find $$X/¥$$, $$X/X$$, $$X/{O}$$.
+#### 2.1.15 Let $$X=\mathbb{R}^3$$ and $$Y=\{(\xi_1,0,0) \vert \xi \in \mathbb{R}\}$$. Find $$X/Y$$, $$X/X$$, $$X/{0}$$.
 
-**Proof:**
+**Answer:**
 
-$$\blacksquare$$
+Loosely, the quotient space is the set of points which can translate cosets to cover the entire vector space.
+For $$X/Y$$, we get the coset as the set of parallel subspaces along the vector $$(1,0,0)$$.
+For $$X/X$$, any translation of the coset $$X$$ covers the entire vector space $$X$$. No translation also covers the entire space. This implies that $$x=\{0\}$$.
+For $$X/{0}$$, we have $$x+\{0\}=\{v|v=x+0\}$$, i.e., each coset is the point itself. Thus the set of points required to partition $$X$$ into cosets is $$X$$ itself.
