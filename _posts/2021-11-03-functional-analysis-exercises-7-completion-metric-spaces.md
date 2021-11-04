@@ -539,6 +539,9 @@ $$\blacksquare$$
 **Answer:**
 
 Loosely, the quotient space is the set of points which can translate cosets to cover the entire vector space.
+
 For $$X/Y$$, we get the coset as the set of parallel subspaces along the vector $$(1,0,0)$$.
+
 For $$X/X$$, any translation of the coset $$X$$ covers the entire vector space $$X$$. No translation also covers the entire space. This implies that $$x=\{0\}$$.
-For $$X/{0}$$, we have $$x+\{0\}=\{v|v=x+0\}$$, i.e., each coset is the point itself. Thus the set of points required to partition $$X$$ into cosets is $$X$$ itself.
+
+For $$X/\{0\}$$, we have $$x+\{0\}=\{v:v=x+0\}$$, i.e., each coset is the point itself. Thus the set of points required to partition $$X$$ into cosets is $$X$$ itself.
