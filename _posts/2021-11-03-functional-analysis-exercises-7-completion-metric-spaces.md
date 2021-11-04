@@ -12,12 +12,12 @@ This post lists solutions to the exercises in the **Vector Space section 2.1** o
 The requirements for a space to be a vector space are:
 
 - **(VA1)** Symmetric with respect to addition, i.e., $$x+y=y+x, x,y \in X$$
-- **(VA2)** Existence of identity element, i.e., $$x+x_{0+}=x, x,x_{0+} \in X$$
-- **(VA3)** Existence of inverse element, i.e., $$x+x_-=x_0, x,x_-,x_0 \in X$$
+- **(VA2)** Existence of identity element, i.e., $$x+\theta=x, x,\theta \in X$$
+- **(VA3)** Existence of inverse element, i.e., $$x+(-x)=\theta, x,\theta \in X$$
 - **(VA4)** Associative with respect to addition, i.e., $$x+(y+z)-=(x+y)+z, x,y,z \in X$$
 
 - **(VM1)** Associative with respect to scalar multiplication, i.e., $$\alpha (\beta x) = (\alpha \beta) x, x \in X, \alpha, \beta \in \mathbb{R}$$
-- **(VM2)** Existence of identity element, i.e., $$\alpha_0 x=x, x \in X, \alpha_0 \in \mathbb{R}$$
+- **(VM2)** Existence of identity element, i.e., $$\alpha_0 x=x, x \in X, \alpha_0=1 \in \mathbb{R}$$
 - **(VM3)** Distributive with respect to addition of scalars, i.e., $$(\alpha + \beta) x=\alpha x + \beta x, x \in X, \alpha, \beta \in \mathbb{R}$$
 - **(VM4)** Distributive with respect to addition of vectors, i.e., $$\alpha (x+y)=\alpha x + \alpha y, x,y \in X, \alpha \in \mathbb{R}$$
 
@@ -32,14 +32,95 @@ $$\blacksquare$$
 #### 2.1.2 Prove (1) and (2).
 **Proof:**
 
+We have to prove:
+
+**(1a)** $$0x=\theta$$  
+**(1b)** $$\alpha \theta=\theta$$  
+**(1c)** $$(-1) x=-x$$
+
+where $$\alpha \in \mathbb{R}, x, \theta \in X$$
+
+**(1a)** We have:
+
+$$
+\begin{array} {lr}
+(0x) + (0x) = (0+0)x = 0x && \mathbf{\text{ (by (VM3))}} \\
+(0x) + (0x) + (-(0x))= (0x) + (-(0x))  && \mathbf{\text{ (adding (0x) on both sides)}} \\
+(0x) + \theta = \theta && \mathbf{\text{ (by (VA3))}} \\
+0x = \theta && \mathbf{\text{ (by (VA2))}}
+\end{array}
+$$
+
+$$\blacksquare$$
+
+**(1b)** We have:
+
+$$
+\begin{array} {lr}
+\alpha(0x)=(\alpha 0)x && \mathbf{\text{ (by (VM1))}} \\
+(\alpha 0)x=0x=\theta
+\end{array}
+$$
+
+$$\blacksquare$$
+
+**(1c)** We have:
+
+$$
+\begin{array} {lr}
+0x = \theta && \mathbf{\text{ (already proved)}} \\
+(1-1)x = \theta \\
+1x + (-1)x = \theta && \mathbf{\text{ (by (VM3))}} \\
+x + (-1)x = \theta &&\mathbf{\text{ (by (VM2))}} \\
+x + (-x) + (-1) x  = \theta + (-x) &&\mathbf{\text{ (adding (-x) on both sides)}} \\
+\theta + (-1) x = \theta + (-x) && \mathbf{\text{ (by (VA3))}} \\
+(-1) x + \theta = (-x) + \theta && \mathbf{\text{ (by (VA1))}} \\
+(-1) x = (-x) && \mathbf{\text{ (by (VA2))}}
+\end{array}
+$$
+
 $$\blacksquare$$
 
 ---
 
 #### 2.1.3 Describe the span of $$M = {(1,1,1), (0,0,2)}$$ in $$\mathbb{R^1}$$.
-**Proof:**
+**Answer:**
 
-$$\blacksquare$$
+The span of $$M$$ is described by:
+
+$$
+\begin{bmatrix}
+1 && 0 \\
+1 && 0 \\
+1 && 2
+\end{bmatrix}
+\bullet
+\begin{bmatrix}
+x \\
+y
+\end{bmatrix}
+$$
+
+Geometrically, this is a plane whose normal is perpendicular to both $$(1,1,1)$$ and $$(0,0,2)$$. Specifically, from the first perpendicularity with $$(0,0,0)$$:
+
+$$
+0x+0y+2z=0 \\
+z=0
+$$
+
+From the second perpendicularity with $$(1,1,1)$$:
+
+$$
+x+y+z=0 \\
+x+y=0 \text{ (since z=0)} \\
+x=-y
+$$
+
+Choose $$x=1$$, then $$y=-1$$. Then, one choice of the normal vector is $$(1,-1,0)$$. The equation of the plane then becomes:
+
+$$
+x-y=0
+$$
 
 ---
 
