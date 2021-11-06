@@ -155,7 +155,7 @@ Going back to the fundamentals can be an uneasy experience: suddenly many facts 
 
 In parallel, there will be many concepts that will seem too abstruse or impenetrable on first reading, and you will be justified in feeling that there are gaps in your understanding. Indeed, in my experience, this feeling of "incompleteness" never goes away. You merely continue to fill the holes in your learning progressively with every new pass of the material. My advice is to not worry too much about getting stuck at the proof / derivation / explanation of a fact / theorem. **Give it a fair shot**, then move on for the moment, accepting the veracity of said fact. You can always give it several more goes, but that shouldn't stop you from progressing.
 
-### TL;DR
+## TL;DR
 
 - **Do not be satisfied** with the minimum needed to get work done.
 - Technology and buzzwords changes; adapt to it, but **strengthen your foundations progressively**.
