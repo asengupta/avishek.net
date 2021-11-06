@@ -41,6 +41,10 @@ The idea is that the **fundamentals constitute a concept (or concepts) which und
 
 In the spirit of defining new buzzwords, I'd like to propose this term that I like to use: **Resilient Knowledge Bases**.
 
+![Structure of a Resilient Knowledge Base](/assets/images/resilient-knowledge-base-structure.png)
+
+The structure of a Resilient Knowledge Base might or might not be intuitive, but it is certainly simple. Think of concepts building upon more primitive concepts, using logical reasoning as glue between these stacks. Usually though, the concepts aren't numerous, and the reasoning can sometimes be loose if lesser rigour suffices; as in mathematics, you start with only a few fundamental concepts, and then derive multiple results from those, and then even more on top of those, like an inverted pyramid. The implicit advantage in understanding the fundamentals is then also that you don't have a lot to "memorise"; most of what you see at the upper levels of abstraction are built atop the sparser layers below.
+
 ## Examples
 
 Let's take a look at some examples of what I consider as **'fundamental'**. Your corresponding definitions and levels for what constitutes "fundamental" for these examples may differ, and that's quite alright; we'll address that in a moment.
@@ -142,8 +146,6 @@ Taking another example from Machine Learning, even something as "simple" as Line
 Learning on the job is great; it's usually where a lot of learning usually happens. Unfortunately, in my experience, fundamentals don't usually present themselves transparently when attempting to solve a problem or write some code or explaining something to stakeholders. Most of that usually can be gained by reading. Here, "reading" is a catch-all term for watching video lectures and discussions with more knowledgeable experts. A lot of theory is not immediately applicable to the situation at hand; instead when you first begin to build your foundations, you will see there's quite some distance between the result you want to derive (or understand) and where the first building blocks.
 
 As another example in Distributed Systems, the FLP Impossibility requires you to understand the system model as well as a working grasp of different types of logical reasoning (proof by contradiction, for example) to understand the proof.
-
-It's like concepts building upon more primitive concepts, using logical reasoning as glue. Usually though, the concepts aren't numerous; as in mathematics, you start with only a few fundamental concepts, and then derive multiple results from those, and then even more on top of those, like an inverted pyramid. The implicit advantage in understanding the fundamentals is then also that you don't have a lot to "memorise"; most of what you see at the upper levels of abstraction are built atop the sparser layers below.
 
 When you begin, there will be many hurdles. To take a personal example, I struggled greatly (and still do) while progressing through graduate Functional Analysis, because I'd never taken a formal Real Analysis course in Engineering. However intractable the material though, in time, be confident that it will yield to study, and possibly some careful backtracking (which is what I did, teaching myself most of the Real Analysis material I need to progress through my primary texts).
 
