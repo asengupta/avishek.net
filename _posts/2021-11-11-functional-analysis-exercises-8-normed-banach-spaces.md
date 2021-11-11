@@ -19,6 +19,23 @@ The requirements for a space to be a normed space are:
 #### 2.2.1 Show that the norm $$\|x\|$$ of x is the distance from x to 0.
 **Proof:**
 
+We have:
+
+$$
+\|x\|=\|x + \theta|=\|x + \theta + (-\theta)\|=\|x + (-\theta) + \theta\| \\
+\|x\| \leq \|x+(-\theta)\| + \|\theta\|
+$$
+
+We also have:
+
+$$
+\|x+(-\theta)\| \leq \|x\| + \|-\theta\| \\
+\|x+(-\theta)\| \leq \|x\| + |-1|\|\theta\| \\
+\|x+(-\theta)\| \leq \|x\| + \|\theta\| = \|x\|
+$$
+
+Thus, $$\|x\| \leq \|x+(-\theta)\|$$ and $$\|x\| \geq \|x+(-\theta)\|$$. Thus, $$\|x\| = \|x+(-\theta)\|$$, which is the distance between $$x$$ and $$\theta$$.
+
 $$\blacksquare$$
 
 ---
@@ -26,12 +43,41 @@ $$\blacksquare$$
 #### 2.2.2 Verify that the usual length of a vector in the plane or in three dimensional space has the properties (N1) to (N4) of a norm.
 **Proof:**
 
+(Easy to prove. TODO)
+
 $$\blacksquare$$
 
 ---
 
 #### 2.2.3 Prove (2).
+
 **Proof:**
+
+We wish to prove the **Reverse Triangle Inequality**, which is:
+
+$$
+|\|y\| - \|x\|| \leq \|y-x\|
+$$
+
+We have:
+
+$$
+\|x\|=\|x-y+y\| \leq \|x-y\| + \|y\| = \|y-x\| + \|y\| \\
+\|x\| - \|y\| = \|y-x\| \\
+$$
+
+We also have:
+
+$$
+\|y\|=\|y-x+x\| \leq \|y-x\| + \|x\| \\
+\|y\| - \|x\| \leq \|y-x\|
+$$
+
+Then, we get:
+
+$$
+|\|y\| - \|x\|| \leq \|y-x\|
+$$
 
 $$\blacksquare$$
 
