@@ -38,6 +38,7 @@ $$\blacksquare$$
 ---
 
 #### 2.2.4 Show that we may replace **(N2)** by $$\|x\|=0 \Rightarrow x=0$$ without altering the concept of a norm. Show that nonnegativity of a norm also follows from **(N3)** and **(N4)**.
+
 **Proof:**
 
 $$\blacksquare$$
@@ -45,6 +46,7 @@ $$\blacksquare$$
 ---
 
 #### 2.2.5 Show that (3) defines a norm.
+
 **Proof:**
 
 $$\blacksquare$$
@@ -66,6 +68,7 @@ $$\blacksquare$$
 ---
 
 #### 2.2.7 Verify that (4) satisfies (N1) to (N4).
+
 **Proof:**
 
 $$\blacksquare$$
@@ -89,6 +92,7 @@ $$\blacksquare$$
 ---
 
 #### 2.2.9 Verify that (5) defines a norm.
+
 **Proof:**
 
 $$\blacksquare$$
