@@ -142,6 +142,8 @@ $$\blacksquare$$
 
 **Proof:**
 
+(Easy to prove. TODO)
+
 $$\blacksquare$$
 
 ---
@@ -149,6 +151,8 @@ $$\blacksquare$$
 #### 2.2.7 Verify that (4) satisfies (N1) to (N4).
 
 **Proof:**
+
+(Easy to prove. TODO)
 
 $$\blacksquare$$
 
@@ -166,6 +170,10 @@ $$\blacksquare$$
 
 **Proof:**
 
+(Easy to prove. TODO)
+
+The second result follows from **Minkowski's Inequality**.
+
 $$\blacksquare$$
 
 ---
@@ -174,15 +182,17 @@ $$\blacksquare$$
 
 **Proof:**
 
+(Easy to prove. TODO)
+
 $$\blacksquare$$
 
 ---
 
 #### 2.2.10 (Unit sphere) The sphere $$S(0; 1) = \{x \in X : \|x\| = 1\}$$ in a normed space $$X$$ is called the unit sphere. Show that for the norms in Prob. 6 and for the norm defined by the unit spheres look as shown in Fig. 16.
 
-**Proof:**
+**Answer:**
 
-$$\blacksquare$$
+(Check diagram in book after your curve sketching)
 
 ---
 
