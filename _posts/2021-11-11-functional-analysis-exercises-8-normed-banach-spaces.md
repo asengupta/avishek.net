@@ -158,7 +158,7 @@ $$\blacksquare$$
 
   $$
   {\|x\|}_1=|\eta_1| + |\eta_2| + \cdots + |\eta_n| \\
-  {\|x\|}_2={(|\eta_1|^p + |\eta_2|^p + \cdots + |\eta_n|^p)}^{1/p} \\
+  {\|x\|}_p={(|\eta_1|^p + |\eta_2|^p + \cdots + |\eta_n|^p)}^{1/p} \\
   {\|x\|}_\infty=\text{max } \{ |\xi_1|, |\xi_2|, \cdots, |\xi_n| \}
   $$
    
@@ -209,9 +209,15 @@ $$\blacksquare$$
 
 ---
 
-#### 2.2.12 Using Prob. 11, show that does not define a norm on the vector space of all ordered pairs $$x = (\xi_1, \xi_2), \cdots$$ of real nwnbers. Sketch the curve $$\phi(x) = 1$$ and compare it with Fig. 18.
+#### 2.2.12 Using Prob. 11, show that $$\phi(x)={(\sqrt{\vert\xi_1\vert} + \sqrt{\vert\xi_2\vert})}^2$$ does not define a norm on the vector space of all ordered pairs $$x = (\xi_1, \xi_2), \cdots$$ of real nwnbers. Sketch the curve $$\phi(x) = 1$$ and compare it with Fig. 18.
 
 **Proof:**
+
+We can see that $$(1,0)$$ and $$(0,1)$$ fall on the unit circle defined by this "norm". For it to be a valid norm, the unit ball must be convex. Thus all points $$z=\alpha x+(1-\alpha)y$$ must lie in the unit ball, i.e., $$\|z\|$ \leq 1$.
+
+Set $$\alpha=\frac{1}{2}$$, we get $$z=(\frac{1}{2}, \frac{1}{2})$$.
+
+However, using this norm gives us $$\|z\|={(\frac{1}{\sqrt{2}} + \frac{1}{\sqrt{2}})}^2=2$$, which implies it does not lie in the unit ball. Thus, this is not a valid norm.
 
 $$\blacksquare$$
 
@@ -221,13 +227,42 @@ $$\blacksquare$$
 
 **Proof:**
 
+For any metric derived from a norm, it must be translation invariant, i.e.:
+
+$$
+d(x+a,y+a)=d(x,y), x,y,a \in X \\
+d(\alpha x,\alpha y)=d(x,y), x,y \in X, \alpha \in \mathbb{R}
+$$
+
+The discrete metric is defined as:
+
+$$
+d(x,y)=\begin{cases}
+0 & \text{if } x=y \\
+1 & \text{if } x \neq y
+\end{cases}
+$$
+
+Assume that $$x \neq y$$. Then $$\alpha x \neq \alpha y$$. Then $$d(\alpha x, \alpha y)=1 \neq \alpha d(x,y)$$.
+
+Thus, the discrete metric cannot be derived from a norm.
+
 $$\blacksquare$$
 
 ---
 
-#### 2.2.14 If $$d$$ is a metric on a vector space $$X \neq \{0\}$$ which is obtained from a norm, and $$d$$ is defined by $$\tilde{d}(x,x) = 0, \tilde{d}(x,y)=d(x,y)+1 (x \neq y)$$, show that $$d$$ cannot be obtained from a norm.
+#### 2.2.14 If $$d$$ is a metric on a vector space $$X \neq \{0\}$$ which is obtained from a norm, and $$\tilde{d}$$ is defined by $$\tilde{d}(x,x) = 0, \tilde{d}(x,y)=d(x,y)+1 (x \neq y)$$, show that $$d$$ cannot be obtained from a norm.
 
 **Proof:**
+
+For any metric derived from a norm, it must be translation invariant, i.e.:
+
+$$
+d(x+a,y+a)=d(x,y), x,y,a \in X \\
+d(\alpha x,\alpha y)=d(x,y), x,y \in X, \alpha \in \mathbb{R}
+$$
+
+Assume that $$x \neq y$$. Then $$\alpha x \neq \alpha y$$. Then $$\tilde{d}(\alpha x, \alpha y)=d(\alpha x, \alpha y) + 1 = \alpha d(x,y) + 1 \neq \alpha d(x,y) + \alpha = \alpha \tilde{d}(x,y)$$.
 
 $$\blacksquare$$
 
@@ -236,5 +271,37 @@ $$\blacksquare$$
 #### 2.2.15 (Bounded set) Show that a subset $$M$$ in a normed space $$X$$ is bounded if and only if there is a positive number $$c$$ such that $$\|x\| \leq  c$$ for every $$x \in M$$. (For the definition, see Prob. 6 in Sec. 1.2.)
 
 **Proof:**
+
+A set is bounded if $$\delta(x,y)<\infty$$, where $$\delta(x,y)=\text{sup } d(x,y)$$.
+
+$$
+(\Rightarrow)
+$$
+Assume that $$M$$ is bounded. Then $$\delta(x,y)=\text{sup } d(x,y)<\infty$$. This implies that $$d(x,y) \leq c, c \in \mathbb{R}$$ for all $$x,y \in M$$. Set $$y=\theta$$ and note that $$d(x,\theta)=\|x\|$$, to get:
+
+$$
+d(x,\theta)=\|x\| \leq c
+$$
+
+$$\blacksquare$$
+
+$$
+(\Leftarrow)
+$$
+Assume that there is a positive number $$c$$ such that $$\|x\| \leq  c$$ for every $$x \in M$$.
+
+Then $$\|x\| \leq c$$.
+
+Using the **Triangle Inequality**, and noting that $$d(x, \theta)=\|x\|$$ and $$d(y, \theta)=\|y\|$$, we get:
+
+$$
+d(x,y) \leq d(x,\theta) + d(\theta, y) \\
+d(x,y) \leq \|x\| + \|y\| \\
+d(x,y) \leq c + c \\
+d(x,y) \leq 2c \\
+\Rightarrow \delta(x,y) = \text{sup } d(x,y) \leq 2c < \infty
+$$
+
+Thus, $$M$$ is bounded.
 
 $$\blacksquare$$
