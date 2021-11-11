@@ -87,6 +87,32 @@ $$\blacksquare$$
 
 **Proof:**
 
+We have from **(N2)** the following:
+
+$$
+\|\alpha x\|=|\alpha|\|x\|
+$$
+
+Assuming that $$\alpha=0$$, and knowing that $$0x=\theta$$, we get:
+
+$$
+\|0 x\|=|0|\|x\| \\
+\|\theta\|=0 \\
+$$
+
+Thus we conclude that $$x=\theta \Rightarrow \|\theta\|=0$$ from **(N2)**.
+
+$$\blacksquare$$
+
+We wish to prove that $$\|x\| \geq 0$$.
+
+$$
+\|x\|=\|x+x-x\| \leq \|x+x\| + \|-x\| = \|2x\| + \|x\| = 2\|x\| + \|x\| \\
+2\|x\| + \|x\| \geq \|x\| \\
+2\|x\| \geq 0 \\
+\|x\| \geq 0 \\
+$$
+
 $$\blacksquare$$
 
 ---
@@ -94,6 +120,13 @@ $$\blacksquare$$
 #### 2.2.5 Show that (3) defines a norm.
 
 **Proof:**
+
+(3) defines the norm:
+$$
+{\|x\|}_2=\sqrt{(|\eta_1|^2 + |\eta_2|^2 + \cdots + |\eta_n|^2)}
+$$
+
+(Easy to prove. TODO)
 
 $$\blacksquare$$
 
@@ -153,9 +186,24 @@ $$\blacksquare$$
 
 ---
 
-#### 2.2.11 (Convex set, segment) A subset $$A$$ of a vector space $$X$$ is said to be convex if $$x,y \in A$$ implies $$M=\{z \in X : z=\alpha x+(1-\alpha)y, 0\leq \alpha \leq 1\} \subset A$$. $$M$$ is called a closed segment with boundary points $$x$$ and $$y$$; any other Z E M is called an interior point of $$M$$. Show that the closed unit ball $$B(0; 1) =\{x \in X : \|x\| \leq 1\}$$ in a normed space X is convex.
+#### 2.2.11 (Convex set, segment) A subset $$A$$ of a vector space $$X$$ is said to be convex if $$x,y \in A$$ implies $$M=\{z \in X : z=\alpha x+(1-\alpha)y, 0\leq \alpha \leq 1\} \subset A$$. $$M$$ is called a closed segment with boundary points $$x$$ and $$y$$; any other $$z \in M$$ is called an interior point of $$M$$. Show that the closed unit ball $$B(0; 1) =\{x \in X : \|x\| \leq 1\}$$ in a normed space X is convex.
 
 **Proof:**
+
+The norm of the point $$z=\alpha x+(1-\alpha)y$$ is:
+
+$$
+\|z\|=\|\alpha x+(1-\alpha)y\| \leq \|\alpha x\|+\|(1-\alpha)y\| \\
+= \alpha \|x\| + (1-\alpha) \|y\|
+$$
+
+Since $$\|x\| \leq 1$$ and $$\|y\| \leq 1$$, we get:
+
+$$
+\|z\| \leq \alpha + (1-\alpha) = 1
+$$
+
+Thus $$z \in X$$, and thus the closed unit ball is convex.
 
 $$\blacksquare$$
 
