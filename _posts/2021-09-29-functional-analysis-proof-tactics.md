@@ -36,6 +36,7 @@ For now, here is a sketch of some of them.
 - Then $$d(x_1,x_2) : x_1,x_2 \in X = \begin{cases} 1 & \text{ if } x_1 \neq x_2 \\ 0 & \text{ if } x_1=x_2 \end{cases}$$
   This works when the distance metric is a "sup" metric like in $$l^\infty$$ space.
   The set is also uncountable, since there are uncountable number of such sequences, and thus can be paired with arbitrary sets to disprove separability.
+- To prove countability, utilise nearness of reals and rationals. Prove that a member of the countable set is close enough to the member of the "densee" set to prove separability.
 - **Proofs about closed sets can be simplified by considering known properties of open sets, and then taking their duals.** The direct proof would involve proving properties about sequences which converge to limits, and assuming those limits are contained in closed sets.
 - **For establishing set membership relations**, start with assuming one side (say, the left side), then breaking it down into cases. Then, expand membership into the right hand side.
 - When trying to prove that a sequence is Cauchy, where the distance metric is bounded to some non-zero value, derive $$\epsilon$$ by considering the diminishing distance between an arbitrary element and the limit. For example:
@@ -46,3 +47,4 @@ For now, here is a sketch of some of them.
   
   $$d(x_m,x_n) \leq d(x_m,x) + d(x,x_n) = \frac{\epsilon}{2} + \frac{\epsilon}{2} = \epsilon$$
 - Note on Terminology: Instead of saying "$$\infty$$ does not exist in a set", say "no element in the set exists which satisfies the condition X".
+- An infinite series tends to zero the further out you start a subsequence.
