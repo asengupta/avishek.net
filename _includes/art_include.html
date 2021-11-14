@@ -1,0 +1,11 @@
+<h2>Art</h2>
+
+This page shows (some of) my art, arranged in no particular order.
+<br></br>
+<br></br>
+<hr/>
+{% for image in site.static_files %}
+    {% if image.path contains 'art' %}
+        <img src="{{ site.baseurl }}{{ image.path }}" alt="image" />
+    {% endif %}
+{% endfor %}
