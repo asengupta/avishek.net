@@ -3,4 +3,7 @@ title: Art
 ---
 # Art
 
-Under Construction...
+My interests
+
+{% include artgallery.html %}
+

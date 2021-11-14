@@ -20,11 +20,20 @@ defaults:
     values:
       layout: "default"
 
+exclude:
+  - assets/art
+
 plugins:
   - jekyll-feed
   - jekyll-sitemap
   - jekyll-seo-tag
   - jekyll-mermaid
+  - jekyll-pig
+
+galleries:
+  -
+    path: assets/art
+    name: artgallery
 
 mermaid:
   src: '/assets/javascript/mermaid.min.js'

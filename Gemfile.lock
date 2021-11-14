@@ -53,6 +53,8 @@ GEM
     jekyll-gist (1.5.0)
       octokit (~> 4.2)
     jekyll-mermaid (1.0.0)
+    jekyll-pig (0.0.3)
+      mini_magick (~> 4.10)
     jekyll-sass-converter (2.1.0)
       sassc (> 2.0.1, < 3.0)
     jekyll-seo-tag (2.7.1)
@@ -73,6 +75,7 @@ GEM
       rb-fsevent (~> 0.10, >= 0.10.3)
       rb-inotify (~> 0.9, >= 0.9.10)
     mercenary (0.4.0)
+    mini_magick (4.11.0)
     multipart-post (2.1.1)
     octokit (4.21.0)
       faraday (>= 0.9)
@@ -105,6 +108,7 @@ DEPENDENCIES
   jekyll-feed
   jekyll-gist
   jekyll-mermaid
+  jekyll-pig
   jekyll-seo-tag
   jekyll-sitemap
   jekyll-theme-minimal

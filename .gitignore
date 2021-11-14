@@ -5,3 +5,6 @@
 **/.idea
 **/.DS_Store
 **/*pycache*
+**/artgallery
+**/artgallery.*
+**/pig.*
