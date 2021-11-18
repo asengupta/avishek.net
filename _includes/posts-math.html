@@ -9,6 +9,7 @@
           <i>{{ post.date | date: "%-d %B %Y" }}</i>
           <br></br>
           {{ post.excerpt }}
+          <i>Tags: {{ post.tags | join: ", " }}</i>
           <hr/>
         </li>
     {% endif %}
