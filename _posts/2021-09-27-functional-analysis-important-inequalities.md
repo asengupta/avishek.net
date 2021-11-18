@@ -86,6 +86,16 @@ $$
 
 $$\eqref{eq:youngs-inequality}$$ is called **Young's Equality**, and we will use it to prove **Hölder's Inequality** next.
 
+A more interesting way to think about (and remember) **Young's Equality** is to note that $$\text{log }(x)$$ is a concave function, therefore by the definition of concavity, we have:
+
+$$
+f(\alpha x^p + (1 - \alpha) y^q) \geq \alpha f(x^p) + (1-\alpha) f(y^q) \\
+\text{log }(\alpha x^p + (1 - \alpha) y^q) \geq \alpha\text{log }(x^p) + (1-\alpha) \text{log }(y^q) \\
+\text{log }\left(\frac {x^p}{p} + \frac {y^q}{q}\right) \geq \frac{\text{log }(x^p)}{p} + \frac{\text{log }(y^q)}{q} = \text{log }(x^{(p/p)}) + \text{log }(y^{(q/q)}) \\
+\text{log }\left(\frac {x^p}{p} + \frac {y^q}{q}\right) \geq \text{log }(xy) \\
+\Rightarrow xy \leq \left(\frac {x^p}{p} + \frac {y^q}{q}\right)
+$$
+
 ## Hölder's Inequality
 
 We look at $$\ell^p$$ spaces now. Briefly recapping, $$\ell^p$$ spaces are spaces of sequences. A sequence $$\xi=\{\xi_1, \xi_2, \cdots\} \in\ell^p$$ must satisfy the following condition:
