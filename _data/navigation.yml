@@ -2,11 +2,11 @@
   link: /
 - name: Blog
   link: /blog.html
-- name: Foundations of Machine Learning
+- name: Machine Learning
   link: /ml-foundations.html
 - name: Mathematics
   link: /maths.html
-- name: Foundations of Distributed Systems
+- name: Distributed Systems
   link: /distributed-systems-foundations.html
 - name: Engineering
   link: /engineering.html
