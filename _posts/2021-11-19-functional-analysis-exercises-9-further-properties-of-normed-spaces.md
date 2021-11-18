@@ -108,6 +108,45 @@ $$\blacksquare$$
 
 **Proof:**
 
+Assume a normed space, with $$\|x-x_0\|<\epsilon$$ and $$\|y-y_0\|<\epsilon$$
+
+Vector addition will be continuous if $$\forall \epsilon>0, \exists \delta>0$$, such that $$\|x-x_0\| < \delta, \|y-y_0\| < \delta \Rightarrow \|f(x,y)-f(x_0,y_0)\| < \epsilon$$.
+
+Then, we have:
+
+$$
+\|x+y-(x_0+y_0)\|=\|(x-x_0)+(y-y_0)\| \leq \|x-x_0\| + \|y-y_0\| < 2 \epsilon
+$$
+
+$$2 \epsilon$$ can be made as small as needed, thus vector addition is continuous in normed space.
+
+$$\blacksquare$$
+
+Scalar multiplication will be continuous if $$\forall \epsilon>0, \exists \delta>0$$, such that $$\|x-x_0\| < \delta, \|\alpha - \alpha_0\| < \delta \Rightarrow \|\alpha x - \alpha x_0\| < \epsilon$$.
+
+We'd like to express $$\alpha x-\alpha_0 x_0$$ using some combination of $$(\alpha-\alpha_0)$$ and $$(y-y_0)$$. As a preliminary test, let's see what terms fall out of the product $$(x-x_0)(\alpha-\alpha_0)$$.
+
+Then, we have:
+
+$$
+(\alpha x-\alpha_0)(x-x_0)=\alpha x + \alpha_0 x_0 - \alpha_0 x - \alpha x_0
+$$
+
+Then we can write $$\alpha x - \alpha_0 x_0$$ as:
+
+$$
+\alpha x - \alpha_0 x_0 = \alpha x + \alpha_0 x_0 - \alpha_0 x - \alpha x_0 - \alpha_0 x_0 - \alpha_0 x_0 + \alpha_0 x + \alpha x_0 \\
+= (\alpha - \alpha_0)(x-x_0) + \alpha_0 (x-x_0) + x_0(\alpha-\alpha_0)
+$$
+
+Therefore, we can write:
+
+$$
+\|\alpha x - \alpha_0 x_0\|=\|(\alpha - \alpha_0)(x-x_0) + \alpha_0 (x-x_0) + x_0(\alpha-\alpha_0)\| \\
+\|\alpha x - \alpha_0 x_0\| \leq \|\alpha - \alpha_0\|\|x-x_0\| + |\alpha_0| \|x-x_0\| + |x_0|\|\alpha-\alpha_0\| < \epsilon^2 + |\alpha_0| \epsilon + |x_0| \epsilon
+$$
+
+The quantity on the RHS can be made as small as possible, and thus scalar multiplication is continuous in normed space.
 
 $$\blacksquare$$
 
