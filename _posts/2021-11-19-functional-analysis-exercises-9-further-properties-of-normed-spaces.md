@@ -76,6 +76,29 @@ $$\blacksquare$$
 
 **Proof:**
 
+Let $$Y$$ be the subset of all sequences with only finitely many nonzero terms.
+
+Let $$(x_n)=x_1, x_2, \cdots, x_m, 0, 0, \cdots$$ and let $$(y_n)=y_1, y_2, \cdots, y_n, 0, 0, \cdots$$. Without loss of generality, assume $$m<n$$.
+It is clear that $$\delta(x_n)=\text{max }(x_1, x_2, \cdots, x_m) < \infty$$ and $$\delta(y_n)=\text{max }(y_1, y_2, \cdots, y_n) < \infty$$, thus $$(x_n), (y_n) \in YZ \subset l^\infty$$
+Then, we have:
+
+$$
+\alpha(x_n) + \beta(y_n)=\alpha x_1 + \beta y_1, \alpha x_2 + \beta y_2, \cdots, \alpha x_m + \beta y_m, \beta y_{m+1}, \cdots, \beta y_n, 0, 0, \cdots \\
+\Rightarrow \delta[\alpha(x_n) + \beta(y_n)]=\text{max }(\alpha x_1 + \beta y_1, \alpha x_2 + \beta y_2, \cdots, \alpha x_m + \beta y_m, \beta y_{m+1}, \cdots, \beta y_n) < \infty \\
+\Rightarrow \alpha(x_n) + \beta(y_n) \in Y \subset l^\infty
+$$
+
+Thus $$Y$$ is a subspace of $$l^\infty$$.
+
+Let there be a Cauchy sequence in $$Y$$, where
+$$
+y_n=\begin{cases}
+1/j & \text{if } j \leq n \\
+0 & \text{if } j > n
+\end{cases}
+$$
+
+Assume $$m<n$$. Then $$d(x_m,x_n)=\text{sup } d(x_m^i, x_n^i)=\frac{1}{m+1}$$. Then as $$m \rightarrow \infty$$, $$\text {lim }_{m \rightarrow \infty} d(x_m,x_n) = 0$$, but this limit has more nonzero terms than any sequence in $$Y$$ and is thus not contained in $$Y$$. Thus, $$Y$$ is not complete.
 
 $$\blacksquare$$
 
