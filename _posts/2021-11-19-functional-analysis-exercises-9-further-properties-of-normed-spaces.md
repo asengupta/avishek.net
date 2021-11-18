@@ -16,10 +16,29 @@ The requirements for a space to be a normed space are:
 - **(N3)** **Linearity** with respect to **scalar multiplication**, i.e., $$\|\alpha x\|=\vert \alpha \vert \|x\|, x \in X, \alpha \in \mathbb{R}$$
 - **(N4)** **Triangle Inequality**, i.e., $$\|x+y\| \leq \|x\| + \|y\|, x,y \in X$$
 
-#### 2.2.1. Show that $$c \in l^\infty$$ is a vector subspace of $$l^\infty$$ (cf. 1.5-3) and so is $$c_0$$, the space of all sequences of scalars converging to zero.
+#### 2.2.1. Show that $$c \subset l^\infty$$ is a vector subspace of $$l^\infty$$ (cf. 1.5-3) and so is $$c_0$$, the space of all sequences of scalars converging to zero.
 
 **Proof:**
 
+$$c \in l^\infty$$ is the space of all complex convergent sequences. Let $$x_n \rightarrow x$$ and $$y_n \rightarrow y$$, such that $$x_n,y_n \in \mathbb{C}$$.
+
+Then, $$\forall \epsilon>0, \exists M, N \in \mathbb{N}$$, such that $$\|x_m-x\|<\epsilon$$ and $$\|y_n-y\|<\epsilon$$, for all $$m>M, n>N$$. Take $$N_0=\text{max }(M_0,N_0)$$, so that $$\|x_n-x\|<\epsilon$$ and $$\|y_n-y\|<\epsilon$$, for all $$n>N_0$$.
+
+$$
+\|\alpha x_n + \beta y_n - (\alpha x + \beta y)\| = \|\alpha x_n - \alpha x + \beta y_n - \beta y)\| \\
+\|\alpha x_n + \beta y_n - (\alpha x + \beta y)\| \leq \|\alpha x_n - \alpha x\| + \|\beta y_n - \beta y\| \\
+= |\alpha|\|x_n - x\| + |\beta|\|y_n - y\| < \alpha \epsilon + \beta \epsilon = (\alpha + \beta) \epsilon
+$$
+
+$$(\alpha + \beta) \epsilon$$ can be made as small as possible. In the limit $$n \rightarrow \infty$$, we thus get: $$\|\alpha x_n + \beta y_n - (\alpha x + \beta y)\| \rightarrow \alpha x + \beta y \in c \subset l^\infty$$.
+
+Thus, $$c$$ is a vector subspace.
+
+$$\blacksquare$$
+
+For $$c_0$$, we have $$x=y=0$$, thus $$\alpha x + \beta y=0$$, and thus $$\alpha x_n + \beta y_n \rightarrow 0$$ as $$n \rightarrow \infty$$.
+
+Thus, $$c_0$$ is a vector subspace.
 
 $$\blacksquare$$
 
@@ -29,6 +48,25 @@ $$\blacksquare$$
 
 **Proof:**
 
+Consider a Cauchy sequence $$(x_n) \in c_0$$. Then, $$\forall \epsilon>0, \exists N \in \mathbb{N}$$, such that $$d(x_m-x_n)<\epsilon$$, for all $$m,n>N$$.
+
+This implies that:
+
+$$
+\text{sup }d(x_j^m, x_j^n)<\epsilon \\
+d(x_j^m, x_j^n)<\epsilon
+$$
+
+Thus, for a fixed $$j$$, the sequence of scalars $$x_j^1, x_j^2, \cdots$$ is Cauchy. Since scalars are real numbers, and $$\mathbb{R}$$ is complete, the sequence converges, say to $$x_j$$, that is, $$\forall \epsilon>0, \exists M \in \mathbb{N}$$ such that $$\|x_j^m-x_j\|<\epsilon$$ for all $$m>M$$. This holds for every $$j$$, yielding a sequence $$x_1, x_2, x_3, \cdots$$.
+
+Of course, $$x_1^m, x_2^m, x_3^m, \cdots$$ is also Cauchy since it is a convergent sequence (converging to zero), thus we have $$\forall \epsilon>0, \exists N \in \mathbb{N}$$ such that $$\|x_j^m-0\|<\epsilon$$ for all $$j>N$$
+We have:
+
+$$
+\|x_j-0\| = \|x_j-x_j^m + x_j^m - 0\| \leq \|x_j-x_j^m\| + \|x_j^m - 0\| < \epsilon + \epsilon = 2 \epsilon
+$$
+
+Thus $$(x_j) \rightarrow 0$$, and $$(x_j) \in c_0$$. Since this holds for any arbitrary Cauchy sequence in $$c_0$$, it follows that $$c_0$$ contains all its limits, and is thus a closed subspace.
 
 $$\blacksquare$$
 
