@@ -6,7 +6,7 @@ tags: ["Distributed Systems"]
 draft: false
 ---
 
-I’ll review the most interesting failure scenario for the **Two Phase Commit (2PC) protocol**. There are excellent explanations of 2PC out there, and I won’t bother too much with the basic explanation. The focus of this post is a walkthrough of the **indistinguishable state scenario**, where neither a global commit, nor a global abort command can be issued.
+We review the most interesting failure scenario for the **Two Phase Commit (2PC) protocol**. There are excellent explanations of 2PC out there, and I won’t bother too much with the basic explanation. The focus of this post is a walkthrough of the **indistinguishable state scenario**, where neither a global commit, nor a global abort command can be issued.
 
 The Wikipedia entry on the Two-Phase Commit protocol, under **Disadvantages**, says the following:
 
