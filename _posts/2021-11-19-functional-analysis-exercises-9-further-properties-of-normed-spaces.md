@@ -239,6 +239,25 @@ $$\blacksquare$$
 
 **Proof:**
 
+Take a Cauchy sequence $$(x_n)$$. Pick $$N_k$$ such that $$\|x_m-x_n\|<\frac{1}{2^k}$$ for all $$m,n \geq N_k$$. Pick the corresponding $$y_k=x_{N_k}$$ from $$(x_n)$$. Then note that $$\|y_k-y_{k+1}\| < \frac{1}{2^k}$$.
+
+Then $$\displaystyle \sum\limits_{k=1}^\infty \|y_{k+1}-y_k\| < \sum\limits_{k=1}^\infty \frac{1}{2^k} = 1$$. Thus, this series is absolutely convergent, and is by assumption, convergent. That is, $$\displaystyle \sum\limits_{k=1}^n y_{k+1}-y_k$$ is convergent, i.e., it converges to some element, say $$x$$.
+
+Now, we have:
+
+$$
+\displaystyle \sum\limits_{k=1}^n y_{k+1}-y_k = \displaystyle \sum\limits_{k=1}^n x_{N_{k+1}}-x_{N_k}\\ 
+=x_{N_{n+1}}-x_{N_1}
+$$
+
+In the limit of $$n \rightarrow \infty$$, this expression tends to $$x$$, that is:
+
+$$
+\text{lim }_{n \rightarrow \infty} x_{N_{n+1}}-x_{N_1} = x \\
+\text{lim }_{n \rightarrow \infty} x_{N_{n+1}} = x + x_{N_1}
+$$
+
+Thus, this limit exists and since $$(x_n)$$ was an arbitrary Cauchy sequence, it converges to $$x$$. Thus $$X$$ is complete.
 
 $$\blacksquare$$
 
@@ -248,6 +267,20 @@ $$\blacksquare$$
 
 **Proof:**
 
+Let there be an absolutely convergent series $$\displaystyle \sum\limits_{i=1}^\infty \|x_k\|<\infty$$. Since it is convergent, it is also Cauchy, thus we have:
+
+$$
+\displaystyle \sum\limits_{i=m}^n |x_k|<\epsilon
+$$
+
+By the **Triangle Inequality**, we have:
+
+$$
+\displaystyle |\sum\limits_{i=m}^n x_k| \leq \sum\limits_{i=m}^n |x_k| \\
+\displaystyle |\sum\limits_{i=m}^n x_k| = s_n - s_{m-1} < \epsilon
+$$
+
+Since the space is Banach, $$(s_n)$$ is a convergent sequence.
 
 $$\blacksquare$$
 
@@ -262,7 +295,7 @@ $$\blacksquare$$
 
 ---
 
-#### 2.2.11. Show that $$(e_n)$$, where $$en = (\delta_{nj})$$, is a Schauder basis for $$l^p$$, where $$1 \leq p< +\infty$$.
+#### 2.2.11. Show that $$(e_n)$$, where $$e_n = (\delta_{nj})$$, is a Schauder basis for $$l^p$$, where $$1 \leq p< +\infty$$.
 
 **Proof:**
 
