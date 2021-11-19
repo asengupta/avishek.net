@@ -181,6 +181,55 @@ $$\blacksquare$$
 
 **Proof:**
 
+We have:
+
+$$
+y_1=\frac{1}{2},0,0, \cdots \\
+y_2=0,\frac{1}{2^2},0, \cdots \\
+y_3=0,0,\frac{1}{2^3}, \cdots \\
+\vdots \\
+y_n=0,0,0, \cdots, \frac{1}{2^n}, \cdots \\
+\vdots
+$$
+
+Correspondingly, the norms are:
+
+$$
+\|y_1\|=\frac{1}{2} \\
+\|y_2\|=\frac{1}{2^2} \\
+\|y_3\|=\frac{1}{2^3} \\
+\|\vdots \\
+\|y_n\|=\frac{1}{2^n} \\
+\vdots
+$$
+
+Then $$\|y_1\| + \|y_2\| + \|y_3\| + \cdots$$ is a convergent series.
+
+The partial sum $$s_n$$ is defined as:
+
+$$
+s_n=\frac{1}{2},\frac{1}{2^2}, \cdots, \frac{1}{2^n}, 0, 0, \cdots
+$$
+
+As $$n \rightarrow \infty$$, we get:
+
+$$
+\text{lim }_{n \rightarrow \infty} s_n=\frac{1}{2},\frac{1}{2^2}, \cdots
+$$
+
+Thus, this is the space of sequences with finite non-zero terms.
+
+We have $$\|s_n-s_{m}\|=\text{sup }\vert s_{n(i)}-s_{n(i)}\vert$$ (note that $$s_n$$ is a sequence, being the sum of sequences). Assume $$m<n$$, then $$\|s_n-s_m\|=\frac{1}{2^{m+1}}$$. This can be made as small as possible, and thus $$(s_n)$$ is Cauchy.
+
+Choose $$s=(\frac{1}{2^n})$$, and we have:
+
+$$
+\|s-s_n\|=\frac{1}{2^{n+1}}
+$$
+
+which goes to zero in the limit $$n \rightarrow \infty$$, thus $$s$$ is a limit of $$(s_n)$$.  However, $$s$$ has infinitely many terms, and thus is not in the space of sequences with finite non-zero terms.
+
+Thus, $$y_1 +y_2 + y_3 + \cdots$$ does not converge even though $$\|y_1\| + \|y_2\| + \|y_3\| + \cdots$$ converges.
 
 $$\blacksquare$$
 
