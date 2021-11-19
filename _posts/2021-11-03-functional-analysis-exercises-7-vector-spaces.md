@@ -207,7 +207,7 @@ Choose any $$\xi_1>\eta_1$$, and $$\alpha=-1$$, $$\beta=1$$. Then, we have:
 
 $$
 \require{cancel}
-\alpha\xi_1 + \beta\eta_1 = -\xi_1 + \eta_1 < 0 \cancel\in X
+\alpha\xi_1 + \beta\eta_1 = -\xi_1 + \eta_1 < 0 \notin X
 $$
 
 Thus, $$X$$ is not a subspace of $$\mathbb{R}^3$$.
@@ -220,7 +220,7 @@ $$
 \require{cancel}
 \alpha x + \beta y=\alpha (\xi_1, \xi_2, k-\xi_1+\xi_2) + \beta (\eta_1, \eta_2, k-\eta_1+\eta_2) \\
 = [\alpha\xi_1, \alpha\xi_2, \alpha(k-\xi_1+\xi_2)] + [\beta\eta_1, \beta\eta_2, \beta(k-\eta_1+\eta_2)] \\
-= [\alpha\xi_1 + \beta\eta_1, \alpha\xi_2 + \beta\eta_2, (\alpha + \beta) k - (\alpha\xi_1 + \beta\eta_1) + (\alpha\xi_2 + \beta\eta_2)] \cancel\in X
+= [\alpha\xi_1 + \beta\eta_1, \alpha\xi_2 + \beta\eta_2, (\alpha + \beta) k - (\alpha\xi_1 + \beta\eta_1) + (\alpha\xi_2 + \beta\eta_2)] \notin X
 $$
 
 Thus, $$X$$ is not a subspace of $$\mathbb{R}^3$$.

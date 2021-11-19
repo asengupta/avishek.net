@@ -21,7 +21,7 @@ $$
 
 We will prove this by contradiction.
 
-Assume that $$\require{cancel} x_0 \cancel{\in} S'$$. Then, $$x_0 \in S$$.
+Assume that $$\require{cancel} x_0 \notin S'$$. Then, $$x_0 \in S$$.
 
 Since $$S$$ is open, there exists an $$r>0$$, such that $$d(x_0,p)<r$$; that is, there exists an $$r$$-neighbourhood around $$x_0$$ in $$S$$.
 
@@ -64,5 +64,21 @@ $$
 Thus, we have found an $$z \in \mathbb{Z}$$ which satisfies $$x<z<y$$.
 
 You can prove the same thing by assuming $$V=\{v:v>x, x \in \mathbb{Z}\}$$ and taking $$\text{inf } V$$, and performing a similar procedure.
+
+$$\blacksquare$$
+
+#### Let $$Y$$ be a subset of $$X$$. Show that $$x \in \bar{Y} \Leftrightarrow B(x,r) \cap Y \neq \emptyset, \forall r>0$$.
+
+**Proof:**
+
+This can be proved using the contrapositive which states that:
+
+$$
+x \notin \bar{Y} \Leftrightarrow \exists r>0, B(x,r) \cap Y = \emptyset
+$$
+
+Assume that $$x \notin \bar{Y}$$. Then $$x \in X \setminus \bar{Y}$$. Since $$\bar{Y}$$ is closed, $$X \setminus \bar{Y}$$ is open. Then, there is an open ball of radius $$r>0$$, such that $$B(x,r) \subset X \setminus \bar{Y}$$. Since $$\subset X \setminus \bar{Y} \cap \bar{Y} = \emptyset$$, this implies that $$B(x,r) \cap \bar{Y} = \emptyset$$. Since $$Y \subseteq \bar{Y}$$, we get $$B(x,r) \cap Y = \emptyset$$.
+
+Assume that $$\exists r>0, B(x,r) \cap Y = \emptyset$$. Then $$X \setminus B(x,r)$$ is a closed set and contains $$\bar{Y}$$. Since $$x \in B(x,r)$$, $$\bar{Y} \subset X \setminus B(x,r)$$, and $$B(x,r) \cap X \setminus B(x,r) = \emptyset$$, we have $$x \notin X \setminus B(x,r)$$, and consequently, $$x \notin \bar{Y}$$.
 
 $$\blacksquare$$

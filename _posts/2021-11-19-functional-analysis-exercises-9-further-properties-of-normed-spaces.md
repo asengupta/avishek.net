@@ -154,10 +154,7 @@ $$\blacksquare$$
 
 #### 2.2.5. Show that $$x_n \rightarrow x$$ and $$y_n \rightarrow y$$ implies $$x_n + y_n \rightarrow x + y$$. Show that $$\alpha_n \rightarrow \alpha$$ and $$x_n \rightarrow x$$ implies $$\alpha_n x_n \rightarrow \alpha x$$.
 
-**Proof:**
-
-
-$$\blacksquare$$
+(See Above)
 
 ---
 
@@ -165,6 +162,16 @@ $$\blacksquare$$
 
 **Proof:**
 
+Let $$x,y \in \bar{S}$$. Thus, $$\forall r>0$$, we have $$B(x,r) \cap S \neq \emptyset$$ and $$B(y,r) \cap S \neq \emptyset$$. Pick $$r<\epsilon$$, then $$\|x-x_0\|<\epsilon/2$$ and $$\|y-y_0\|<\epsilon/2$$.
+
+Then, we have:
+
+$$
+\|\alpha x + \beta y - (\alpha x_0 + \beta y_0)\|=\|\alpha x - \alpha x_0 + \beta y - \beta y_0\| \\
+\leq \|\alpha x - \alpha x_0\| + \|\beta y - \beta y_0\| < \epsilon/2 + \epsilon/2 = \epsilon
+$$
+
+This holds for every $$\epsilon>0$$, thus $$B(\alpha x + \beta y, r) \cap Y \neq \emptyset$$, since every open ball around it contains $$\alpha x_0 + \beta y_0 \in Y$$. Thus, $$\bar{Y}$$ is an vector subspace.
 
 $$\blacksquare$$
 
