@@ -429,8 +429,6 @@ $$\blacksquare$$
 
 **Proof:**
 
-fucking cosets.
-
 From the set $$N=\{x \in X : p(x)=0\}$$, pick $$x,y \in Y$$.
 
 We have:
@@ -455,13 +453,19 @@ $$\blacksquare$$
 #### 2.2.14. (Quotient space) Let Y be a closed subspace of a normed space $$(X, \|\bullet\|)$$. Show that a norm $$\|\bullet\|_0$$ on $$X/Y$$ (cf. Prob. 14, Sec. 2.1) is defined by  
 
 $$
-{\|\hat{x}\|}_0 = \text{inf }_{x \in \hat{x}} \|x\|
+{\|\hat{x}\|}_0 = \inf_{x \in \hat{x}} \|x\|
 $$
 
 **where $$\hat{x} \in X/Y$$, that is, $$\hat{x}$$ is any coset of $$Y$$.**
 
 **Proof:**
 
+The cosets of $$X/N$$ are of the form $$x+N$$. To prove that $${\|\hat{x}\|}_0 = \inf\limits_{x \in \hat{x}} \|x\|$$ is a norm:
+
+- **(N1)**: Pick a coset $$x+N \in X/N$$. Now pick any $$y \in N$$. Then the $$p(x+y) \geq 0$$, since we take infimum of nonnegative norms. Since this holds for any $$y \in N$$, $$\|x+N\|_0 \geq 0$$. Since this is an arbitrary coset, the defined norm is nonnegative.
+- **(N2)**: Assume $${\|\hat{x}\|}_0=p(x)=0$$. Then for this coset we have at least one element $$\|x+y\|=0, y \in N$$. This implies that $$x+y=0 \Rightarrow x=-y=(-1)y$$. This implies that $$x+y=(-1)y+y$$, i.e., it is a linear combination of $$y \in N$$, and thus belongs to $$N$$, which is the zero element.
+- **(N3)**: Assume the coset $$\hat{x} = \alpha(x+N)=\alpha x + N$$. Now pick $$y \in N$$. Then $$\alpha x + y \in \alpha x + N$$. Then $${\|\alpha\hat{x}\|}_0 = \inf\|\alpha (x+\frac{y}{\alpha})\| = \vert \alpha \vert \inf \|x+\frac{y}{\vert\alpha\vert}\|$$. Note that $$\frac{y}{\|\alpha\|} \in N$$, since $$N$$ is a subspace. Thus, we get $$\|\alpha \hat{x} \|_0 = \vert \alpha \vert \inf \|x+N\| = \alpha \|\hat{x}\|_0$$.
+- **(N4)**: Assume the cosets $$\hat{x_1}=x_1 + N, \hat{x_2}=x_2 + N$$. Pick arbitrary elements $$x_1 + y_1 \in \hat{x_1}$$ and $$x_2 + y_2 \in \hat{x_2}$$. Then $$\|\hat{x_1} + \hat{x_2}\|=\inf \|x_1 + y_1 + x_2 + y_2\| \leq \inf \|x_1 + y_1\| + \|x_2 + y_2\| = \|\hat{x_1}\| + \|\hat{x_2}\|$$.
 
 $$\blacksquare$$
 
@@ -473,8 +477,39 @@ $$
 \|x\|=\text{max }({\|x_1\|}_1, {\|x_2\|}_2)
 $$
 
+**where $$x=(x_1,x_2)$$**.
+
 **Proof:**
 
+The operations on a product vector space are defined as:
+
+$$
+(x_1,x_2) + (y_1,y_2) = (x_1+y_1, x_2+y_2) \\
+\alpha(x_1, x_2) = (\alpha x_1, \alpha x_2)
+$$
+
+- **(N1)**: Since we take the maximum of nonnegative norms, the norm on the product space is nonnegative.
+- **(N2)**: Assume that $$(x_1, x_2) = (0,0)$$. Then $$\|x\|=\max(\|x_1\|, \|x_2\|) = 0$$. Conversely, assume that $$\|x\|=\max(\|x_1\|, \|x_2\|) = 0$$. Then, $$\|x_1\|=\|x_2\|=0$$, i.e., $$x_1=x_2=0$$.
+- **(N3)**: We have $$\|\alpha x\|=\|(\alpha x_1, \alpha x_2)\| = \max(\|\alpha x_1\|, \|\alpha x_2\|) = \vert\alpha\vert max(\|x_1\|, \|x_2\|) = \alpha \|x\|$$.
+- **(N4)**: We have:
+  $$
+  \|x+y\|=\|(x_1,x_2) + (y_1,y_2)\| = \|(x_1+y_1, x_2+y_2)\| \\
+  =\max(\|x_1+y_1\|_1, \|x_2+y_2\|_2) \leq \max(\|x_1\|_1+\|y_1\|_1, \|x_2\|_2+\|y_2\|_2) \\
+  \leq \max(\|x_1\|_1, \|x_2\|_2) + \max(\|y_1\|_1, \|y_2\|_2) = \|x+y\|
+  $$
+
+Remember that:
+
+$$
+a \leq max(a,b) \\
+b \leq max(a,b) \\
+c \leq max(c,d) \\
+d \leq max(c,d) \\
+
+\Rightarrow a+c \leq max(a,b) + max(c,d) \\
+\Rightarrow b+d \leq max(a,b) + max(c,d) \\
+\Rightarrow max(a+c,b+d) \leq max(a,b) + max(c,d)
+$$
 
 $$\blacksquare$$
 
