@@ -411,7 +411,7 @@ $$\blacksquare$$
 
 ---
 
-#### 2.2.14. (Quotient space) Let Y be a closed subspace of a normed space(X, 11·11). Show that a norm 11·110 on XIY (cf. Prob. 14, Sec. 2.1) is defined by  
+#### 2.2.14. (Quotient space) Let Y be a closed subspace of a normed space $$(X, \|\bullet\|)$$. Show that a norm $$\|\bullet\|_0$$ on $$X/Y$$ (cf. Prob. 14, Sec. 2.1) is defined by  
 
 $$
 {\|\hat{x}\|}_0 = \text{inf }_{x \in \hat{x}} \|x\|
