@@ -397,6 +397,29 @@ $$
 
 **Proof:**
 
+$$
+p(\theta)=p(0x)=0 p(x) = 0
+$$
+
+Since the seminorm respects the **Triangle Inequality**, we have:
+
+$$
+p(x)=p(x-y+y) \leq p(x-y) + p(y) \\
+p(x)-p(y) \leq p(x-y)
+$$
+
+Similarly, we have:
+
+$$
+p(y)=p(y-x+x) \leq p(y-x) + p(x) \\
+p(y)-p(x) \leq p(y-x) = p(x-y) \\
+$$
+
+Therefore:
+
+$$
+|p(y)-p(x)| \leq p(y-x)
+$$
 
 $$\blacksquare$$
 
@@ -406,6 +429,24 @@ $$\blacksquare$$
 
 **Proof:**
 
+fucking cosets.
+
+From the set $$N=\{x \in X : p(x)=0\}$$, pick $$x,y \in Y$$.
+
+We have:
+
+$$
+p(\alpha x + \beta y) \leq p(\alpha x) + p(\beta y) = |\alpha| p(x) + |\beta| p(y) = 0
+$$
+
+Thus, $$\alpha x + \beta y \in N$$, so $$N$$ is a subspace.
+
+The cosets of $$X/N$$ are of the form $$x+N$$. To prove that $${\|\hat{x}\|}_0=p(x)$$ is a norm:
+
+- **(N1)**: Pick a coset $$x+N \in X/N$$. Now pick any $$y \in N$$. Then the seminorm $$p(x+y) \geq 0$$. Since this holds for any $$y \in N$$, $$\|x+N\|_0 \geq 0$$. Since this is an arbitrary coset, the defined norm is nonnegative.
+- **(N2)**: Assume $${\|\hat{x}\|}_0=p(x)=0$$. Then $$\hat{x} \in N$$, since $$p(x)=0, \forall x \in N$$. This is the coset $$(0+N)$$, which is the zero vector. Assume $$\hat{x}=\theta$$. This is the coset $$0+N$$. Pick any element $$y \in N$$. Then $$p(\theta) \leq p(0) + p(y) = 0$$.
+- **(N3)**: Assume the coset $$\hat{x} = \alpha(x+N)=\alpha x + N$$. Now pick $$y \in N$$. Then $$\alpha x + y \in \alpha x + N$$. Then $$p(\alpha x + y) = p(\alpha (x+\frac{y}{\alpha})) = \vert \alpha \vert p(x+\frac{y}{\alpha})$$. Note that $$\frac{y}{\alpha} \in N$$, since $$N$$ is a subspace. Thus, we get $$\|\alpha \hat{x} \|_0 = p(\alpha x + y)=\vert \alpha \vert p(x+N) = \alpha \|\hat{x}\|_0$$.
+- **(N4)**: Assume the cosets $$\hat{x_1}=x_1 + N, \hat{x_2}=x_2 + N$$. Pick arbitrary elements $$x_1 + y_1 \in \hat{x_1}$$ and $$x_2 + y_2 \in \hat{x_2}$$. Then $$\|\hat{x_1} + \hat{x_2}\|=p(x_1 + y_1 + x_2 + y_2) \leq p(x_1) + p(x_2) + p(y_1) + p(y_2) = p(x_1) + p(x_2)$$. Now, we have: $$p(x_1) \leq p(x_1 + y) + p(y) = p(x_1 + y) = \|\hat{x_1}\|_0$$ and $$p(x_2) \leq p(x_2 + y) + p(y) = p(x_2 + y) = \|\hat{x_2}\|_0$$, for some $$y \in N$$. This gives us $$\|\hat{x_1} + \hat{x_2}\| \leq \|\hat{x_1}\|_0 + \|\hat{x_2}\|_0$$.
 
 $$\blacksquare$$
 
