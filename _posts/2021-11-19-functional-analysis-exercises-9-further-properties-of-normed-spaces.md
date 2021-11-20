@@ -214,7 +214,7 @@ $$
 As $$n \rightarrow \infty$$, we get:
 
 $$
-\text{lim }_{n \rightarrow \infty} s_n=\frac{1}{2},\frac{1}{2^2}, \cdots
+\lim\limits_{n \rightarrow \infty} s_n=\frac{1}{2},\frac{1}{2^2}, \cdots
 $$
 
 Thus, this is the space of sequences with finite non-zero terms.
@@ -253,8 +253,8 @@ $$
 In the limit of $$n \rightarrow \infty$$, this expression tends to $$x$$, that is:
 
 $$
-\text{lim }_{n \rightarrow \infty} x_{N_{n+1}}-x_{N_1} = x \\
-\text{lim }_{n \rightarrow \infty} x_{N_{n+1}} = x + x_{N_1}
+\lim\limits_{n \rightarrow \infty} x_{N_{n+1}}-x_{N_1} = x \\
+\lim\limits_{n \rightarrow \infty} x_{N_{n+1}} = x + x_{N_1}
 $$
 
 Thus, this limit exists and since $$(x_n)$$ was an arbitrary Cauchy sequence, it converges to $$x$$. Thus $$X$$ is complete.
@@ -290,6 +290,35 @@ $$\blacksquare$$
 
 **Proof:**
 
+A Schauder basis of a space $$X$$ is a sequence $$(e_n)$$ such that $$\|x-(\alpha_1 e_1 + \alpha_2 e_2 + \alpha_3 e_3 + \cdots + \alpha_n e_n)\| \rightarrow 0, x \in X$$ as $$n \rightarrow \infty$$.
+
+A space is separable if it has a countable subset which is dense in this space.
+
+The partial sum of a Schauder basis is represented as $$s_n=\alpha_1 e_1 + \alpha_2 e_2 + \alpha_3 e_3 + \cdots + \alpha_n e_n$$.
+
+This implies that $$\forall \epsilon > 0, \exists N$$ such that $$\|x-s_n\|<\epsilon$$ for all $$n>N$$. Thus every neighbourhood of $$x$$ has a Schauder representation.
+
+Since $$\alpha_n \in \mathbb{R}$$, there exists a $$\beta_n \in \mathbb{Q}$$, such that $$\|\alpha_n-\beta_n\|<\epsilon$$.
+
+**(Prove that $$Y=\sum\limits_{i=1}^n \beta_i e_i$$ is countable).**
+
+Denote $$s_n'=\beta_1 e_1 + \beta_2 e_2 + \beta_3 e_3 + \cdots + \beta_n e_n$$, then we have:
+
+$$
+\|s_n-s_n'\|=\|(\alpha_1-\beta_1) e_1 + (\alpha_2-\beta_2) e_2 + (\alpha_3-\beta_3) e_3 + \cdots + (\alpha_n-\beta_n) e_n\| \\
+\leq \|(\alpha_1-\beta_1) e_1\| + \|(\alpha_2-\beta_2) e_2\| + \|(\alpha_3-\beta_3) e_3\| + \cdots + \|(\alpha_n-\beta_n) e_n\| \\
+= |\alpha_1-\beta_1| \|e_1\| + |\alpha_2-\beta_2| \|e_2\| + |\alpha_3-\beta_3| \|e_3\| + \cdots + |\alpha_n-\beta_n| \|e_n\| \\
+= \epsilon \|e_1\| + \epsilon \|e_2\| + \epsilon \|e_3\| + \cdots + \epsilon \|e_n\| \\
+= \epsilon (\|e_1\| + \|e_2\| +  \|e_3\| + \cdots + \|e_n\|)=K \epsilon
+$$
+
+(Note that even though $$K$$ depends upon how far the Schauder basis is expanded, for a fixed Schauder basis, a rational number can be chosen arbitrarily closer to the real number without resorting to going further along the Schauder basis).
+
+$$
+\|x-s_n'\| \leq \|x-s_n\| + \|s_n-s_n'\| < \epsilon + K \epsilon = (K+1) \epsilon
+$$
+
+This can be made as small as needed, and thus $$Y$$ (countable) is dense in this normed space, and hence the space is separable.
 
 $$\blacksquare$$
 
@@ -299,6 +328,59 @@ $$\blacksquare$$
 
 **Proof:**
 
+$$l^p$$ is the space of all bounded sequences. This implies that:
+
+$$
+\sum\limits_{i=1}^\infty {|x_i|}^p=K<\infty
+$$
+
+Equivalently,
+
+$$
+\lim\limits_{n \rightarrow \infty} \sum\limits_{i=1}^n {|x_i|}^p=K
+$$
+
+The norm is defined as $$
+{\|x\|}_p={\left(\sum\limits_{i=1}^\infty {|x_i|}^p\right)}^{1/p}
+$$
+
+Assume the sequence is $$x_1, x_2, x_3, \cdots$$.
+Then, we have:
+
+$$
+x_1 e_1=x_1, 0, 0, 0, \cdots \\
+x_2 e_2=0, x_2, 0, 0, \cdots \\
+x_3 e_3=0, x_2, 0, 0, \cdots \\
+\vdots \\
+x_n e_n=0, 0, 0, 0, \cdots, x_n, 0, 0, \cdots \\
+$$
+
+Then, we get:
+
+$$
+s_n=\sum\limits_{i=1}^n x_i e_i = x_1, x_2, \cdots, x_n, 0, 0, \cdots \\
+x = s_n + \sum\limits_{i=n+1}^\infty x_i e_i \\
+x-s_n = \sum\limits_{i=n+1}^\infty x_i e_i \\
+\|x-s_n\| = {(\sum\limits_{i=n+1}^\infty {|x_i|}^p)}^{1/p}
+$$
+
+We know that:
+
+$$
+\sum\limits_{i=1}^\infty {|x_i|}^p=K=\sum\limits_{i=1}^n {|x_i|}^p + \sum\limits_{i=n+1}^\infty {|x_i|}^p
+$$
+
+Taking limits on both sides for $$n \rightarrow \infty$$, we get:
+
+$$
+\lim\limits_{n \rightarrow \infty} \underbrace{\sum\limits_{i=1}^n {|x_i|}^p}_\text{Partial Sum} + \lim\limits_{n \rightarrow \infty} \sum\limits_{i=n+1}^\infty {|x_i|}^p=K \\
+K + \lim\limits_{n \rightarrow \infty} \sum\limits_{i=n+1}^\infty {|x_i|}^p = K \\
+\lim\limits_{n \rightarrow \infty} \sum\limits_{i=n+1}^\infty {|x_i|}^p = 0 \\
+$$
+
+Thus $$\|x-s_n\| \rightarrow 0$$ as $$n \rightarrow \infty$$.
+
+Thus, $$e_n = (\delta_{nj})$$ is a Schauder basis for $$l^p$$.
 
 $$\blacksquare$$
 
