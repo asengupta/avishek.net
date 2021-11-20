@@ -171,7 +171,7 @@ $$\blacksquare$$
 
 #### 1.6.10  If $$(x_n)$$ and $$(x_n')$$ are convergent sequences in a metric space $$(X,d)$$ and have the same limit $$l$$, show that they satisfy (1).
 
-(1) defines equivalence of two sequences as $$(x_n)\tilde(x_n') \Rightarrow \text{lim }_{n \rightarrow \infty} d(x_n,x_n')=0$$.
+(1) defines equivalence of two sequences as $$(x_n)\tilde(x_n') \Rightarrow \lim\limits_{n \rightarrow \infty} d(x_n,x_n')=0$$.
 
 **Proof:**
 
@@ -179,7 +179,7 @@ Since $$(x_n)$$ and $$(x_n')$$ are convergent, we have, $$\forall \epsilon>0, \e
 
 $$
 d(x_n,x_n') \leq d(x_n,l) + d(l,x_n') < \epsilon+\epsilon=2 \epsilon \\
-\Rightarrow \text{lim}_{n \rightarrow \infty} d(x_n,x_n') = 0
+\Rightarrow \lim\limits_{n \rightarrow \infty} d(x_n,x_n') = 0
 $$
 
 $$\blacksquare$$
@@ -188,7 +188,7 @@ $$\blacksquare$$
 
 #### 1.6.11   Show that (1) defines an equivalence relation on the set of all Cauchy sequences of elements of $$X$$.
 
-(1) defines equivalence of two sequences as $$(x_n)\tilde{}(x_n') \Rightarrow \text{lim }_{n \rightarrow \infty} d(x_n,x_n')=0$$.
+(1) defines equivalence of two sequences as $$(x_n)\tilde{}(x_n') \Rightarrow \lim\limits_{n \rightarrow \infty} d(x_n,x_n')=0$$.
 
 **Proof:**
 
@@ -200,11 +200,11 @@ We will check for the following properties:
 
 We know that $$d(x_n,x_n)=0$$ always because of the **Principle of Indiscernibles**. Thus, we get:
 
-$$\text{lim}_{n \rightarrow \infty} d(x_n,x_n)=0$$
+$$\lim\limits_{n \rightarrow \infty} d(x_n,x_n)=0$$
 
-By the **Symmetry Property** of a distance metric, we know that $$d(x_n,x_n')=d(x_n',x_n)$$. Thus if we have $$\text{lim}_{n \rightarrow \infty} d(x_n,x_n')=0$$, then we also have:
+By the **Symmetry Property** of a distance metric, we know that $$d(x_n,x_n')=d(x_n',x_n)$$. Thus if we have $$\lim\limits_{n \rightarrow \infty} d(x_n,x_n')=0$$, then we also have:
 
-$$\text{lim}_{n \rightarrow \infty} d(x_n',x_n)=0$$
+$$\lim\limits_{n \rightarrow \infty} d(x_n',x_n)=0$$
 
 By the **Triangle Inequality**, we have:
 
@@ -215,16 +215,16 @@ $$
 Taking limits, we get:
 
 $$
-\text{lim}_{n \rightarrow \infty} d(x_n,z_n) \leq \text{lim}_{n \rightarrow \infty} d(x_n,y_n) + \text{lim}_{n \rightarrow \infty} d(y_n,z_n)
+\lim\limits_{n \rightarrow \infty} d(x_n,z_n) \leq \lim\limits_{n \rightarrow \infty} d(x_n,y_n) + \lim\limits_{n \rightarrow \infty} d(y_n,z_n)
 $$
 
-If we have $$\text{lim}_{n \rightarrow \infty} d(x_n,y_n)=0$$ and $$\text{lim}_{n \rightarrow \infty} d(y_n,z_n)=0$$, we get:
+If we have $$\lim\limits_{n \rightarrow \infty} d(x_n,y_n)=0$$ and $$\lim\limits_{n \rightarrow \infty} d(y_n,z_n)=0$$, we get:
 
 $$
-\text{lim}_{n \rightarrow \infty} d(x_n,z_n) \leq 0
+\lim\limits_{n \rightarrow \infty} d(x_n,z_n) \leq 0
 $$
 
-Since distances are always nonnegative, we have: $$\text{lim}_{n \rightarrow \infty} d(x_n,z_n) = 0$$.
+Since distances are always nonnegative, we have: $$\lim\limits_{n \rightarrow \infty} d(x_n,z_n) = 0$$.
 
 $$\blacksquare$$
 
@@ -242,7 +242,7 @@ $$
 We also have $$(x_n)$$ and $$(x_n')$$ being equivalent, so we can write:
 
 $$
-\text{lim}_{n \rightarrow \infty} d(x_n,x_n') = 0
+\lim\limits_{n \rightarrow \infty} d(x_n,x_n') = 0
 $$
 
 By the **Triangle Inequality**, we have:
@@ -254,13 +254,13 @@ $$
 Taking limits on both sides, we get:
 
 $$
-\text{lim}_{n \rightarrow \infty} d(x_m',x_n') \leq \underbrace{\text{lim}_{n \rightarrow \infty} d(x_m',x_m)}_\text{0 because equivalent} + \underbrace{\text{lim}_{n \rightarrow \infty} d(x_m,x_n)}_\text{0 because Cauchy} + \underbrace{\text{lim}_{n \rightarrow \infty} d(x_n,x_n')}_\text{0 because equivalent} \\
+\lim\limits_{n \rightarrow \infty} d(x_m',x_n') \leq \underbrace{\lim\limits_{n \rightarrow \infty} d(x_m',x_m)}_\text{0 because equivalent} + \underbrace{\lim\limits_{n \rightarrow \infty} d(x_m,x_n)}_\text{0 because Cauchy} + \underbrace{\lim\limits_{n \rightarrow \infty} d(x_n,x_n')}_\text{0 because equivalent} \\
 $$
 
 Since distance metric has to be nonnegative, we conclude that:
 
 $$
-\text{lim}_{n \rightarrow \infty} d(x_m',x_n')=0
+\lim\limits_{n \rightarrow \infty} d(x_m',x_n')=0
 $$
 
 $$\blacksquare$$

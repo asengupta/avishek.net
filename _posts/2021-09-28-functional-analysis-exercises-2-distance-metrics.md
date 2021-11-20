@@ -340,8 +340,8 @@ $$
 We know then that:
 
 $$
-\text{lim }_{n\rightarrow\infty}\frac{1}{2^n}=0 \\
-\Rightarrow \text{lim }_{n\rightarrow\infty}\Delta_{XY}=0 \\
+\lim\limits_{n\rightarrow\infty}\frac{1}{2^n}=0 \\
+\Rightarrow \lim\limits_{n\rightarrow\infty}\Delta_{XY}=0 \\
 $$
 
 In this case, $$\Delta_{XY}$$ has no Least Upper Bound. Then, $$D{X,Y}$$ is:

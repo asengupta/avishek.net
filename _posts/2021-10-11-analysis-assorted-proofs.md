@@ -16,7 +16,7 @@ We claim that if $$S$$ is open, $$S'$$ is closed.
 Thus, we'd like to prove that for a sequence $$(x_k) \in S'$$:
 
 $$
-\text{lim}_{k \rightarrow \infty} (x_k)= x_0 \in S'
+\lim\limits_{k \rightarrow \infty} (x_k)= x_0 \in S'
 $$
 
 We will prove this by contradiction.
