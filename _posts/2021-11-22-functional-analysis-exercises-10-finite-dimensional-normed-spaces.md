@@ -52,7 +52,7 @@ $$\blacksquare$$
 
 ---
 
-#### 2.3.4. Show that equivalent norms on a vector space X induce the same topology for X.
+#### 2.3.4. Show that equivalent norms on a vector space $$X$$ induce the same topology for $$X$$.
 
 **Proof:**
 
@@ -61,7 +61,7 @@ $$\blacksquare$$
 
 ---
 
-#### 2.3.5. If II· II and II· lin are equivalent norms on X, show that the Cauchy sequences in (X, II ·11) and (X, 11·110) are the same.
+#### 2.3.5. If $$\|\bullet\|$$ and $${\|\bullet\|}_0$$ are equivalent norms on X, show that the Cauchy sequences in $$(X, \|\bullet\|)$$ and $$(X,{\|\bullet\|}_0)$$ are the same.
 
 **Proof:**
 
