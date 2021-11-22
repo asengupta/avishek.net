@@ -70,7 +70,7 @@ $$\blacksquare$$
 
 ---
 
-#### 2.3.6. Theorem 2.4-5 implies that II . liz and 11·1100 in Prob. 8, Sec. 2.2, are equivalent. Give a direct proof of this fact.
+#### 2.3.6. Theorem 2.4-5 implies that $${\|\bullet\|}_2$$ and $${\|\bullet\|}_\infty$$ in Prob. 8, Sec. 2.2, are equivalent. Give a direct proof of this fact.
 
 **Proof:**
 
@@ -79,7 +79,7 @@ $$\blacksquare$$
 
 ---
 
-#### 2.3.7. Let II· liz be as in Prob. 8, Sec. 2.2, and let 11·11 be any norm on that vector space, call it X. Show directly (without using 2.4-5) that there is a b > ° such that Ilxll ~ b Ilxllz for all x.
+#### 2.3.7. Let $${\|\bullet\|}_2$$ be as in Prob. 8, Sec. 2.2, and let $$\|\bullet\|$$ be any norm on that vector space, call it $$X$$. Show directly (without using 2.4-5) that there is a b>0 such that $$\|\bullet\| \leq {\|\bullet\|}_2$$ for all $$x$$.
 
 **Proof:**
 
@@ -88,7 +88,7 @@ $$\blacksquare$$
 
 ---
 
-#### 2.3.8. Show that the norms II ·111 and II· liz in Prob. 8, Sec. 2.2, satisfy 1~ Ilxllt ~ 114 ~ Ilxlb·
+#### 2.3.8. Show that the norms $${\|\bullet\|}_1$$ and $${\|\bullet\|}_2$$ in Prob. 8, Sec. 2.2, satisfy \frac{1}{\sqrt{n}} {\|x\|}_1 \leq {\|\bullet\|}_2 \leq {\|x\|}_1.
 
 **Proof:**
 
@@ -97,7 +97,7 @@ $$\blacksquare$$
 
 ---
 
-#### 2.3.9. If two norms II . II and II . 110 on a vector space X are equivalent, show that (i) Ilxn - xll---- 0 implies (ii) Ilxn - xllo ---- ° (and vice versa, of course).
+#### 2.3.9. If two norms $$\|\bullet\|$$ and $${\|\bullet\|}_0$$ on a vector space $$X$$ are equivalent, show that (i) $$\|x_n - x\| \rightarrow 0$$ implies (ii) $${\|x_n - x\|}_0 \rightarrow 0$$ (and vice versa, of course).
 
 **Proof:**
 
@@ -106,7 +106,7 @@ $$\blacksquare$$
 
 ---
 
-#### 2.3.10. Show that all complex m x n matrices A = (ajk) with fixed m and n constitute an mn-dimensional vector space Z. Show that all norms on Z are equivalent. What would be the analogues of II· III> II . 112 and II . 1100 in Prob. 8, Sec. 2.2, for the present space Z?
+#### 2.3.10. Show that all complex $$m \times n$$ matrices $$A = (\alpha_{jk})$$ with fixed $$m$$ and $$n$$ constitute an $$mn$$-dimensional vector space $$Z$$. Show that all norms on $$Z$$ are equivalent. What would be the analogues of $${\|\bullet\|}_1$$, $${\|\bullet\|}_2$$ and $${\|\bullet\|}_\infty$$ in Prob. 8, Sec. 2.2, for the present space $$Z$$?
 
 **Proof:**
 
