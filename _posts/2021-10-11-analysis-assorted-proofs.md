@@ -63,7 +63,7 @@ $$
 
 Thus, we have found an $$z \in \mathbb{Z}$$ which satisfies $$x<z<y$$.
 
-You can prove the same thing by assuming $$V=\{v:v>x, x \in \mathbb{Z}\}$$ and taking $$\text{inf } V$$, and performing a similar procedure.
+You can prove the same thing by assuming $$V=\{v:v>x, x \in \mathbb{Z}\}$$ and taking $$\inf V$$, and performing a similar procedure.
 
 $$\blacksquare$$
 

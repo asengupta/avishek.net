@@ -283,7 +283,7 @@ $$\blacksquare$$
 #### 1.2.8. **(Distance between sets)** The distance $$D(A,B)$$ between two nonempty subsets $$A$$ and $$B$$ of a metric space $$(X, d)$$ is defined to be:
 
 
-$$D(A,B) = \text{inf } d(a, b)$$.
+$$D(A,B) = \inf d(a, b)$$.
 
 #### Show that $$D$$ does not define a metric on the power set of $$X$$. (For this reason we use another symbol, $$D$$, but one that still reminds us of $$d$$.)
 
@@ -297,7 +297,7 @@ P(A)=\{\emptyset,\{3\}, \{4\}\, \{3,4\}\} \\
 P(B)=\{\emptyset,\{4\}, \{5\}\, \{4,5\}\}
 $$
 
-Then $$D(P(A),P(B))=\text{inf } d(a,b)=0$$
+Then $$D(P(A),P(B))=\inf d(a,b)=0$$
 
 However, $$P(A) \neq P(B)$$.
 
@@ -317,7 +317,7 @@ Let $$A \cap B \neq \emptyset$$, then there exists at least one element $$p\in A
 
 Then, $$d(p,p) \in \Delta_{XY}$$ and $$d(p,p)=0$$.
 
-Since a distance metric must be nonnegative, $$D(A,B)=\text{inf }\Delta_{XY}=0$$
+Since a distance metric must be nonnegative, $$D(A,B)=\inf\Delta_{XY}=0$$
 
 $$\blacksquare$$
 
@@ -347,7 +347,7 @@ $$
 In this case, $$\Delta_{XY}$$ has no Least Upper Bound. Then, $$D{X,Y}$$ is:
 
 $$
-D(X,Y)=\text{inf }\Delta_{XY}=0 \\
+D(X,Y)=\inf\Delta_{XY}=0 \\
 $$
 
 This is a case where $$D(X,y)=0$$, even though $$X\cap Y=\emptyset$$.  
@@ -364,7 +364,7 @@ $$\blacksquare$$
 
 #### 1.2.10. The distance $$D(x,B)$$ from a point $$x$$ to a non-empty subset $$B$$ of $$(X,d)$$ is defined to be
 
-$$D(x,B)= \text{inf } d(x, b)$$
+$$D(x,B)= \inf d(x, b)$$
 
 #### in agreement with Prob. 8. Show that for any $$x,y\in X$$,
 
@@ -404,7 +404,7 @@ $$
 This is true for all $$d(x,b)$$ and $$d(y,b)$$, including their infimums, i.e.:
 
 $$
-|\text{inf } d(x,b)-\text{inf } d(y,b)| \leq d(x,y) \\
+|\inf d(x,b)-\inf d(y,b)| \leq d(x,y) \\
 \Rightarrow |D(x,B)-D(y,B)| \leq d(x,y)
 $$
 
@@ -518,7 +518,7 @@ Then the set of all distances between points in $$C=A \cup B$$ is $$\Delta_C=\De
 By definition, diameter of $$C$$ is:
 
 $$
-\delta(A \cup B) = \text{inf } \Delta_C
+\delta(A \cup B) = \inf \Delta_C
 $$
 
 From the axioms of the metric $$d$$, we note that $$\forall d(x,y) \in \Delta_A, \Delta_B, \Delta_{AB}, d(x,y)<\infty$$.
@@ -526,7 +526,7 @@ From the axioms of the metric $$d$$, we note that $$\forall d(x,y) \in \Delta_A,
 Then, we can deduce the following:
 
 $$
-\delta(A \cup B) = \text{inf } \Delta_C = \text{inf } \{d(x,y): d(x,y) \in \Delta_A, \Delta_B, \Delta_{AB}\} \\
+\delta(A \cup B) = \inf \Delta_C = \inf \{d(x,y): d(x,y) \in \Delta_A, \Delta_B, \Delta_{AB}\} \\
 \Rightarrow \delta(A \cup B) < \infty
 $$
 

@@ -223,11 +223,11 @@ $$\blacksquare$$
 
 **Proof:**
 
-We know that $$D(x, A)=\text{inf } d(x,y), y \in M$$.
+We know that $$D(x, A)=\inf d(x,y), y \in M$$.
 
-Assume that $$x\in A$$. Since d(x,x)=0, we have $$D(x,A)=\text{inf } d(x,y), y \in A = d(x,x) = 0$$
+Assume that $$x\in A$$. Since d(x,x)=0, we have $$D(x,A)=\inf d(x,y), y \in A = d(x,x) = 0$$
 
-Conversely, assume that $$D(x,A)=0$$. Since $$d(x,y)=0$$ if $$x=y$$, from the definition of $$D(x,A)=\text{inf } d(x,y), y \in A$$, the value of $$y$$ for which $$d(x,y)=0$$ has to be $$x$$. That is, $$y=x$$. Since $$y \in A$$ by definition, we conclude that $$x \in A$$.
+Conversely, assume that $$D(x,A)=0$$. Since $$d(x,y)=0$$ if $$x=y$$, from the definition of $$D(x,A)=\inf d(x,y), y \in A$$, the value of $$y$$ for which $$d(x,y)=0$$ has to be $$x$$. That is, $$y=x$$. Since $$y \in A$$ by definition, we conclude that $$x \in A$$.
 
 $$\blacksquare$$
 
