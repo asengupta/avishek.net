@@ -16,14 +16,21 @@ The requirements for a space to be a normed space are:
 - **(N3)** **Linearity** with respect to **scalar multiplication**, i.e., $$\|\alpha x\|=\vert \alpha \vert \|x\|, x \in X, \alpha \in \mathbb{R}$$
 - **(N4)** **Triangle Inequality**, i.e., $$\|x+y\| \leq \|x\| + \|y\|, x,y \in X$$
 
-#### 2.2.1. Show that $$c \subset l^\infty$$ is a vector subspace of $$l^\infty$$ (cf. 1.5-3) and so is $$c_0$$, the space of all sequences of scalars converging to zero.
+The requirements for a space to be a vector space are:
 
-**Proof:**
+(Mnemonic: **ADD1 MISA**)
 
+#### Addition
+- **(V1)** **Symmetry** implies $$x+y=y+x, x,y \in X$$.
+- **(V2)** **Identity** implies **zero vector**, i.e., $$x+\theta=x, x,\theta \in X$$.
+- **(V4)** **Inverse** implies $$x+(-x)=\theta, x,y,\theta \in X$$.
+- **(V3)** **Associativity** implies $$(x+y)+z=x+(y+z), x,y,z \in X$$.
 
-$$\blacksquare$$
-
----
+#### Multiplication
+- **(V1)** **Associativity** implies $$x(yz)=(xy)z, x,y,z \in X$$.
+- **(V2)** **Distributivity with respect to vector addition** implies $$\alpha(x+y)=\alpha x + \alpha y, x,y \in X, \alpha \in \mathbb{R}$$.
+- **(V3)** **Distributivity with respect to scalar addition** implies $$(\alpha + \beta) x = \alpha x + \beta x, x \in X, \alpha, \beta \in \mathbb{R}$$.
+- **(V4)** **Identity** implies, $$1x=x, x \in X$$.
 
 #### 2.3.1. Give examples of subspaces of $$l^\infty$$ and $$l^2$$ which are not closed.
 
@@ -88,7 +95,7 @@ $$\blacksquare$$
 
 ---
 
-#### 2.3.8. Show that the norms $${\|\bullet\|}_1$$ and $${\|\bullet\|}_2$$ in Prob. 8, Sec. 2.2, satisfy \frac{1}{\sqrt{n}} {\|x\|}_1 \leq {\|\bullet\|}_2 \leq {\|x\|}_1.
+#### 2.3.8. Show that the norms $${\|\bullet\|}_1$$ and $${\|\bullet\|}_2$$ in Prob. 8, Sec. 2.2, satisfy $$\frac{1}{\sqrt{n}} {\|x\|}_1 \leq {\|\bullet\|}_2 \leq {\|x\|}_1$$.
 
 **Proof:**
 
