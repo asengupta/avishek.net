@@ -55,13 +55,13 @@ Let me repeat: **a single sampled vector from an $$N$$-dimensional Multivariate 
 An $$N$$-dimensional Multivariate Gaussian is simply the product of $$N$$ one-dimensional Gaussians, like so:
 
 $$
-\mathcal{N}(X)=\prod\limits_{i=1}^N C_i\cdot \text{exp}\left[-\frac{1}{2} \frac{ {(x_i-\mu_i)}^2}{\sigma_i^2}\right]
+\mathcal{N}(X)=\prod\limits_{i=1}^N C_i\cdot \exp\left[-\frac{1}{2} \frac{ {(x_i-\mu_i)}^2}{\sigma_i^2}\right]
 $$
 
 If you translate this into the canonical form of a Multivariate Gaussian Distribution, namely:
 
 $$
-P(X)=K_0\cdot \text{exp}\left( -\frac{1}{2} {(X-\mu)}^T\Sigma^{-1}(X-\mu)\right)
+P(X)=K_0\cdot \exp\left( -\frac{1}{2} {(X-\mu)}^T\Sigma^{-1}(X-\mu)\right)
 $$
 
 then the covariance matrix $$\Sigma$$ is a diagonal matrix.
@@ -153,7 +153,7 @@ We have also encountered this kernel: we have simply referred to it as the **Exp
 The expression for the RBF Kernel is obviously a Gaussian.
 
 $$
-K(x,y)=K\cdot \text{exp}\left(-\frac{1}{2}\frac{ {(x-y)}^2}{\sigma^2}\right)
+K(x,y)=K\cdot \exp\left(-\frac{1}{2}\frac{ {(x-y)}^2}{\sigma^2}\right)
 $$
 
 We have already encountered the types of functions that can be sampled based on this kernel.
@@ -163,7 +163,7 @@ We have already encountered the types of functions that can be sampled based on 
 The **Periodic Kernel**, as its name suggests, can be used to model variations which are potentially periodic in nature. Its expression looks like so:
 
 $$
-K(x,y)=\sigma^2\text{exp}\left[-\frac{2}{l^2}\cdot \text{sin}^2\left(\pi\frac{\|x-y\|}{p}\right)\right]
+K(x,y)=\sigma^2\exp\left[-\frac{2}{l^2}\cdot \text{sin}^2\left(\pi\frac{\|x-y\|}{p}\right)\right]
 $$
 
 An example covariance matrix based on a Periodic Kernel, looks like this:

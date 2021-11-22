@@ -30,7 +30,7 @@ To that end, we define the Bivariate Gaussian Distribution as:
 
 $$
 \begin{equation}
-P(x,y)=K_0\cdot \text{exp}\left( -\frac{1}{2} {(X-\mu)}^T\Sigma^{-1}(X-\mu)\right)
+P(x,y)=K_0\cdot \exp\left( -\frac{1}{2} {(X-\mu)}^T\Sigma^{-1}(X-\mu)\right)
 \label{eq:bivariate-joint-gaussian}
 \end{equation}
 $$
@@ -142,8 +142,8 @@ We have already defined $$P(x,y)$$ in $$\eqref{eq:bivariate-joint-gaussian}$$. T
 
 $$
 \begin{equation}
-P(y=y_0)=K_1\cdot \text{exp}\left(-\frac{1}{2}\cdot\frac{ {(y_0-\mu_y)}^2}{\Sigma_{22}}\right) \\
-P(y=y_0)=K_1\cdot \text{exp}\left(-\frac{1}{2}\cdot\frac{ {(y_0-\mu_y)}^2}{\lambda_1 b^2 + \lambda_2 a^2}\right)
+P(y=y_0)=K_1\cdot \exp\left(-\frac{1}{2}\cdot\frac{ {(y_0-\mu_y)}^2}{\Sigma_{22}}\right) \\
+P(y=y_0)=K_1\cdot \exp\left(-\frac{1}{2}\cdot\frac{ {(y_0-\mu_y)}^2}{\lambda_1 b^2 + \lambda_2 a^2}\right)
 \label{eq:y-condition}
 \end{equation}
 $$
@@ -152,8 +152,8 @@ Putting $$\eqref{eq:y-condition}$$ and $$\eqref{eq:bivariate-joint-gaussian}$$ i
 
 $$
 \begin{equation}
-P(x|y=y_0)=\frac{K_0\cdot \text{exp}\left( -\frac{1}{2} {(X-\mu)}^T\Sigma^{-1}(X-\mu)\right)}{K_1\cdot \text{exp}\left(-\frac{1}{2}\cdot\frac{ {(y_0-\mu_y)}^2}{\lambda_1 b^2 + \lambda_2 a^2}\right)} \\
-=\frac{K_0}{K_1}\cdot\text{exp}\left[-\frac{1}{2}\left(
+P(x|y=y_0)=\frac{K_0\cdot \exp\left( -\frac{1}{2} {(X-\mu)}^T\Sigma^{-1}(X-\mu)\right)}{K_1\cdot \exp\left(-\frac{1}{2}\cdot\frac{ {(y_0-\mu_y)}^2}{\lambda_1 b^2 + \lambda_2 a^2}\right)} \\
+=\frac{K_0}{K_1}\cdot\exp\left[-\frac{1}{2}\left(
 \begin{bmatrix}
 x-\mu_x && y_0-\mu_y
 \end{bmatrix}
@@ -184,7 +184,7 @@ y_0-\mu_y
 \right)
 \right] \\
 
-=\frac{K_0}{K_1}\cdot\text{exp}\left[-\frac{1}{2}\left(
+=\frac{K_0}{K_1}\cdot\exp\left[-\frac{1}{2}\left(
 \underbrace{
 \begin{bmatrix}
 x-\mu_x && y_0-\mu_y
@@ -254,10 +254,10 @@ Substituting the value of $$A$$ back into $$\eqref{eq:conditional-distribution-d
 
 $$
 \require{cancel}
-P(x|y=y_0)=\frac{K_0}{K_1}\cdot \text{exp}\left( -\frac{1}{2} \frac {\lambda_2 a^2 + \lambda_1 b^2}{\lambda_1\lambda_2} {\left(x-\mu_x-\frac{(y_0-\mu_y)ab(\lambda_1-\lambda_2)}{\lambda_2 a^2 + \lambda_1 b^2}\right)}^2\right)\cdot\text{exp}\left(\cancel{\frac { {(y_0-\mu_y)}^2}{ \lambda_2 a^2 + \lambda_1 b^2}} - \cancel{\frac { {(y_0-\mu_y)}^2}{ \lambda_2 a^2 + \lambda_1 b^2}}\right) \\
-=\frac{K_0}{K_1}\cdot \text{exp}\left( -\frac{1}{2} \frac {\lambda_2 a^2 + \lambda_1 b^2}{\lambda_1\lambda_2} {\left(x-\mu_x-\frac{(y_0-\mu_y)ab(\lambda_1-\lambda_2)}{\lambda_2 a^2 + \lambda_1 b^2}\right)}^2\right) \\
-=\frac{K_0}{K_1}\cdot \text{exp}\left( -\frac{1}{2} \frac {\lambda_2 a^2 + \lambda_1 b^2}{\lambda_1\lambda_2} {\left(x-\mu_x-\frac{(y_0-\mu_y)\Sigma_{12}}{\Sigma_{22}}\right)}^2\right) \\
-P(x|y=y_0)=\frac{K_0}{K_1}\cdot \text{exp}\left( -\frac{1}{2} {\left(\frac {\lambda_1\lambda_2}{\lambda_2 a^2 + \lambda_1 b^2}\right)}^{-1} {\left(x-\left[\mu_x+\frac{(y_0-\mu_y)\Sigma_{12}}{\Sigma_{22}}\right]\right)}^2\right)
+P(x|y=y_0)=\frac{K_0}{K_1}\cdot \exp\left( -\frac{1}{2} \frac {\lambda_2 a^2 + \lambda_1 b^2}{\lambda_1\lambda_2} {\left(x-\mu_x-\frac{(y_0-\mu_y)ab(\lambda_1-\lambda_2)}{\lambda_2 a^2 + \lambda_1 b^2}\right)}^2\right)\cdot\exp\left(\cancel{\frac { {(y_0-\mu_y)}^2}{ \lambda_2 a^2 + \lambda_1 b^2}} - \cancel{\frac { {(y_0-\mu_y)}^2}{ \lambda_2 a^2 + \lambda_1 b^2}}\right) \\
+=\frac{K_0}{K_1}\cdot \exp\left( -\frac{1}{2} \frac {\lambda_2 a^2 + \lambda_1 b^2}{\lambda_1\lambda_2} {\left(x-\mu_x-\frac{(y_0-\mu_y)ab(\lambda_1-\lambda_2)}{\lambda_2 a^2 + \lambda_1 b^2}\right)}^2\right) \\
+=\frac{K_0}{K_1}\cdot \exp\left( -\frac{1}{2} \frac {\lambda_2 a^2 + \lambda_1 b^2}{\lambda_1\lambda_2} {\left(x-\mu_x-\frac{(y_0-\mu_y)\Sigma_{12}}{\Sigma_{22}}\right)}^2\right) \\
+P(x|y=y_0)=\frac{K_0}{K_1}\cdot \exp\left( -\frac{1}{2} {\left(\frac {\lambda_1\lambda_2}{\lambda_2 a^2 + \lambda_1 b^2}\right)}^{-1} {\left(x-\left[\mu_x+\frac{(y_0-\mu_y)\Sigma_{12}}{\Sigma_{22}}\right]\right)}^2\right)
 $$
 
 The final expression gives us a one-dimensional Gaussian with mean and covariance as: 
@@ -305,7 +305,7 @@ This will be particularly important to keep in mind, when we get into the proofs
 We will now discuss the **motivation for partitioning the covariance matrix**. Let us assume we have $$N$$ random variables $$X=\{x_1, x_2, ..., x_N\}$$. The joint probability distribution of these random variables is then given by the covariance matrix as below:
 
 $$
-P(x_1, x_2, \cdots, x_N)=K\cdot\text{exp}\left(-\frac{1}{2}{(X-\mu_0)}^T\Sigma^{-1}(X-\mu_0)\right)
+P(x_1, x_2, \cdots, x_N)=K\cdot\exp\left(-\frac{1}{2}{(X-\mu_0)}^T\Sigma^{-1}(X-\mu_0)\right)
 $$
 
 where the covariance matrix $$\Sigma$$ is defined as below:
@@ -595,7 +595,7 @@ $$
 where $$X_T=X_0$$ is an $$m$$-dimensional vector ($$m\times 1$$).
 
 $$
-P(X_U, X_T)=K\cdot \text{exp}\left[{
+P(X_U, X_T)=K\cdot \exp\left[{
 \begin{bmatrix}
 X_U-\mu_U \\
 X_0-\mu_T
@@ -618,7 +618,7 @@ $$
 Thus, the joint distribution becomes:
 
 $$
-P(X_U, X_T)=K\cdot \text{exp}\left({
+P(X_U, X_T)=K\cdot \exp\left({
 \begin{bmatrix}
 X_U-\mu_U \\
 X_0-\mu_T
@@ -639,7 +639,7 @@ Decomposing $$\Sigma$$ into its Schur Complements gives us the following:
 
 $$
 \begin{equation}
-P(X_U, X_T)=K\cdot \text{exp}\left({
+P(X_U, X_T)=K\cdot \exp\left({
 \begin{bmatrix}
 X_U-\mu_U \\
 X_0-\mu_T
@@ -684,7 +684,7 @@ $$
 Then, substituting the above into $$\eqref{eq:joint-distribution-schur}$$, we get:
 
 $$
-P(X_U, X_T)=K\cdot \text{exp}\left({
+P(X_U, X_T)=K\cdot \exp\left({
 \begin{bmatrix}
 \mathbb{X}_U \\
 \mathbb{X}_0
@@ -716,7 +716,7 @@ $$
 Now, we expand. Note that the **next few calculations are simply rough work** for you to follow along if you wish to; the final result is where we will make the next logical leap.
 
 $$
-P(X_U, X_T)=K\cdot \text{exp}\left(
+P(X_U, X_T)=K\cdot \exp\left(
 \begin{bmatrix}
 \mathbb{X}_U - \mathbb{X}_0 {\Sigma_{TT}}^{-1} \Sigma_{TU} && \mathbb{X}_0 \\
 \end{bmatrix}
@@ -738,7 +738,7 @@ I && -\Sigma_{UT}{\Sigma_{TT}}^{-1} \\
 
 \right) \\
 
-=K\cdot \text{exp}\left(
+=K\cdot \exp\left(
 \begin{bmatrix}
 (\mathbb{X}_U - \mathbb{X}_0 {\Sigma_{TT}}^{-1} \Sigma_{TU})S^{-1} && \mathbb{X}_0 {\Sigma_{TT}}^{-1} \\
 \end{bmatrix}
@@ -755,7 +755,7 @@ I && -\Sigma_{UT}{\Sigma_{TT}}^{-1} \\
 
 \right) \\
 
-=K\cdot \text{exp}\left(
+=K\cdot \exp\left(
 \begin{bmatrix}
 (\mathbb{X}_U - \mathbb{X}_0 {\Sigma_{TT}}^{-1} \Sigma_{TU})S^{-1} && (\mathbb{X}_U - \mathbb{X}_0 {\Sigma_{TT}}^{-1} \Sigma_{TU})S^{-1} \Sigma_{UT} {\Sigma_{TT}}^{-1} + \mathbb{X}_0 {\Sigma_{TT}}^{-1}\\
 \end{bmatrix}
@@ -767,14 +767,14 @@ I && -\Sigma_{UT}{\Sigma_{TT}}^{-1} \\
 
 \right) \\
 
-=K\cdot \text{exp}\left(
+=K\cdot \exp\left(
 (\mathbb{X}_U-\mathbb{X}_0 {\Sigma_{TT}}^{-1} \Sigma_{TU})S^{-1} \mathbb{X}_U - (\mathbb{X}_U-\mathbb{X}_0 {\Sigma_{TT}}^{-1} \Sigma_{TU})S^{-1} \Sigma_{UT} {\Sigma_{TT}}^{-1} \mathbb{X}_0 + \mathbb{X}_0 {\Sigma_{TT}}^{-1} \mathbb{X}_0
 \right) \\
 $$
 
 $$
 \begin{equation}
-=K\cdot \text{exp}\left(
+=K\cdot \exp\left(
 \mathbb{X}_U S^{-1} \mathbb{X}_U - \mathbb{X}_0 {\Sigma_{TT}}^{-1} \Sigma_{TU} S^{-1} \mathbb{X}_U - \mathbb{X}_U S^{-1} \Sigma_{UT} {\Sigma_{TT}}^{-1} \mathbb{X}_0 + \mathbb{X}_0 {\Sigma_{TT}}^{-1} \Sigma_{TU} S^{-1} \Sigma_{UT} {\Sigma_{TT}}^{-1} \mathbb{X}_0 + \mathbb{X}_0 {\Sigma_{TT}}^{-1} \mathbb{X}_0
 \right)
 \label{eq:joint-distribution-before-rearrangement}
@@ -794,7 +794,7 @@ $$
 Using the above identities, we can rearrange and group terms in $$\eqref{eq:joint-distribution-before-rearrangement}$$ like so:
 
 $$
-P(X_U, X_T)=K\cdot \text{exp}\left(
+P(X_U, X_T)=K\cdot \exp\left(
 \underbrace{
 {\mathbb{X}_U}^T S^{-1} \mathbb{X}_U - {\Sigma_{UT} {\Sigma_{TT}}^{-1} \mathbb{X}_0)}^T (S^{-1} \mathbb{X}_U - {\mathbb{X}_U}^T S^{-1} (\Sigma_{UT} {\Sigma_{TT}}^{-1} \mathbb{X}_0) + {(\Sigma_{UT} {\Sigma_{TT}}^{-1} \mathbb{X}_0)}^T S^{-1} (\Sigma_{UT} {\Sigma_{TT}}^{-1} \mathbb{X}_0)
 }_\text{Square}
@@ -808,7 +808,7 @@ $$
 The first square is the form of $${(X-Y)}^T D (X-Y)$$, and the second square is simply of the form $$X^T D X$$. Factoring out the squares gives us:
 
 $$
-P(X_U, X_T)=K\cdot \text{exp}\left(
+P(X_U, X_T)=K\cdot \exp\left(
 {(\mathbb{X}_U - \Sigma_{UT} {\Sigma_{TT}}^{-1} \mathbb{X}_0)}^T S^{-1} (\mathbb{X}_U - \Sigma_{UT} {\Sigma_{TT}}^{-1} \mathbb{X}_0) + {\mathbb{X}_0}^T {\Sigma_{TT}}^{-1} \mathbb{X}_0
 \right)
 $$
@@ -817,19 +817,19 @@ Substituting back the expressions for $$\mathbb{X}_U$$ and $$\mathbb{X}_0$$, we 
 
 $$
 P(X_U, X_T)=K\cdot 
-\text{exp}\left[
+\exp\left[
 {(X_U - (\mu_U + \Sigma_{UT} {\Sigma_{TT}}^{-1} (X_0-\mu_0) ))}^T S^{-1} (X_U - (\mu_U + \Sigma_{UT} {\Sigma_{TT}}^{-1} (X_0-\mu_0) )) + {(X_0-\mu_0)}^T {\Sigma_{TT}}^{-1} (X_0-\mu_0)
 \right] \\
 P(X_U, X_T)=K\cdot
 \underbrace{
-\text{exp}\left[
+\exp\left[
 {(X_U - (\mu_U + \Sigma_{UT} {\Sigma_{TT}}^{-1} (X_0-\mu_0) ))}^T S^{-1} (X_U - (\mu_U + \Sigma_{UT} {\Sigma_{TT}}^{-1} (X_0-\mu_0) ))\right]
 }_\text{Conditional Distribution} \\
 
 \cdot
 
 \underbrace{
-\text{exp}\left[{(X_0-\mu_0)}^T {\Sigma_{TT}}^{-1} (X_0-\mu_0)
+\exp\left[{(X_0-\mu_0)}^T {\Sigma_{TT}}^{-1} (X_0-\mu_0)
 \right]
 }_\text{Marginal Distribution} \\
 $$

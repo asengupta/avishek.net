@@ -169,7 +169,7 @@ We are now in a position to understand the form of the Multivariate Gaussian Dis
 
 $$
 \mathbf{
-G(X)=C\bullet\text{exp}\left( -\frac{1}{2} {(X-\mu)}^T\Sigma^{-1}(X-\mu) \right)
+G(X)=C\bullet\exp\left( -\frac{1}{2} {(X-\mu)}^T\Sigma^{-1}(X-\mu) \right)
 }
 $$
 
@@ -181,7 +181,7 @@ where $$\Sigma$$ is the (invertible) **covariance matrix**. Let us note some spe
 We seek to understand the shape of this Gaussian. To do that, let us fix the value of $$G(X)$$ to, say, $$K$$.
 
 $$
-C\bullet \text{exp}\left(-\frac{1}{2} {(X-\mu)}^T \Sigma^{-1} (X-\mu)\right)=K
+C\bullet \exp\left(-\frac{1}{2} {(X-\mu)}^T \Sigma^{-1} (X-\mu)\right)=K
 $$
 
 Let us express $$\Sigma^{-1}$$ in terms of its eigenvectors.
@@ -196,8 +196,8 @@ $$
 Substituting this result into the original expression, we get:
 
 $$
-C\bullet \text{exp}\left(-\frac{1}{2}{(X-\mu)}^T VD^{-1}V^T (X-\mu)\right)=K \\
-\text{exp}\left(-\frac{1}{2}{(X-\mu)}^T VD^{-\frac{1}{2}} D^{-\frac{1}{2}} V^T (X-\mu)\right) = \frac{K}{C}
+C\bullet \exp\left(-\frac{1}{2}{(X-\mu)}^T VD^{-1}V^T (X-\mu)\right)=K \\
+\exp\left(-\frac{1}{2}{(X-\mu)}^T VD^{-\frac{1}{2}} D^{-\frac{1}{2}} V^T (X-\mu)\right) = \frac{K}{C}
 $$
 
 $$
