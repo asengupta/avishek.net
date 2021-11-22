@@ -53,7 +53,7 @@ Consider a Cauchy sequence $$(x_n) \in c_0$$. Then, $$\forall \epsilon>0, \exist
 This implies that:
 
 $$
-\text{sup }d(x_j^m, x_j^n)<\epsilon \\
+\supd(x_j^m, x_j^n)<\epsilon \\
 d(x_j^m, x_j^n)<\epsilon
 $$
 
@@ -98,7 +98,7 @@ y_n=\begin{cases}
 \end{cases}
 $$
 
-Assume $$m<n$$. Then $$d(x_m,x_n)=\text{sup } d(x_m^i, x_n^i)=\frac{1}{m+1}$$. Then as $$m \rightarrow \infty$$, $$\text {lim }_{m \rightarrow \infty} d(x_m,x_n) = 0$$, but this limit has more nonzero terms than any sequence in $$Y$$ and is thus not contained in $$Y$$. Thus, $$Y$$ is not complete.
+Assume $$m<n$$. Then $$d(x_m,x_n)=\sup d(x_m^i, x_n^i)=\frac{1}{m+1}$$. Then as $$m \rightarrow \infty$$, $$\text {lim }_{m \rightarrow \infty} d(x_m,x_n) = 0$$, but this limit has more nonzero terms than any sequence in $$Y$$ and is thus not contained in $$Y$$. Thus, $$Y$$ is not complete.
 
 $$\blacksquare$$
 
@@ -219,7 +219,7 @@ $$
 
 Thus, this is the space of sequences with finite non-zero terms.
 
-We have $$\|s_n-s_{m}\|=\text{sup }\vert s_{n(i)}-s_{n(i)}\vert$$ (note that $$s_n$$ is a sequence, being the sum of sequences). Assume $$m<n$$, then $$\|s_n-s_m\|=\frac{1}{2^{m+1}}$$. This can be made as small as possible, and thus $$(s_n)$$ is Cauchy.
+We have $$\|s_n-s_{m}\|=\sup\vert s_{n(i)}-s_{n(i)}\vert$$ (note that $$s_n$$ is a sequence, being the sum of sequences). Assume $$m<n$$, then $$\|s_n-s_m\|=\frac{1}{2^{m+1}}$$. This can be made as small as possible, and thus $$(s_n)$$ is Cauchy.
 
 Choose $$s=(\frac{1}{2^n})$$, and we have:
 

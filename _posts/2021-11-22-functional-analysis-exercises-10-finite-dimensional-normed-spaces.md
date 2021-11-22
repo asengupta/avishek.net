@@ -36,6 +36,9 @@ The requirements for a space to be a vector space are:
 
 **Proof:**
 
+$$l^\infty$$ is the space of all bounded sequences, i.e., $$\sum\limits_{i=1}^\infty \vert x_i \vert < \infty$$. The norm it is equipped with is $$\|(x_n)\|=\sup \vert x_i\vert $$.
+
+The space of 
 
 $$\blacksquare$$
 
@@ -50,7 +53,7 @@ $$\blacksquare$$
 
 ---
 
-#### 2.3.3. Show that in Def. 2.4-4 the axioms of an equivalence relation hold (d. Al.4 in Appendix 1).
+#### 2.3.3. Show that in Def. 2.4-4 the axioms of an equivalence relation hold (cf. A1.4 in Appendix 1).
 
 **Proof:**
 

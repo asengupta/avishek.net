@@ -282,12 +282,12 @@ $$\blacksquare$$
 
 **Proof:**
 
-A set is bounded if $$\delta(x,y)<\infty$$, where $$\delta(x,y)=\text{sup } d(x,y)$$.
+A set is bounded if $$\delta(x,y)<\infty$$, where $$\delta(x,y)=\sup d(x,y)$$.
 
 $$
 (\Rightarrow)
 $$
-Assume that $$M$$ is bounded. Then $$\delta(x,y)=\text{sup } d(x,y)<\infty$$. This implies that $$d(x,y) \leq c, c \in \mathbb{R}$$ for all $$x,y \in M$$. Set $$y=\theta$$ and note that $$d(x,\theta)=\|x\|$$, to get:
+Assume that $$M$$ is bounded. Then $$\delta(x,y)=\sup d(x,y)<\infty$$. This implies that $$d(x,y) \leq c, c \in \mathbb{R}$$ for all $$x,y \in M$$. Set $$y=\theta$$ and note that $$d(x,\theta)=\|x\|$$, to get:
 
 $$
 d(x,\theta)=\|x\| \leq c
@@ -309,7 +309,7 @@ d(x,y) \leq d(x,\theta) + d(\theta, y) \\
 d(x,y) \leq \|x\| + \|y\| \\
 d(x,y) \leq c + c \\
 d(x,y) \leq 2c \\
-\Rightarrow \delta(x,y) = \text{sup } d(x,y) \leq 2c < \infty
+\Rightarrow \delta(x,y) = \sup d(x,y) \leq 2c < \infty
 $$
 
 Thus, $$M$$ is bounded.

@@ -66,7 +66,7 @@ $$\blacksquare$$
 
 The open ball $$B(x_0;1)$$ on $$\mathbb{R}$$ is the open interval $$(x_0-1,x_0+1)$$.  
 The open ball $$B(x_0;1)$$ on $$\mathbb{C}$$ is the unit disk centered at $$x_0$$, excluding its circumference.  
-The open ball $$B(x_0;1)$$ in $$\mathbb{C}[a,b]$$ is the set of functions $$x(t)$$ which satisfy the condition $$\text{sup }\vert x_0(t)-x(t)\vert < 1$$.
+The open ball $$B(x_0;1)$$ in $$\mathbb{C}[a,b]$$ is the set of functions $$x(t)$$ which satisfy the condition $$\sup\vert x_0(t)-x(t)\vert < 1$$.
 
 ---
 
@@ -265,7 +265,7 @@ f_n(x)=\begin{cases} 0 & \text{ if } x=n \\
        \end{cases}, n \in \mathbb{R}
 $$
 
-Then the $$d(f_m(x), f_n(x))=\text{sup } \vert f_m(x)-f_n(x)\vert = 1 $$ unless $$m=n$$. Therefore, all distinct functions in this family (examples are $$f_{2.5}(x)$$ and $$f_\sqrt{2}(x)$$) are separated by $$1$$.
+Then the $$d(f_m(x), f_n(x))=\sup \vert f_m(x)-f_n(x)\vert = 1 $$ unless $$m=n$$. Therefore, all distinct functions in this family (examples are $$f_{2.5}(x)$$ and $$f_\sqrt{2}(x)$$) are separated by $$1$$.
 
 The number of these functions is uncountable, since $$n$$ corresponds to the real number line.
 Each of these functions can be represented by a point in $$B[a, b]$$ space, separated by $$1$$. An open ball of $$\frac{1}{2}$$ around each of them do not intersect each other.

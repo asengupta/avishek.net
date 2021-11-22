@@ -225,13 +225,13 @@ then $$x^*$$ is a **local optimum**.
 We already know from the [Max-Min Inequality]({% post_url 2021-05-08-quadratic-optimisation-theory %}) that:
 
 $$
-\mathbf{\text{sup}_y \text{ inf}_x f(x,y)\leq \text{inf}_x \text{ sup}_y f(x,y)} \text{   }\forall x,y\in\mathbb{R}
+\mathbf{\sup_y \text{ inf}_x f(x,y)\leq \text{inf}_x \text{ sup}_y f(x,y)} \text{   }\forall x,y\in\mathbb{R}
 $$
 
 Since this is a general statement about any $$f(x,y)$$, we can apply this inequality to the Primal Optimisation Problem, i.e.:
 
 $$
-\text{sup}_\lambda \text{ inf}_x L(x,\lambda) \leq \text{inf}_x \text{ sup}_\lambda L(x,\lambda)
+\sup_\lambda \text{ inf}_x L(x,\lambda) \leq \text{inf}_x \text{ sup}_\lambda L(x,\lambda)
 $$
 
 The right side is the **Primal Optimisation Problem**, and the left side is known as the **Dual Optimisation Problem**, and in this case, the **Lagrangian Dual**.
@@ -239,7 +239,7 @@ The right side is the **Primal Optimisation Problem**, and the left side is know
 To understand the fuss about the **Lagrangian Dual**, we will begin with the more restrictive case where equality holds for the **Max-Min Inequality**, and later discuss the more general case and its implications. For this first part, we will assume that:
 
 $$
-\text{sup}_\lambda \text{ inf}_x L(x,\lambda) = \text{inf}_x \text{ sup}_\lambda L(x,\lambda)
+\sup_\lambda \text{ inf}_x L(x,\lambda) = \text{inf}_x \text{ sup}_\lambda L(x,\lambda)
 $$
 
 Let's look at a motivating example. This is the graph of the Lagrangian for the following problem:
@@ -296,7 +296,7 @@ $$
 Let's walk through the Lagrangian maximisation-minimisation procedure step-by-step. The procedure is:
 
 $$
-\text{sup}_\lambda \text{ inf}_x L(x,\lambda)
+\sup_\lambda \text{ inf}_x L(x,\lambda)
 $$
 
 There are two important points to note here:
@@ -402,7 +402,7 @@ The reason this leads to **Strong Duality** is this: minimising $$f(x,\lambda)$$
 Mathematically, this implies that:
 
 $$
-\mathbf{\text{sup}_\lambda \text{ inf}_x f(x,\lambda)= \text{inf}_x \text{ sup}_\lambda f(x,\lambda)}
+\mathbf{\sup_\lambda \text{ inf}_x f(x,\lambda)= \text{inf}_x \text{ sup}_\lambda f(x,\lambda)}
 $$
 
 thus implying that the **Duality Gap** is zero.

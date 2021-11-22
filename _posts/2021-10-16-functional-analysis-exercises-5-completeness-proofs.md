@@ -44,7 +44,7 @@ $$\blacksquare$$
 
 $$l^\infty$$ is the space of all bounded sequences. Let there be a Cauchy sequence $$(x_n)$$, where the $$n$$th sequence has $$n$$ terms $$1,\frac{1}{2},\frac{1}{3},\frac{1}{4},\cdots,\frac{1}{n}$$.
 
-This is a Cauchy sequence because for any $$m,n>N$$, we have $$d(x^m,x^n)=\text{sup }\vert x^m_j - x^n_j\vert=\displaystyle\frac{1}{\text{min }(m,n)+1}$$ and $$\text{min }(m,n)$$ can be made as large as possible to make $$\epsilon$$ as small as possible (by the Archimedean Principle).
+This is a Cauchy sequence because for any $$m,n>N$$, we have $$d(x^m,x^n)=\sup\vert x^m_j - x^n_j\vert=\displaystyle\frac{1}{\text{min }(m,n)+1}$$ and $$\text{min }(m,n)$$ can be made as large as possible to make $$\epsilon$$ as small as possible (by the Archimedean Principle).
 
 The limit of the Cauchy sequence is the infinite sequence $$1, \frac{1}{2}, \frac{1}{3}, \cdots$$. Call it $$x$$.
 
@@ -120,13 +120,13 @@ $$\blacksquare$$
 #### 1.5.8 (Space $$C[a, b]$$) Show that the subspace $$Y \subset C[a,b]$$ consisting of all $$x \in C[a, b]$$ such that $$x(a) = x(b)$$ is complete.
 **Proof:**
 
-The distance metric on $$C[a.b]$$ is defined as: $$d(f_1,f_2)=\text{sup }\vert f_1(x), f_2(x)\vert$$. We assume a Cauchy sequence of functions $$(f_n)=f_1,f_2,f_3,\cdots$$.
+The distance metric on $$C[a.b]$$ is defined as: $$d(f_1,f_2)=\sup\vert f_1(x), f_2(x)\vert$$. We assume a Cauchy sequence of functions $$(f_n)=f_1,f_2,f_3,\cdots$$.
 
 We have, by the Cauchy criterion:
 
 $$
 d(f_m(x),f_n(x))<\epsilon \\
-\Rightarrow \text{sup } |f_m(x) - f_n(x)| < \epsilon \\
+\Rightarrow \sup |f_m(x) - f_n(x)| < \epsilon \\
 \Rightarrow |f_m(x) - f_n(x)| < \epsilon
 $$
 

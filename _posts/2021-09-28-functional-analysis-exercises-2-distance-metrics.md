@@ -197,7 +197,7 @@ $$z_k$$ is an example of a sequence which converges to zero, but whose series di
 $$(x_i)=\frac{1}{i}$$ converges to 0.
 $$\displaystyle\sum_{i=1}^\infty{(\frac{1}{i})}^p$$ diverges to $$\infty$$ for $$p\leq 1$$, and thus violates the condition for a sequence in $$\ell^p$$ spaces, i.e. $$\displaystyle\sum_{i=1}^\infty{\vert\xi_i\vert}^p<\infty$$ for $$p \leq 1$$.
 
-#### 1.2.6. **(Diameter, bounded set)** The diameter $$\delta(A)$$ of a nonempty set A in a  metric space $$(X, d)$$ is defined to be $$\delta(A) = \text{sup } d(x,y)$$. A is said to be bounded if $$\delta(A)<\infty$$. Show that $$A\subset B$$ implies $$\delta(A)\leq \delta(B)$$.
+#### 1.2.6. **(Diameter, bounded set)** The diameter $$\delta(A)$$ of a nonempty set A in a  metric space $$(X, d)$$ is defined to be $$\delta(A) = \sup d(x,y)$$. A is said to be bounded if $$\delta(A)<\infty$$. Show that $$A\subset B$$ implies $$\delta(A)\leq \delta(B)$$.
 
 **Proof:**
 
@@ -216,7 +216,7 @@ $$
 \Delta_A \subset \Delta_B
 $$
 
-Thus, $$\delta(A)=\text{sup } \Delta_A$$ exists in $$\Delta_B$$, i.e.,
+Thus, $$\delta(A)=\sup \Delta_A$$ exists in $$\Delta_B$$, i.e.,
 
 $$
 \begin{equation}
@@ -229,7 +229,7 @@ By the definition of the diameter of a bounded set, we have:
 
 $$
 \begin{equation}
-\delta_B=\text{sup } \Delta_B
+\delta_B=\sup \Delta_B
 \label{eq:diameter-B-sup-DeltaB}
 \end{equation}
 $$
@@ -254,7 +254,7 @@ We prove the **"if"** side of the claim first.
 
 Assume $$A=\{x\}$$.  
 Then the set $$\Delta_A={d(x,x)}$$.  
-Therefore $$\delta(A)=\text{sup} \Delta_A=d(x,x)$$.
+Therefore $$\delta(A)=\sup \Delta_A=d(x,x)$$.
 
 By the definition of a distance metric, $$d(x,x)=0$$.
 
@@ -266,7 +266,7 @@ $$
 
 $$\blacksquare$$
 
-For the **"only if"** side of implication, Let $$\delta(A)=\text{sup } \Delta_A=0$$.
+For the **"only if"** side of implication, Let $$\delta(A)=\sup \Delta_A=0$$.
 
 By the definition of a distance metric, $$d(x,y)\geq 0$$.  
 Thus, all other elements of $$\Delta_A$$ have to be zero. This implies there is only one element in $$\Delta_A={0}$$.  
@@ -509,8 +509,8 @@ $$
 $$
 
 Verbally,
-- $$\Delta_A$$ is the set of all distances between points in $$A$$. $$\Delta_A$$ is bounded because $$A$$ is bounded by definition, therefore $$\delta(A)=\text{sup }\Delta_A<\infty$$.
-- $$\Delta_B$$ is the set of all distances between points in $$B$$. $$\Delta_B$$ is bounded because $$B$$ is bounded by definition, therefore $$\delta(B)=\text{sup }\Delta_B<\infty$$.
+- $$\Delta_A$$ is the set of all distances between points in $$A$$. $$\Delta_A$$ is bounded because $$A$$ is bounded by definition, therefore $$\delta(A)=\sup\Delta_A<\infty$$.
+- $$\Delta_B$$ is the set of all distances between points in $$B$$. $$\Delta_B$$ is bounded because $$B$$ is bounded by definition, therefore $$\delta(B)=\sup\Delta_B<\infty$$.
 - $$\Delta_{AB}$$ is the set of all distances between points in $$A$$ and points in $$B$$.
 
 Then the set of all distances between points in $$C=A \cup B$$ is $$\Delta_C=\Delta_A \cap \Delta_B \cap \Delta_{AB}$$.

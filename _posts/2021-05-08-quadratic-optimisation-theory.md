@@ -257,8 +257,8 @@ where $$g(x,y)=\text{ inf}_xf(x,y)$$ and $$h(x,y)=\text{ sup}_yf(x,y)$$. Note th
 In the general case, the infimum will define a function whose image will contain values which are all less than the smallest value in the image of the supremum function. We express this last statment as:
 
 $$
-\text{sup}_y g(x,y)\leq \text{inf}_x h(x,y) \\
-\Rightarrow \mathbf{\text{sup}_y \text{ inf}_x f(x,y)\leq \text{inf}_x \text{ sup}_y f(x,y)}\text{   }\forall x,y\in\mathbf{R}
+\sup_y g(x,y)\leq \text{inf}_x h(x,y) \\
+\Rightarrow \mathbf{\sup_y \text{ inf}_x f(x,y)\leq \text{inf}_x \text{ sup}_y f(x,y)}\text{   }\forall x,y\in\mathbf{R}
 $$
 
 This is the statement of the **Max-Min Inequality**.
@@ -268,7 +268,7 @@ The **Minimax Theorem** (first proof by **John von Neumann**) specifies conditio
 Specifically, the theorem states that the 
 
 $$
-\mathbf{\text{sup}_y \text{ inf}_x f(x,y)\leq \text{inf}_x \text{ sup}_y f(x,y)} \text{   }\forall x,y\in\mathbf{R}
+\mathbf{\sup_y \text{ inf}_x f(x,y)\leq \text{inf}_x \text{ sup}_y f(x,y)} \text{   }\forall x,y\in\mathbf{R}
 $$
 
 if:

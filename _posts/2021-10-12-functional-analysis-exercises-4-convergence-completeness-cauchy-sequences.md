@@ -104,7 +104,7 @@ Choose $$\epsilon=1$$. Then, assume the value of $$N_0$$ to be $$N_1$$. For any 
 - $$N_0<a<b$$: Then $$d(x_a,x_b) < \epsilon = 1$$
 - $$a \leq N_0<b$$: By the **Triangle Inequality**, we have: $$d(x_a,x_b) \leq d(x_a,x_{N_1}) + d(x_{N_1}, x_b) < a + 1$$
 
-Combining these upper bounds, we get: $$\text{sup } d(x_a,x_b) < a+1$$
+Combining these upper bounds, we get: $$\sup d(x_a,x_b) < a+1$$
 
 $$\blacksquare$$
 
@@ -114,7 +114,7 @@ $$\blacksquare$$
 
 **Answer:**
 
-Consider the discrete metric on $$\mathbb{R}$$. If we have a sequence $$(x_n)=0,1,0,1,\cdots$$, then the series is bounded because $$\text{sup } d(x_m, x_n)=1$$, but for $$\epsilon=\frac{1}{2}$$, there is no $$N$$ for which $$d(x_m,x_n)<\epsilon$$ for $$m,n>N$$. Thus, the sequence is not Cauchy, though it is bounded.
+Consider the discrete metric on $$\mathbb{R}$$. If we have a sequence $$(x_n)=0,1,0,1,\cdots$$, then the series is bounded because $$\sup d(x_m, x_n)=1$$, but for $$\epsilon=\frac{1}{2}$$, there is no $$N$$ for which $$d(x_m,x_n)<\epsilon$$ for $$m,n>N$$. Thus, the sequence is not Cauchy, though it is bounded.
 
 Convergence is sufficient for a sequence to be Cauchy. For convergence, we have the condition: if $$x_n \rightarrow x$$, $$\forall \epsilon>0, \exists N_0$$, such that $$d(x_n,x)<\epsilon$$ for all $$n>N_0$$.
 

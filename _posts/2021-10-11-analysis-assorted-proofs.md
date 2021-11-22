@@ -42,23 +42,23 @@ $$\blacksquare$$
 
 Consider the set $$U=\{u:u<y, u \in \mathbb{Z}\}$$.
 
-Since $$U$$ is bounded from above by $$y$$, it has a least upper bound, call it $$U_\text{sup}$$.
+Since $$U$$ is bounded from above by $$y$$, it has a least upper bound, call it $$U_\sup$$.
 
-We note that $$y-U_\text{sup}<1$$. This is because if $$y-U_\text{sup} > 1$$, then $$y-(U_\text{sup}+1) > 0$$, implying the $$U_\text{sup}$$ is not the largest $$x \in U$$ which satisfies $$x<y$$, which is a contradiction.
+We note that $$y-U_\sup<1$$. This is because if $$y-U_\sup > 1$$, then $$y-(U_\sup+1) > 0$$, implying the $$U_\sup$$ is not the largest $$x \in U$$ which satisfies $$x<y$$, which is a contradiction.
 
 Thus, we can write:
 
 $$
-y-U_\text{sup}<1 \\
-\Rightarrow U_\text{sup}-y>-1
+y-U_\sup<1 \\
+\Rightarrow U_\sup-y>-1
 $$
 
 Adding the above identity to $$y-x>1$$, we get:
 
 $$
-U_\text{sup}-x>0 \\
-\Rightarrow U_\text{sup}>x \\
-x<U_\text{sup}<y
+U_\sup-x>0 \\
+\Rightarrow U_\sup>x \\
+x<U_\sup<y
 $$
 
 Thus, we have found an $$z \in \mathbb{Z}$$ which satisfies $$x<z<y$$.

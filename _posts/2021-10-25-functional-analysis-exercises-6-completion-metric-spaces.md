@@ -91,7 +91,7 @@ Consider the $$f:(0,1) \rightarrow \mathbb{R}$$ defined as $$f(x)=x$$. Then $$f(
 We note that $$f(t)=\displaystyle\frac{t-a}{b-a}, a \neq b$$ is a mapping $$f: [a,b] \rightarrow [0,1]$$, and that $$f^{-1}(t)=a+(b-a)t$$ is a mapping $$f^{-1}: [0,1] \rightarrow [a,b]$$.
 
 We note that $$f$$ and $$f^{-1}$$ are bijections.
-The distance metric in $$C$$ is defined as $$d(x,y)=\text{sup }\vert x(t) - y(t) \vert$$.
+The distance metric in $$C$$ is defined as $$d(x,y)=\sup\vert x(t) - y(t) \vert$$.
 
 Define a mapping $$T:C_{t \in [0,1]}(t) \rightarrow C_{t \in [a,b]}(f^{-1}(t))$$
 
@@ -100,7 +100,7 @@ Think of $$C(f(t)$$ as the original function applied to $$[0,1]$$ even though th
 Then:
 
 $$
-d(Tx,Ty)=\text{sup }_{[a,b]} |x(f(t)) - y(f(t))|=\text{sup }_{[0,1]} |x(t) - y(t)|=d(x,y)
+d(Tx,Ty)=\sup_{[a,b]} |x(f(t)) - y(f(t))|=\sup_{[0,1]} |x(t) - y(t)|=d(x,y)
 $$
 
 Thus, $$T$$ preserves distances.
@@ -108,8 +108,8 @@ Thus, $$T$$ preserves distances.
 To prove injectivity, suppose $$Tx=Ty$$, then we have:
 
 $$
-d(Tx,Ty)=\text{sup }_{[a,b]} |x(f(t)) - y(f(t))|=0 \\
-\Rightarrow \text{sup }_{[0,1]} |x(t) - y(t)|=d(x,y)=0 \\
+d(Tx,Ty)=\sup_{[a,b]} |x(f(t)) - y(f(t))|=0 \\
+\Rightarrow \sup_{[0,1]} |x(t) - y(t)|=d(x,y)=0 \\
 \Rightarrow x=y
 $$
 
