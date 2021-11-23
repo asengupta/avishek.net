@@ -119,6 +119,71 @@ $$
 
 **Proof:**
 
+The relation to demonstrate is an equivalence is the following:
+
+$$
+a{\|x\|}_2 \leq {\|x\|}_1 \leq b{\|x\|}_2
+$$
+
+**Reflexive**:
+This is evident since:
+
+$$
+{\|x\|}_1 \leq {\|x\|}_1 \leq b{\|x\|}_1
+$$
+
+where $$a=b=1$$.
+
+**Symmetric**:
+
+We have:
+
+$$
+{\|x\|}_1 \leq b{\|x\|}_2 \\
+(1/b){\|x\|}_1 \leq {\|x\|}_2 \\
+{\|x\|}_2 \geq (1/b){\|x\|}_1
+$$
+
+$$
+a{\|x\|}_2 \leq {\|x\|}_1 \\
+{\|x\|}_2 \leq (1/a){\|x\|}_1
+$$
+
+Thus, we get:
+
+$$
+\frac{1}{b}{\|x\|}_1 \leq {\|x\|}_2 \leq \frac{1}{a}{\|x\|}_1
+$$
+
+**Transitive**:
+Assume that:
+
+$$
+a_1{\|x\|}_2 \leq {\|x\|}_1 \leq b_1{\|x\|}_2 \\
+a_2{\|x\|}_3 \leq {\|x\|}_2 \leq b_2{\|x\|}_3
+$$
+
+We have the following two identities:
+
+$$
+{\|x\|}_1 \leq b_1{\|x\|}_2 \\
+(1/b_1){\|x\|}_1 \leq {\|x\|}_2 \\
+(1/b_1){\|x\|}_1 \leq {\|x\|}_2 \leq b_2{\|x\|}_3 \\
+{\|x\|}_1 \leq b_1b_2{\|x\|}_3
+$$
+
+$$
+a_1{\|x\|}_2 \leq {\|x\|}_1 \\
+{\|x\|}_2 \leq (1/a_1){\|x\|}_1 \\
+a_2{\|x\|}_3 \leq {\|x\|}_2 \leq (1/a_1){\|x\|}_1 \\
+a_1a_2{\|x\|}_3 \leq {\|x\|}_1 \\
+$$
+
+Putting the two inequalities above together, we get:
+
+$$
+a_1a_2{\|x\|}_3 \leq {\|x\|}_1 \leq b_1b_2{\|x\|}_3
+$$
 
 $$\blacksquare$$
 
