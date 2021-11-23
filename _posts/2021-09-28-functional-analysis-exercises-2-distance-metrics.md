@@ -698,7 +698,7 @@ $$\blacksquare$$
 #### 1.2.15. Show that a third metric on $$X$$ in Prob. 13 is defined by
 
 $$
-\bar{d}(x,y)=\text{max}[d_1(x_1,y_1), d_2(x_2,y_2)]
+\bar{d}(x,y)=\max[d_1(x_1,y_1), d_2(x_2,y_2)]
 $$
 
 **Proof:**
@@ -706,7 +706,7 @@ $$
 The candidate distance metric is:
 
 $$
-\bar{d}(x,y)=\text{max}[d_1(x_1,y_1), d_2(x_2,y_2)]
+\bar{d}(x,y)=\max[d_1(x_1,y_1), d_2(x_2,y_2)]
 $$
 
 where $$d_1$$ and $$d_2$$ are already valid distance metrics.
@@ -734,17 +734,17 @@ Since $$d_1(x,y)$$ and $$d_2(x,y)$$ are symmetric, substituting $$d_1(y,x)$$ and
 We have:
 
 $$
-\bar{d}(x,y)=\text{max}[d_1(x_1,y_1), d_2(x_2,y_2)] \\
-\bar{d}(x,z)=\text{max}[d_1(x_1,z_1), d_2(x_2,z_2)] \\
-\bar{d}(z,y)=\text{max}[d_1(z_1,y_1), d_2(z_2,y_2)]
+\bar{d}(x,y)=\max[d_1(x_1,y_1), d_2(x_2,y_2)] \\
+\bar{d}(x,z)=\max[d_1(x_1,z_1), d_2(x_2,z_2)] \\
+\bar{d}(z,y)=\max[d_1(z_1,y_1), d_2(z_2,y_2)]
 $$
 
 Adding the above gives us:
 
 $$
 \begin{equation}
-\bar{d}(x,y)=\text{max}[d_1(x_1,y_1), d_2(x_2,y_2)] \\
-\bar{d}(x,y) \leq \text{max}[d_1(x_1,z_1)+d_1(z_1,y_1), d_2(x_2,z_2)+d_2(z_2,y_2)]
+\bar{d}(x,y)=\max[d_1(x_1,y_1), d_2(x_2,y_2)] \\
+\bar{d}(x,y) \leq \max[d_1(x_1,z_1)+d_1(z_1,y_1), d_2(x_2,z_2)+d_2(z_2,y_2)]
 \label{eq:1-2-15-max}
 \end{equation}
 $$
@@ -755,9 +755,9 @@ To do this, let us observe that:
 
 $$
 \begin{equation}
-a \leq \text{max}(a,b) \\
-c \leq \text{max}(c,d) \\
-\Rightarrow a+c \leq \text{max}(a,b) + \text{max}(c,d)
+a \leq \max(a,b) \\
+c \leq \max(c,d) \\
+\Rightarrow a+c \leq \max(a,b) + \max(c,d)
 \label{eq:1-2-15-a-plus-c}
 \end{equation}
 $$
@@ -766,7 +766,7 @@ Similarly:
 
 $$
 \begin{equation}
-b+d \leq \text{max}(a,b) + \text{max}(c,d)
+b+d \leq \max(a,b) + \max(c,d)
 \label{eq:1-2-15-b-plus-d}
 \end{equation}
 $$
@@ -774,15 +774,15 @@ $$
 Thus, if we take the maximum of the left hand side of $$\eqref{eq:1-2-15-a-plus-c}$$ and $$\eqref{eq:1-2-15-b-plus-d}$$, we get:
 
 $$
-\text{max}(a+c,b+d) \leq \text{max}(a,b) + \text{max}(c,d)
+\max(a+c,b+d) \leq \max(a,b) + \max(c,d)
 $$
 
 Substituting the above results back into $$\eqref{eq:1-2-15-max}$$, we get:
 
 $$
 \begin{equation}
-\bar{d}(x,y) \leq \text{max}[d_1(x_1,z_1)+d_1(z_1,y_1), d_2(x_2,z_2)+d_2(z_2,y_2)] \\
-\leq \text{max}(d_1(x_1,z_1), d_2(x_2,z_2)) + \text{max}(d_1(z_1,y_1), d_2(z_2,y_2))
+\bar{d}(x,y) \leq \max[d_1(x_1,z_1)+d_1(z_1,y_1), d_2(x_2,z_2)+d_2(z_2,y_2)] \\
+\leq \max(d_1(x_1,z_1), d_2(x_2,z_2)) + \max(d_1(z_1,y_1), d_2(z_2,y_2))
 \label{eq:1-2-15-penultimate}
 \end{equation}
 $$
@@ -790,7 +790,7 @@ $$
 We note that:
 
 $$
-\bar{d}(x,z) + \bar{d}(z,y) = \text{max}[d_1(x_1,z_1), d_2(x_2,z_2)] + \text{max}[d_1(z_1,y_1), d_2(z_2,y_2)]
+\bar{d}(x,z) + \bar{d}(z,y) = \max[d_1(x_1,z_1), d_2(x_2,z_2)] + \max[d_1(z_1,y_1), d_2(z_2,y_2)]
 $$
 
 Substituting the above equality into $$\eqref{eq:1-2-15-penultimate}$$, we directly get:

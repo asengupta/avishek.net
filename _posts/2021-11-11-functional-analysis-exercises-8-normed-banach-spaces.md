@@ -137,7 +137,7 @@ $$\blacksquare$$
   $$
   {\|x\|}_1=|\eta_1| + |\eta_2| \\
   {\|x\|}_2={(\eta_1^2 + \eta_2^2)}^{1/2} \\
-  {\|x\|}_\infty=\text{max } \{ |\xi_1|, |\xi_2| \}
+  {\|x\|}_\infty=\max \{ |\xi_1|, |\xi_2| \}
   $$
 
 **Proof:**
@@ -163,7 +163,7 @@ $$\blacksquare$$
   $$
   {\|x\|}_1=|\eta_1| + |\eta_2| + \cdots + |\eta_n| \\
   {\|x\|}_p={(|\eta_1|^p + |\eta_2|^p + \cdots + |\eta_n|^p)}^{1/p} \\
-  {\|x\|}_\infty=\text{max } \{ |\xi_1|, |\xi_2|, \cdots, |\xi_n| \}
+  {\|x\|}_\infty=\max \{ |\xi_1|, |\xi_2|, \cdots, |\xi_n| \}
   $$
    
    **In each case, verify that (N1) to (N4) are satisfied.**

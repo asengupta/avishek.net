@@ -22,7 +22,7 @@ The requirements for a space to be a normed space are:
 
 $$c \in l^\infty$$ is the space of all complex convergent sequences. Let $$x_n \rightarrow x$$ and $$y_n \rightarrow y$$, such that $$x_n,y_n \in \mathbb{C}$$.
 
-Then, $$\forall \epsilon>0, \exists M, N \in \mathbb{N}$$, such that $$\|x_m-x\|<\epsilon$$ and $$\|y_n-y\|<\epsilon$$, for all $$m>M, n>N$$. Take $$N_0=\text{max }(M_0,N_0)$$, so that $$\|x_n-x\|<\epsilon$$ and $$\|y_n-y\|<\epsilon$$, for all $$n>N_0$$.
+Then, $$\forall \epsilon>0, \exists M, N \in \mathbb{N}$$, such that $$\|x_m-x\|<\epsilon$$ and $$\|y_n-y\|<\epsilon$$, for all $$m>M, n>N$$. Take $$N_0=\max(M_0,N_0)$$, so that $$\|x_n-x\|<\epsilon$$ and $$\|y_n-y\|<\epsilon$$, for all $$n>N_0$$.
 
 $$
 \|\alpha x_n + \beta y_n - (\alpha x + \beta y)\| = \|\alpha x_n - \alpha x + \beta y_n - \beta y)\| \\
@@ -79,12 +79,12 @@ $$\blacksquare$$
 Let $$Y$$ be the subset of all sequences with only finitely many nonzero terms.
 
 Let $$(x_n)=x_1, x_2, \cdots, x_m, 0, 0, \cdots$$ and let $$(y_n)=y_1, y_2, \cdots, y_n, 0, 0, \cdots$$. Without loss of generality, assume $$m<n$$.
-It is clear that $$\delta(x_n)=\text{max }(x_1, x_2, \cdots, x_m) < \infty$$ and $$\delta(y_n)=\text{max }(y_1, y_2, \cdots, y_n) < \infty$$, thus $$(x_n), (y_n) \in YZ \subset l^\infty$$
+It is clear that $$\delta(x_n)=\max(x_1, x_2, \cdots, x_m) < \infty$$ and $$\delta(y_n)=\max(y_1, y_2, \cdots, y_n) < \infty$$, thus $$(x_n), (y_n) \in YZ \subset l^\infty$$
 Then, we have:
 
 $$
 \alpha(x_n) + \beta(y_n)=\alpha x_1 + \beta y_1, \alpha x_2 + \beta y_2, \cdots, \alpha x_m + \beta y_m, \beta y_{m+1}, \cdots, \beta y_n, 0, 0, \cdots \\
-\Rightarrow \delta[\alpha(x_n) + \beta(y_n)]=\text{max }(\alpha x_1 + \beta y_1, \alpha x_2 + \beta y_2, \cdots, \alpha x_m + \beta y_m, \beta y_{m+1}, \cdots, \beta y_n) < \infty \\
+\Rightarrow \delta[\alpha(x_n) + \beta(y_n)]=\max(\alpha x_1 + \beta y_1, \alpha x_2 + \beta y_2, \cdots, \alpha x_m + \beta y_m, \beta y_{m+1}, \cdots, \beta y_n) < \infty \\
 \Rightarrow \alpha(x_n) + \beta(y_n) \in Y \subset l^\infty
 $$
 
@@ -474,7 +474,7 @@ $$\blacksquare$$
 #### 2.2.15. (Product of normed spaces) If $$(X_1, {\|\bullet\|}_1)$$ and $$(X_2, {\|\bullet\|}_2)$$ are normed spaces, show that the product vector space $$X = X_1 \times X_2$$ (cf. Prob. 13, Sec. 2.1) becomes a normed space if we define
 
 $$
-\|x\|=\text{max }({\|x_1\|}_1, {\|x_2\|}_2)
+\|x\|=\max({\|x_1\|}_1, {\|x_2\|}_2)
 $$
 
 **where $$x=(x_1,x_2)$$**.

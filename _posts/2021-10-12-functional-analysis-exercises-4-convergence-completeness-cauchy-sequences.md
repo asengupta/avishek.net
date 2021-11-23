@@ -52,7 +52,7 @@ Suppose $$(x_n)$$ is Cauchy. Let $$(x_{n_k})$$ be a subsequence. Let $$x_{n_m}$$
 - Since $$(x_{n_k})$$ is convergent, $$\forall \epsilon>0, \exists M$$, such that $$d(x_{n_k},x)<\epsilon$$ for $$n>M$$.
 - Since $$(x_n)$$ is convergent, $$\forall \epsilon>0, \exists N$$, such that $$d(x_i,x_j)<\epsilon$$ for $$i,j>N$$.
 
-Pick $$N_0=\text{max}(M,N)$$. Then the above two statements become:
+Pick $$N_0=\max(M,N)$$. Then the above two statements become:
 
 - Since $$(x_{n_k})$$ is convergent, $$\forall \epsilon>0, \exists N_0$$, such that $$d(x_{n_i},x)<\epsilon$$ for $$i>N_0$$.
 - Since $$(x_n)$$ is convergent, $$\forall \epsilon>0, \exists N_0$$, such that $$d(x_i,x_j)<\epsilon$$ for $$i,j>N_0$$.
@@ -175,7 +175,7 @@ We have $$x_n \rightarrow x$$ and $$y_n \rightarrow y$$. Then $$(x_n)$$ and $$(y
 - $$\forall \epsilon/2>0, \exists M$$ such that $$d(x_m,x_n)<\epsilon/2$$ for $$m,n>M$$
 - $$\forall \epsilon/2>0, \exists N$$ such that $$d(y_m,y_n)<\epsilon/2$$ for $$m,n>N$$
 
-Taking $$N_0=\text{max }(M,N)$$, the above statements become:
+Taking $$N_0=\max(M,N)$$, the above statements become:
 
 $$\forall \epsilon/2>0, \exists N_0$$ such that $$d(x_m,x_n)<\epsilon/2$$ and $$d(y_m,y_n)<\epsilon/2$$ for $$m,n>N_0$$, i.e., $$d(x_m,x_n)+d(y_m,y_n)<\epsilon/2+\epsilon/2=\epsilon$$
 
@@ -228,7 +228,7 @@ We know that $$x_n(d_1) \rightarrow L_1$$ and $$x_n(d_2) \rightarrow L_2$$, ther
 - $$\forall \epsilon>0, \exists M$$ such that $$d_1(x_m(d_1),L_1)<\epsilon$$ for $$m>M$$
 - $$\forall \epsilon>0, \exists N$$ such that $$d_1(x_m(d_2),L_2)<\epsilon$$ for $$m>N$$
 
-Pick $$N_0=\text{max }(M,N)$$, so that the above holds true for $$N_0$$.
+Pick $$N_0=\max(M,N)$$, so that the above holds true for $$N_0$$.
 
 Then $$d_1(L_1,x_{N_0})<\epsilon$$ and $$d_2(L_2,x_{N_0})<\epsilon$$, so that we get:
 
@@ -249,7 +249,7 @@ The three distance metrics mentioned are:
 
 - $$d_1(x,y)=d(x_1,x_2)+d(y_1,y_2)$$
 - $$d_2(x,y)=\sqrt{ {d(x_1,x_2)}^2+{d(y_1,y_2)}^2}$$
-- $$d_{max}(x,y)=\text{max } [d(x_1,x_2),d(y_1,y_2)]$$
+- $$d_{max}(x,y)=\max [d(x_1,x_2),d(y_1,y_2)]$$
 
 **Proof:**
 
@@ -275,21 +275,21 @@ $$
 \Rightarrow d_2(x,y) \leq d_1(x,y) \leq \sqrt{2} d_2(x,y)
 $$
 
-For $$d_1$$ and $$d_max$$, note that $$x+y> \geq \text{max }(x,y)$$ and $$2 \text{max }(x,y) \geq x+y$$
+For $$d_1$$ and $$d_max$$, note that $$x+y> \geq \max(x,y)$$ and $$2 \max(x,y) \geq x+y$$
 
 Then, we get:
 
 $$
-\text{max }(x,y) \leq x+y \leq 2 \text{ max }(x,y) \\
+\max(x,y) \leq x+y \leq 2 \text{ max }(x,y) \\
 \Rightarrow d_{max}(x,y) \leq d_1(x,y) \leq 2 d_{ max}(x,y)
 $$
 
-For $$d_2$$ and $$d_max$$, note that $$x^2+y^2> \geq {\text{max }(x,y)}^2$$ and $$2 {\text{ max }(x,y)}^2 \geq x^2+y^2$$
+For $$d_2$$ and $$d_max$$, note that $$x^2+y^2> \geq {\max(x,y)}^2$$ and $$2 {\text{ max }(x,y)}^2 \geq x^2+y^2$$
 
 Then, we get:
 
 $$
-\text{max }(x,y) \leq \sqrt{x^2+y^2} \leq 2 \text{ max }(x,y) \\
+\max(x,y) \leq \sqrt{x^2+y^2} \leq 2 \text{ max }(x,y) \\
 \Rightarrow d_{max}(x,y) \leq d_2(x,y) \leq 2 d_{max}(x,y)
 $$
 
@@ -318,7 +318,7 @@ Assume the distance metric for $$\mathbb{Z}$$ is $$d(z_1,z_2)=\sqrt{ {(x_1-x_2)}
 - $$\forall \epsilon>0, \exists M$$ such that $$x_m-x<\frac{\epsilon}{\sqrt{2}}$$ for $$m>M$$
 - $$\forall \epsilon>0, \exists N$$ such that $$x_m-x<\frac{\epsilon}{\sqrt{2}}$$ for $$m>N$$
 
-Pick $$N_0=\text{max }(M,N)$$, so that the above holds true for $$N_0$$.
+Pick $$N_0=\max(M,N)$$, so that the above holds true for $$N_0$$.
 
 Pick $$z_i$$ so that $$i>N_0$$. Assume $$z=x+iy$$. Then, we have:
 

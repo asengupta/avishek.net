@@ -88,12 +88,12 @@ for all $$x_i$$ such that $$\lambda_i\geq 0$$, $$g_i(x)\leq 0$$, and $$y_i\in\{-
 We have already assumed the **Primal and Dual Feasibility Conditions** above. The **Dual Optimisation Problem** is then:
 
 $$
-\text{max}_\lambda\hspace{4mm}\text{min}_{w,b} \hspace{4mm} L(w,\lambda,b)
+\max_\lambda\hspace{4mm}\text{min}_{w,b} \hspace{4mm} L(w,\lambda,b)
 $$
 
 $$
 \begin{equation}
-\text{max}_\lambda\hspace{4mm}\text{min}_{w,b} \hspace{4mm} \frac{w^Tw}{2}-\sum_{i=1}^n\lambda_i [y_i(w^Tx_i-b)-1] \label{eq:lagrangian}
+\max_\lambda\hspace{4mm}\text{min}_{w,b} \hspace{4mm} \frac{w^Tw}{2}-\sum_{i=1}^n\lambda_i [y_i(w^Tx_i-b)-1] \label{eq:lagrangian}
 \end{equation}
 $$
 

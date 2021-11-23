@@ -19,19 +19,19 @@ $$\blacksquare$$
 
 ---
 
-#### 1.5.2 Let $$X$$ be the space of all ordered n-tuples $$x = (\xi_1, \cdots, \xi_n)$$ of real numbers and $$d(x,y)=\text{max }_j \vert \xi_j-\eta_j\vert$$ where $$y=(\eta_j)$$. Show that $$(X,d)$$ is complete.
+#### 1.5.2 Let $$X$$ be the space of all ordered n-tuples $$x = (\xi_1, \cdots, \xi_n)$$ of real numbers and $$d(x,y)=\max_j \vert \xi_j-\eta_j\vert$$ where $$y=(\eta_j)$$. Show that $$(X,d)$$ is complete.
 **Proof:**
 
 Consider a Cauchy sequence of ordered n-tuples $$(\xi^m) \in X$$. By the Cauchy criterion, we have:
 
 $$
-d(\xi^m, \xi^n)=\text{max }|\xi^m_j - \xi^n_j|<\epsilon
+d(\xi^m, \xi^n)=\max|\xi^m_j - \xi^n_j|<\epsilon
 $$
 
 This implies that $$\vert\xi^m_j - \xi^n_j\vert < \epsilon$$.  
 For a fixed $$j$$, we have a sequence of reals $$\xi^1_j, \xi^2_j, \cdots$$ which is then a Cauchy sequence, and because of the completeness of $$\mathbb{R}$$, this sequence converges to $$L_j \in \mathbb{R}$$.
 
-Then, we have for any $$m,j$$, $$\vert\xi^m_j - L_j\vert < \epsilon$$. It follows then that $$\text{max }\vert\xi^m_j - L_j\vert < \epsilon$$. This implies that the n-tuple formed by $$(L)=L_1,L_2,\cdots,L_n$$ is the limit of the Cauchy sequence $$(\xi^m)$$. Since $$(\xi^m)$$ was arbitrary, every Cauchy sequence in this space converges to a limit. Also, $$L \in X$$, hence the limit is contained within this metric space.
+Then, we have for any $$m,j$$, $$\vert\xi^m_j - L_j\vert < \epsilon$$. It follows then that $$\max\vert\xi^m_j - L_j\vert < \epsilon$$. This implies that the n-tuple formed by $$(L)=L_1,L_2,\cdots,L_n$$ is the limit of the Cauchy sequence $$(\xi^m)$$. Since $$(\xi^m)$$ was arbitrary, every Cauchy sequence in this space converges to a limit. Also, $$L \in X$$, hence the limit is contained within this metric space.
 
 Hence, this is a complete metric space.
 

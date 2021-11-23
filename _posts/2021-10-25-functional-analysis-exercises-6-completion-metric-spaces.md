@@ -175,7 +175,7 @@ $$\blacksquare$$
 
 **Proof:**
 
-Since $$(x_n)$$ and $$(x_n')$$ are convergent, we have, $$\forall \epsilon>0, \exists N_1, N_2$$ such that $$d(x_m,l)<\epsilon$$ and $$d(x_n',l)<\epsilon$$, for $$m>N_1, n>N_2$$. Choose $$N=\text{max}(N_1,N_2)$$, so that we have $$d(x_n,l)<\epsilon$$ and $$d(x_n',l)<\epsilon$$ for all $$n>N$$.
+Since $$(x_n)$$ and $$(x_n')$$ are convergent, we have, $$\forall \epsilon>0, \exists N_1, N_2$$ such that $$d(x_m,l)<\epsilon$$ and $$d(x_n',l)<\epsilon$$, for $$m>N_1, n>N_2$$. Choose $$N=\max(N_1,N_2)$$, so that we have $$d(x_n,l)<\epsilon$$ and $$d(x_n',l)<\epsilon$$ for all $$n>N$$.
 
 $$
 d(x_n,x_n') \leq d(x_n,l) + d(l,x_n') < \epsilon+\epsilon=2 \epsilon \\
