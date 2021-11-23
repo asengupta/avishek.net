@@ -18,7 +18,7 @@ The requirements for a space to be a normed space are:
 
 The requirements for a space to be a vector space are:
 
-(Mnemonic: **ADD1 MISA**)
+(Mnemonic: **ADD1 SIIA**)
 
 #### Addition
 - **(V1)** **Symmetry** implies $$x+y=y+x, x,y \in X$$.
@@ -34,22 +34,84 @@ The requirements for a space to be a vector space are:
 
 #### 2.3.1. Give examples of subspaces of $$l^\infty$$ and $$l^2$$ which are not closed.
 
-**Proof:**
+**Answer:**
 
 $$l^\infty$$ is the space of all bounded sequences, i.e., $$\sum\limits_{i=1}^\infty \vert x_i \vert < \infty$$. The norm it is equipped with is $$\|(x_n)\|=\sup \vert x_i\vert $$.
 
-The space of 
+The space of sequences with finitely many non-zero elements is an example of a subspace which is not closed.
 
-$$\blacksquare$$
+In particular, the sequence defined as:
+
+$$
+(x_j^n)=\begin{cases}
+\displaystyle\frac{1}{2^n} & \text{if } j \leq n \\
+0 & \text{if } j > n
+\end{cases}
+$$
+
+Assume $$m<n$$. Then, we have:
+
+$$
+\alpha x^{(m)} + \beta x^{(n)} \\
+= \alpha (\frac{1}{2} , \frac{1}{2^2} , \cdots + \frac{1}{2^m}, , 0 , 0, \cdots) , \beta (\frac{1}{2} , \frac{1}{2^2} , \cdots , \frac{1}{2^m} , \frac{1}{2^{m+1}} , \cdots , \frac{1}{2^n} , 0 , 0, \cdots) \\
+= (\alpha + \beta) \frac{1}{2} , (\alpha + \beta) \frac{1}{2^2} , \cdots , (\alpha + \beta) \frac{1}{2^m} , \frac{\beta}{2^{m+1}} , \cdots , \frac{\beta}{2^n}, 0 , 0, \cdots
+$$
+
+For the $$l^\infty$$ case, we have the norm as:
+
+$$
+{\|x-x^{(n)}\|}_\infty=\sup |x_j-x_j^{(n)}|=\frac{1}{2^{n+1}}
+$$
+
+where $$x=\frac{1}{2} , \frac{1}{2^2} , \cdots$$.
+
+As $${\|x-x^{(n)}\|}+\infty \rightarrow 0$$ as $$n \rightarrow 0$$, $$x$$ is a limit of $$x^{(n)}$$. Thus, the limit exists, but it is not in this space, since $$x$$ has infinitely many terms.
+
+In the case of $$l^2$$, the norm $${\|\bullet\|}_2$$ the partial sum $$s_n=\displaystyle\frac{1}{3}(1-\frac{1}{4^n})$$ (see Rough Work at the end to see how this was calculated).
+
+Then $${\|x-x^{(n)}\|}_2=\displaystyle\frac{1}{3\cdot 4^n} \rightarrow 0$$ as $$n \rightarrow \infty$$ where $$x=\frac{1}{4} , \frac{1}{4^2} , \cdots$$. Thus, the limit exists, but it is not in this space, since $$x$$ again has infinitely many terms.
 
 ---
 
 #### 2.3.2. What is the largest possible $$c$$ in (1) if $$X = \mathbb{R}^2$$ and $$x_1 = (1,0), x_2 = (0,1)$$? If $$X = \mathbb{R}^3$$ and $$x_1 = (1,0,0), x_2 = (0,1,0), x_3 = (0,0,1)$$?
 
-**Proof:**
+**Answer:**
 
+We have the identity:
 
-$$\blacksquare$$
+$$
+\|\alpha_1 e_1 + \alpha_2 e_2 + \cdots + \alpha_1 e_n\| \geq c(|\alpha_1| + |\alpha_2| + \cdots + |\alpha_n|)
+$$
+
+For $$\mathbb{R}^2$$, we have:
+
+$$
+\|\alpha_1 e_1 + \alpha_2 e_2\| \geq c(|\alpha_1| + |\alpha_2|) \\
+{(\alpha_1^2 + \alpha_2^2)}^{1/2} \geq c(|\alpha_1| + |\alpha_2|)
+$$
+
+If $$\alpha_1=\alpha_2=0$$ gives us an equality above, let us pick an arbitrary small $$\alpha_1=\alpha_2=\epsilon$$, so that we get:
+
+$$
+{(\epsilon^2 + \epsilon^2)}^{1/2} \geq c(\epsilon + \epsilon) \\
+2 \epsilon c \leq \sqrt 2 \epsilon \\
+c \leq \frac{1}{\sqrt 2}
+$$
+
+For $$\mathbb{R}^3$$, we have:
+
+$$
+\|\alpha_1 e_1 + \alpha_2 e_2 + \alpha_3 e_3\| \geq c(|\alpha_1| + |\alpha_2| + |\alpha_3|) \\
+{(\alpha_1^2 + \alpha_2^2 + \alpha_3^2)}^{1/2} \geq c(|\alpha_1| + |\alpha_2| + |\alpha_3|)
+$$
+
+If $$\alpha_1=\alpha_2=\alpha_3=0$$ gives us an equality above, let us pick an arbitrary small $$\alpha_1=\alpha_2=\alpha_3=\epsilon$$, so that we get:
+
+$$
+{(\epsilon^2 + \epsilon^2 + \epsilon^3)}^{1/2} \geq c(\epsilon + \epsilon + \epsilon) \\
+3 \epsilon c \leq \sqrt 3 \epsilon \\
+c \leq \frac{1}{\sqrt 3}
+$$
 
 ---
 
