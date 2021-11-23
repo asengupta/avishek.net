@@ -3,7 +3,7 @@ title: "Functional Analysis Exercises 10 : Finite Dimensional Normed Spaces and 
 author: avishek
 usemathjax: true
 tags: ["Mathematics", "Proof", "Functional Analysis", "Pure Mathematics", "Kreyszig"]
-draft: false
+draft: true
 ---
 
 This post lists solutions to the exercises in the **Finite Dimensional Normed Spaces and Subspaces section 2.4** of *Erwin Kreyszig's* **Introductory Functional Analysis with Applications**. This is a work in progress, and proofs may be refined over time.
