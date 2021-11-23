@@ -91,8 +91,8 @@ $$
 Plugging this value back into that of $$r_{xy}$$, we get:
 
 $$
-\text{min } r_{xy}=-\sqrt{2} \\
-|\text{min } r_{xy}|=\sqrt{2}
+\min r_{xy}=-\sqrt{2} \\
+|\min r_{xy}|=\sqrt{2}
 $$
 
 ---
@@ -119,7 +119,7 @@ $$
 
 $$\blacksquare$$
 
-Assume that $$A$$ is a union of open balls $$\bigcup\limits_i B_i(x_i, r)$$. Then any point $$p$$ in a given ball $$B_i(x_i,r)$$ with a radius of, say, $$\epsilon$$, can have an open ball around it of radius $$\epsilon'=\text{min }\left(\displaystyle\frac{d(p,xi)}{2}, \frac{\epsilon-d(p,x_i)}{2}\right)$$, while being a member of $$A$$. Since $$p$$ is an arbitrary point in $$A$$, $$A$$ is an open set.
+Assume that $$A$$ is a union of open balls $$\bigcup\limits_i B_i(x_i, r)$$. Then any point $$p$$ in a given ball $$B_i(x_i,r)$$ with a radius of, say, $$\epsilon$$, can have an open ball around it of radius $$\epsilon'=\min\left(\displaystyle\frac{d(p,xi)}{2}, \frac{\epsilon-d(p,x_i)}{2}\right)$$, while being a member of $$A$$. Since $$p$$ is an arbitrary point in $$A$$, $$A$$ is an open set.
 
 $$\blacksquare$$
 

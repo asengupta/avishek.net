@@ -44,7 +44,7 @@ $$\blacksquare$$
 
 $$l^\infty$$ is the space of all bounded sequences. Let there be a Cauchy sequence $$(x_n)$$, where the $$n$$th sequence has $$n$$ terms $$1,\frac{1}{2},\frac{1}{3},\frac{1}{4},\cdots,\frac{1}{n}$$.
 
-This is a Cauchy sequence because for any $$m,n>N$$, we have $$d(x^m,x^n)=\sup\vert x^m_j - x^n_j\vert=\displaystyle\frac{1}{\text{min }(m,n)+1}$$ and $$\text{min }(m,n)$$ can be made as large as possible to make $$\epsilon$$ as small as possible (by the Archimedean Principle).
+This is a Cauchy sequence because for any $$m,n>N$$, we have $$d(x^m,x^n)=\sup\vert x^m_j - x^n_j\vert=\displaystyle\frac{1}{\min(m,n)+1}$$ and $$\min(m,n)$$ can be made as large as possible to make $$\epsilon$$ as small as possible (by the Archimedean Principle).
 
 The limit of the Cauchy sequence is the infinite sequence $$1, \frac{1}{2}, \frac{1}{3}, \cdots$$. Call it $$x$$.
 
