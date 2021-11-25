@@ -265,6 +265,34 @@ $$\blacksquare$$
 
 **Proof:**
 
+The norms $${\|\bullet\|}_2$$ and $${\|\bullet\|}_\infty$$ are defined as:
+
+$$
+{\|x\|}_2={\left(\sum\limits_{i=1}^n {|x_i|}^2\right)}^{1/2} \\
+{\|x\|}_\infty=\sup |x_i|
+$$
+
+We have:
+
+$$
+{|\sup{x_i}|}^2 + {|\sup{x_i}|}^2 + \cdots + {|\sup{x_i}|}^2 \geq {|x_1|}^2 + {|x_2|}^2 + \cdots + {|x_n|}^2 \\
+n{|\sup{x_i}|}^2 \geq {|x_1|}^2 + {|x_2|}^2 + \cdots + {|x_n|}^2 \\
+\sqrt{n}|\sup{x_i}| \geq {\left(\sum_{i=1}^{n}{|x_i|}^2\right)}^{1/2}
+$$
+
+We also have:
+
+$$
+{|\sup{x_i}|}^2 \leq {|x_1|}^2 + {|x_2|}^2 + \cdots + {|x_n|}^2 \\
+{|\sup{x_i}|} \leq {\left(\sum_{i=1}^{n}{|x_i|}^2\right)}^{1/2}
+$$
+
+Thid implies that:
+
+$$
+{|\sup{x_i}|} \leq {\left(\sum_{i=1}^{n}{|x_i|}^2\right)}^{1/2} \leq \sqrt{n}|\sup{x_i}| \\
+{\|\bullet\|}_\infty \leq {\|\bullet\|}_2 \leq \sqrt{n} {\|\bullet\|}_\infty
+$$
 
 $$\blacksquare$$
 
