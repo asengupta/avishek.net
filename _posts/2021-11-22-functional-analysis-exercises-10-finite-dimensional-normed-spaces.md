@@ -3,7 +3,7 @@ title: "Functional Analysis Exercises 10 : Finite Dimensional Normed Spaces and 
 author: avishek
 usemathjax: true
 tags: ["Mathematics", "Proof", "Functional Analysis", "Pure Mathematics", "Kreyszig"]
-draft: true
+draft: false
 ---
 
 This post lists solutions to the exercises in the **Finite Dimensional Normed Spaces and Subspaces section 2.4** of *Erwin Kreyszig's* **Introductory Functional Analysis with Applications**. This is a work in progress, and proofs may be refined over time.
@@ -193,6 +193,33 @@ $$\blacksquare$$
 
 **Proof:**
 
+To prove that $${\|\bullet\|}_1$$ and $${\|\bullet\|}_2$$ are equivalent norms, we need to show that for every open ball $$B_{1}$$, there is an open ball $$B_{2}$$ contained within it, and vice versa.
+
+The equivalent norms are related as:
+
+$$
+a{\|x\|}_2 \leq {\|x\|}_1 \leq b{\|x\|}_2
+$$
+
+From the above relation, we know that $$a \leq b$$.
+
+Pick an open ball $$B_1(x_0,r)$$. Let $$x \in B_1(x_0,r)$$. Then $$d_1(x_0,x) < r$$. We then have:
+
+$$
+a \cdot d_2(x_0,x) \leq d_1(x_0,x) < r \\
+d_2(x_0,x) < \frac{r}{a} \\
+\Rightarrow x \in B_2(x_0,\frac{r}{a}) \\
+\Rightarrow B_1(x_0,r) \in B_2(x_0,\frac{r}{a})
+$$
+
+Conversely, pick an open ball $$B_2(x_0,r)$$. Let $$x \in B_2(x_0,r)$$. Then $$d_2(x_0,x) < r$$. We then have:
+
+$$
+d_1(x_0,x) \leq b \cdot d_2(x_0,x) < br \\
+d_1(x_0,x) < br \\
+\Rightarrow x \in B_1(x_0,br) \\
+\Rightarrow B_2(x_0,r) \in B_1(x_0,br)
+$$
 
 $$\blacksquare$$
 
@@ -202,6 +229,33 @@ $$\blacksquare$$
 
 **Proof:**
 
+Assume that the equivalence relation is:
+
+$$
+a{\|x\|}_0 \leq {\|x\|} \leq b{\|x\|}_0
+$$
+
+Assume a Cauchy sequence $$(x_n)$$ in $$(X,{\|\bullet\|}_0)$$, we have that $$\forall \epsilon>0, \exists N_0$$ such that $$d_0(x_m,x_n)<\epsilon$$ for all $$m,n>N_0$$.
+
+Then, we have:
+
+$$
+d(x_m,x_n) \leq b d_0(x_m,x_n) < b \epsilon \\
+d(x_m,x_n) < b \epsilon
+$$
+
+Thus $$(x_n)$$ is also a Cauchy sequence in $$(X,\|\bullet\|)$$.
+
+Assume a Cauchy sequence $$(x_n)$$ in $$(X,{\|\bullet\|})$$, we have that $$\forall \epsilon>0, \exists N_0$$ such that $$d(x_m,x_n)<\epsilon$$ for all $$m,n>N_0$$.
+
+Then, we have:
+
+$$
+a d_0(x_m,x_n) \leq b d(x_m,x_n) < \epsilon \\
+d_0(x_m,x_n) < \frac{\epsilon}{a}
+$$
+
+Thus $$(x_n)$$ is also a Cauchy sequence in $$(X,{\|\bullet\|}_0)$$.
 
 $$\blacksquare$$
 
