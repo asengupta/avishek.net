@@ -298,19 +298,70 @@ $$\blacksquare$$
 
 ---
 
-#### 2.3.7. Let $${\|\bullet\|}_2$$ be as in Prob. 8, Sec. 2.2, and let $$\|\bullet\|$$ be any norm on that vector space, call it $$X$$. Show directly (without using 2.4-5) that there is a b>0 such that $$\|\bullet\| \leq {\|\bullet\|}_2$$ for all $$x$$.
+#### 2.3.7. Let $${\|\bullet\|}_2$$ be as in Prob. 8, Sec. 2.2, and let $$\|\bullet\|$$ be any norm on that vector space, call it $$X$$. Show directly (without using 2.4-5) that there is a $$b>0$$ such that $$\|x\| \leq b {\|x\|}_2$$ for all $$x$$.
 
 **Proof:**
 
+We have the vector $$x=\alpha_1 e_1 + \alpha_2 e_2 + \cdots + \alpha_n e_n$$.
+Then we have, by the **Triangle Inequality**:
+
+$$
+\|x\|=\|\a_1 e_1 + \a_2 e_2 + \cdots + \a_n e_n\| \leq |\a_1| \|e_1\| + |\a_2| \|e_2\| + \cdots + |\a_n| \|e_n\| \\
+\leq \max(\|e_i\|)(|\a_1| + |\a_2| + \cdots + |\a_n|)
+$$
+
+But by the **Cauchy-Schwarz Inequality**, we have:
+
+$$
+\sum\limits_{i=1}^n |a_i| \leq {\left(\sum\limits_{i=1}^n {|a_i|}^2\right)}^{1/2} {\left(\sum\limits_{i=1}^n 1\right)}^{1/2} = \sqrt{n} {\|x\|}_2
+$$
+
+This implies that:
+
+$$
+\|x\| \leq \sqrt{n}\max(\|e_i\|){\|x\|}_2 \\
+\|x\| \leq b {\|x\|}_2
+$$
+
+where $$b=\sqrt{n}\max{\|e_i\|}$$.
 
 $$\blacksquare$$
 
 ---
 
-#### 2.3.8. Show that the norms $${\|\bullet\|}_1$$ and $${\|\bullet\|}_2$$ in Prob. 8, Sec. 2.2, satisfy $$\frac{1}{\sqrt{n}} {\|x\|}_1 \leq {\|\bullet\|}_2 \leq {\|x\|}_1$$.
+#### 2.3.8. Show that the norms $${\|\bullet\|}_1$$ and $${\|\bullet\|}_2$$ in Prob. 8, Sec. 2.2, satisfy $$\frac{1}{\sqrt{n}} {\|x\|}_1 \leq {\|x\|}_2 \leq {\|x\|}_1$$.
 
 **Proof:**
 
+The norms $${\|\bullet\|}_2$$ and $${\|\bullet\|}_\infty$$ are defined as:
+
+$$
+{\|x\|}_1=\sum\limits_{i=1}^n {|a_i|} \\
+{\|x\|}_2={\left(\sum\limits_{i=1}^n {|a_i|}^2\right)}^{1/2} \\
+$$
+
+By the **Cauchy-Schwarz Inequality**, we have:
+
+$$
+{\|x\|}_1 = \sum\limits_{i=1}^n |a_i| \leq {\left(\sum\limits_{i=1}^n {|a_i|}^2\right)}^{1/2} {\left(\sum\limits_{i=1}^n 1\right)}^{1/2} = \sqrt{n} {\|x\|}_2 \\
+\Rightarrow {\|x\|}_1 \leq \sqrt{n} {\|x\|}_2 \\
+\Rightarrow \displaystyle\frac{1}{\sqrt{}n}{\|x\|}_1 \leq {\|x\|}_2
+$$
+
+By the **Cauchy-Schwarz Inequality**, we have:
+
+$$
+{ {\|x\|}_2}^2 = \sum\limits_{i=1}^n {|a_i|}^2 \\
+\sum\limits_{i=1}^n |a_i||a_i| \leq \left(\sum\limits_{i=1}^n |a_i|\right)\left(\sum\limits_{i=1}^n |a_i|\right)={\left(\sum\limits_{i=1}^n |a_i|\right)}^2 \\
+{\left(\sum\limits_{i=1}^n |a_i||a_i|\right)}^{1/2} \leq {\left(\sum\limits_{i=1}^n |a_i|\right)} \\
+\Rightarrow {\|x\|}_2 \leq {\|x\|}_1
+$$
+
+Putting the above inequalities together, we get:
+
+$$
+\displaystyle\frac{1}{\sqrt{}n}{\|x\|}_1 \leq {\|x\|}_2 \leq {\|x\|}_1
+$$
 
 $$\blacksquare$$
 
