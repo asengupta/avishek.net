@@ -306,8 +306,8 @@ We have the vector $$x=\alpha_1 e_1 + \alpha_2 e_2 + \cdots + \alpha_n e_n$$.
 Then we have, by the **Triangle Inequality**:
 
 $$
-\|x\|=\|\a_1 e_1 + \a_2 e_2 + \cdots + \a_n e_n\| \leq |\a_1| \|e_1\| + |\a_2| \|e_2\| + \cdots + |\a_n| \|e_n\| \\
-\leq \max(\|e_i\|)(|\a_1| + |\a_2| + \cdots + |\a_n|)
+\|x\|=\|a_1 e_1 + a_2 e_2 + \cdots + a_n e_n\| \leq |a_1| \|e_1\| + |a_2| \|e_2\| + \cdots + |a_n| \|e_n\| \\
+\leq \max(\|e_i\|)(|a_1| + |a_2| + \cdots + |a_n|)
 $$
 
 But by the **Cauchy-Schwarz Inequality**, we have:
@@ -371,6 +371,23 @@ $$\blacksquare$$
 
 **Proof:**
 
+$$
+a{\|x\|} \leq {\|x\|}_0 \leq b{\|x\|}
+$$
+
+Let $$\|x_n-x\| \rightarrow 0$$. This implies that $$\|x_n-x\| < \epsilon / b$$, for some $$\epsilon / b > 0$$. By the equivalence relation, we then have:
+
+$$
+{\|x_n-x\|}_0 \leq b{\|x_n-x\|} < b (\epsilon/b) = \epsilon \\
+\Rightarrow {\|x_n-x\|}_0 \rightarrow 0
+$$
+
+Let $${\|x_n-x\|}_0 \rightarrow 0$$. This implies that $${\|x_n-x\|}_0 < a \epsilon$$, for some $$a \epsilon > 0$$. By the equivalence relation, we then have:
+
+$$
+a {\|x_n-x\|} \leq {\|x_n-x\|}_0 < (1/a) (a \epsilon) = \epsilon \\
+\Rightarrow {\|x_n-x\|} \rightarrow 0
+$$
 
 $$\blacksquare$$
 
@@ -380,6 +397,10 @@ $$\blacksquare$$
 
 **Proof:**
 
+**TODO:**
+
+- Need to prove dimension of space is $$mn$$.
+- Need to check if matrix norm should be taken as the norm of the vectorised form, if so, then this reduces to $$l^p$$ case.
 
 $$\blacksquare$$
 
