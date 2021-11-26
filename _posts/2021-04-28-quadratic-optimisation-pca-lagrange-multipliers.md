@@ -4,7 +4,7 @@ author: avishek
 usemathjax: true
 tags: ["Machine Learning", "Quadratic Optimisation", "Linear Algebra", "Principal Components Analysis", "Optimisation", "Theory"]
 ---
-We pick up from where we left off in [Quadratic Optimisation using Principal Component Analysis as Motivation: Part One]({ %post_url 2021-04-19-quadratic-form-optimisation-pca-motivation-part-one% ). We treated **Principal Component Analysis** as an optimisation, and took a detour to build our geometric intuition behind **Lagrange Multipliers**, wading through its proof to some level.
+We pick up from where we left off in [Quadratic Optimisation using Principal Component Analysis as Motivation: Part One]({% post_url 2021-04-19-quadratic-form-optimisation-pca-motivation-part-one%} ). We treated **Principal Component Analysis** as an optimisation, and took a detour to build our geometric intuition behind **Lagrange Multipliers**, wading through its proof to some level.
 
 We now have all the machinery we need to tackle the PCA problem directly. As we will see, the Lagrangian approach to optimisation maps to this problem very naturally. It will probably turn out to be slightly anti-climactic, because the concept of eigenvalues will fall out of this application quite naturally.
 
