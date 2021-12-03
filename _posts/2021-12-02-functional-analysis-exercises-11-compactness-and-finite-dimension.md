@@ -169,7 +169,7 @@ For $$T$$ to be a homeomorphism, its inverse should be continuous.
 $$X$$ is compact and $$T$$ is continuous, thus $$T(X)$$ is compact.
 Choose any sequence $$(x_n) \subset X$$. Since $$X$$ is compact, $$(x_n)$$ contains a convergent subsequence $$(x_{n_k})$$ which converges to $$x$$. Since continuous functions map convergent sequences to convergent sequences, $$(y_{n_k}) = T((x_{n_k}))$$ is a convergent sequence.
 
-Now we define $$T^{-1}$$ as $$T^{-1}: (y_{n_k}) \rightarrow (x_{n_k})$$. We know that if a function is continuous if and only if it maps convergent sequences to convergent sequences.
+Now we define $$T^{-1}$$ as $$T^{-1}: (y_{n_k}) \mapsto (x_{n_k})$$. We know that if a function is continuous if and only if it maps convergent sequences to convergent sequences.
 
 Since both $$(x_{n_k})$$ and $$(y_{n_k})$$ are convergent sequences, $$T^{-1}$$ is continuous at $$x$$.
 
