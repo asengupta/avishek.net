@@ -57,8 +57,7 @@ $$\blacksquare$$
 
 ---
 
-#### 2.5.7. If $$\dim Y < \infty$$ in Riesz's lemma 2.5-4, show that one can even choose
-$$\theta = 1$$.
+#### 2.5.7. If $$\dim Y < \infty$$ in Riesz's lemma 2.5-4, show that one can even choose $$\theta = 1$$.
 
 **Proof:**
 
@@ -67,8 +66,7 @@ $$\blacksquare$$
 
 ---
 
-#### 2.5.8. In Prob. 7, Sec. 2.4, show directly (without using 2.4-5) that there is an
-$$a > 0$$ such that a $$a {\|x\|}_2 \leq \|x\|$$. (Use 2.5-7.)
+#### 2.5.8. In Prob. 7, Sec. 2.4, show directly (without using 2.4-5) that there is an $$a > 0$$ such that a $$a {\|x\|}_2 \leq \|x\|$$. (Use 2.5-7.)
 
 **Proof:**
 
@@ -77,8 +75,7 @@ $$\blacksquare$$
 
 ---
 
-#### 2.5.9. If $$X$$ is a compact metric space and $$M \subset X$$ is closed, show that $$M$$ is
-compact.
+#### 2.5.9. If $$X$$ is a compact metric space and $$M \subset X$$ is closed, show that $$M$$ is compact.
 
 **Proof:**
 
