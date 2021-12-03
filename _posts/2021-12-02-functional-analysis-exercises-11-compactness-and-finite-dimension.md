@@ -66,7 +66,7 @@ $$\blacksquare$$
 
 ---
 
-#### 2.5.8. In Prob. 7, Sec. 2.4, show directly (without using 2.4-5) that there is an $$a > 0$$ such that a $$a {\|x\|}_2 \leq \|x\|$$. (Use 2.5-7.)
+#### 2.5.8. In Prob. 7, Sec. 2.4, show directly (without using 2.4-5) that there is an $$a > 0$$ such that $$a {\|x\|}_2 \leq \|x\|$$. (Use 2.5-7.)
 
 **Proof:**
 
