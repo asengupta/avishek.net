@@ -43,10 +43,10 @@ $$
 
 We'd like to know what mapping function $$\phi(x)$$ (or equivalently, $$\kappa(x, \bullet)$$) projects our original points $$X$$ and $$Y$$ to $$\mathbb{R}^3$$, so that the inner product in this new vector space is equal to the evaluation of the kernel function $$\kappa(x,y)$$.
 
-Because I know the answer already so we will write it straight away.
+Because I know the answer already, we will write it straight away.
 
 $$
-\phi(x)=\kappa(x,\bullet)=\begin{bmatrix}{Yx_1}^2 \\
+\phi(x)=\kappa(x,\bullet)=\begin{bmatrix}{x_1}^2 \\
 {x_2}^2 \\ \sqrt 2x_1x_2 \end{bmatrix}
 $$
 
