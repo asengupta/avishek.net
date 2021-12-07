@@ -122,7 +122,7 @@ Analogous to the above example, we can recover the original vector $$V$$ by writ
 
 ### Notes: Change of Basis for a Non-Orthogonal Basis
 
-The reason we chose an orthonormal basis for our illustration is because a change of basis of a non-orthogonal basis cannot be represented by a vertical projection. The situation qwith a non-orthogonal basis is shown below.
+The reason we chose an orthonormal basis for our illustration is because a change of basis of a non-orthogonal basis cannot be represented by a vertical projection. The situation with a non-orthogonal basis is shown below.
 
 ![Non-orthogonal Basis Change](/assets/images/non-orthogonal-basis-change.png)
 
