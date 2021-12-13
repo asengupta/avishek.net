@@ -116,6 +116,8 @@ $$\blacksquare$$
 
 #### 2.6.3. What are the domain, range and null space of $$T_1, T_2, T_3$$ in Prob. 2?
 
+**Answer:**
+
 The operators are:
 
 $$
@@ -124,7 +126,23 @@ T_2(x_1,x_2) = (0, x_2) \\
 T_3(x_1,x_2) = (x_2, x_1)
 $$
 
-**Answer:**
+For **$$T_1$$**, we have:
+
+Domain is $$\mathbb{R}^2$$.  
+Range is $$((-\infty,0), (+\infty,0))$$.  
+Null Space is $$((0,-\infty), (0,+\infty))$$.
+
+For **$$T_2$$**, we have:
+
+Domain is $$\mathbb{R}^2$$.  
+Range is $$((0,-\infty), (0,+\infty))$$.
+Null Space is $$((-\infty,0), (+\infty,0))$$.
+
+For **$$T_2$$**, we have:
+
+Domain is $$\mathbb{R}^2$$.  
+Range is $$\mathbb{R}^2$$.  
+Null Space is $$(0,0)$$.
 
 ---
 
