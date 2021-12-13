@@ -9,9 +9,27 @@ draft: false
 This post lists solutions to the exercises in the **Linear Operators section 2.6** of *Erwin Kreyszig's* **Introductory Functional Analysis with Applications**. This is a work in progress, and proofs may be refined over time.
 
 
-#### 2.6.1. Show that the operators in 2.6-2, 2.6-3 and 2.6-4 are linear.
+#### 2.6.1. Show that the identity, zero, and differentiation operators are linear.
 
 **Proof:**
+
+The identity operator is $$I_x x=x$$. We have:
+
+$$
+I_x(\alpha x + \beta y) = \alpha x + \beta y = \alpha I_x x + \beta I_x y
+$$
+
+The zero operator is $$0x=0$$. We have:
+
+$$
+0(\alpha x + \beta y) = \alpha 0 + \beta 0 = \alpha 0x + \beta 0y
+$$
+
+The differentiation operator is $$Tx=x'(t)$$. We have:
+
+$$
+T(\alpha x(t) + \beta y(t)) = (\alpha x(t) + \beta y(t))' = \alpha x'(t) + \beta y'(t) = \alpha Tx + \beta Ty
+$$
 
 $$\blacksquare$$
 
@@ -30,11 +48,81 @@ $$
 
 **Proof:**
 
+We take $$x=(x_1,x_2)$$ and $$y=(y_1,y_2)$$.
+
+$$
+T_1(x_1,x_2) = (x_1,0)
+$$
+
+We have:
+
+$$
+T_1(\alpha x + \beta y) = T[(\alpha x_1, \alpha x_2) + (\beta y_1, \beta y_2)] \\
+= T_1(\alpha x_1 + \beta y_1, \alpha x_2 + \beta y_2) = (\alpha x_1 + \beta y_1, 0) \\
+= (\alpha x_1, 0) + (\beta y_1, 0) = \alpha T_1 x + \beta T_1 y
+$$
+
+$$\blacksquare$$
+
+We take $$x=(x_1,x_2)$$ and $$y=(y_1,y_2)$$.
+
+$$
+T_2(x_1,x_2) = (0,x_2)
+$$
+
+We have:
+
+$$
+T_2(\alpha x + \beta y) = T[(\alpha x_1, \alpha x_2) + (\beta y_1, \beta y_2)] \\
+= T_2(\alpha x_1 + \beta y_1, \alpha x_2 + \beta y_2) = (0, \alpha x_2 + \beta y_2) \\
+= (0, \alpha x_2) + (0, \beta y_2) = \alpha T_2 x + \beta T_2 y
+$$
+
+$$\blacksquare$$
+
+We take $$x=(x_1,x_2)$$ and $$y=(y_1,y_2)$$.
+
+$$
+T_3(x_1,x_2) = (x_2,x_1)
+$$
+
+We have:
+
+$$
+T_3(\alpha x + \beta y) = T[(\alpha x_1, \alpha x_2) + (\beta y_1, \beta y_2)] \\
+= T_3(\alpha x_1 + \beta y_1, \alpha x_2 + \beta y_2) = (\alpha x_2 + \beta y_2, \alpha x_1 + \beta y_1)
+= \alpha (x_2, x_1) + \beta (y_2, y_1) = \alpha T_3 x + \beta T_3 y
+$$
+
+$$\blacksquare$$
+
+We take $$x=(x_1,x_2)$$ and $$y=(y_1,y_2)$$.
+
+$$
+T_4(x_1,x_2) = (\gamma x_1, \gamma x_2)
+$$
+
+We have:
+
+$$
+T_4(\alpha x + \beta y) = T[(\alpha x_1, \alpha x_2) + (\beta y_1, \beta y_2)] \\
+= T_4(\alpha x_1 + \beta y_1, \alpha x_2 + \beta y_2) = (\gamma \alpha x_1 + \gamma \beta y_1, \gamma \alpha x_2 + \gamma \beta y_2) \\
+= \alpha \gamma (x_1, x_2) + \beta \gamma (y_1, y_2) = \alpha T_4 x + \beta T_4 y
+$$
+
 $$\blacksquare$$
 
 ---
 
-#### 2.6.3. What. are the domain, range and null space of $$T_1, T_2, T_3$$ in Prob. 2?
+#### 2.6.3. What are the domain, range and null space of $$T_1, T_2, T_3$$ in Prob. 2?
+
+The operators are:
+
+$$
+T_1(x_1,x_2) = (x_1,0) \\
+T_2(x_1,x_2) = (0, x_2) \\
+T_3(x_1,x_2) = (x_2, x_1)
+$$
 
 **Answer:**
 
