@@ -212,6 +212,22 @@ $$\blacksquare$$
 
 **Proof:**
 
+We have the following operators:
+
+$$
+T_1(x_1,x_2)=(x_1,0) \\
+T_2(x_1,x_2)=(0,x_2)
+$$
+
+We have :
+
+$$
+(T_1 T_2) (x_1,x_2) = T_1(T_2(x_1,x_2)) = T_1(0,x_2) = (0,0) \\
+(T_2 T_1) (x_1,x_2) = T_2(T_1(x_1,x_2)) = T_2(x_1,0) = (0,0)
+$$
+
+Thus $$T_1, T_2$$ commute.
+
 $$\blacksquare$$
 
 ---
@@ -220,7 +236,50 @@ $$\blacksquare$$
 
 **Answer:**
 
+The operators are:
 
+$$
+(\xi_1, \xi_2) \mapsto (\xi_1, 0) \\
+(\xi_1, \xi_2) \mapsto (0, \xi_2) \\
+(\xi_1, \xi_2) \mapsto (\xi_2, \xi_1) \\
+(\xi_1, \xi_2) \mapsto (\gamma\xi_1, \gamma\xi_2)
+$$
+
+$$(\xi_1, \xi_2) \mapsto (\xi_1, 0)$$ can be represented as:
+
+$$
+\begin{bmatrix}
+1 && 0 \\
+0 && 0
+\end{bmatrix}
+$$
+
+$$(\xi_1, \xi_2) \mapsto (0, \xi_2)$$ can be represented as:
+
+$$
+\begin{bmatrix}
+0 && 0 \\
+0 && 1
+\end{bmatrix}
+$$
+
+$$(\xi_1, \xi_2) \mapsto (\xi_2, \xi_1)$$ can be represented as:
+
+$$
+\begin{bmatrix}
+0 && 1 \\
+1 && 0
+\end{bmatrix}
+$$
+
+$$(\xi_1, \xi_2) \mapsto (\gamma\xi_1, \gamma\xi_2)$$ can be represented as:
+
+$$
+\begin{bmatrix}
+\gamma && 0 \\
+0 && \gamma
+\end{bmatrix}
+$$
 
 ---
 
@@ -228,16 +287,35 @@ $$\blacksquare$$
 
 **Proof:**
 
+Let $$A$$ be an arbitrary $$m \times n$$ matrix, and $$x$$ be an $$n \times 1$$ vector. Then we have $$T:x \mapsto Ax$$
+
+Then we have $$y$$ as an $$m \times 1$$ vector, and $$y_k = \sum\limits_{i=1}^n A_{ki} x_i$$.
+
+Let $$z=\alpha x + \beta y$$. Then we have: $$z_i=\alpha x_i + \beta y_i$$.
+
+Then we have, for $$y=A(\alpha x + \beta y)$$:
+
+$$
+y_k = \sum\limits_{i=1}^n A_{ki} (\alpha x_i + \beta y_i) \\
+= \sum\limits_{i=1}^n (\alpha A_{ki} x_i + \beta A_{ki} y_i) \\
+=  \alpha \sum\limits_{i=1}^n A_{ki} x_i + \beta \sum\limits_{i=1}^n A_{ki} y_i
+$$
+
+Thus $$y=\alpha Ax + \beta Ay = \alpha Tx + \beta Ty$$ and $$T$$ is linear.
 
 $$\blacksquare$$
 
 ---
 
-#### 2.6.10. Formulate the condition in 2.6-1O(a) in terms of the null space of $$T$$.
+#### 2.6.10. Formulate the condition in 2.6-10(a) in terms of the null space of $$T$$.
 
 **Answer:**
 
+The condition is:
 
+The inverse $$T^{-1}: \mathcal{R}(T) \rightarrow \mathcal{D}(T)$$ exists if and only if $$Tx=0 \Rightarrow x=0$$.
+
+Reformulated in terms of the null space of $$T$$, it states the inverse $$T^{-1}: \mathcal{R}(T) \rightarrow \mathcal{D}(T)$$ exists if and only if the null space of $$T$$ consists of only the zero vector.
 
 ---
 
