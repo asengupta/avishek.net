@@ -148,9 +148,9 @@ Null Space is $$(0,0)$$.
 
 #### 2.6.4.  What is the null space of $$T_4$$ in Prob. 2? Of $$T_1$$ and $$T_2$$ in 2.6-7? Of $$T$$ in 2.6-4?
 
-**Proof:**
+**Answer:**
 
-$$\blacksquare$$
+
 
 ---
 
@@ -181,10 +181,9 @@ $$\blacksquare$$
 
 #### 2.6.8. Write the operators in Prob. 2 using $$2 \times 2$$ matrices.
 
-**Proof:**
+**Answer:**
 
 
-$$\blacksquare$$
 
 ---
 
@@ -199,10 +198,9 @@ $$\blacksquare$$
 
 #### 2.6.10. Formulate the condition in 2.6-1O(a) in terms of the null space of $$T$$.
 
-**Proof:**
+**Answer:**
 
 
-$$\blacksquare$$
 
 ---
 
