@@ -150,13 +150,37 @@ Null Space is $$(0,0)$$.
 
 **Answer:**
 
+The null space of $$T_4(x_1,x_2)=(\gamma x_1, \gamma x_2)$$ is $$(0,0)$$.
 
+The null space of $$T_1$$, which is the cross product $$T_1: \mathbb{R}^3 \rightarrow \mathbb{R}^3$$ with a fixed vector $$a=(a_1, a_2, a_3)$$ is $$(ka_1, ka_2, ka_3)$$, with $$k \in \mathbb{R}$$.
+
+The null space of $$T_2=\langle x,a \rangle$$ with $$a=(a_1,a_2,a_3)$$ as a constant vector is the plane defined by $$a_1 x + a_2 y + a_3 z = 0$$
+
+The null space of $$T: x(t) \mapsto x'(t)$$ is the space of functions $$x(t)=c$$, where $$c \in \mathbb{R}$$.
 
 ---
 
 #### 2.6.5. Let $$T: X \rightarrow Y$$ be a linear operator. Show that the image of a subspace $$V$$ of $$X$$ is a vector space, and so is the inverse image of a subspace $$W$$ of $$Y$$.
 
 **Proof:**
+
+Let $$x,y \in V$$, and $$x',y' \in \text{Im } V$$. Then we have:
+
+$$
+\alpha x' + \beta y' = \alpha Tx + \beta Ty = T(\alpha x + \beta y)
+$$
+
+We know that $$\alpha x + \beta y \in V$$, therefore $$T(\alpha x + \beta y) \in \text{Im } V$$. Thus $$\alpha x' + \beta y' \in \text{Im } V$$. Thus $$\text{Im } V$$ is a vector subspace of $$V$$ and is thus a vector space.
+
+$$\blacksquare$$
+
+Let $$x,y \in \text{Im } W$$, and $$x',y' \in W$$. Then we have:
+
+$$
+\alpha x + \beta y = \alpha T^{-1} x' + \beta T^{-1} y' = T^{-1}(\alpha x' + \beta y')
+$$
+
+We know that $$\alpha x' + \beta y' \in W$$, thus $$T(\alpha x' + \beta y') \in \text{Im } W$$. Thus $$\alpha x + \beta y \in \text{Im } W$$. Thus $$\text{Im } W$$ is a vector subspace of $$W$$ and is thus a vector space.
 
 $$\blacksquare$$
 
@@ -166,6 +190,19 @@ $$\blacksquare$$
 
 **Proof:**
 
+$$
+Tx = (T_1 \circ T_2) x = T_1(T_2 x)
+$$
+
+Thus for $$z=\alpha x + \beta y$$, we have:
+
+$$
+Tz = (T_1 \circ T_2) z = T_1(T_2 z) = T_1(T_2 (\alpha x + \beta y)) \\
+T_1(\alpha T_2 x + \beta T_2 y) = T_1(\alpha T_2 x) + T_1(\beta T_2 y) \\
+= \alpha (T_1 (T_2 x)) + \beta (T_1 (T_2 y)) \\
+= \alpha (T_1 \circ T_2) x + \beta (T_1 \circ T_2) y
+= \alpha T x + \beta T y
+$$
 
 $$\blacksquare$$
 
