@@ -323,24 +323,81 @@ Reformulated in terms of the null space of $$T$$, it states the inverse $$T^{-1}
 
 **Proof:**
 
+We have $$Tx=bx=c$$, so we can write each individual element of the result $$c_{ij}$$ as:
+
+$$
+c_{ij}= \sum\limits_{k=1}^2 b_{ik} x_{kj}
+$$
+
+We can thus write, for $$z=\alpha x + \beta y$$:
+
+$$
+{(Tz)}_{ij} = \sum\limits_{k=1}^2 b_{ik} (\alpha x_{kj} + \beta y_{kj}) \\
+= \alpha \sum\limits_{k=1}^2 b_{ik} x_{kj} + \beta \sum\limits_{k=1}^2 b_{ik} y_{kj} \\
+= \alpha {(Tx)}_{ij} + \beta {(Ty)}_{ij} \\
+\Rightarrow T(\alpha x + \beta y) = \alpha Tx + \beta Ty
+$$
+
+$$T^{-1}$$ exists when the determinant $$ad-bc \neq 0$$.
+
+Alternatively, the two column vectors in the $$2 \times 2$$ matrix should be linearly independent.
 
 $$\blacksquare$$
 
 ---
 
-#### 2.6.12. Does the inverse of $$T$$ in 2.6-4 exist?
+#### 2.6.12. Does the inverse of $$T$$ in 2.6-4 (differentiation operator) exist?
 
 **Proof:**
 
+For the inverse to exist, we need the operator to be injective, that is:
+
+$$
+x_1 \neq x_2 \Rightarrow Tx_1 \neq Tx_2 \\
+\text{or, } Tx_1 = Tx_2 \Rightarrow x_1 = x_2
+$$
+
+As a counter-example, take:
+
+$$
+x_1(t) = x + 2 \\
+x_2(t) = x + 3
+$$
+
+Then, applying the differentiation operator on them, we get:
+
+$$
+Tx_1(t) = x_1'(t) = 1 \\
+Tx_2(t) = x_2'(t) = 1
+$$
+
+Thus $$Tx_1=Tx_2$$, but $$x_1 \neq x_2$$. Thus, the inverse of $$T$$ does not exist.
 
 $$\blacksquare$$
 
 ---
 
-#### 2.6.13. Let $$T: \mathcal{D}(T) \rightarrow Y$$ be a linear operator whose inverse exists. If $$\{x_1, \cdots, x_n\}$$ is a linearly independent set in $$\mathcal{R}(T)$$, show that the set $$\{Tx_1, \cdots, Tx_n\}$$ is linearly independent.
+#### 2.6.13. Let $$T: \mathcal{D}(T) \rightarrow Y$$ be a linear operator whose inverse exists. If $$\{x_1, \cdots, x_n\}$$ is a linearly independent set in $$\mathcal{D}(T)$$, show that the set $$\{Tx_1, \cdots, Tx_n\}$$ is linearly independent.
 
 **Proof:**
 
+$$\{x_1, \cdots, x_n\}$$ is a linearly independent set. Thus, $$\sum\limits_{i=1}^n \alpha_i x_i = 0 \Rightarrow \alpha_i=0$$.
+
+Assume then that $$\sum\limits_{i=1}^n \alpha_i Tx_i = 0$$. Then we have:
+
+$$
+\sum\limits_{i=1}^n \alpha_i Tx_i = T(\sum\limits_{i=1}^n \alpha_i x_i) = 0
+$$
+
+Because $$T0=0$$, we then have:
+
+$$
+T(\sum\limits_{i=1}^n \alpha_i x_i) = 0 = T0
+\Rightarrow \sum\limits_{i=1}^n \alpha_i x_i = 0
+$$
+
+But this implies that all $$\alpha_i = 0$$.  
+Thus $$\sum\limits_{i=1}^n \alpha_i Tx_i = 0 \Rightarrow \alpha_i = 0$$
 
 $$\blacksquare$$
 
