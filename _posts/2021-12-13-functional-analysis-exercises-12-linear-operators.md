@@ -420,9 +420,11 @@ $$
 
 Thus the null space of $$T$$ consists of only the zero vector, and thus $$T^{-1}$$ exists.
 
+$$\blacksquare$$
+
 $$(\Leftarrow)$$
 
-Assume that the inverse $$T^{-1}$$ exists. Then $$Tx=0 \Rightarrow x=0$$. Thus the null space of $$T$$ has only the zero vector, i.e., it has dimension zero.
+Conversely, assume that the inverse $$T^{-1}$$ exists. Then $$Tx=0 \Rightarrow x=0$$. Thus the null space of $$T$$ has only the zero vector, i.e., it has dimension zero.
 
 By the **Rank-Nullity Theorem**, we have:
 
