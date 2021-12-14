@@ -407,6 +407,31 @@ $$\blacksquare$$
 
 **Proof:**
 
+$$(\Rightarrow)$$
+
+Suppose that $$\mathcal{R}(T) = Y$$. For $$T^{-1}$$ to exist, we need to prove that the null space contains only the zero vector.
+
+By the **Rank-Nullity Theorem**, we have:
+
+$$
+\dim \mathcal{R}(T) + \dim \mathcal{N}(T) = \dim X \\
+\dim \mathcal{N}(T) = \dim X - \dim \mathcal{R}(T) = n - n = 0
+$$
+
+Thus the null space of $$T$$ consists of only the zero vector, and thus $$T^{-1}$$ exists.
+
+$$(\Leftarrow)$$
+
+Assume that the inverse $$T^{-1}$$ exists. Then $$Tx=0 \Rightarrow x=0$$. Thus the null space of $$T$$ has only the zero vector, i.e., it has dimension zero.
+
+By the **Rank-Nullity Theorem**, we have:
+
+$$
+\dim \mathcal{R}(T) + \dim \mathcal{N}(T) = \dim X \\
+\dim \mathcal{R}(T) = \dim X - \dim \mathcal{N}(T) = n - 0 = n = \dim Y
+$$
+
+Thus, $$\mathcal{R}(T) = Y$$.
 
 $$\blacksquare$$
 
@@ -416,5 +441,6 @@ $$\blacksquare$$
 
 **Proof:**
 
+(TODO)
 
 $$\blacksquare$$
