@@ -3,7 +3,7 @@ title: "Advice for the New Tech Lead: The Realities of Distributed Development"
 author: avishek
 usemathjax: false
 tags: ["Technology", "Leadership"]
-draft: true
+draft: false
 ---
 
 This is part of an ongoing blog post series “Advice for the new Tech Lead”.
