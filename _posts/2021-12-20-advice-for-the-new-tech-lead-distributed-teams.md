@@ -3,8 +3,10 @@ title: "Advice for the New Tech Lead: The Realities of Distributed Development"
 author: avishek
 usemathjax: false
 tags: ["Technology", "Leadership"]
-draft: false
+draft: true
 ---
+
+**Note: I resurrected this post from 2013-2014 on my old site. Most of the things I've written about here, I still see as relevant even at the end of 2021. I've revised and added more information based on my own learnings since I originally wrote this.**
 
 This is part of an ongoing blog post series “Advice for the new Tech Lead”.
 
@@ -33,7 +35,7 @@ This autonomy comes with getting more information about what is happening on the
 
 Of course, you don’t want to turn all your communications with the remote team into a gossip channel. However, you will want to have more informal channels of discussion with the remote teams where some minutiae of the situation can be discussed without needing to be politically correct.
 
-### Perceptions
+### Perceptions (Hint: Use Stoicism)
 
 This is not the only problem your remote team faces. Geography distorts perception in subtle ways. You’ll inevitably encounter situations where people from the onshore team — your co-located non-client colleagues — will sometimes form opinions about the remote team that are based on very limited — or even no — interactions with that team. The flavour of these opinions is very wide-ranging, but the ones you’ll want to actively combat are the ill-informed ones. This is the most insidious form of chaos that seeps in, almost unnoticed, and then informs a wide range of discussions/choices that ultimately cause frustration on both sides.
 
@@ -42,3 +44,10 @@ Do not let such perceptions linger if you see them.
 We are not done with the problems yet. Consulting is always a challenging task, in the best of circumstances. Sometimes, it is a matter of patience. Sometimes, it means talking to a few people, planting the germ of an idea in their heads, letting them ruminate on it, and hopefully take it forward. This is very evident if you are working with very closely with your client. See, the thing is, the remote team is not seeing this. Some of them are probably thinking “What do these guys onshore really do half of the time?” This can potentially breed a skewed opinion of the onshore team. Your job, as usual, is to combat this type of thinking.
 
 In both these cases, the ounce of prevention, as well as the pound of cure, are multiple channels of communication. You will want to keep most of these informal; whether they are scheduled or unscheduled, is up to you. But, do not let the talking die down. Silence in distributed teams can be downright poisonous.
+
+- [ ] Be the Driver (or, your team is in control of its destiny)
+- [ ] Read, Borrow, or Steal (read how others have done it)
+- [ ] Make Foundational Bets (or, don't chase the latest shiny)
+- [ ] Call out Bullshit (nicely)
+- [ ] Hold Others to a High Standard (and stick to it yourself)
+- [ ] No One is an Island (or, leverage your network)
