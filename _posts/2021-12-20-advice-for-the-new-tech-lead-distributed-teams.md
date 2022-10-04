@@ -6,6 +6,7 @@ tags: ["Technology", "Leadership"]
 draft: true
 ---
 
+Test
 **Note: I resurrected this post from 2013-2014 on my old site. Most of the things I've written about here, I still see as relevant even at the end of 2021. I've revised and added more information based on my own learnings since I originally wrote this.**
 
 This is part of an ongoing blog post series “Advice for the new Tech Lead”.
