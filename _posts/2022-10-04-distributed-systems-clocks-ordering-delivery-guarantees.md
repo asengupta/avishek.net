@@ -3,7 +3,7 @@ title: "Ordering, Clocks, and Delivery Guarantees"
 author: avishek
 usemathjax: false
 tags: ["Distributed Systems"]
-draft: false
+draft: true
 ---
 
 We discuss the **message-passing model** of computation, which will be used to reason about distributed computing algorithms. The mathematical formalism will be introduced in stages, as it is useful to gain an intuitive understanding of the model first.

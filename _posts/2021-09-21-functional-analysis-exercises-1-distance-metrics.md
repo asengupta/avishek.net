@@ -110,15 +110,15 @@ Let $$\bar{d}(x,y)=d(x,y) + k$$ be a candidate metric on $$X$$. For it to be a v
 - $$\bar{d}(x,y)>0$$ if $$x \neq y$$: For this to hold for $$x \neq y$$, we must have $$k>0, k \in \mathbb{R}$$.
 - $$\bar{d}(x,y)=0$$ if and only if $$x=y$$: For this to hold, we must have $$d(x,y)+k=0$$. Since $$d(x,y)=0$$ already, $$k=0, k \in \mathbb{R}$$.
 - $$\bar{d}(x,y)=\bar{d}(y,x)$$: For this to hold, we can have $$k \in \mathbb{R}$$.
-- $$\bar{d}(x,z) \leq \bar{d}(x,y) + \bar{d}(y,z)$$: For this, we can note the following:
+- $$\bar{d}(x,z) \leq \bar{d}(x,y) + \bar{d}(y,z)$$: For this, we can need to find the condition for which the following holds:
   
-  $$
-  d(x,z) + k \leq k[d(x,y) + d(y,z)] + 2k \\
-  \Rightarrow d(x,z) + k \leq [d(x,y) + k] + [d(y,z) + k] \\
-  \Rightarrow \bar{d}(x,z) \leq \bar{d}(x,y) + \bar{d}(y,z)
+  $$ 
+  d(x,z) + k \leq [d(x,y) + k] + [d(y,z) + k] \\
+  \Rightarrow d(x,z) + k \leq d(x,y) + d(y,z) + 2k \\
+  \Rightarrow d(x,z) \leq d(x,y) + d(y,z) + k
   $$
 
-  proving that the **Triangle Inequality** holds for $$\bar{d}$$ for any $$k \in \mathbb{R}$$.
+  Since $$d(x,z) \leq d(x,y) + d(y,z)$$ already, we must have $$k \geq 0$$ for the above inequality to always hold; this shows that the **Triangle Inequality** holds for $$\bar{d}$$ for $$k \geq 0 \in \mathbb{R}$$.
 
 Putting all of these together, we get the condition that $$k=0, k \in \mathbb{R}$$.
 
@@ -313,7 +313,7 @@ $$\blacksquare$$
 
 ---
 
-#### 1.1.14. **(Axioms of a metric)** (M1) to (M4) could be replaced by other axioms (without changine the definition). For instance, show that (M3) and (M4) could be obtained from (M2) and $$d(x,y) \leq d(z,x) + d(z,y)$$.
+#### 1.1.14. **(Axioms of a metric)** (M1) to (M4) could be replaced by other axioms (without changing the definition). For instance, show that (M3) and (M4) could be obtained from (M2) and $$d(x,y) \leq d(z,x) + d(z,y)$$.
 
 For reference, the axioms **(M1)** to **(M4)** are as follows:
 

@@ -21,8 +21,9 @@ title: Book References
 
 ## Distributed Systems
 - **Designing Data-Intensive Applications**: *Martin Kleppmann*
-- **Streaming Systems**: *Tyler Akidau*, *Slava Chernyak*, *Reuven Lax*
+- **Elements of Distributed Computing**: Vijay K. Garg
 - **Distributed Algorithms: A Verbose Tour**: *Fourré Sigs*
+- **Streaming Systems**: *Tyler Akidau*, *Slava Chernyak*, *Reuven Lax*
 - **Distributed Algorithms**: *Nancy Lynch*
 
 ## Programming and Architecture
