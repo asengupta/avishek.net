@@ -2,7 +2,7 @@
 title: "A Quick Note on Proving the Triangle Inequality on a Derived Distance Metric using Monotonicity"
 author: avishek
 usemathjax: true
-tags: ["Distributed Systems"]
+tags: ["Mathematics", "Proof", "Functional Analysis", "Pure Mathematics", "Kreyszig"]
 draft: false
 ---
 
