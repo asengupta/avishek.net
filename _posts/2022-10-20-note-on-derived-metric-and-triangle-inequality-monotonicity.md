@@ -65,7 +65,7 @@ thus, proving the **Triangle Inequality**.
 This is the central idea in proving that the distance metric in a sequence space of all bounded and unbounded complex numbers **(Kreyszig 1.2-1)** has a metric defined by:
 
 $$
-d(x,y)=\displaystyle\sum_{j=1}^\infty \frac{1}{2^j} \frac{\vert \eta_j - \theta_j\vert}{1 + \vert \eta_j - \theta_j\vert}
+d(x,y)=\displaystyle\sum_{j=1}^\infty \frac{1}{2^j} \frac{\vert \zeta_j - \eta_j\vert}{1 + \vert \zeta_j - \eta_j\vert}
 $$
 
-where $$x=(\eta_j)$$ and $$y=(\theta_j)$$.
+where $$x=(\eta_j)$$ and $$y=(\zeta_j)$$.

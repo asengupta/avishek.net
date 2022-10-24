@@ -125,17 +125,137 @@ Putting all of these together, we get the condition that $$k=0, k \in \mathbb{R}
 ---
 
 #### 1.1.6. Show that $$d$$ in 1.1-6 satisfies the triangle inequality.
-[TODO]
+
+**Answer:**
+$$l^\infty$$ is the set of all bounded sequences of complex numbers. The metric under consideration is $$d(x,y)=sup \vert \zeta_i - eta_i\vert$$.
+
+We need to prove that $$d(x,y) \leq d(x,z) + d(z,y)$$.
+We know that: $$\vert \eta_i - \zeta_i \vert \leq \vert \eta_i - \theta_i \vert + \vert \theta_i - \zeta_i \vert$$. Taking $$sup$$ on both sides we get:
+
+$$
+\begin{equation}
+sup \vert \eta_i - \zeta_i \vert \leq sup [\vert \eta_i - \theta_i \vert + \vert \theta_i - \zeta_i \vert]
+\label{eq:1-1-6-1}
+\end{equation}
+$$
+
+For two sequences $$(a_i)$$ and $$(b_i)$$, we have:
+$$
+a_i \leq sup(a_i) \\
+b_i \leq sup(b_i)
+$$
+
+Adding the two inequalities, we get:
+
+$$
+a_i + b_i \leq sup(a_i) + sup(b_i) \\
+\Rightarrow sup(a_i + b_i) \leq sup(a_i) + sup(b_i)
+$$
+
+The above is because any $$a_i+b_i$$ is less than or equal to some constant, so the supremum is also less than or equal to that constant.
+
+Setting $$a_i = \vert \eta_i - \theta_i \vert$$ and $$b_i = \vert \theta_i - \zeta_i \vert$$, we get:
+
+$$
+\begin{equation}
+sup[\vert \eta_i - \theta_i \vert + \vert \theta_i - \zeta_i \vert] \leq sup \vert \eta_i - \theta_i \vert + sup \vert \theta_i - \zeta_i \vert
+\label{eq:1-1-6-2}
+\end{equation}
+$$
+
+Putting $$\eqref{eq:1-1-6-1}$$ and $$\eqref{eq:1-1-6-2}$$ together we get:
+
+$$
+sup \vert \eta_i - \zeta_i \vert \leq sup [\vert \eta_i - \theta_i \vert + \vert \theta_i - \zeta_i \vert] \leq sup \vert \eta_i - \theta_i \vert + sup \vert \theta_i - \zeta_i \vert \\
+\Rightarrow sup \vert \eta_i - \zeta_i \vert \leq sup \vert \eta_i - \theta_i \vert + sup \vert \theta_i - \zeta_i \vert \\
+$$
+
+This proves the **Triangle Inequality** for the given distance metric.
+
+$$\blacksquare$$
 
 ---
 
-#### 1.1.8. Show that another metric $$\bar{d}$$ on the set $$X$$ in 1.1-7 is defined by $$\bar{d}(x,y)=\int\limits_a^b |x(t) - y(t)| dt$$.
-[TODO]
+#### 1.1.8. Show that another metric $$\bar{d}$$ on the set $$X$$ in 1.1-7 is defined by $$\bar{d}(x,y)=\displaystyle\int\limits_a^b |x(t) - y(t)| dt$$.
+
+**Proof:**
+
+The distance metric given is: $$d(x,y)=\displaystyle\int\limits_a^b \vert x(t) - y(t) \vert$$
+We know that:
+
+$$
+\vert x(t) - y(t) \vert \leq \vert x(t) - z(t) \vert + \vert z(t) - y(t) \vert
+$$
+
+Integrating both sides with respect to $$t$$ from $$a$$ to $$b$$, we get:
+
+$$
+\displaystyle\int\limits_a^b \vert x(t) - y(t) \vert \leq \displaystyle\int\limits_a^b \vert x(t) - z(t) \vert + \displaystyle\int\limits_a^b \vert z(t) - y(t) \vert \\
+\Rightarrow d(x,y) \leq d(x,z) + d(z,y)
+$$
+
+$$\blacksquare$$
 
 ---
 
 #### 1.1.9. Show that $$d$$ in 1.1-8 is a metric.
-[TODO]
+
+For reference, the axioms **(M1)** to **(M4)** are as follows:
+
+- **(M1)** $$0 \leq d(x,y)<\infty, d(x,y)\in \mathbb{R}$$
+- **(M2)** $$d(x,y)=0$$ if and only if $$x=y$$
+- **(M3)** $$d(x,y)=d(y,x)$$
+- **(M4)** $$d(x,z) \leq d(x,y) + d(y,z)$$
+
+The discrete metric is:
+$$
+d(x,x)=0 \\
+d(x,y)=1, \text{ for } x \neq y
+$$
+
+This satisfies **(M1)**, since $$d(x,y) \in \{0,1\}$$.
+
+**(M2)** also follows from $$d(x,x) = 0$$.
+
+**(M3)** also follows from $$d(x,y) = d(y,x) = 1$$ if $$x \neq y$$ and $$d(x,x) = 0$$.
+
+Let's prove the **Triangle Inequality**. We have:
+
+$$
+d(x,z) \geq 0 \\
+d(z,y) \geq 0
+$$
+
+Adding the above inequalities, we get:
+
+$$
+d(x,z) + d(z,y) \geq 0
+$$
+
+**Case 1**
+
+If $$x=y$$, then $$d(x,y) = 0$$, and we have:
+
+$$
+d(x,z) + d(z,y) \geq d(x,y) \text{ for } x=y
+$$
+
+**Case 2**
+
+If $$x \neq y$$, then $$d(x,y) = 1$$. Then, we have 3 sub-cases:
+
+**(2.1) $$z=x, z \neq y$$**.
+Then $$d(x,z) + d(z,y) = 0 + 1 = 1 \geq d(x,y)$$
+
+**(2.2) $$z=y, z \neq x$$**.
+Then $$d(x,z) + d(z,y) = 1 + 0 = 1 \geq d(x,y)$$
+
+**(2.3) $$z \neq y, z \neq x$$**.
+Then $$d(x,z) + d(z,y) = 1 + 1 = 2 \geq d(x,y)$$
+
+In all the above cases, we have $$d(x,y) \leq d(x,z) + d(z,y)$$, thus proving **(M4)** (the **Triangle Inequality**).
+
+$$\blacksquare$$
 
 ---
 
