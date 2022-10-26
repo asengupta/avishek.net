@@ -227,14 +227,14 @@ $$
 $$
 \omega_i=|\xi_i+\eta_i| \\
 \Rightarrow {\omega_i}^p={|\xi_i+\eta_i|}^p \\
-\Rightarrow {\omega_i}^p=\omega^{p-1}|\xi_i+\eta_i|
+\Rightarrow {\omega_i}^p={\omega_i}^{p-1}|\xi_i+\eta_i|
 $$
 
 Summing up over $$i$$, we get:
 
 $$
 \begin{equation}
-\displaystyle\sum\limits_{i=1}^\infty{\omega_i}^p = \displaystyle\sum\limits_{i=1}^\infty \omega^{p-1}|\xi_i+\eta_i|
+\displaystyle\sum\limits_{i=1}^\infty{\omega_i}^p = \displaystyle\sum\limits_{i=1}^\infty {\omega_i}^{p-1}|\xi_i+\eta_i|
 \label{eq:minkowski-separated-summed}
 \end{equation}
 $$
