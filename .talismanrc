@@ -7,3 +7,5 @@ fileignoreconfig:
   checksum: 70c8baa46a1e827d17f803a131c50aa6613da41687cd82ccd958783b716df3c6
 - filename: _posts/2021-09-02-gaussian-processes.md
   checksum: 1335b2b3d1825f3cb0aded3bd0cbe67b20378c58dc3d27dca3d99120c9b1c966
+- filename: code/notebooks/pytorch-tutorial.ipynb
+  checksum: 499c785330d2f693102c34e121e3a11eeebb622cc4fd59801bc310d8bed6c62d
