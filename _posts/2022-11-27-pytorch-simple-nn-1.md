@@ -6,13 +6,28 @@ tags: ["Machine Learning", "PyTorch", "Programming", "Neural Networks"]
 draft: false
 ---
 
-Programming guides are probably the first posts to become obsolete, as APIs are updated. Regardless, we will look at building simple neural networks in PyTorch; we won't be starting from models with a million parameters, however. We will proceed from the basics, starting with a single neuron, talk a little about the tensor notation and how that relates to our usual mathematical notation of representing everything with column vectors, and scale up from there.
+Programming guides are probably the first posts to become obsolete, as APIs are updated. Regardless, we will look at building simple neural networks in **PyTorch**. We won't be starting from models with a million parameters, however. We will proceed from the basics, starting with a single neuron, talk a little about the tensor notation and how that relates to our usual mathematical notation of representing everything with column vectors, and scale up from there.
 
-We will assume you have already installed Python and PyTorch; we'll not get into those details.
+I call this the "No Questions Asked" Guide, because I'd like to cut through all the diversions when learning a new API, and focus on communicating the basic ideas needed to get work done. Do I want to know how to set up a single neuron network? Yes. Am I interested in knowing why I call ```optimiser.zero_grad()``` before each training iteration? Maybe, but not immediately. If there are specific details I want to bring out later on, I will gladly modify these guides.
+
+We will assume you have already installed Python and PyTorch; we'll not get into those details. The progression for this post will be as follows:
+
+- One Neuron, One Input, No Bias, No Activation Function
+- One Neuron, One Input, No Bias, RelU Activation Function
+- One Neuron, One Input, No Bias, Leaky RelU Activation Function
+- One Neuron, One Input with Bias, Leaky RelU Activation Function
+- One Neuron, Multiple Inputs with Bias, Leaky RelU Activation Function
+- Multiple Neurons, Multiple Inputs with Bias, Leaky RelU Activation Function
+- Multiple Neurons, One Hidden Layer, Multiple Inputs with Bias, Leaky RelU Activation Function
+
+Each of these build atop the previous one, with incremental changes
+
 
 ### One Neuron, One Input, No Bias, No Activation Function
 
 This is the simplest setup one can imagine. We've stripped away every possible piece we could: the resulting thing is a neuron -- barely. At this point, we are literally solving a multiplication problem: it could not get any simpler.
+
+![One Neuron, One Input, No Bias, No Activation Function](/assets/images/ann-1-ip-no-bias-no-activation.png)
 
 ```python
 {% include_relative code/simple-linear-nn.py %}
@@ -32,6 +47,8 @@ Let's talk quickly about a couple of things.
 
 Let's add an activation function to the above example. This will be a **Rectified Linear Unit** (ReLU).
 
+![One Neuron, One Input, No Bias, ReLU](/assets/images/ann-1-ip-no-bias-relu.png)
+
 ```python
 {% include_relative code/simple-linear-nn-relu.py %}
 ```
@@ -46,6 +63,8 @@ To rectify the above situation, we will use what is called the **Leaky ReLU**. T
 {% include_relative code/simple-linear-nn-leaky-relu.py %}
 ```
 
+![One Neuron, One Input, No Bias, Leaky ReLU](/assets/images/ann-1-ip-no-bias-leaky-relu.png)
+
 ### One Neuron, One Input with Bias, Leaky RelU Activation Function
 
 We now add the bias input to the neuron. This is as simple as setting ```bias=True``` in the above code, so that we get the following:
@@ -54,9 +73,13 @@ We now add the bias input to the neuron. This is as simple as setting ```bias=Tr
 {% include_relative code/simple-linear-nn-bias-leaky-relu.py %}
 ```
 
+![One Neuron, One Input with Bias, Leaky ReLU](/assets/images/ann-1-ip-bias-leaky-relu.png)
+
 ### One Neuron, Multiple Inputs with Bias, Leaky RelU Activation Function
 
 We will finally add another input to our neuron. This will complete our prototypical single perceptron model that we all know and love.
+
+![One Neuron, Multiple Inputs with Bias, Leaky ReLU](/assets/images/ann-2-ip-bias-leaky-relu.png)
 
 ```python
 {% include_relative code/simple-linear-nn-multiple-inputs-bias-leaky-relu.py %}
@@ -65,6 +88,8 @@ We will finally add another input to our neuron. This will complete our prototyp
 ### Multiple Neurons, Multiple Inputs with Bias, Leaky RelU Activation Function
 
 Now let's talk of layers. We already have a single layer, but let's add more than one neuron to this layer.
+
+![Multiple Neurons, Multiple Inputs with Bias, Leaky ReLU](/assets/images/ann-2-ip-multiple-neurons-bias-leaky-relu.png)
 
 ```python
 {% include_relative code/simple-linear-nn-multiple-neurons-multiple-inputs-bias.py %}
@@ -79,6 +104,8 @@ Another point to note is that the target tensor can either have a single value, 
 The numbers in the constructor of the ```Linear``` class are worth reiterating about. The first parameter is the dimensionality of the input, i.e., ```Linear(2,3)``` implies that the input will be a two-dimensional tensor. The second parameter describes how many neurons (and consequently, how many outputs from this layer) this input will be fed to. Thus, ```Linear(2,3)``` implies that a two-dimensional tensor will be fed to 3 neurons.
 
 ### Multiple Neurons, One Hidden Layer, Multiple Inputs with Bias, Leaky RelU Activation Function
+
+![Multiple Neurons, Multiple Inputs with Hidden Layer and Bias, Leaky ReLU](/assets/images/ann-2-ip-multiple-neurons-hidden-layer-bias-leaky-relu.png)
 
 ```python
 {% include_relative code/simple-linear-nn-multiple-neurons-hidden-layer-multiple-inputs-bias.py %}
