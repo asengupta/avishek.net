@@ -20,6 +20,8 @@ simple_optimiser = torch.optim.SGD(net.parameters(), lr = learning_rate, momentu
 target =torch.tensor([5.])
 loss_criterion =nn.MSELoss()
 
+net.train()
+
 for i in range(100):
     simple_optimiser.zero_grad()
     output = net(torch.tensor([1.]))
@@ -31,3 +33,5 @@ for i in range(100):
     simple_optimiser.step()
 
 print(list(net.parameters()))
+net.eval()
+print(net(torch.tensor([1., 1.])))

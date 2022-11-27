@@ -31,3 +31,4 @@ for i in range(100):
     simple_optimiser.step()
 
 print(list(net.parameters()))
+print(net(torch.tensor([1., 1.])))

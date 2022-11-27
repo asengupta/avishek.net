@@ -1,5 +1,4 @@
 import torch
-import torch.nn.functional as F
 import torch.nn as nn
 
 class SimpleNN(nn.Module):
@@ -19,6 +18,7 @@ learning_rate = 0.1
 simple_optimiser = torch.optim.SGD(net.parameters(), lr = learning_rate, momentum=0.9)
 target =torch.tensor([5.])
 loss_criterion =nn.MSELoss()
+net.train()
 
 for i in range(100):
     simple_optimiser.zero_grad()
@@ -31,3 +31,5 @@ for i in range(100):
     simple_optimiser.step()
 
 print(list(net.parameters()))
+net.eval()
+print(net(torch.tensor([1.])))

@@ -14,6 +14,7 @@ class SimpleNN(nn.Module):
 net = SimpleNN()
 print(net)
 print(list(net.parameters()))
+net.train()
 
 learning_rate = 0.1
 simple_optimiser = torch.optim.SGD(net.parameters(), lr = learning_rate, momentum=0.9)
@@ -31,3 +32,5 @@ for i in range(100):
     simple_optimiser.step()
 
 print(list(net.parameters()))
+net.eval()
+print(net(torch.tensor([1., 1.])))
