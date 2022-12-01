@@ -61,8 +61,4 @@ word = torch.ones(word_width)
 words = torch.randn([num_words, word_width])
 qkv_words = qkvs(words)
 print(attention_scores(qkv_words))
-attention_scores = torch.tensor([attention_score(test_qkv_1),
-                                 attention_score(test_qkv_2),
-                                 attention_score(test_qkv_3), ])
-
 
