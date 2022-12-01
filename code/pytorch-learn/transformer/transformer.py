@@ -29,9 +29,17 @@ W_V = torch.ones([512, 64])
 def qkv(input):
     return (torch.matmul(input, W_Q), torch.matmul(input, W_K), torch.matmul(input, W_V))
 
+def attention_score(qkv):
+    return torch.dot(qkv[0], qkv[1]) / 8
+
+def softmax_scores(scores):
+    softmax = torch.nn.Softmax(dim=0)
+    return softmax(scores)
+
 start_encoder = coder_stack(EncoderCtor, 6)
 start_decoder = coder_stack(DecoderCtor, 6)
-print(start_encoder)
 
-print(qkv(torch.ones(512)))
-
+tensors = torch.tensor([attention_score(qkv(torch.ones(512))),
+                        attention_score(qkv(torch.ones(512))),
+                        attention_score(qkv(torch.ones(512))), ])
+print(softmax_scores(tensors))
