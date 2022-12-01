@@ -24,7 +24,7 @@ class SelfAttentionLayer:
 
 
 class EncoderCtor(nn.Module):
-    def __init__(self, w_o):
+    def __init__(self, num_heads, w_o):
         super(EncoderCtor, self).__init__()
         self.w_o = w_o
         self.attention_layers = list(map(lambda x: SelfAttentionLayer(W_Q, W_K, W_V), range(num_heads)))
@@ -68,6 +68,6 @@ qkv_words = qkvs(words, W_Q, W_K, W_V)
 # print(attention_scores(qkv_words))
 # print(SelfAttentionLayer(W_Q, W_K, W_V).forward(words))
 
-encoder = EncoderCtor(W_O)
+encoder = EncoderCtor(num_heads, W_O)
 encoder.eval()
 print(encoder(words).shape)
