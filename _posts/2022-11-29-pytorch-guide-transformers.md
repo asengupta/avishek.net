@@ -3,7 +3,7 @@ title: "The No-Questions Asked Guide to PyTorch : Transformers"
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "PyTorch", "Programming", "Deep Learning", "Transformers"]
-draft: true
+draft: false
 ---
 
 It may seem strange that I'm jumping from implementing a simple neural network into **Transformers**. I will return to building up the foundations of neural networks soon enough: for the moment, let's look at **Transformers**.
