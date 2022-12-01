@@ -23,10 +23,15 @@ class DecoderCtor(nn.Module):
         feedforward_layer = nn.Linear(1, 1, bias=True)
         self.stack = nn.Sequential(self_attention_layer, encoder_decoder_attention_layer, feedforward_layer)
 
+W_Q = torch.ones([512, 64])
+W_K = torch.ones([512, 64])
+W_V = torch.ones([512, 64])
 def qkv(input):
-    return (torch.ones(64), torch.ones(64), torch.ones(64))
+    return (torch.matmul(input, W_Q), torch.matmul(input, W_K), torch.matmul(input, W_V))
 
 start_encoder = coder_stack(EncoderCtor, 6)
 start_decoder = coder_stack(DecoderCtor, 6)
 print(start_encoder)
+
+print(qkv(torch.ones(512)))
 
