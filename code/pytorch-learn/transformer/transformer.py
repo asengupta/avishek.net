@@ -43,6 +43,10 @@ def qkvs(words):
 def attention_score(qkv):
     return torch.dot(qkv[0], qkv[1]) / 8
 
+softmax = torch.nn.Softmax(dim=1)
+def attention_scores(qkvs):
+    return torch.matmul(softmax(torch.matmul(qkvs[0], torch.transpose(qkvs[1], 0, 1)) / 8.), qkvs[2])
+
 
 def softmax_scores(scores):
     softmax = torch.nn.Softmax(dim=0)
@@ -55,21 +59,10 @@ start_decoder = coder_stack(DecoderCtor, 6)
 num_words = 2
 word = torch.ones(word_width)
 words = torch.randn([num_words, word_width])
-qkv_set = qkvs(words)
-# print(qkv_set)
-divided = torch.matmul(qkv_set[0], torch.transpose(qkv_set[1], 0, 1)) / 8.
-print(divided)
-softmax = torch.nn.Softmax(dim=1)
-print(torch.matmul(softmax(divided), qkv_set[2]).shape)
-test_qkv_1 = qkv(word)
-test_qkv_2 = qkv(word)
-test_qkv_3 = qkv(word)
+qkv_words = qkvs(words)
+print(attention_scores(qkv_words))
 attention_scores = torch.tensor([attention_score(test_qkv_1),
                                  attention_score(test_qkv_2),
                                  attention_score(test_qkv_3), ])
 
-scores = softmax_scores(attention_scores)
 
-# print(test_qkv_1[2] * scores[0])
-# print(test_qkv_2[2] * scores[1])
-# print(test_qkv_3[2] * scores[2])
