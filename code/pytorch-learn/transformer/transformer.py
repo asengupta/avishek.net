@@ -5,6 +5,7 @@ softmax = torch.nn.Softmax(dim=1)
 num_heads = 8
 word_width = 512
 projection_width = 64
+scale_factor = 100
 
 
 def coder_stack(CoderCtor, num_encoders):
@@ -45,10 +46,10 @@ class DecoderCtor(nn.Module):
         self.stack = nn.Sequential(self_attention_layer, encoder_decoder_attention_layer, feedforward_layer)
 
 
-W_Q = torch.randn([word_width, projection_width]) / 100
-W_K = torch.randn([word_width, projection_width]) / 100
-W_V = torch.randn([word_width, projection_width]) / 100
-W_O = torch.randn([num_heads * projection_width, word_width]) / 100
+W_Q = torch.randn([word_width, projection_width]) / scale_factor
+W_K = torch.randn([word_width, projection_width]) / scale_factor
+W_V = torch.randn([word_width, projection_width]) / scale_factor
+W_O = torch.randn([num_heads * projection_width, word_width]) / scale_factor
 
 def qkvs(words, w_q, w_k, w_v):
     return torch.matmul(words, w_q), torch.matmul(words, w_k), torch.matmul(words, w_v)
