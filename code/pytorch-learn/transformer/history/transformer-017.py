@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
+import math
 
 softmax = torch.nn.Softmax(dim=1)
 
@@ -27,8 +28,9 @@ def encoder_stack(num_encoders, w_o):
     return nn.Sequential(*encoders)
 
 
-class SelfAttentionLayer:
+class SelfAttentionLayer(nn.Module):
     def __init__(self, w_q, w_k, w_v):
+        super(SelfAttentionLayer, self).__init__()
         self.w_q = w_q
         self.w_k = w_k
         self.w_v = w_v
@@ -45,7 +47,7 @@ class MultiheadedAttention(nn.Module):
 
     def forward(self, x):
         # Concatenating gives [num_words x num_heads * projection_width]
-        attention_vectors = list(map(lambda attention_layer: attention_layer.forward(x), self.attention_layers))
+        attention_vectors = list(map(lambda attention_layer: attention_layer(x), self.attention_layers))
         concatenated_attention_vectors = torch.cat(attention_vectors, dim=1)
         scaled_concatenated_attention_vectors = torch.matmul(concatenated_attention_vectors, self.w_o)
         return scaled_concatenated_attention_vectors
@@ -81,7 +83,7 @@ def qkvs(words, w_q, w_k, w_v):
 
 
 def attention_scores(qkvs):
-    return torch.matmul(softmax(torch.matmul(qkvs[0], torch.transpose(qkvs[1], 0, 1)) / 8.), qkvs[2])
+    return torch.matmul(softmax(torch.matmul(qkvs[0], torch.transpose(qkvs[1], 0, 1)) / math.sqrt(qkvs[0].shape[1])), qkvs[2])
 
 
 def positionally_encoded(words):

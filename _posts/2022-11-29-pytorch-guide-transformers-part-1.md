@@ -66,7 +66,7 @@ We can immediately move to the next logical step: actually multiplying our 512-d
 At this point, we are ready have the three vectors $$Q$$, $$K$$, and $$V$$. We are about to implement part of the following calculation, except that it is for a single word:
 
 $$
-\displaystyle\text{Softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right) \times V
+\displaystyle\text{Softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)
 $$
 ![Softmax on Attention Score on a Single Word](/assets/images/self-attention-softmax.png)
 
@@ -76,11 +76,15 @@ $$
 
 ### Building the Attention Score for a single word
 
+$$
+\displaystyle\text{Softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right) \times V
+$$
+
 ```python
 {% include_absolute '/code/pytorch-learn/transformer/history/transformer-007.py' %}
 ```
 
-### Applying the Query-Key-Value function to a multiple words
+### Applying the Query-Key-Value function to multiple words
 
 ```python
 {% include_absolute '/code/pytorch-learn/transformer/history/transformer-009.py' %}
