@@ -207,6 +207,12 @@ We'd like to now tune the FFNN architecture in line with the paper. The paper no
 - 2048 units passing their outputs through a ReLU layer
 - ReLU layer fully connected to a layer of 512 units (remember, our output needs to be 512-dimensional)
 
+This is described in the paper as:
+
+$$
+FFN(x) = \text{max}(0,xW_1 + b_1) W_2 + b_2
+$$
+
 This neural network needs to be applied as many times as we have words. So if we have 4 words, our word matrix is represented as a $$4 \times 512$$ matrix; and each row (of size 512) of this matrix needs to be passed into the FFNN. That's 4 rows in this case.
 
 The FFNN is wrapped in a ```Sequential``` module, and uses a Leaky ReLU.
@@ -227,7 +233,17 @@ We still need to add the residual connections which are added and normed to the 
 
 ### Refactoring, Stacking Encoders, and Placeholder for Positional Encoding
 
-This step involves a lot of refactoring and cleaning up. Specifically, reordering and cleaning up parameters happens here. Default parameters are added as well. This is also the first time we touch the function to stack six Encoders. Our original code is pretty much useless at this point; thus we simply build a ```Sequential``` container of 
+This step involves a lot of refactoring and cleaning up. Specifically, reordering and cleaning up parameters happens here. Default parameters are added as well. This is also the first time we touch the function to stack six Encoders. Our original code is pretty much useless at this point; thus we simply build a ```Sequential``` container of ```Encoder``` layers. We obviously verify that it outputs a $$2 \times 512$$ vector.
+
+There is still one part of the Encoder we haven't fleshed out fully: the positional encoding. For the moment, we add a placeholder function ```positionally_encoded()``` which we will implement fully going forward.
+
 ```python
 {% include_absolute '/code/pytorch-learn/transformer/history/transformer-017.py' %}
 ```
+This concludes Part 1 of implementing Transformers using PyTorch. There are a lot of loose ends which we will continue to address in the sequels. The demonstration of the incremental build-up should give you a fair idea of how you can go about implementing models from scratch in PyTorch.
+
+### References
+
+- [Attention is All You Need](https://arxiv.org/abs/1706.03762)
+- [Formal Algorithms for Transformers](https://arxiv.org/abs/2207.09238)
+- [The Illustrated Transformer](https://jalammar.github.io/illustrated-transformer/)
