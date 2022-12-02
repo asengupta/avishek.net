@@ -16,15 +16,15 @@ We will start with following the simplified block diagram as is presented on the
 
 ![Encoder-Decoder Block Diagram](/assets/images/transformer-encoder-decoder-block-diagram.png)
 
-We will start without any PyTorch dependencies, and almost blindly build an object model based on this diagram. The paper says that there are 6 encoders stacked on top of each other, so we will build a simple linked encoder graph. Probably, most of this code will be thrown away later, but at this point we are feeling out the structure of the solution without worrying too much about the details: experimenting with the details will come later. Here's the code:
+We will start without any PyTorch dependencies, and almost blindly build an object model based on this diagram. The paper says that there are 6 encoders stacked on top of each other, so we will build a simple linked encoder graph. Most of this code will be probably thrown away later, but at this point we are feeling out the structure of the solution without worrying too much about the details: experimenting with the details will come later. Here's the code:
 
-```Python
+```python
 {% include_absolute '/code/pytorch-learn/transformer/history/transformer-001.py' %}
 ```
 
 Replicating the decoder block diagram is almost as easy: simply steal code from the encoder. We will probably not get to the decoder for a while, but this is a exercise to get a lay of the land before getting lost in the weeds.
 
-```Python
+```python
 {% include_absolute '/code/pytorch-learn/transformer/history/transformer-002.py' %}
 ```
 
@@ -36,9 +36,49 @@ We want to build these blocks, but building the Self-Attention layer is going to
 
 Thus, even the Self-Attention layers are also represented as Feedforward neural networks, and the code is as below:
 
-```Python
+```python
 {% include_absolute '/code/pytorch-learn/transformer/history/transformer-003.py' %}
 ```
 
 To be honest, a lot of this is pretty dirty code; there are magic numbers, most of the object variables are not used. That's alright. This is also the first time we start including PyTorch dependencies.
+
+```python
+{% include_absolute '/code/pytorch-learn/transformer/history/transformer-004.py' %}
+```
+
+```python
+{% include_absolute '/code/pytorch-learn/transformer/history/transformer-005.py' %}
+```
+
+```python
+{% include_absolute '/code/pytorch-learn/transformer/history/transformer-006.py' %}
+```
+
+```python
+{% include_absolute '/code/pytorch-learn/transformer/history/transformer-007.py' %}
+```
+
+```python
+{% include_absolute '/code/pytorch-learn/transformer/history/transformer-008.py' %}
+```
+
+```python
+{% include_absolute '/code/pytorch-learn/transformer/history/transformer-009.py' %}
+```
+
+```python
+{% include_absolute '/code/pytorch-learn/transformer/history/transformer-010.py' %}
+```
+
+```python
+{% include_absolute '/code/pytorch-learn/transformer/history/transformer-011.py' %}
+```
+
+```python
+{% include_absolute '/code/pytorch-learn/transformer/history/transformer-012.py' %}
+```
+
+```python
+{% include_absolute '/code/pytorch-learn/transformer/history/transformer-013.py' %}
+```
 
