@@ -61,24 +61,27 @@ We can immediately move to the next logical step: actually multiplying our 512-d
 {% include_absolute '/code/pytorch-learn/transformer/history/transformer-005.py' %}
 ```
 
-### Building the Softmax Scores for a single word
+### Building the Attention Score for a single word
 
 At this point, we are ready have the three vectors $$Q$$, $$K$$, and $$V$$. We are about to implement part of the following calculation, except that it is for a single word:
 
 $$
-\displaystyle\text{Softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)
+S = \displaystyle\text{Softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right) \times V
 $$
+
+The single word version of the above calculation for the $$i$$-th word can be written as:
+
+$$
+S_i = \displaystyle\sum_{j=1}^N \text{Softmax} \left(\frac {Q_i K_j}{\sqrt{d_K}}\right) V_j
+$$
+
+In the current case, we only have one word in total, so the above simply reduces to:
+
+$$
+S_1 = \displaystyle\text{Softmax} \left(\frac {Q_1 K_1}{\sqrt{d_K}}\right) V_1
+$$
+
 ![Softmax on Attention Score on a Single Word](/assets/images/self-attention-softmax.png)
-
-```python
-{% include_absolute '/code/pytorch-learn/transformer/history/transformer-006.py' %}
-```
-
-### Building the Attention Score for a single word
-
-$$
-\displaystyle\text{Softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right) \times V
-$$
 
 ```python
 {% include_absolute '/code/pytorch-learn/transformer/history/transformer-007.py' %}
