@@ -25,16 +25,19 @@ class SelfAttentionLayer:
 
 
 class EncoderCtor(nn.Module):
-    def __init__(self, num_heads, w_o):
+    def __init__(self, num_heads, w_o, word_width):
         super(EncoderCtor, self).__init__()
         self.w_o = w_o
         self.attention_layers = list(map(lambda x: SelfAttentionLayer(W_Q, W_K, W_V), range(num_heads)))
-        self.feedforward_layer = nn.Linear(1, 1, bias=True)
+        self.feedforward_layer = nn.Linear(word_width, word_width, bias=True)
 
     def forward(self, x):
         # Concatenating gives [num_words x num_heads * projection_width]
         attention_vectors = list(map(lambda attention_layer: attention_layer.forward(x), self.attention_layers))
-        return torch.matmul(torch.cat(attention_vectors, dim=1), self.w_o)
+        scaled_concatenated_attention_vectors = torch.matmul(torch.cat(attention_vectors, dim=1), self.w_o)
+
+        ffnn_outputs = list(map(lambda attention_vector: self.feedforward_layer(attention_vector), scaled_concatenated_attention_vectors))
+        return torch.stack(ffnn_outputs)
 
 
 class DecoderCtor(nn.Module):
@@ -59,16 +62,14 @@ def attention_scores(qkvs):
     return torch.matmul(softmax(torch.matmul(qkvs[0], torch.transpose(qkvs[1], 0, 1)) / 8.), qkvs[2])
 
 
-start_encoder = coder_stack(EncoderCtor, 6)
-start_decoder = coder_stack(DecoderCtor, 6)
+# start_encoder = coder_stack(EncoderCtor, 6)
+# start_decoder = coder_stack(DecoderCtor, 6)
 
 num_words = 2
-word = torch.ones(word_width)
 words = torch.randn([num_words, word_width])
 qkv_words = qkvs(words, W_Q, W_K, W_V)
-# print(attention_scores(qkv_words))
-# print(SelfAttentionLayer(W_Q, W_K, W_V).forward(words))
-
-encoder = EncoderCtor(num_heads, W_O)
+encoder = EncoderCtor(num_heads, W_O, word_width)
 encoder.eval()
-print(encoder(words).shape)
+values = encoder(words)
+print(values)
+print(values.shape)

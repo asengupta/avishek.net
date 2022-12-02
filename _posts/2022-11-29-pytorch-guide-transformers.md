@@ -41,42 +41,61 @@ Thus, even the Self-Attention layers are also represented as Feedforward neural 
 ```
 
 To be honest, a lot of this is pretty dirty code; there are magic numbers, most of the object variables are not used. That's alright. This is also the first time we start including PyTorch dependencies.
+We've created a ```Sequential``` stack to house our layers, but there is not much to say about it, since it is essentially a placeholder for the real layers to be built in and incorporated.
+
+### Introducing the Query-Key-Value triad function
 
 ```python
 {% include_absolute '/code/pytorch-learn/transformer/history/transformer-004.py' %}
 ```
 
+### Applying the Query-Key-Value function to a single word
+
 ```python
 {% include_absolute '/code/pytorch-learn/transformer/history/transformer-005.py' %}
 ```
+
+### Building the Softmax Scores for a single word
 
 ```python
 {% include_absolute '/code/pytorch-learn/transformer/history/transformer-006.py' %}
 ```
 
+### Building the Attention Score for a single word
+
 ```python
 {% include_absolute '/code/pytorch-learn/transformer/history/transformer-007.py' %}
 ```
 
-```python
-{% include_absolute '/code/pytorch-learn/transformer/history/transformer-008.py' %}
-```
+### Applying the Query-Key-Value function to a multiple words
 
 ```python
 {% include_absolute '/code/pytorch-learn/transformer/history/transformer-009.py' %}
 ```
 
+### Building the Attention Scores for multiple words
+
 ```python
 {% include_absolute '/code/pytorch-learn/transformer/history/transformer-010.py' %}
 ```
+
+### Encapsulating Attention Score calculation into a custom layer
 
 ```python
 {% include_absolute '/code/pytorch-learn/transformer/history/transformer-011.py' %}
 ```
 
+### Incorporating the Self Attention layer into the Encoder
+
+This is also the point at which we build the multi-head attention block by running the input through eight attention blocks.
+
 ```python
 {% include_absolute '/code/pytorch-learn/transformer/history/transformer-012.py' %}
 ```
+
+### Projecting the Attention Outputs back into original word width
+
+At this point, we are ready to pass the output into the Feedforward neural network.
 
 ```python
 {% include_absolute '/code/pytorch-learn/transformer/history/transformer-013.py' %}
