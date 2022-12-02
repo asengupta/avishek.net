@@ -29,7 +29,7 @@ class EncoderCtor(nn.Module):
         super(EncoderCtor, self).__init__()
         self.w_o = w_o
         self.attention_layers = list(map(lambda x: SelfAttentionLayer(W_Q, W_K, W_V), range(num_heads)))
-        self.feedforward_layer = nn.Linear(word_width, word_width, bias=True)
+        self.feedforward_layer = nn.Sequential(nn.Linear(word_width, 2048, bias=True), nn.LeakyReLU(), nn.Linear(2048, word_width, bias=True))
 
     def forward(self, x):
         # Concatenating gives [num_words x num_heads * projection_width]
