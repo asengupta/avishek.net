@@ -22,9 +22,9 @@ FFNN_HIDDEN_LAYER_WIDTH = 2048
 
 
 def encoder_stack(num_encoders, w_o):
-    encoders = np.array(list(map(lambda x: EncoderCtor(w_o,
-                                                       DefaultParameters.DEFAULT_NUM_HEADS,
-                                                       DefaultParameters.DEFAULT_WORD_WIDTH), range(num_encoders))))
+    encoders = np.array(list(map(lambda x: Encoder(w_o,
+                                                   DefaultParameters.DEFAULT_NUM_HEADS,
+                                                   DefaultParameters.DEFAULT_WORD_WIDTH), range(num_encoders))))
     return nn.Sequential(*encoders)
 
 
@@ -53,9 +53,9 @@ class MultiheadedAttention(nn.Module):
         return scaled_concatenated_attention_vectors
 
 
-class EncoderCtor(nn.Module):
+class Encoder(nn.Module):
     def __init__(self, w_o, num_heads=8, word_width=512):
-        super(EncoderCtor, self).__init__()
+        super(Encoder, self).__init__()
         self.layer_norm = nn.LayerNorm(word_width)
         self.multiheaded_attention_layer = MultiheadedAttention(w_o, num_heads)
         self.feedforward_layer = nn.Sequential(
