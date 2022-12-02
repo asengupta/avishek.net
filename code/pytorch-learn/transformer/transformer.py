@@ -6,6 +6,7 @@ num_heads = 8
 word_width = 512
 projection_width = 64
 scale_factor = 100
+ffnn_hidden_layer_width = 2048
 
 
 def coder_stack(CoderCtor, num_encoders):
@@ -39,17 +40,16 @@ class MultiheadedAttention(nn.Module):
 class EncoderCtor(nn.Module):
     def __init__(self, num_heads, w_o, word_width):
         super(EncoderCtor, self).__init__()
-        self.w_o = w_o
         self.layer_norm = nn.LayerNorm(word_width)
         self.multiheaded_attention_layer = MultiheadedAttention(num_heads, w_o, word_width)
-        self.feedforward_layer = nn.Sequential(nn.Linear(word_width, 2048, bias=True), nn.LeakyReLU(), nn.Linear(2048, word_width, bias=True))
+        self.feedforward_layer = nn.Sequential(nn.Linear(word_width, ffnn_hidden_layer_width, bias=True), nn.LeakyReLU(), nn.Linear(ffnn_hidden_layer_width, word_width, bias=True))
 
     def forward(self, x):
         mh_output = self.multiheaded_attention_layer(x)
-        layer_normed_multihead = self.layer_norm(mh_output + x)
-        ffnn_outputs = torch.stack(list(map(lambda attention_vector: self.feedforward_layer(attention_vector), layer_normed_multihead)))
-        layer_normed_ffnn = self.layer_norm(ffnn_outputs + layer_normed_multihead)
-        return layer_normed_ffnn
+        layer_normed_multihead_output = self.layer_norm(mh_output + x)
+        ffnn_outputs = torch.stack(list(map(lambda attention_vector: self.feedforward_layer(attention_vector), layer_normed_multihead_output)))
+        layer_normed_ffnn_output = self.layer_norm(ffnn_outputs + layer_normed_multihead_output)
+        return layer_normed_ffnn_output
 
 
 class DecoderCtor(nn.Module):
