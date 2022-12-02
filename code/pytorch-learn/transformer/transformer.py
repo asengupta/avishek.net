@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
+import math
 
 softmax = torch.nn.Softmax(dim=1)
 
@@ -81,7 +82,7 @@ def qkvs(words, w_q, w_k, w_v):
 
 
 def attention_scores(qkvs):
-    return torch.matmul(softmax(torch.matmul(qkvs[0], torch.transpose(qkvs[1], 0, 1)) / 8.), qkvs[2])
+    return torch.matmul(softmax(torch.matmul(qkvs[0], torch.transpose(qkvs[1], 0, 1)) / math.sqrt(qkvs[0].shape[1])), qkvs[2])
 
 
 def positionally_encoded(words):

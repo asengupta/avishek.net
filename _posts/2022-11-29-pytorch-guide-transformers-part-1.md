@@ -47,17 +47,28 @@ Our initial aim is similar to the mathematics problems on dimensional analysis w
 
 ### Introducing the Query-Key-Value triad function
 
+This step is pretty simple: we will introduce the function which returns us the Key-Query-Value triad for a given word. Remember that we are not worried about the actual calculations right now; we will only worry ourselves about getting the dimensions right. Since the original paper mentions scaling the input to 64 dimensions, our function will simply return three 64-dimensional tensors filled with ones.
+
 ```python
 {% include_absolute '/code/pytorch-learn/transformer/history/transformer-004.py' %}
 ```
 
 ### Applying the Query-Key-Value function to a single word
 
+We can immediately move to the next logical step: actually multiplying our 512-dimensional input by $$W_Q$$, $$W_K$$ and $$W_V$$ matrices. Remember we still want to get out three 64-dimensional vectors, thus the sizes of these matrices will be $$512 \times 64$$. This is also when we actually multiply the input with these vectors in our ```qkv()``` function.
+
 ```python
 {% include_absolute '/code/pytorch-learn/transformer/history/transformer-005.py' %}
 ```
 
 ### Building the Softmax Scores for a single word
+
+At this point, we are ready have the three vectors $$Q$$, $$K$$, and $$V$$. We are about to implement part of the following calculation, except that it is for a single word:
+
+$$
+\displaystyle\text{Softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right) \times V
+$$
+![Softmax on Attention Score on a Single Word](/assets/images/self-attention-softmax.png)
 
 ```python
 {% include_absolute '/code/pytorch-learn/transformer/history/transformer-006.py' %}
