@@ -8,9 +8,13 @@ draft: false
 
 It may seem strange that I'm jumping from implementing a simple neural network into **Transformers**. I will return to building up the foundations of neural networks soon enough: for the moment, let's build a **Transformer** using PyTorch.
 
-The original paper is [Attention is All You Need](https://arxiv.org/abs/1706.03762). However, there are several excellent guides to understanding the original Transformers architecture; I will use [The Illustrated Transformer](https://jalammar.github.io/illustrated-transformer/) by Jay Alammar to guide this implementation. All the diagrams of the Transformer internals are gratefully borrowed from this site.
+The original paper is [Attention is All You Need](https://arxiv.org/abs/1706.03762). However, there are several excellent guides to understanding the original Transformers architecture; I will use [The Illustrated Transformer](https://jalammar.github.io/illustrated-transformer/) by Jay Alammar to guide this implementation. Many of the diagrams of the Transformer internals are gratefully borrowed from this site.
 
-One thing about this guide is that it does not start with a polished walkthrough of the finished code. Rather, I build it in stages, experimenting with PyTorch API's, adding/modifying/deleting code as I go along. The idea is two-fold: one, to give you a sense of what goes behind implementing a paper incrementally, and second, to demonstrate that progress while writing code is not linear.
+As is obligatory, we reproduce the original Transformer architecture before diving into the depths of its implementation.
+
+![Transformer Architecture](/assets/images/transformers-architecture.png)
+
+One thing about this guide is that it does not start with a polished walkthrough of the finished code. Rather, we build it in stages, experimenting with PyTorch API's, adding/modifying/deleting code as I go along. The idea is two-fold: one, to give you a sense of what goes behind implementing a paper incrementally, and second, to demonstrate that progress while writing code is not necessarily linear.
 
 Also, apart from some stock functionality like ```Linear``` and ```LayerNorm```, we won't be using any Transformer-specific layers available in PyTorch, like ```MultiheadAttention```. This is so we can gain a better understanding of the attention mechanism by building it ourselves.
 
