@@ -56,9 +56,10 @@ class EncoderCtor(nn.Module):
         super(EncoderCtor, self).__init__()
         self.layer_norm = nn.LayerNorm(word_width)
         self.multiheaded_attention_layer = MultiheadedAttention(w_o, num_heads)
-        self.feedforward_layer = nn.Sequential(nn.Linear(word_width, DefaultParameters.DEFAULT_FFNN_HIDDEN_LAYER_WIDTH, bias=True),
-                                               nn.LeakyReLU(),
-                                               nn.Linear(DefaultParameters.DEFAULT_FFNN_HIDDEN_LAYER_WIDTH, word_width, bias=True))
+        self.feedforward_layer = nn.Sequential(
+            nn.Linear(word_width, DefaultParameters.DEFAULT_FFNN_HIDDEN_LAYER_WIDTH, bias=True),
+            nn.LeakyReLU(),
+            nn.Linear(DefaultParameters.DEFAULT_FFNN_HIDDEN_LAYER_WIDTH, word_width, bias=True))
 
     def forward(self, x):
         mh_output = self.multiheaded_attention_layer(x)
@@ -83,11 +84,15 @@ def attention_scores(qkvs):
     return torch.matmul(softmax(torch.matmul(qkvs[0], torch.transpose(qkvs[1], 0, 1)) / 8.), qkvs[2])
 
 
+def positionally_encoded(words):
+    return words
+
+
 num_words = 2
 words = torch.randn([num_words, WORD_WIDTH])
 qkv_words = qkvs(words, W_Q, W_K, W_V)
 stack = encoder_stack(6, W_O)
-values = stack(words)
+values = stack(positionally_encoded(words))
 print(values)
 print(values.shape)
 # encoder = EncoderCtor(W_O)
