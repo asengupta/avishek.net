@@ -1,5 +1,5 @@
 ---
-title: "The No-Questions Asked Guide to PyTorch : Transformers"
+title: "The No-Questions Asked Guide to PyTorch : Transformers, Part 1"
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "PyTorch", "Programming", "Deep Learning", "Transformers"]
@@ -8,7 +8,7 @@ draft: false
 
 It may seem strange that I'm jumping from implementing a simple neural network into **Transformers**. I will return to building up the foundations of neural networks soon enough: for the moment, let's look at **Transformers**.
 
-There are several excellent guides to understanding the original Transformers architecture; I will use [The Illustrated Transformer](https://jalammar.github.io/illustrated-transformer/) by Jay Alammar to guide this implementation.
+The original paper is [Attention is All You Need](https://arxiv.org/abs/1706.03762). However, there are several excellent guides to understanding the original Transformers architecture; I will use [The Illustrated Transformer](https://jalammar.github.io/illustrated-transformer/) by Jay Alammar to guide this implementation.
 
 One thing about this guide is that it does not start with a polished walkthrough of the finished code. Rather, I build it in stages, experimenting with PyTorch API's, adding/modifying/deleting code as I go along. The idea is two-fold: one, to give you a sense of what goes behind implementing a paper incrementally, and second, to demonstrate that progress while writing code is not linear.
 
@@ -42,6 +42,8 @@ Thus, even the Self-Attention layers are also represented as Feedforward neural 
 
 To be honest, a lot of this is pretty dirty code; there are magic numbers, most of the object variables are not used. That's alright. This is also the first time we start including PyTorch dependencies.
 We've created a ```Sequential``` stack to house our layers, but there is not much to say about it, since it is essentially a placeholder for the real layers to be built in and incorporated.
+
+Our initial aim is similar to the mathematics problems on dimensional analysis we used to solve in school: namely, we want to get the dimensions of our inputs and outputs correct and parameterisable. We will start with one word, and midway, scale to supporting multiple words.
 
 ### Introducing the Query-Key-Value triad function
 
@@ -101,3 +103,26 @@ At this point, we are ready to pass the output into the Feedforward neural netwo
 {% include_absolute '/code/pytorch-learn/transformer/history/transformer-013.py' %}
 ```
 
+### Adding Feedforward Neural Network
+
+```python
+{% include_absolute '/code/pytorch-learn/transformer/history/transformer-014.py' %}
+```
+
+### Fixing Feedforward Neural Network architecture
+
+```python
+{% include_absolute '/code/pytorch-learn/transformer/history/transformer-015.py' %}
+```
+
+### Adding Add-and-Norm Layer
+
+```python
+{% include_absolute '/code/pytorch-learn/transformer/history/transformer-016.py' %}
+```
+
+### Refactoring, Stacking Encoders, and Placeholder for Positional Encoding
+
+```python
+{% include_absolute '/code/pytorch-learn/transformer/history/transformer-017.py' %}
+```
