@@ -197,7 +197,7 @@ At this point, we are ready to pass the output into the Feedforward neural netwo
 
 ### Adding Feedforward Neural Network
 
-We'd already build a FFNN in one of our first iterations; now we need to hook it up to the output of the Attention layer. Each word needs to be run through the same FFNN. Each word width is 512, thus the number of inputs to the FFNN is 512. The output needs to be of the same dimension. For this iteration, we will not worry about the ReLU and the hidden layer; a single layer will suffice to demonstrate that the Encoder in its current form can give a dimensionally-correct output.
+We'd already built a FFNN in one of our first iterations; now we need to hook it up to the output of the Attention layer. Each word needs to be run through the same FFNN. Each word width is 512, thus the number of inputs to the FFNN is 512. The output needs to be of the same dimension. For this iteration, we will not worry about the ReLU and the hidden layer; a single layer will suffice to demonstrate that the Encoder in its current form can give a dimensionally-correct output.
 
 ```python
 {% include_absolute '/code/pytorch-learn/transformer/history/transformer-014.py' %}
