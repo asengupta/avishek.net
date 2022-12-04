@@ -43,6 +43,7 @@ def translate(x, y, z):
 
 focal_length = 1.
 
+
 class Camera:
     def __init__(self, focal_length, center, basis):
         camera_center = center.detach().clone()
@@ -63,12 +64,32 @@ class Camera:
         point_z = rendered_point[2, 0]
         return rendered_point / point_z
 
+
+def camera_basis_from(camera_depth_z_vector):
+    depth_vector = camera_depth_z_vector[:3]
+    cartesian_z_vector = torch.tensor([0., 0., 1.])
+    cartesian_x_vector = torch.tensor([1., 0., 0.])
+    cartesian_z_projection_lambda = torch.dot(depth_vector, cartesian_z_vector) / torch.dot(
+        depth_vector, depth_vector)
+    cartesian_x_projection_lambda = torch.dot(depth_vector, cartesian_x_vector) / torch.dot(
+        depth_vector, depth_vector)
+    camera_up_vector = cartesian_z_vector - cartesian_z_projection_lambda * depth_vector
+    camera_x_vector = torch.linalg.cross(depth_vector, camera_up_vector)
+    # camera_x_vector = cartesian_x_vector - cartesian_x_projection_lambda * depth_vector
+    inhomogeneous_basis = torch.stack([camera_x_vector, camera_up_vector, depth_vector, torch.tensor([0., 0., 0.])])
+    homogeneous_basis = torch.hstack((inhomogeneous_basis, torch.tensor([[0.], [0.], [0.], [1.]])))
+    return homogeneous_basis
+
+
 # camera_coordinate_system = torch.tensor([[1.,1.,0.,0.], [-1.,1.,0,0.], [.0,0.,1.,0.], [0.,0.,0.,1.]])
 # camera_basis = torch.tensor([[1.,-1.,0.,0.], [0.,0.,1.,0.], [1.,1.,0.,0.], [0.,0.,0.,1.]])
-camera_basis = torch.tensor([[1.,-1.,0.,0.], [1.,1.,1.,0.], [1.,1.,-2.,0.], [0.,0.,0.,1.]])
+# camera_basis = torch.tensor([[1.,-1.,0.,0.], [1.,1.,1.,0.], [1.,1.,-2.,0.], [0.,0.,0.,1.]])
+# camera_basis = camera_basis_from(torch.tensor([1., 1., -2., 1.]))
+camera_basis = camera_basis_from(torch.tensor([-3., 10., -8., 1.]))
+print(camera_basis)
 # camera_basis = torch.tensor([[1.,-1.,0.,0.], [1.,1.,1.,0.], [1.,1.,-1.,0.], [0.,0.,0.,1.]])
 # camera_coordinate_system = torch.tensor([[math.cos(math.pi/4),math.sin(math.pi/4),0.,0.], [-math.cos(math.pi/4),math.sin(math.pi/4),0,0.], [.0,0.,1.,0.], [0.,0.,0.,1.]])
-camera_center = torch.tensor([0.,0.,10.,1.])
+camera_center = torch.tensor([8., -5., 8., 1.])
 
 camera = Camera(focal_length, camera_center, camera_basis)
 r1 = camera.to_2D(torch.tensor([[10., 10., 10., 1.]]))
@@ -90,16 +111,21 @@ back_sq_2 = camera.to_2D(torch.tensor([[back_zx - 5., back_zy + 5., -5., 1.]]))
 back_sq_3 = camera.to_2D(torch.tensor([[back_zx + 5., back_zy - 5., 5., 1.]]))
 back_sq_4 = camera.to_2D(torch.tensor([[back_zx + 5., back_zy - 5., -5., 1.]]))
 
-print(front_sq_1)
-print(front_sq_2)
-print(front_sq_3)
-print(front_sq_4)
+
+# print(camera_basis(torch.tensor([0,1,0,0])))
+
+# print(front_sq_1)
+# print(front_sq_2)
+# print(front_sq_3)
+# print(front_sq_4)
 
 def plot(style="bo"):
     return lambda p: plt.plot(p[0][0], p[1][0], style)
 
+
 def line(style="bo"):
     return lambda p1, p2: plt.plot([p1[0][0], p2[0][0]], [p1[1][0], p2[1][0]], marker="o")
+
 
 front_line = line("bo")
 back_line = line("ro")
