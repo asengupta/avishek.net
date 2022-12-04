@@ -153,3 +153,5 @@ for i in range(10):
             plt.plot(d[0][0], d[1][0], marker="o")
 
 plt.show()
+
+start_ray = camera_center
