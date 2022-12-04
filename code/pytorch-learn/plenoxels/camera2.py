@@ -9,7 +9,8 @@ class Camera:
     def __init__(self, focal_length, center, basis):
         camera_center = center.detach().clone()
         transposed_basis = torch.transpose(basis, 0, 1)
-        camera_center[:3] = camera_center[:3] * -1
+        camera_center[:3] = camera_center[
+                            :3] * -1  # We don't want to multiply the homogenous coordinate component; it needs to remain 1
         camera_origin_translation = torch.eye(4, 4)
         camera_origin_translation[:, 3] = camera_center
         extrinsic_camera_parameters = torch.matmul(torch.inverse(transposed_basis), camera_origin_translation)
@@ -21,17 +22,24 @@ class Camera:
 
     def to_2D(self, point):
         rendered_point = torch.matmul(self.transform, torch.transpose(point, 0, 1))
-        # return rendered_point
         point_z = rendered_point[2, 0]
         return rendered_point / point_z
 
 
 def camera_basis_from(camera_depth_z_vector):
-    depth_vector = camera_depth_z_vector[:3]
+    depth_vector = camera_depth_z_vector[:3]  # We just want the inhomogenous parts of the coordinates
+
+    # This calculates the projection of the world z-axis onto the surface defined by the camera direction,
+    # since we want to derive the coordinate system of the camera to be orthogonal without having
+    # to calculate it manually.
     cartesian_z_vector = torch.tensor([0., 0., 1.])
     cartesian_z_projection_lambda = torch.dot(depth_vector, cartesian_z_vector) / torch.dot(
         depth_vector, depth_vector)
     camera_up_vector = cartesian_z_vector - cartesian_z_projection_lambda * depth_vector
+
+    # The camera coordinate system now has the direction of camera and the up direction of the camera.
+    # We need to find the third vector which needs to be orthogonal to both the previous vectors.
+    # Taking the cross product of these vectors gives us this third component
     camera_x_vector = torch.linalg.cross(depth_vector, camera_up_vector)
     inhomogeneous_basis = torch.stack([camera_x_vector, camera_up_vector, depth_vector, torch.tensor([0., 0., 0.])])
     homogeneous_basis = torch.hstack((inhomogeneous_basis, torch.tensor([[0.], [0.], [0.], [1.]])))
@@ -42,6 +50,13 @@ def basis_from_depth(look_at, camera_center):
     depth_vector = torch.sub(look_at, camera_center)
     depth_vector[3] = 1.
     return camera_basis_from(depth_vector)
+
+
+def unit_vector(camera_basis_vector):
+    return camera_basis_vector / math.sqrt(
+        pow(camera_basis_vector[0], 2) +
+        pow(camera_basis_vector[1], 2) +
+        pow(camera_basis_vector[2], 2))
 
 
 def plot(style="bo"):
@@ -67,17 +82,9 @@ for i in range(10):
             d = camera.to_2D(torch.tensor([[i, j, k, 1.]]))
             plt.plot(d[0][0], d[1][0], marker="o")
 
-start_ray = camera_center
+ray_origin = camera_center
 camera_basis_x = camera_basis[0][:3]
 camera_basis_y = camera_basis[1][:3]
-
-
-def unit_vector(camera_basis_vector):
-    return camera_basis_vector / math.sqrt(
-        pow(camera_basis_vector[0], 2) +
-        pow(camera_basis_vector[1], 2) +
-        pow(camera_basis_vector[2], 2))
-
 
 unit_vector_x_camera_basis = unit_vector(camera_basis_x)
 unit_vector_y_camera_basis = unit_vector(camera_basis_y)
