@@ -80,11 +80,6 @@ def basis_from_depth(look_at, camera_center):
     return camera_basis_from(depth_vector)
 
 
-look_at2 = torch.tensor([0., 0., 0., 1])
-camera_center2 = torch.tensor([-10., -10., 20., 1.])
-
-camera2 = Camera(focal_length, camera_center2, basis_from_depth(look_at2, camera_center2))
-
 def plot(style="bo"):
     return lambda p: plt.plot(p[0][0], p[1][0], style)
 
@@ -92,14 +87,18 @@ def plot(style="bo"):
 def line(style="bo"):
     return lambda p1, p2: plt.plot([p1[0][0], p2[0][0]], [p1[1][0], p2[1][0]], marker="o")
 
+look_at = torch.tensor([0., 0., 0., 1])
+camera_center = torch.tensor([-10., -10., 20., 1.])
+
+camera = Camera(focal_length, camera_center, basis_from_depth(look_at, camera_center))
+
 for i in range(10):
     for j in range(10):
         for k in range(10):
-            print(i)
-            d = camera2.to_2D(torch.tensor([[i, j, k, 1.]]))
+            d = camera.to_2D(torch.tensor([[i, j, k, 1.]]))
             plt.plot(d[0][0], d[1][0], marker="o")
 
 plt.show()
 
-start_ray = camera_center2
+start_ray = camera_center
 
