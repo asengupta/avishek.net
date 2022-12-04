@@ -1,5 +1,6 @@
 import math
 
+import numpy as np
 import torch
 import matplotlib.pyplot as plt
 
@@ -87,10 +88,14 @@ def plot(style="bo"):
 def line(style="bo"):
     return lambda p1, p2: plt.plot([p1[0][0], p2[0][0]], [p1[1][0], p2[1][0]], marker="o")
 
-look_at = torch.tensor([0., 0., 0., 1])
-camera_center = torch.tensor([-10., -10., 20., 1.])
 
-camera = Camera(focal_length, camera_center, basis_from_depth(look_at, camera_center))
+look_at = torch.tensor([0., 0., 0., 1])
+camera_center = torch.tensor([-5., -10., 20., 1.])
+
+camera_basis = basis_from_depth(look_at, camera_center)
+camera = Camera(focal_length, camera_center, camera_basis)
+
+fig1 = plt.figure()
 
 for i in range(10):
     for j in range(10):
@@ -98,7 +103,42 @@ for i in range(10):
             d = camera.to_2D(torch.tensor([[i, j, k, 1.]]))
             plt.plot(d[0][0], d[1][0], marker="o")
 
-plt.show()
-
 start_ray = camera_center
+camera_basis_x = camera_basis[0][:3]
+camera_basis_y = camera_basis[1][:3]
 
+
+def unit_vector(camera_basis_vector):
+    return camera_basis_vector / math.sqrt(
+        pow(camera_basis_vector[0], 2) +
+        pow(camera_basis_vector[1], 2) +
+        pow(camera_basis_vector[2], 2))
+
+
+unit_vector_x_camera_basis = unit_vector(camera_basis_x)
+unit_vector_y_camera_basis = unit_vector(camera_basis_y)
+
+print(unit_vector_x_camera_basis)
+print(unit_vector_y_camera_basis)
+
+camera_center_inhomogenous = camera_center[:3]
+
+fig2 = plt.figure()
+
+for i in np.linspace(-10, 20, 50):
+    for j in np.linspace(0, 30, 50):
+        ray_screen_intersection = unit_vector_x_camera_basis * i + unit_vector_y_camera_basis * j
+        unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
+        density = 0.
+        for k in np.linspace(0, 100):
+            ray_endpoint = camera_center_inhomogenous + unit_ray * k
+            ray_x, ray_y, ray_z = ray_endpoint
+            if (ray_x < 0 or ray_x > 10 or
+                    ray_y < 0 or ray_y > 10 or
+                    ray_z < 0 or ray_z > 10):
+                continue
+            # We are in the box
+            density += 0.1
+        plt.plot(i, j, marker="o", color=str(1. - density))
+
+plt.show()
