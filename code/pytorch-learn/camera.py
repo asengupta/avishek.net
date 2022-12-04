@@ -82,15 +82,16 @@ def camera_basis_from(camera_depth_z_vector):
 # camera_basis = torch.tensor([[1.,-1.,0.,0.], [0.,0.,1.,0.], [1.,1.,0.,0.], [0.,0.,0.,1.]])
 # camera_basis = torch.tensor([[1.,-1.,0.,0.], [1.,1.,1.,0.], [1.,1.,-2.,0.], [0.,0.,0.,1.]])
 # camera_basis = camera_basis_from(torch.tensor([1., 1., -2., 1.]))
-look_at = torch.tensor([5., 5., 0., 1])
-camera_center = torch.tensor([-5., -20., 8., 1.])
-depth_vector = look_at - camera_center
-depth_vector[3] = 1.
-print(depth_vector)
-camera_basis = camera_basis_from(depth_vector)
-print(camera_basis)
+def basis_from_depth(look_at, camera_center):
+    depth_vector = torch.sub(look_at, camera_center)
+    depth_vector[3] = 1.
+    return camera_basis_from(depth_vector)
 
-camera = Camera(focal_length, camera_center, camera_basis)
+
+look_at = torch.tensor([5., 5., 0., 1])
+camera_center = torch.tensor([18., -30., 15., 1.])
+
+camera = Camera(focal_length, camera_center, basis_from_depth(look_at, camera_center))
 r1 = camera.to_2D(torch.tensor([[10., 10., 10., 1.]]))
 r2 = camera.to_2D(torch.tensor([[30., 30., 10., 1.]]))
 
