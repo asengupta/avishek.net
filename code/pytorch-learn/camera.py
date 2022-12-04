@@ -68,7 +68,6 @@ class Camera:
 def camera_basis_from(camera_depth_z_vector):
     depth_vector = camera_depth_z_vector[:3]
     cartesian_z_vector = torch.tensor([0., 0., 1.])
-    cartesian_x_vector = torch.tensor([1., 0., 0.])
     cartesian_z_projection_lambda = torch.dot(depth_vector, cartesian_z_vector) / torch.dot(
         depth_vector, depth_vector)
     camera_up_vector = cartesian_z_vector - cartesian_z_projection_lambda * depth_vector
@@ -89,9 +88,12 @@ def basis_from_depth(look_at, camera_center):
 
 
 look_at = torch.tensor([5., 5., 0., 1])
+look_at2 = torch.tensor([0., 0., 0., 1])
 camera_center = torch.tensor([38., -30., 15., 1.])
+camera_center2 = torch.tensor([-10., -10., 20., 1.])
 
 camera = Camera(focal_length, camera_center, basis_from_depth(look_at, camera_center))
+camera2 = Camera(focal_length, camera_center2, basis_from_depth(look_at2, camera_center2))
 r1 = camera.to_2D(torch.tensor([[10., 10., 10., 1.]]))
 r2 = camera.to_2D(torch.tensor([[30., 30., 10., 1.]]))
 
@@ -124,21 +126,30 @@ def plot(style="bo"):
     return lambda p: plt.plot(p[0][0], p[1][0], style)
 
 
-def line(style="bo"):
-    return lambda p1, p2: plt.plot([p1[0][0], p2[0][0]], [p1[1][0], p2[1][0]], marker="o")
+# def line(style="bo"):
+#     return lambda p1, p2: plt.plot([p1[0][0], p2[0][0]], [p1[1][0], p2[1][0]], marker="o")
 
 
-front_line = line("bo")
-back_line = line("ro")
+# front_line = line("bo")
+# back_line = line("ro")
+#
+# front_line(front_sq_1, front_sq_2)
+# front_line(front_sq_2, front_sq_4)
+# front_line(front_sq_3, front_sq_4)
+# front_line(front_sq_3, front_sq_1)
+#
+# back_line(back_sq_1, back_sq_2)
+# back_line(back_sq_2, back_sq_4)
+# back_line(back_sq_3, back_sq_4)
+# back_line(back_sq_3, back_sq_1)
 
-front_line(front_sq_1, front_sq_2)
-front_line(front_sq_2, front_sq_4)
-front_line(front_sq_3, front_sq_4)
-front_line(front_sq_3, front_sq_1)
+# grid = torch.ones([30,30,30])
 
-back_line(back_sq_1, back_sq_2)
-back_line(back_sq_2, back_sq_4)
-back_line(back_sq_3, back_sq_4)
-back_line(back_sq_3, back_sq_1)
+for i in range(10):
+    for j in range(10):
+        for k in range(10):
+            print(i)
+            d = camera2.to_2D(torch.tensor([[i, j, k, 1.]]))
+            plt.plot(d[0][0], d[1][0], marker="o")
 
 plt.show()
