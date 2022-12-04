@@ -89,7 +89,7 @@ def basis_from_depth(look_at, camera_center):
 
 
 look_at = torch.tensor([5., 5., 0., 1])
-camera_center = torch.tensor([18., -30., 15., 1.])
+camera_center = torch.tensor([38., -30., 15., 1.])
 
 camera = Camera(focal_length, camera_center, basis_from_depth(look_at, camera_center))
 r1 = camera.to_2D(torch.tensor([[10., 10., 10., 1.]]))
@@ -98,14 +98,15 @@ r2 = camera.to_2D(torch.tensor([[30., 30., 10., 1.]]))
 front_zx = 10
 front_zy = 10
 
-back_zx = 17
-back_zy = 17
+far = 5
+
+back_zx = front_zx + far
+back_zy = front_zy + far
 front_sq_1 = camera.to_2D(torch.tensor([[front_zx - 5., front_zy + 5., 5., 1.]]))
 front_sq_2 = camera.to_2D(torch.tensor([[front_zx - 5., front_zy + 5., -5., 1.]]))
 front_sq_3 = camera.to_2D(torch.tensor([[front_zx + 5., front_zy - 5., 5., 1.]]))
 front_sq_4 = camera.to_2D(torch.tensor([[front_zx + 5., front_zy - 5., -5., 1.]]))
 
-far = 50
 back_sq_1 = camera.to_2D(torch.tensor([[back_zx - 5., back_zy + 5., 5., 1.]]))
 back_sq_2 = camera.to_2D(torch.tensor([[back_zx - 5., back_zy + 5., -5., 1.]]))
 back_sq_3 = camera.to_2D(torch.tensor([[back_zx + 5., back_zy - 5., 5., 1.]]))
