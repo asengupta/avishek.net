@@ -4,43 +4,6 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 
-point0 = torch.transpose(torch.tensor([[10., 10., 15., 1.]]), 0, 1)
-point3 = torch.transpose(torch.tensor([[30., 30., 15., 1.]]), 0, 1)
-point1 = torch.transpose(torch.tensor([[1, 1, 1, 1]]), 0, 1)
-point2 = torch.transpose(torch.tensor([[1., 1., 0., 1.]]), 0, 1)
-
-
-def rotation_x_axis(angle):
-    return torch.tensor([[1, 0, 0, 0],
-                         [0, math.cos(angle), - math.sin(angle), 0],
-                         [0, math.sin(angle), math.cos(angle), 0],
-                         [0, 0, 0, 1]])
-
-
-def rotation_y_axis(angle):
-    return torch.tensor([[1, 0, 0, 0],
-                         [math.cos(angle), 0, math.sin(angle), 0],
-                         [0, 1, 0, 0],
-                         [0, -math.sin(angle), 0, math.cos(angle)],
-                         [0, 0, 0, 1]])
-
-
-def rotation_z_axis(angle):
-    return torch.tensor([[math.cos(angle), - math.sin(angle), 0, 5],
-                         [math.sin(angle), math.cos(angle), 0, 0],
-                         [0, 0, 1, 0],
-                         [0, 0, 0, 1]])
-
-
-def translate(x, y, z):
-    return torch.tensor([[0, 0, 0, x],
-                         [0, 0, 0, y],
-                         [0, 0, 1, z],
-                         [0, 0, 0, 1]])
-
-
-focal_length = 1.
-
 
 class Camera:
     def __init__(self, focal_length, center, basis):
@@ -85,12 +48,13 @@ def plot(style="bo"):
     return lambda p: plt.plot(p[0][0], p[1][0], style)
 
 
-def line(style="bo"):
+def line(marker="o"):
     return lambda p1, p2: plt.plot([p1[0][0], p2[0][0]], [p1[1][0], p2[1][0]], marker="o")
 
 
 look_at = torch.tensor([0., 0., 0., 1])
 camera_center = torch.tensor([-5., -10., 20., 1.])
+focal_length = 1.
 
 camera_basis = basis_from_depth(look_at, camera_center)
 camera = Camera(focal_length, camera_center, camera_basis)
