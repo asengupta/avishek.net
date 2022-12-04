@@ -71,11 +71,8 @@ def camera_basis_from(camera_depth_z_vector):
     cartesian_x_vector = torch.tensor([1., 0., 0.])
     cartesian_z_projection_lambda = torch.dot(depth_vector, cartesian_z_vector) / torch.dot(
         depth_vector, depth_vector)
-    cartesian_x_projection_lambda = torch.dot(depth_vector, cartesian_x_vector) / torch.dot(
-        depth_vector, depth_vector)
     camera_up_vector = cartesian_z_vector - cartesian_z_projection_lambda * depth_vector
     camera_x_vector = torch.linalg.cross(depth_vector, camera_up_vector)
-    # camera_x_vector = cartesian_x_vector - cartesian_x_projection_lambda * depth_vector
     inhomogeneous_basis = torch.stack([camera_x_vector, camera_up_vector, depth_vector, torch.tensor([0., 0., 0.])])
     homogeneous_basis = torch.hstack((inhomogeneous_basis, torch.tensor([[0.], [0.], [0.], [1.]])))
     return homogeneous_basis
@@ -85,11 +82,13 @@ def camera_basis_from(camera_depth_z_vector):
 # camera_basis = torch.tensor([[1.,-1.,0.,0.], [0.,0.,1.,0.], [1.,1.,0.,0.], [0.,0.,0.,1.]])
 # camera_basis = torch.tensor([[1.,-1.,0.,0.], [1.,1.,1.,0.], [1.,1.,-2.,0.], [0.,0.,0.,1.]])
 # camera_basis = camera_basis_from(torch.tensor([1., 1., -2., 1.]))
-camera_basis = camera_basis_from(torch.tensor([-3., 10., -8., 1.]))
+look_at = torch.tensor([5., 5., 0., 1])
+camera_center = torch.tensor([-5., -20., 8., 1.])
+depth_vector = look_at - camera_center
+depth_vector[3] = 1.
+print(depth_vector)
+camera_basis = camera_basis_from(depth_vector)
 print(camera_basis)
-# camera_basis = torch.tensor([[1.,-1.,0.,0.], [1.,1.,1.,0.], [1.,1.,-1.,0.], [0.,0.,0.,1.]])
-# camera_coordinate_system = torch.tensor([[math.cos(math.pi/4),math.sin(math.pi/4),0.,0.], [-math.cos(math.pi/4),math.sin(math.pi/4),0,0.], [.0,0.,1.,0.], [0.,0.,0.,1.]])
-camera_center = torch.tensor([8., -5., 8., 1.])
 
 camera = Camera(focal_length, camera_center, camera_basis)
 r1 = camera.to_2D(torch.tensor([[10., 10., 10., 1.]]))
