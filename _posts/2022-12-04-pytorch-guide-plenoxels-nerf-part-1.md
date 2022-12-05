@@ -15,14 +15,14 @@ Before we get into the implementations of the paper proper, we will need a game 
 - Spherical Harmonics
 - Regularisation
 
-In this specific post, however, we will start building out a simple volumetric renderer. On the way, we will also discuss the pinhole camera model, on which most of our rendering will be based on.
+In this specific post, however, we will start building out a simple **volumetric renderer**. On the way, we will also discuss the pinhole camera model, on which most of our rendering will be based on.
 
 ### The World Camera Model and some Linear Algebra
 
-The pinhole camera model has the following characteristics.
+The **pinhole camera model** has the following characteristics.
 
-- The model exists in the world, and is expressed in the world coordinate system. This is usually our default three-dimensional basis.
-- The camera exists somewhere in the world, and has its own coordinate system, the camera coordinate system. This is characterised by the location of the camera, the focal length of the camera, and the three-dimensional basis for the camera.
+- The model exists in the world, and is expressed in the **world coordinate system**. This is usually our default three-dimensional basis.
+- The camera exists somewhere in the world, and has its own coordinate system, the **camera coordinate system**. This is characterised by the **location** of the camera, the **focal length** of the camera, and the three-dimensional basis for the camera.
 - The screen of the camera (which is basically where the image is formed) has its own two-dimensional coordinate system.
 
 ![Camera World Mode](/assets/images/camera-world-model.png)
@@ -39,8 +39,8 @@ $$
 In the above diagram $$X_W = (x_w, y_w, z_w)$$.
 We need to do the following steps:
 
-- Express $$X_W$$ in the coordinate system of the camera as $$X_C$$. These are the extrinsic parameters of the camera.
-- Express $$X_C$$ in the coordinate system of the camera screen, taking into account focal length. These are the intrinsic parameters of the camera.
+- Express $$X_W$$ in the coordinate system of the camera as $$X_C$$. These are the **extrinsic parameters** of the camera.
+- Express $$X_C$$ in the coordinate system of the camera screen, taking into account focal length. These are the **intrinsic parameters** of the camera.
 
 The camera is characterised first by the camera center $$C$$. The first step is translating the entire world so that the origin is now at the camera. This is simply done by calculating $$X_W-C$$.
 
