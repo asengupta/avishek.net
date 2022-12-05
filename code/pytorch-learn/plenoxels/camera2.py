@@ -41,6 +41,9 @@ def camera_basis_from(camera_depth_z_vector):
     camera_x_vector = torch.linalg.cross(depth_vector, camera_up_vector)
     inhomogeneous_basis = torch.stack([camera_x_vector, camera_up_vector, depth_vector, torch.tensor([0., 0., 0.])])
     homogeneous_basis = torch.hstack((inhomogeneous_basis, torch.tensor([[0.], [0.], [0.], [1.]])))
+    homogeneous_basis[0] = unit_vector(homogeneous_basis[0])
+    homogeneous_basis[1] = unit_vector(homogeneous_basis[1])
+    homogeneous_basis[2] = unit_vector(homogeneous_basis[2])
     return homogeneous_basis
 
 

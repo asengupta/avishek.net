@@ -174,7 +174,7 @@ We have not discussed the optical model for volumetric rendering, so for the mom
 - For each such point, determine if it lies in an occupied voxel. If it does, increment the density of this ray by a tiny amount.
 - At the end of the sampling of this ray, the accumulated density will be the greyscale intensity of the pixel in the camera viewport.
 
-We have used a simple $$10 \times 10 \times 10$$ cube for this example. There is currently no data structure holding the cube information: we simply assume the cube exists extends from $$(0,0,0)$$ upto $$(10,0,0)$$, $$(0,10,0)$$, and $$(0,0,10)$$, and implement the voxel check accordingly.
+We have used a simple $$10 \times 10 \times 10$$ cube for this example. There is currently no data structure holding the cube information: we simply assume the cube extends from $$(0,0,0)$$ upto $$(10,0,0)$$, $$(0,10,0)$$, and $$(0,0,10)$$, and implement the voxel check accordingly.
 
 ![Basic Volumetric Raycasting](/assets/images/basic-volumetric-raycasting.png)
 
