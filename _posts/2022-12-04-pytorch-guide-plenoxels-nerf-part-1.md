@@ -17,7 +17,7 @@ Before we get into the implementations of the paper proper, we will need a game 
 
 In this specific post, however, we will start building out a simple volumetric renderer. On the way, we will also discuss the pinhole camera model, on which most of our rendering will be based on.
 
-### The Pinhole Camera Model and some Linear Algebra
+### The World Camera Model and some Linear Algebra
 
 The pinhole camera model has the following characteristics.
 
@@ -25,12 +25,18 @@ The pinhole camera model has the following characteristics.
 - The camera exists somewhere in the world, and has its own coordinate system, the camera coordinate system. This is characterised by the location of the camera, the focal length of the camera, and the three-dimensional basis for the camera.
 - The screen of the camera (which is basically where the image is formed) has its own two-dimensional coordinate system.
 
+![Camera World Mode](/assets/images/camera-world-model.png)
+
 The challenge is this: we have a point in 3D space expressed in the world coordinate system, let's call it $$X_W$$; we want to know what this point will translate to on the 2D coordinate system of the camera screen/film. At a very high level, given all the information about the camera and the world, we want to know about the camera transform matrix $$P$$.
 
 $$
-X_{2D}=PX_W
+\begin{equation}
+X_V=TX_W
+\label{eq:1}
+\end{equation}
 $$
 
+In the above diagram $$X_W = (x_w, y_w, z_w)$$.
 We need to do the following steps:
 
 - Express $$X_W$$ in the coordinate system of the camera as $$X_C$$. These are the extrinsic parameters of the camera.
@@ -57,12 +63,85 @@ Thus, multiplying $$B^{-1}$$ with our original world space vector $$v$$ gives us
 Thus, the rotation that we need to do is:
 
 $$
+\begin{equation}
 X_C=B^{-1} (X_W - C)
+\label{eq:2}
+\end{equation}
 $$
 
+In the diagram above, $$X_C=(x_C, y_C, x_C)$$.
 A note on convention: the Z-axis of the camera always points in the direction the camera is pointing in: the X- and Y-axes are reserved for mapping the image onto the camera screen.
 
-Now we look at the intrinsic parameters, specifically the focal length and the mapping to the screen (which is where we will finally see the image). The pinhole camera model is represented by the following diagram.
+### The Pinhole Camera Model
+
+Now we look at the intrinsic parameters which form the basis for the pinhole camera model, specifically the focal length and the mapping to the screen (which is where we will finally see the image). The pinhole camera model is represented by the following diagram.
+
+![Pinhole Camera Mode](/assets/images/pinhole-camera-model.png)
+
+By similar triangles, we have:
+
+$$
+\frac{y_V}{y}=\frac{f}{z} \\
+y_V = \frac{f}{z} y
+$$
+
+Similarly, we have: $$\displaystyle x_V = \frac{f}{z} x$$.
+The transform matrix is thus:
+
+$$
+\begin{equation}
+P=
+\begin{bmatrix}
+f && 0 && p_x && 0 \\
+0 && f && p_y && 0 \\
+0 && 0 && 1 && 0
+\end{bmatrix}
+\label{eq:3}
+\end{equation}
+$$
+
+Note that the above matrix is $$3 \times 4$$: passing a 3D coordinate in homogeneous form ($$4 \times 1$$) will yield a $$3 \times 1$$ vector.
+
+The result of the transform $$PX_C$$ gives us:
+
+$$
+PX_C =
+\begin{bmatrix}
+f && 0 && p_x && 0 \\
+0 && f && p_y && 0 \\
+0 && 0 && 1 && 0
+\end{bmatrix}
+
+\begin{bmatrix}
+x_C \\
+y_C \\
+z_C \\
+1
+\end{bmatrix}
+=
+
+\begin{bmatrix}
+fx_C + z_C p_x \\
+fy_C + z_C p_y \\
+z_C \\
+\end{bmatrix}
+$$
+
+Since $$z$$ is not constant, whatever result we get will be divided throughout by $$z$$, to give us the 2D view screen coordinates in homogeneous form.
+
+$$
+PX_C=\begin{bmatrix}
+\displaystyle\frac{f}{z}x_C + p_x \\
+\displaystyle\frac{f}{z}y_C + p_y \\
+1 \\
+\end{bmatrix}
+$$
+
+Pulling in $$\eqref{eq:2}$$, $$\eqref{eq:3}$$, and substituting in $$\eqref{eq:3}$$, we get:
+
+$$
+X_V = PB^{-1} (X_W - C)
+$$
 
 ![Voxel Cube](/assets/images/voxel-cube.png)
 ![Very Basic Volumetric Rendering of Cube](/assets/images/basic-volumetric-rendering-cube.png)

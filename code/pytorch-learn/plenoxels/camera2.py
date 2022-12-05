@@ -15,8 +15,7 @@ class Camera:
         extrinsic_camera_parameters = torch.matmul(torch.inverse(transposed_basis), camera_origin_translation)
         intrinsic_camera_parameters = torch.tensor([[focal_length, 0., 0., 0.],
                                                     [0., focal_length, 0., 0.],
-                                                    [0., 0., 1., 0.],
-                                                    [0., 0., 0., 1.]])
+                                                    [0., 0., 1., 0.]])
         self.transform = torch.matmul(intrinsic_camera_parameters, extrinsic_camera_parameters)
 
     def to_2D(self, point):
@@ -79,6 +78,7 @@ for i in range(10):
     for j in range(10):
         for k in range(10):
             d = camera.to_2D(torch.tensor([[i, j, k, 1.]]))
+            print(d)
             plt.plot(d[0][0], d[1][0], marker="o")
 
 ray_origin = camera_center
