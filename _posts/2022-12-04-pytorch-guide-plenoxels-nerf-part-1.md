@@ -1,5 +1,5 @@
 ---
-title: "Plenoxels and Neural Radiance Fields using PyTorch: Building a Volume Renderer"
+title: "Plenoxels and Neural Radiance Fields using PyTorch: Part 1"
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "PyTorch", "Programming", "Deep Learning", "Neural Radiance Fields", "Machine Vision"]
@@ -86,7 +86,7 @@ y_V = \frac{f}{z} y
 $$
 
 Similarly, we have: $$\displaystyle x_V = \frac{f}{z} x$$.
-The transform matrix is thus:
+The mapping to the screen is a simple $$x-y$$ translation represented by $$p_x$$ and $$p_y$$. The transform matrix is thus:
 
 $$
 \begin{equation}
@@ -143,34 +143,26 @@ $$
 X_V = PB^{-1} (X_W - C)
 $$
 
+**Technical Note:** In the actual implementation, the camera center translation is implemented using homogeneous coordinates, so that instead of subtracting the camera center ($$C=(C_x, C_y, C_z)$$), we perform a matrix multiplication, like so:
+
+$$
+X_V = PB^{-1}.C'.X_W
+$$
+
+where $$C'=\begin{bmatrix}
+0 && 0 && 0 && -C_x \\
+0 && 1 && 0 && -C_y \\
+0 && 0 && 0 && -C_z \\
+0 && 0 && 0 && 1
+\end{bmatrix}
+$$.
+
+
 ![Voxel Cube](/assets/images/voxel-cube.png)
 ![Very Basic Volumetric Rendering of Cube](/assets/images/basic-volumetric-rendering-cube.png)
 
-The following code plays around with the pinhole camera model and sets up a very basic (maybe even contrived) volumetric rendering model.
+The following code plays around with the pinhole camera model and sets up a very basic (maybe even contrived) volumetric rendering model. The details of the toy volumetric raycasting logic is explained after the listing. The code is annotated with comments so you should be able to follow along.
 
 ```python
 {% include_absolute '/code/pytorch-learn/plenoxels/camera2.py' %}
 ```
-
-### Building the Voxel Data Structure
-
-We will store opacity and the spherical harmonic coefficients.
-
-### Incorporating the Volumetric Rendering Model
-
-We will take a bit of a pause to understand the optical model involved in volumetric rendering since it is essential to the actual rendering and the subsequent calculation of the loss. This article follows [Optical Model for Volumetric Rendering](https://www.youtube.com/watch?v=hiaHlTLN9TE) quite a bit. Solving differential equations is involved, but for the most part, you should be able to skip to the results, if you are not interested in the gory details.
-
-### Calculating Loss
-
-### Incorporating Training Images
-
-### Incorporating Trilinear Interpolation
-
-### Optimising using RMSProp
-
-### References
-
-- [Camera Matrix - Kris Kitani](https://www.cs.cmu.edu/~16385/s17/Slides/11.1_Camera_matrix.pdf)
-- [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131)
-- [Plenoxels Explained](https://deeprender.ai/blog/plenoxels-radiance-fields-without-neural-networks)
-- [Optical Model for Volumetric Rendering](https://www.youtube.com/watch?v=hiaHlTLN9TE)
