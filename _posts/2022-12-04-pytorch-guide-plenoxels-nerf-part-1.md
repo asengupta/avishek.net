@@ -157,12 +157,15 @@ where $$C'=\begin{bmatrix}
 \end{bmatrix}
 $$.
 
-
-![Voxel Cube](/assets/images/voxel-cube.png)
-![Very Basic Volumetric Rendering of Cube](/assets/images/basic-volumetric-rendering-cube.png)
+### Implementation
 
 The following code plays around with the pinhole camera model and sets up a very basic (maybe even contrived) volumetric rendering model. The details of the toy volumetric raycasting logic is explained after the listing. The code is annotated with comments so you should be able to follow along.
 
 ```python
 {% include_absolute '/code/pytorch-learn/plenoxels/camera2.py' %}
 ```
+
+### Outputs
+
+![Voxel Cube](/assets/images/voxel-cube.png)
+![Very Basic Volumetric Rendering of Cube](/assets/images/basic-volumetric-rendering-cube.png)
