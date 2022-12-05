@@ -85,8 +85,11 @@ $$
 y_V = \frac{f}{z} y
 $$
 
-Similarly, we have: $$\displaystyle x_V = \frac{f}{z} x$$.
-The mapping to the screen is a simple $$x-y$$ translation represented by $$p_x$$ and $$p_y$$. The transform matrix is thus:
+Similarly, we have: $$\displaystyle x_V = \frac{f}{z} x$$. Finally, we have the translation from the camera viewfinder to the screen where we will see the image. The mapping to the screen is a simple $$x-y$$ translation represented by $$p_x$$ and $$p_y$$.
+
+![Screen Camera Translation](/assets/images/screen-camera-translation.png)
+
+The transform matrix in homogeneous coordinates is thus:
 
 $$
 \begin{equation}
@@ -165,7 +168,30 @@ The following code plays around with the pinhole camera model and sets up a very
 {% include_absolute '/code/pytorch-learn/plenoxels/camera2.py' %}
 ```
 
+We have not discussed the optical model for volumetric rendering, so for the moment, we will describe a very cheap way of getting a sense of what a volumetric rendering might look like.
+- Determine a bundle of rays originating from the camera center. These rays will be intersecting the camera viewport.
+- For each ray, sample a number of points along this ray upto some reasonable limit. The initial "density" of this ray is 0.
+- For each such point, determine if it lies in an occupied voxel. If it does, increment the density of this ray by a tiny amount.
+- At the end of the sampling of this ray, the accumulated density will be the greyscale intensity of the pixel in the camera viewport.
+
+We have used a simple $$10 \times 10 \times 10$$ cube for this example. There is currently no data structure holding the cube information: we simply assume the cube exists extends from $$(0,0,0)$$ upto $$(10,0,0)$$, $$(0,10,0)$$, and $$(0,0,10)$$, and implement the voxel check accordingly.
+
+![Basic Volumetric Raycasting](/assets/images/basic-volumetric-raycasting.png)
+
 ### Outputs
 
+This is the voxel image of the cube.
 ![Voxel Cube](/assets/images/voxel-cube.png)
+
+This is the volumetric render of the cube. As expected, the direction of the diagonal (as seen from the camera) is the densest, as the rays have to pass through the most number of voxels.
+
 ![Very Basic Volumetric Rendering of Cube](/assets/images/basic-volumetric-rendering-cube.png)
+
+This concludes the first part of building the very basic infrastructure to support building the rest of the paper.
+
+### References
+
+- [Camera Matrix - Kris Kitani](https://www.cs.cmu.edu/~16385/s17/Slides/11.1_Camera_matrix.pdf)
+- [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131)
+- [Plenoxels Explained](https://deeprender.ai/blog/plenoxels-radiance-fields-without-neural-networks)
+- [Optical Model for Volumetric Rendering](https://www.youtube.com/watch?v=hiaHlTLN9TE)
