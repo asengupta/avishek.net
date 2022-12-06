@@ -4,6 +4,7 @@ import torch
 import matplotlib.pyplot as plt
 import functools
 
+
 class Camera:
     def __init__(self, focal_length, center, basis):
         camera_center = center.detach().clone()
@@ -95,7 +96,8 @@ def channel_opacity(position_distance_density_color_tensors):
     number_of_samples = len(position_distance_density_color_vectors)
     # print(number_of_samples)
     transmittances = list(map(lambda i: functools.reduce(
-        lambda acc, j: acc + math.exp(- position_distance_density_color_vectors[j, 4] * position_distance_density_color_vectors[j, 3]),
+        lambda acc, j: acc + math.exp(
+            - position_distance_density_color_vectors[j, 4] * position_distance_density_color_vectors[j, 3]),
         range(0, i), 0.), range(1, number_of_samples + 1)))
     density = 0.
     # print(transmittances)
@@ -106,25 +108,26 @@ def channel_opacity(position_distance_density_color_tensors):
     return density
 
 
-tuples = torch.tensor([[1,2,3, 2, 0.2, 1, 1, 1], [1,2,3, 2, 0.2, 1, 1, 1]])
+tuples = torch.tensor([[1, 2, 3, 2, 0.2, 1, 1, 1], [1, 2, 3, 2, 0.2, 1, 1, 1]])
 
 print(channel_opacity(tuples))
 
 test_harmonic = harmonic(1, 2, 3, 4, 5, 6, 7, 8, 1)
+
 
 class VoxelGrid:
     def __init__(self, x, y, z):
         self.grid_x = x
         self.grid_y = y
         self.grid_z = z
+        self.default_voxel = torch.tensor([0.002, 0.5, 0.6, 0.7])
         self.voxel_grid = torch.zeros([self.grid_x, self.grid_y, self.grid_z, 4])
 
-
     def at(self, x, y, z):
-        if self.is_outside(x,y,z):
-            return torch.tensor([0.,0.,0.,0.])
+        if self.is_outside(x, y, z):
+            return torch.tensor([0., 0., 0., 0.])
         else:
-            return self.voxel_grid[int(x),int(y),int(z)]
+            return self.voxel_grid[int(x), int(y), int(z)]
 
     def is_inside(self, x, y, z):
         if (0 <= x < self.grid_x and
@@ -133,7 +136,7 @@ class VoxelGrid:
             return True
 
     def is_outside(self, x, y, z):
-        return not self.is_inside(x,y,z)
+        return not self.is_inside(x, y, z)
 
     def density(self, ray_samples_with_distances):
         collected_voxels = []
@@ -146,28 +149,28 @@ class VoxelGrid:
         for i in range(self.grid_x):
             for j in range(self.grid_y):
                 for k in range(self.grid_z):
-                    self.voxel_grid[i,j,k] = torch.tensor([0.002, 0.5, 0.6, 0.7])
+                    self.voxel_grid[i, j, k] = self.default_voxel
 
     def build_hollow_cube(self):
-        default_voxel = torch.tensor([0.002, 0.5, 0.6, 0.7])
         for i in range(self.grid_x):
             for j in range(self.grid_y):
-                self.voxel_grid[i,j,0] = default_voxel
+                self.voxel_grid[i, j, 0] = self.default_voxel
         for i in range(self.grid_x):
             for j in range(self.grid_y):
-                self.voxel_grid[i,j,self.grid_z - 1] = default_voxel
+                self.voxel_grid[i, j, self.grid_z - 1] = self.default_voxel
         # for i in range(self.grid_y):
         #     for j in range(self.grid_z):
-        #         self.voxel_grid[0,i,j] = default_voxel
+        #         self.voxel_grid[0,i,j] = self.default_voxel
         # for i in range(self.grid_x):
         #     for j in range(self.grid_y):
-        #         self.voxel_grid[self.grid_x - 1,i,j] = default_voxel
+        #         self.voxel_grid[self.grid_x - 1,i,j] = self.default_voxel
         # for i in range(self.grid_z):
         #     for j in range(self.grid_x):
         #         self.voxel_grid[j,0,i] = default_voxel
         # for i in range(self.grid_x):
         #     for j in range(self.grid_y):
         #         self.voxel_grid[j,self.grid_y - 1,i] = default_voxel
+
 
 grid_x = 10
 grid_y = 10
@@ -249,7 +252,7 @@ for i in np.linspace(-20, 0, 100):
         #     volumetric_density = 0
         # plt.plot(i, j, marker="o", color=str(1. - density))
         # plt.plot(i, j, marker="o", color=str(1. - total_density))
-        plt.plot(i, j, marker="o", color=str((volumetric_density + 1) /2))
+        plt.plot(i, j, marker="o", color=str((volumetric_density + 1) / 2))
 
 plt.show()
 print("Done!!")
