@@ -213,9 +213,11 @@ for i in np.linspace(-20, 0, 100):
         # print(view_tensors)
         total_density = functools.reduce(lambda total_density, view_tensor: total_density + view_tensor[0].item(), view_tensors, 0.)
         # print(view_tensors)
-        if (total_density == 0.):
-            # print("Ray didn't intersect with anything in world")
+        if (total_density <= 0.):
             continue
+        if (total_density > 1.):
+            total_density = 1.
+            # print("Ray didn't intersect with anything in world")
         # view_tensors_as_tensor = torch.tensor(view_tensors)
         # plt.plot(i, j, marker="o", color=str(1. - density))
         plt.plot(i, j, marker="o", color=str(1. - total_density))
