@@ -119,6 +119,7 @@ class VoxelGrid:
         self.grid_z = z
         self.voxel_grid = torch.zeros([self.grid_x, self.grid_y, self.grid_z, 4])
 
+
     def at(self, x, y, z):
         if self.is_outside(x,y,z):
             return torch.tensor([0.,0.,0.,0.])
@@ -141,13 +142,14 @@ class VoxelGrid:
         return channel_opacity(torch.cat([ray_samples_with_distances, torch.stack(collected_voxels)], 1))
 
     def build_solid_cube(self):
+        default_voxel = torch.tensor([0.002, 0.5, 0.6, 0.7])
         for i in range(self.grid_x):
             for j in range(self.grid_y):
                 for k in range(self.grid_z):
                     self.voxel_grid[i,j,k] = torch.tensor([0.002, 0.5, 0.6, 0.7])
 
     def build_hollow_cube(self):
-        default_voxel = torch.tensor([5., 0.5, 0.6, 0.7])
+        default_voxel = torch.tensor([0.002, 0.5, 0.6, 0.7])
         for i in range(self.grid_x):
             for j in range(self.grid_y):
                 self.voxel_grid[i,j,0] = default_voxel
@@ -160,12 +162,12 @@ class VoxelGrid:
         # for i in range(self.grid_x):
         #     for j in range(self.grid_y):
         #         self.voxel_grid[self.grid_x - 1,i,j] = default_voxel
-        for i in range(self.grid_z):
-            for j in range(self.grid_x):
-                self.voxel_grid[j,0,i] = default_voxel
-        for i in range(self.grid_x):
-            for j in range(self.grid_y):
-                self.voxel_grid[j,self.grid_y - 1,i] = default_voxel
+        # for i in range(self.grid_z):
+        #     for j in range(self.grid_x):
+        #         self.voxel_grid[j,0,i] = default_voxel
+        # for i in range(self.grid_x):
+        #     for j in range(self.grid_y):
+        #         self.voxel_grid[j,self.grid_y - 1,i] = default_voxel
 
 grid_x = 10
 grid_y = 10
@@ -243,11 +245,11 @@ for i in np.linspace(-20, 0, 100):
         #     total_density = 1.
         if (volumetric_density > 1):
             volumetric_density = 1
-        if (volumetric_density < 0.0001):
-            volumetric_density = 0
+        # if (volumetric_density < 0.0001):
+        #     volumetric_density = 0
         # plt.plot(i, j, marker="o", color=str(1. - density))
         # plt.plot(i, j, marker="o", color=str(1. - total_density))
-        plt.plot(i, j, marker="o", color=str(volumetric_density))
+        plt.plot(i, j, marker="o", color=str((volumetric_density + 1) /2))
 
 plt.show()
 print("Done!!")
