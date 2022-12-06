@@ -116,10 +116,10 @@ class VoxelGrid:
         self.grid_y = y
         self.grid_z = z
         self.voxel_grid = torch.zeros([self.grid_x, self.grid_y, self.grid_z, 4])
-        for i in range(self.grid_x):
-            for j in range(self.grid_y):
-                for k in range(self.grid_z):
-                    self.voxel_grid[i,j,k] = torch.tensor([0.1, 0.5, 0.6, 0.7])
+        # for i in range(self.grid_x):
+        #     for j in range(self.grid_y):
+        #         for k in range(self.grid_z):
+        #             self.voxel_grid[i,j,k] = torch.tensor([0.1, 0.5, 0.6, 0.7])
 
     def at(self, x, y, z):
         if self.is_outside(x,y,z):
@@ -136,24 +136,38 @@ class VoxelGrid:
     def is_outside(self, x, y, z):
         return not self.is_inside(x,y,z)
 
+    def build_cube(self):
+        default_voxel = torch.tensor([0.1, 0.5, 0.6, 0.7])
+        for i in range(self.grid_x):
+            for j in range(self.grid_y):
+                self.voxel_grid[i,j,0] = default_voxel
+        for i in range(self.grid_x):
+            for j in range(self.grid_y):
+                self.voxel_grid[i,j,self.grid_z - 1] = default_voxel
+        # for i in range(self.grid_y):
+        #     for j in range(self.grid_z):
+        #         self.voxel_grid[0,i,j] = default_voxel
+        # for i in range(self.grid_x):
+        #     for j in range(self.grid_y):
+        #         self.voxel_grid[self.grid_x - 1,i,j] = default_voxel
+        for i in range(self.grid_z):
+            for j in range(self.grid_x):
+                self.voxel_grid[j,0,i] = default_voxel
+        for i in range(self.grid_x):
+            for j in range(self.grid_y):
+                self.voxel_grid[j,self.grid_y - 1,i] = default_voxel
+
 grid_x = 10
 grid_y = 10
 grid_z = 10
 
 world = VoxelGrid(grid_x, grid_y, grid_z)
-# fig1 = plt.figure()
-#
-# for i in range(10):
-#     for j in range(10):
-#         for k in range(10):
-#             d = camera.to_2D(torch.tensor([[i, j, k, 1.]]))
-#             print(d)
-#             plt.plot(d[0][0], d[1][0], marker="o")
-#
+world.build_cube()
 
 look_at = torch.tensor([0., 0., 0., 1])
 # camera_center = torch.tensor([-30., 5., 5., 1.])
-camera_center = torch.tensor([-30., -30., -30., 1.])
+camera_center = torch.tensor([-50., 10., 15., 1.])
+# camera_center = torch.tensor([-30., -30., -30., 1.])
 focal_length = 1
 
 camera_basis = basis_from_depth(look_at, camera_center)
@@ -165,11 +179,20 @@ camera_basis_y = camera_basis[1][:3]
 
 camera_center_inhomogenous = camera_center[:3]
 
-plt.figure()
 plt.axis("equal")
+fig1 = plt.figure()
+for i in range(0, world.grid_x - 1):
+    for j in range(0, world.grid_y - 1):
+        for k in range(0, world.grid_z - 1):
+            # voxel = world.at(i,j,k)
+            d = camera.to_2D(torch.tensor([[i, j, k, 1.]]))
+            plt.plot(d[0][0], d[1][0], marker="o")
 
-for i in np.linspace(-10, 10, 50):
-    for j in np.linspace(-10, 10, 50):
+plt.show()
+
+fig2 = plt.figure()
+for i in np.linspace(-20, 0, 100):
+    for j in np.linspace(0, 20, 100):
         ray_screen_intersection = camera_basis_x * i + camera_basis_y * j
         unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
         density = 0.
@@ -188,12 +211,14 @@ for i in np.linspace(-10, 10, 50):
             view_tensors.append(world.at(ray_x, ray_y, ray_z))
             density += 0.1
         # print(view_tensors)
-        # print(f"LOL={list(filter(lambda x: len(x) > 0, view_tensors))}")
-        # if (density == 0.):
-        #     print("Ray didn't intersect with anything in world")
-            # continue
+        total_density = functools.reduce(lambda total_density, view_tensor: total_density + view_tensor[0].item(), view_tensors, 0.)
+        # print(view_tensors)
+        if (total_density == 0.):
+            # print("Ray didn't intersect with anything in world")
+            continue
         # view_tensors_as_tensor = torch.tensor(view_tensors)
-        plt.plot(i, j, marker="o", color=str(1. - density))
+        # plt.plot(i, j, marker="o", color=str(1. - density))
+        plt.plot(i, j, marker="o", color=str(1. - total_density))
 
 plt.show()
 print("Done!!")
