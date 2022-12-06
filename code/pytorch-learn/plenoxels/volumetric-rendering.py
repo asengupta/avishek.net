@@ -108,15 +108,39 @@ tuples = torch.tensor([[1, 1, 1], [1, 1, 1]])
 
 print(channel_opacity(tuples))
 
-voxel_grid = torch.ones([20, 20, 20, 4])
-for i in range(20):
-    for j in range(20):
-        for k in range(20):
-            voxel_grid[i,j,k] = torch.tensor([0.1, 0.5, 0.6, 0.7])
-
 test_harmonic = harmonic(1, 2, 3, 4, 5, 6, 7, 8, 1)
 
+class VoxelGrid:
+    def __init__(self, x, y, z):
+        self.grid_x = x
+        self.grid_y = y
+        self.grid_z = z
+        self.voxel_grid = torch.zeros([self.grid_x, self.grid_y, self.grid_z, 4])
+        for i in range(self.grid_x):
+            for j in range(self.grid_y):
+                for k in range(self.grid_z):
+                    self.voxel_grid[i,j,k] = torch.tensor([0.1, 0.5, 0.6, 0.7])
 
+    def at(self, x, y, z):
+        if self.is_outside(x,y,z):
+            return torch.tensor([0.,0.,0.,0.])
+        else:
+            return self.voxel_grid[int(x),int(y),int(z)]
+
+    def is_inside(self, x, y, z):
+        if (0 <= x < self.grid_x and
+                0 <= y < self.grid_y and
+                0 <= z < self.grid_z):
+            return True
+
+    def is_outside(self, x, y, z):
+        return not self.is_inside(x,y,z)
+
+grid_x = 10
+grid_y = 10
+grid_z = 10
+
+world = VoxelGrid(grid_x, grid_y, grid_z)
 # fig1 = plt.figure()
 #
 # for i in range(10):
@@ -128,7 +152,8 @@ test_harmonic = harmonic(1, 2, 3, 4, 5, 6, 7, 8, 1)
 #
 
 look_at = torch.tensor([0., 0., 0., 1])
-camera_center = torch.tensor([30., -30., 30., 1.])
+# camera_center = torch.tensor([-30., 5., 5., 1.])
+camera_center = torch.tensor([-30., -30., -30., 1.])
 focal_length = 1
 
 camera_basis = basis_from_depth(look_at, camera_center)
@@ -143,20 +168,32 @@ camera_center_inhomogenous = camera_center[:3]
 plt.figure()
 plt.axis("equal")
 
-for i in np.linspace(0, 20, 30):
-    for j in np.linspace(-10, 30, 30):
+for i in np.linspace(-10, 10, 50):
+    for j in np.linspace(-10, 10, 50):
         ray_screen_intersection = camera_basis_x * i + camera_basis_y * j
         unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
         density = 0.
+        view_tensors = []
         for k in np.linspace(0, 100):
             ray_endpoint = camera_center_inhomogenous + unit_ray * k
             ray_x, ray_y, ray_z = ray_endpoint
-            if (ray_x < 0 or ray_x > 10 or
-                    ray_y < 0 or ray_y > 10 or
-                    ray_z < 0 or ray_z > 10):
+            if (world.is_outside(ray_x, ray_y, ray_z)):
                 continue
             # We are in the box
+            # voxel_ray_x = int(ray_x)
+            # voxel_ray_y = int(ray_y)
+            # voxel_ray_z = int(ray_z)
+            # print(f"{voxel_ray_x},{voxel_ray_y},{voxel_ray_z}")
+
+            view_tensors.append(world.at(ray_x, ray_y, ray_z))
             density += 0.1
+        # print(view_tensors)
+        # print(f"LOL={list(filter(lambda x: len(x) > 0, view_tensors))}")
+        # if (density == 0.):
+        #     print("Ray didn't intersect with anything in world")
+            # continue
+        # view_tensors_as_tensor = torch.tensor(view_tensors)
         plt.plot(i, j, marker="o", color=str(1. - density))
 
 plt.show()
+print("Done!!")
