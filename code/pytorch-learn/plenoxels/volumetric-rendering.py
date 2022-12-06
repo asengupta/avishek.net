@@ -89,22 +89,24 @@ def harmonic(C_0_0, C_m1_1, C_0_1, C_1_1, C_m2_2, C_m1_2, C_0_2, C_1_2, C_2_2):
         theta, phi) + C_2_2 * Y_2_2(theta, phi)
 
 
-def channel_opacity(channel_density_distance_tuples):
-    number_of_samples = len(channel_density_distance_tuples)
-    print(number_of_samples)
+def channel_opacity(position_distance_density_color_tensors):
+    position_distance_density_color_vectors = position_distance_density_color_tensors.numpy()
+    # print(position_distance_density_color_vectors)
+    number_of_samples = len(position_distance_density_color_vectors)
+    # print(number_of_samples)
     transmittances = list(map(lambda i: functools.reduce(
-        lambda acc, j: acc + math.exp(- channel_density_distance_tuples[j, 0] * channel_density_distance_tuples[j, 2]),
+        lambda acc, j: acc + math.exp(- position_distance_density_color_vectors[j, 4] * position_distance_density_color_vectors[j, 3]),
         range(0, i), 0.), range(1, number_of_samples + 1)))
     density = 0.
-    print(transmittances)
+    # print(transmittances)
     for index, transmittance in enumerate(transmittances):
         if index == len(transmittances) - 1:
             break
-        density += (transmittance - transmittances[index + 1]) * channel_density_distance_tuples[index, 1]
+        density += (transmittance - transmittances[index + 1]) * position_distance_density_color_vectors[index, 5]
     return density
 
 
-tuples = torch.tensor([[1, 1, 1], [1, 1, 1]])
+tuples = torch.tensor([[1,2,3, 2, 0.2, 1, 1, 1], [1,2,3, 2, 0.2, 1, 1, 1]])
 
 print(channel_opacity(tuples))
 
@@ -116,10 +118,6 @@ class VoxelGrid:
         self.grid_y = y
         self.grid_z = z
         self.voxel_grid = torch.zeros([self.grid_x, self.grid_y, self.grid_z, 4])
-        # for i in range(self.grid_x):
-        #     for j in range(self.grid_y):
-        #         for k in range(self.grid_z):
-        #             self.voxel_grid[i,j,k] = torch.tensor([0.1, 0.5, 0.6, 0.7])
 
     def at(self, x, y, z):
         if self.is_outside(x,y,z):
@@ -136,8 +134,20 @@ class VoxelGrid:
     def is_outside(self, x, y, z):
         return not self.is_inside(x,y,z)
 
-    def build_cube(self):
-        default_voxel = torch.tensor([0.1, 0.5, 0.6, 0.7])
+    def density(self, ray_samples_with_distances):
+        collected_voxels = []
+        for ray_sample in ray_samples_with_distances:
+            collected_voxels.append(self.at(ray_sample[0], ray_sample[1], ray_sample[2]))
+        return channel_opacity(torch.cat([ray_samples_with_distances, torch.stack(collected_voxels)], 1))
+
+    def build_solid_cube(self):
+        for i in range(self.grid_x):
+            for j in range(self.grid_y):
+                for k in range(self.grid_z):
+                    self.voxel_grid[i,j,k] = torch.tensor([0.002, 0.5, 0.6, 0.7])
+
+    def build_hollow_cube(self):
+        default_voxel = torch.tensor([5., 0.5, 0.6, 0.7])
         for i in range(self.grid_x):
             for j in range(self.grid_y):
                 self.voxel_grid[i,j,0] = default_voxel
@@ -162,7 +172,8 @@ grid_y = 10
 grid_z = 10
 
 world = VoxelGrid(grid_x, grid_y, grid_z)
-world.build_cube()
+# world.build_solid_cube()
+world.build_hollow_cube()
 
 look_at = torch.tensor([0., 0., 0., 1])
 # camera_center = torch.tensor([-30., 5., 5., 1.])
@@ -184,7 +195,6 @@ fig1 = plt.figure()
 for i in range(0, world.grid_x - 1):
     for j in range(0, world.grid_y - 1):
         for k in range(0, world.grid_z - 1):
-            # voxel = world.at(i,j,k)
             d = camera.to_2D(torch.tensor([[i, j, k, 1.]]))
             plt.plot(d[0][0], d[1][0], marker="o")
 
@@ -197,6 +207,7 @@ for i in np.linspace(-20, 0, 100):
         unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
         density = 0.
         view_tensors = []
+        view_tensors2 = []
         for k in np.linspace(0, 100):
             ray_endpoint = camera_center_inhomogenous + unit_ray * k
             ray_x, ray_y, ray_z = ray_endpoint
@@ -208,19 +219,35 @@ for i in np.linspace(-20, 0, 100):
             # voxel_ray_z = int(ray_z)
             # print(f"{voxel_ray_x},{voxel_ray_y},{voxel_ray_z}")
 
-            view_tensors.append(world.at(ray_x, ray_y, ray_z))
+            view_tensors2.append([ray_x, ray_y, ray_z, world.at(ray_x, ray_y, ray_z)])
+            view_tensors.append([ray_x, ray_y, ray_z])
             density += 0.1
-        # print(view_tensors)
-        total_density = functools.reduce(lambda total_density, view_tensor: total_density + view_tensor[0].item(), view_tensors, 0.)
-        # print(view_tensors)
-        if (total_density <= 0.):
+
+        if (len(view_tensors) <= 1):
             continue
-        if (total_density > 1.):
-            total_density = 1.
-            # print("Ray didn't intersect with anything in world")
-        # view_tensors_as_tensor = torch.tensor(view_tensors)
+        t1 = torch.tensor(view_tensors)[:-1]
+        t2 = torch.tensor(view_tensors)[1:]
+        distance_tensors = (t1 - t2).pow(2).sum(1).sqrt()
+        ray_samples_with_distances = torch.cat([t1, torch.reshape(distance_tensors, (-1, 1))], 1)
+        volumetric_density = world.density(ray_samples_with_distances)
+        print(volumetric_density)
+        # print(ray_samples_with_distances)
+
+        # if (volumetric_density <= 0.01):
+        #     volumetric_density = 0.
+        # total_density = functools.reduce(lambda total_density, view_tensor: total_density + view_tensor[3][0].item(), view_tensors2, 0.)
+        # if (total_density <= 0.):
+        #     continue
+        #
+        # if (total_density > 1.):
+        #     total_density = 1.
+        if (volumetric_density > 1):
+            volumetric_density = 1
+        if (volumetric_density < 0.0001):
+            volumetric_density = 0
         # plt.plot(i, j, marker="o", color=str(1. - density))
-        plt.plot(i, j, marker="o", color=str(1. - total_density))
+        # plt.plot(i, j, marker="o", color=str(1. - total_density))
+        plt.plot(i, j, marker="o", color=str(volumetric_density))
 
 plt.show()
 print("Done!!")
