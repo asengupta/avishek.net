@@ -92,19 +92,19 @@ def harmonic(C_0_0, C_m1_1, C_0_1, C_1_1, C_m2_2, C_m1_2, C_0_2, C_1_2, C_2_2):
 
 def channel_opacity(position_distance_density_color_tensors):
     position_distance_density_color_vectors = position_distance_density_color_tensors.numpy()
-    # print(position_distance_density_color_vectors)
     number_of_samples = len(position_distance_density_color_vectors)
-    # print(number_of_samples)
     transmittances = list(map(lambda i: functools.reduce(
         lambda acc, j: acc + math.exp(
             - position_distance_density_color_vectors[j, 4] * position_distance_density_color_vectors[j, 3]),
         range(0, i), 0.), range(1, number_of_samples + 1)))
     density = 0.
-    # print(transmittances)
     for index, transmittance in enumerate(transmittances):
-        if index == len(transmittances) - 1:
-            break
-        density += (transmittance - transmittances[index + 1]) * position_distance_density_color_vectors[index, 5]
+        # if index == len(transmittances) - 1:
+        #     break
+        # density += (transmittance - transmittances[index + 1]) * position_distance_density_color_vectors[index, 5]
+        density += transmittance * (1. -  math.exp(- position_distance_density_color_vectors[index, 4] *
+                                   position_distance_density_color_vectors[index, 3])) * position_distance_density_color_vectors[index, 5]
+
     return density
 
 
@@ -120,7 +120,7 @@ class VoxelGrid:
         self.grid_x = x
         self.grid_y = y
         self.grid_z = z
-        self.default_voxel = torch.tensor([0.002, 0.5, 0.6, 0.7])
+        self.default_voxel = torch.tensor([0.2, 0.5, 0.6, 0.7])
         self.voxel_grid = torch.zeros([self.grid_x, self.grid_y, self.grid_z, 4])
 
     def at(self, x, y, z):
@@ -145,7 +145,6 @@ class VoxelGrid:
         return channel_opacity(torch.cat([ray_samples_with_distances, torch.stack(collected_voxels)], 1))
 
     def build_solid_cube(self):
-        default_voxel = torch.tensor([0.002, 0.5, 0.6, 0.7])
         for i in range(self.grid_x):
             for j in range(self.grid_y):
                 for k in range(self.grid_z):
@@ -158,18 +157,18 @@ class VoxelGrid:
         for i in range(self.grid_x):
             for j in range(self.grid_y):
                 self.voxel_grid[i, j, self.grid_z - 1] = self.default_voxel
-        # for i in range(self.grid_y):
-        #     for j in range(self.grid_z):
-        #         self.voxel_grid[0,i,j] = self.default_voxel
-        # for i in range(self.grid_x):
-        #     for j in range(self.grid_y):
-        #         self.voxel_grid[self.grid_x - 1,i,j] = self.default_voxel
-        # for i in range(self.grid_z):
-        #     for j in range(self.grid_x):
-        #         self.voxel_grid[j,0,i] = default_voxel
-        # for i in range(self.grid_x):
-        #     for j in range(self.grid_y):
-        #         self.voxel_grid[j,self.grid_y - 1,i] = default_voxel
+        for i in range(self.grid_y):
+            for j in range(self.grid_z):
+                self.voxel_grid[0,i,j] = self.default_voxel
+        for i in range(self.grid_x):
+            for j in range(self.grid_y):
+                self.voxel_grid[self.grid_x - 1,i,j] = self.default_voxel
+        for i in range(self.grid_z):
+            for j in range(self.grid_x):
+                self.voxel_grid[j,0,i] = self.default_voxel
+        for i in range(self.grid_x):
+            for j in range(self.grid_y):
+                self.voxel_grid[j,self.grid_y - 1,i] = self.default_voxel
 
 
 grid_x = 10
@@ -182,8 +181,8 @@ world.build_hollow_cube()
 
 look_at = torch.tensor([0., 0., 0., 1])
 # camera_center = torch.tensor([-30., 5., 5., 1.])
-camera_center = torch.tensor([-50., 10., 15., 1.])
-# camera_center = torch.tensor([-30., -30., -30., 1.])
+camera_center = torch.tensor([-10., -10., 15., 1.])
+# camera_center = torch.tensor([-10., -10., 10., 1.])
 focal_length = 1
 
 camera_basis = basis_from_depth(look_at, camera_center)
@@ -195,6 +194,7 @@ camera_basis_y = camera_basis[1][:3]
 
 camera_center_inhomogenous = camera_center[:3]
 
+# plt.rcParams['axes.facecolor'] = 'black'
 plt.axis("equal")
 fig1 = plt.figure()
 for i in range(0, world.grid_x - 1):
@@ -206,8 +206,8 @@ for i in range(0, world.grid_x - 1):
 plt.show()
 
 fig2 = plt.figure()
-for i in np.linspace(-20, 0, 100):
-    for j in np.linspace(0, 20, 100):
+for i in np.linspace(-20, 20, 200):
+    for j in np.linspace(-20, 20, 200):
         ray_screen_intersection = camera_basis_x * i + camera_basis_y * j
         unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
         density = 0.
@@ -234,9 +234,8 @@ for i in np.linspace(-20, 0, 100):
         t2 = torch.tensor(view_tensors)[1:]
         distance_tensors = (t1 - t2).pow(2).sum(1).sqrt()
         ray_samples_with_distances = torch.cat([t1, torch.reshape(distance_tensors, (-1, 1))], 1)
-        volumetric_density = world.density(ray_samples_with_distances)
-        print(volumetric_density)
-        # print(ray_samples_with_distances)
+        total_transmitted_light = world.density(ray_samples_with_distances)
+        # print(total_transmitted_light)
 
         # if (volumetric_density <= 0.01):
         #     volumetric_density = 0.
@@ -246,13 +245,14 @@ for i in np.linspace(-20, 0, 100):
         #
         # if (total_density > 1.):
         #     total_density = 1.
-        if (volumetric_density > 1):
-            volumetric_density = 1
-        # if (volumetric_density < 0.0001):
-        #     volumetric_density = 0
+        total_transmitted_light = total_transmitted_light / 3.
+        if (total_transmitted_light > 1):
+            total_transmitted_light = 1
+        if (total_transmitted_light < 0.):
+            total_transmitted_light = 0
         # plt.plot(i, j, marker="o", color=str(1. - density))
         # plt.plot(i, j, marker="o", color=str(1. - total_density))
-        plt.plot(i, j, marker="o", color=str((volumetric_density + 1) / 2))
+        plt.plot(i, j, marker="o", color=str(1. - total_transmitted_light))
 
 plt.show()
 print("Done!!")
