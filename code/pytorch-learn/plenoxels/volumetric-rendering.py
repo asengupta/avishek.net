@@ -205,38 +205,38 @@ for i in range(0, world.grid_x - 1):
             plt.plot(d[0][0], d[1][0], marker="o")
 
 plt.show()
-# fig2 = plt.figure()
-# for i in np.linspace(-30, 30, 100):
-#     for j in np.linspace(-30, 30, 100):
-#         ray_screen_intersection = camera_basis_x * i + camera_basis_y * j
-#         unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
-#         density = 0.
-#         view_tensors = []
-#         for k in np.linspace(0, 100):
-#             ray_endpoint = camera_center_inhomogenous + unit_ray * k
-#             ray_x, ray_y, ray_z = ray_endpoint
-#             if (world.is_outside(ray_x, ray_y, ray_z)):
-#                 continue
-#             # We are in the box
-#             view_tensors.append([ray_x, ray_y, ray_z])
-#             density += 0.1
-#
-#         full_view_tensors = torch.unique(torch.tensor(view_tensors), dim = 0)
-#         if (len(full_view_tensors) <= 1):
-#             continue
-#         t1 = full_view_tensors[:-1]
-#         t2 = full_view_tensors[1:]
-#         distance_tensors = (t1 - t2).pow(2).sum(1).sqrt()
-#         ray_samples_with_distances = torch.cat([t1, torch.reshape(distance_tensors, (-1, 1))], 1)
-#         total_transmitted_light = world.density(ray_samples_with_distances)
-#         # print(total_transmitted_light)
-#
-#         total_transmitted_light = total_transmitted_light
-#         if (total_transmitted_light > 1):
-#             total_transmitted_light = 1
-#         if (total_transmitted_light < 0.):
-#             total_transmitted_light = 0
-#         plt.plot(i, j, marker="o", color=str(1. - total_transmitted_light))
-#
-# plt.show()
+fig2 = plt.figure()
+for i in np.linspace(-30, 30, 200):
+    for j in np.linspace(-30, 30, 200):
+        ray_screen_intersection = camera_basis_x * i + camera_basis_y * j
+        unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
+        density = 0.
+        view_tensors = []
+        for k in np.linspace(0, 100):
+            ray_endpoint = camera_center_inhomogenous + unit_ray * k
+            ray_x, ray_y, ray_z = ray_endpoint
+            if (world.is_outside(ray_x, ray_y, ray_z)):
+                continue
+            # We are in the box
+            view_tensors.append([ray_x, ray_y, ray_z])
+            density += 0.1
+
+        full_view_tensors = torch.unique(torch.tensor(view_tensors), dim = 0)
+        if (len(full_view_tensors) <= 1):
+            continue
+        t1 = full_view_tensors[:-1]
+        t2 = full_view_tensors[1:]
+        distance_tensors = (t1 - t2).pow(2).sum(1).sqrt()
+        ray_samples_with_distances = torch.cat([t1, torch.reshape(distance_tensors, (-1, 1))], 1)
+        total_transmitted_light = world.density(ray_samples_with_distances)
+        # print(total_transmitted_light)
+
+        total_transmitted_light = total_transmitted_light
+        if (total_transmitted_light > 1):
+            total_transmitted_light = 1
+        if (total_transmitted_light < 0.):
+            total_transmitted_light = 0
+        plt.plot(i, j, marker="o", color=str(1. - total_transmitted_light))
+
+plt.show()
 print("Done!!")

@@ -49,6 +49,16 @@ Here is an example of an example 2nd order harmonic with some randomly chosen co
 {% include_absolute '/code/pytorch-learn/plenoxels/spherical-harmonics.py' %}
 ```
 
+```python
+{% include_absolute '/code/pytorch-learn/plenoxels/volumetric-rendering.py' %}
+```
+
+```python
+{% include_absolute '/code/pytorch-learn/plenoxels/volumetric-rendering-with-trilinear-interpolation.py' %}
+```
+![Volumetric Rendering with Trilinear Interpolation](/assets/images/volumetric-rendering-cube-trilinear-interpolation.png)
+
+
 ### Building the Voxel Data Structure: First Pass
 
 We will store opacity and the spherical harmonic coefficients. Opacity will be denoted by $$\sigma \in [0,1]$$ and is as straightforward as it sounds. Let's talk quickly about how we should encode colour. Each colour channel (R,G,B) will have its own set of 9 spherical harmonic coefficients; this gives us 27 numbers to store. Add $$\sigma$$ to this, and each voxel is essentially represented by 28 numbers.
