@@ -165,7 +165,8 @@ class VoxelGrid:
                 self.voxel_grid[self.grid_x - 1,i,j] = self.default_voxel
         for i in range(self.grid_z):
             for j in range(self.grid_x):
-                self.voxel_grid[j,0,i] = self.default_voxel
+                # self.voxel_grid[j,0,i] = self.default_voxel
+                self.voxel_grid[j,0,i] = torch.tensor([0.5, 0.2, 0.2, 0.2])
         for i in range(self.grid_x):
             for j in range(self.grid_y):
                 self.voxel_grid[j,self.grid_y - 1,i] = self.default_voxel
@@ -176,13 +177,13 @@ grid_y = 10
 grid_z = 10
 
 world = VoxelGrid(grid_x, grid_y, grid_z)
-# world.build_solid_cube()
-world.build_hollow_cube()
+world.build_solid_cube()
+# world.build_hollow_cube()
 
 look_at = torch.tensor([0., 0., 0., 1])
-# camera_center = torch.tensor([-30., 5., 5., 1.])
-camera_center = torch.tensor([-10., -10., 15., 1.])
-# camera_center = torch.tensor([-10., -10., 10., 1.])
+# camera_center = torch.tensor([-60., 5., 15., 1.])
+# camera_center = torch.tensor([-10., -10., 15., 1.])
+camera_center = torch.tensor([-20., -20., 20., 1.])
 focal_length = 1
 
 camera_basis = basis_from_depth(look_at, camera_center)
@@ -204,10 +205,9 @@ for i in range(0, world.grid_x - 1):
             plt.plot(d[0][0], d[1][0], marker="o")
 
 plt.show()
-
 fig2 = plt.figure()
-for i in np.linspace(-20, 20, 200):
-    for j in np.linspace(-20, 20, 200):
+for i in np.linspace(-10, 30, 100):
+    for j in np.linspace(-30, 10, 100):
         ray_screen_intersection = camera_basis_x * i + camera_basis_y * j
         unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
         density = 0.
@@ -219,39 +219,26 @@ for i in np.linspace(-20, 20, 200):
             if (world.is_outside(ray_x, ray_y, ray_z)):
                 continue
             # We are in the box
-            # voxel_ray_x = int(ray_x)
-            # voxel_ray_y = int(ray_y)
-            # voxel_ray_z = int(ray_z)
-            # print(f"{voxel_ray_x},{voxel_ray_y},{voxel_ray_z}")
-
             view_tensors2.append([ray_x, ray_y, ray_z, world.at(ray_x, ray_y, ray_z)])
             view_tensors.append([ray_x, ray_y, ray_z])
             density += 0.1
 
-        if (len(view_tensors) <= 1):
+        full_view_tensor = torch.tensor(view_tensors)
+        full_view_tensors = torch.unique(full_view_tensor)
+        if (len(full_view_tensor) <= 1):
             continue
-        t1 = torch.tensor(view_tensors)[:-1]
-        t2 = torch.tensor(view_tensors)[1:]
+        t1 = full_view_tensor[:-1]
+        t2 = full_view_tensor[1:]
         distance_tensors = (t1 - t2).pow(2).sum(1).sqrt()
         ray_samples_with_distances = torch.cat([t1, torch.reshape(distance_tensors, (-1, 1))], 1)
         total_transmitted_light = world.density(ray_samples_with_distances)
         # print(total_transmitted_light)
 
-        # if (volumetric_density <= 0.01):
-        #     volumetric_density = 0.
-        # total_density = functools.reduce(lambda total_density, view_tensor: total_density + view_tensor[3][0].item(), view_tensors2, 0.)
-        # if (total_density <= 0.):
-        #     continue
-        #
-        # if (total_density > 1.):
-        #     total_density = 1.
         total_transmitted_light = total_transmitted_light / 3.
         if (total_transmitted_light > 1):
             total_transmitted_light = 1
         if (total_transmitted_light < 0.):
             total_transmitted_light = 0
-        # plt.plot(i, j, marker="o", color=str(1. - density))
-        # plt.plot(i, j, marker="o", color=str(1. - total_density))
         plt.plot(i, j, marker="o", color=str(1. - total_transmitted_light))
 
 plt.show()
