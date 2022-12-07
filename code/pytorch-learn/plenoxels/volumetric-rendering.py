@@ -177,8 +177,8 @@ grid_y = 10
 grid_z = 10
 
 world = VoxelGrid(grid_x, grid_y, grid_z)
-world.build_solid_cube()
-# world.build_hollow_cube()
+# world.build_solid_cube()
+world.build_hollow_cube()
 
 look_at = torch.tensor([0., 0., 0., 1])
 # camera_center = torch.tensor([-60., 5., 15., 1.])
@@ -206,8 +206,8 @@ for i in range(0, world.grid_x - 1):
 
 plt.show()
 fig2 = plt.figure()
-for i in np.linspace(-10, 30, 100):
-    for j in np.linspace(-30, 10, 100):
+for i in np.linspace(-30, 30, 200):
+    for j in np.linspace(-30, 30, 200):
         ray_screen_intersection = camera_basis_x * i + camera_basis_y * j
         unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
         density = 0.
@@ -223,18 +223,18 @@ for i in np.linspace(-10, 30, 100):
             view_tensors.append([ray_x, ray_y, ray_z])
             density += 0.1
 
-        full_view_tensor = torch.tensor(view_tensors)
-        full_view_tensors = torch.unique(full_view_tensor)
-        if (len(full_view_tensor) <= 1):
+        full_view_tensors = torch.tensor(view_tensors)
+        full_view_tensors = torch.unique(full_view_tensors, dim=0)
+        if (len(full_view_tensors) <= 1):
             continue
-        t1 = full_view_tensor[:-1]
-        t2 = full_view_tensor[1:]
+        t1 = full_view_tensors[:-1]
+        t2 = full_view_tensors[1:]
         distance_tensors = (t1 - t2).pow(2).sum(1).sqrt()
         ray_samples_with_distances = torch.cat([t1, torch.reshape(distance_tensors, (-1, 1))], 1)
         total_transmitted_light = world.density(ray_samples_with_distances)
         # print(total_transmitted_light)
 
-        total_transmitted_light = total_transmitted_light / 3.
+        total_transmitted_light = total_transmitted_light
         if (total_transmitted_light > 1):
             total_transmitted_light = 1
         if (total_transmitted_light < 0.):
