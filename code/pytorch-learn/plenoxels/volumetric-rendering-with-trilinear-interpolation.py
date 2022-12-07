@@ -242,7 +242,8 @@ for i in np.linspace(-30, 30, 200):
         unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
         density = 0.
         view_tensors = []
-        for k in np.linspace(0, 100, 200):
+        # To remove artifacts, set ray step samples to be higher, like 200
+        for k in np.linspace(0, 100, 100):
             ray_endpoint = camera_center_inhomogenous + unit_ray * k
             ray_x, ray_y, ray_z = ray_endpoint
             if (world.is_outside(ray_x, ray_y, ray_z)):
