@@ -260,6 +260,6 @@ which is the same result that we got in the previous section.
 - The **F-statistic** can also be derived using the above geometric intuitions; we will cover that in an upcoming post.
 
 ## References:
-- 
+
 - **The Geometry of Multivariate Statistics** : *Thomas D. Wickens*
 - **Statistical Methods: The Geometric Approach** : *David J. Saville*, *Graham R. Wood*

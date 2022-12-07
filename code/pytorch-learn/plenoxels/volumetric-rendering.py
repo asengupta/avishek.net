@@ -195,7 +195,7 @@ camera_basis_y = camera_basis[1][:3]
 
 camera_center_inhomogenous = camera_center[:3]
 
-# plt.rcParams['axes.facecolor'] = 'black'
+plt.rcParams['axes.facecolor'] = 'black'
 plt.axis("equal")
 fig1 = plt.figure()
 for i in range(0, world.grid_x - 1):
@@ -212,19 +212,16 @@ for i in np.linspace(-30, 30, 200):
         unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
         density = 0.
         view_tensors = []
-        view_tensors2 = []
         for k in np.linspace(0, 100):
             ray_endpoint = camera_center_inhomogenous + unit_ray * k
             ray_x, ray_y, ray_z = ray_endpoint
             if (world.is_outside(ray_x, ray_y, ray_z)):
                 continue
             # We are in the box
-            view_tensors2.append([ray_x, ray_y, ray_z, world.at(ray_x, ray_y, ray_z)])
             view_tensors.append([ray_x, ray_y, ray_z])
             density += 0.1
 
-        full_view_tensors = torch.tensor(view_tensors)
-        full_view_tensors = torch.unique(full_view_tensors, dim=0)
+        full_view_tensors = torch.unique(torch.tensor(view_tensors), dim = 0)
         if (len(full_view_tensors) <= 1):
             continue
         t1 = full_view_tensors[:-1]
