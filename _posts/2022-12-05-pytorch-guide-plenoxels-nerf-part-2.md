@@ -39,6 +39,8 @@ Addressing a voxel in a position which does not exist in this world will give us
 
 We will take a bit of a pause to understand the optical model involved in volumetric rendering since it is essential to the actual rendering and the subsequent calculation of the loss. This article follows [Optical Model for Volumetric Rendering](https://www.youtube.com/watch?v=hiaHlTLN9TE) quite a bit. Solving differential equations is involved, but for the most part, you should be able to skip to the results, if you are not interested in the gory details.
 
+TODO: Insert transmittance image
+
 Let's take the transmittance equation:
 
 $$
@@ -96,8 +98,20 @@ Let's discount the constant factor of integration for the moment, and assume tha
 $$
 C(D).e^{\int_0^D \sigma(t) dt} = \int_0^D \sigma(s)c(s).e^{\int_0^s \sigma(t) dt} ds \\
 C(D) = \int_0^D \sigma(s)c(s).e^{\int_0^s \sigma(t) dt}.e^{-\int_0^D \sigma(t) dt} ds \\
-C(D) = \int_0^D \sigma(s)c(s).e^{-\int_s^D \sigma(t) dt} ds \\
+C(D) = \int_0^D \sigma(s)c(s).e^{-\int_s^D \sigma(t) dt} ds
 $$
+
+We're almost there. We'd like to change our coordinate system, so that the origin lies at the viewer's eye, instead of at the back end of the volume. This then becomes:
+
+$$
+\begin{equation}
+C(D) = \int_0^D \sigma(s)c(s).e^{-\int_0^D \sigma(t) dt} ds
+\label{eq:volumetric-rendering-integration}
+\end{equation}
+$$
+
+Note: I'm not very clear about how this change of coordinate is achieved. [Optical Models for Volumetric Rendering](https://courses.cs.duke.edu/spring03/cps296.8/papers/max95opticalModelsForDirectVolumeRendering.pdf) uses a coordinate system which originates from the back of the volume; the previous derivations are based on that. [Local and Global Illumination in the Volume Rendering Integral](https://drops.dagstuhl.de/opus/volltexte/2010/2709/pdf/18.pdf) uses a model which uses the viewing ray starting from the viewer's eye.
+
 
 A very nice thing happens if $$c(s)$$ happens to be constant. Let us assume it is $$c$$. Then the above equation becomes:
 
@@ -125,6 +139,53 @@ C(D) = c \int_0^D \frac{d[e^{-\int_s^D \sigma(t) dt}]}{ds} ds \\
 C(D) = c \left[ 1 - e^{-\int_0^D \sigma(t) dt} \right]
 $$
 
+The above technique will be used to derive the discrete implementation of the integration of the transmittances along a given ray, which is what we will be using in our code.
+
+Let's assume two samples along a ray with their distances as $$s_i$$ and $$s_{i+1}$$. The quantities $$c(s)$$ and $$\sigma(s)$$ are constant within this segment, and are denoted as $$c_i$$ and $$\sigma_i$$ respectively. Let the distance between these two samples be $$d_i$$Let us substitute these limits in $$\eqref{eq:volumetric-rendering-integration}$$ to get:
+
+$$
+C(i) = \int_{s_i}^{s_{i+1}} \sigma_i c_i.\text{exp}\left[-\int_0^s \sigma(t) dt \right] ds \\
+= \sigma_i c_i \int_{s_i}^{s_{i+1}} \text{exp}\left[-\int_0^{s_i} \sigma(t) dt \right].\text{exp}\left[-\int_{s_i}^{s} \sigma(t) dt \right] ds \\
+= \sigma_i c_i \int_{s_i}^{s_{i+1}} \text{exp}\left[-\int_0^{s_i} \sigma(t) dt \right].\text{exp}\left[-\int_{s_i}^{s} \sigma_i dt \right] ds \\
+= \sigma_i c_i \text{exp}\left[-\int_0^{s_i} \sigma(t) dt \right] \int_{s_i}^{s_{i+1}} \text{exp}\left[-\sigma_i (s-s_i) \right] ds \\
+= \sigma_i c_i \text{exp}\left[-\int_0^{s_i} \sigma(t) dt \right] \left(- \frac{1}{\sigma_i} \right) \left[ \text{exp}[-\sigma_i (s_{i+1}-s_i)] - [\text{exp}[-\sigma_i (s_i-s_i) ] \right] \\
+= \sigma_i c_i \text{exp}\left[-\int_0^{s_i} \sigma(t) dt \right] \left(- \frac{1}{\sigma_i}\right) [\text{exp}\left[-\sigma_i (s_{i+1}-s_i) \right] - e^0] \\
+= \sigma_i c_i \text{exp}\left[-\int_0^{s_i} \sigma(t) dt \right] \left(- \frac{1}{\sigma_i}\right) [\text{exp}\left[-\sigma_i (s_{i+1}-s_i) \right] - 1] \\
+C(i) = c_i \text{exp}\left[-\int_0^{s_i} \sigma(t) dt \right] \left[1 - \text{exp}(-\sigma_i d_i)\right]
+$$
+
+If we denote the transparency as $$T(s) = \text{exp}\left[-\int_0^{s_i} \sigma(t) dt \right]$$, we can write the above:
+
+$$
+C(i) = c_i T(s_i) \left[1 - e^{-\sigma_i d_i}\right]
+$$
+
+Summing the above across all pairs of consecutive samples, gives us the volumetric raycasting equations $$\eqref{eq:accumulated-transmittance}$$ and $$\eqref{eq:sample-transmittance}$$ we will use in our actual implementation.
+
+$$
+\begin{equation}
+\boxed{
+C_i = \sum_{i=1}^N T_i \left[1 - e^{-\sigma_i d_i}\right] c_i \\
+}
+\label{eq:accumulated-transmittance}
+\end{equation}
+$$
+
+$$
+\begin{equation}
+\boxed{
+T_i = \text{exp}\left[-\sum_{i=1}^{i-1} \sigma_i d_i \right]
+}
+\label{eq:sample-transmittance}
+\end{equation}
+$$
+
+**Notes**
+
+- The $$i-1$$ term in the summation is so that the last pairwise distance computed is between the $$(N-1)$$th and the $$N$$the sample, since there is no $$(N+1)$$th sample.
+- The enumeration of samples starts front to back, closer to the camera and then proceeding towards the volume.
+
+
 ```python
 {% include_absolute '/code/pytorch-learn/plenoxels/volumetric-rendering.py' %}
 ```
@@ -149,5 +210,6 @@ $$
 - [Plenoxels Explained](https://deeprender.ai/blog/plenoxels-radiance-fields-without-neural-networks)
 - [Direct Volume Rendering](https://www.youtube.com/watch?v=hiaHlTLN9TE)
 - [Optical Models for Volumetric Rendering](https://courses.cs.duke.edu/spring03/cps296.8/papers/max95opticalModelsForDirectVolumeRendering.pdf)
+- [Local and Global Illumination in the Volume Rendering Integral](https://drops.dagstuhl.de/opus/volltexte/2010/2709/pdf/18.pdf)
 - [Common Artifacts in Volume Rendering](https://arxiv.org/abs/2109.13704)
 - [Trilinear Interpolation](https://en.wikipedia.org/wiki/Trilinear_interpolation)
