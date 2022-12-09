@@ -108,13 +108,10 @@ def channel_opacity(position_distance_density_color_tensors, viewing_angle):
         lambda acc, j: acc + math.exp(
             - position_distance_density_color_vectors[j, 4] * position_distance_density_color_vectors[j, 3]),
         range(0, i), 0.), range(1, number_of_samples + 1)))
-    density = torch.tensor(0.)
     color_densities = torch.zeros([3])
     for index, transmittance in enumerate(transmittances):
         if (position_distance_density_color_vectors[index, 4] == 0.):
             continue
-        # if index == len(transmittances) - 1:
-        #     break
         # density += (transmittance - transmittances[index + 1]) * position_distance_density_color_vectors[index, 5]
         red_harmonic, green_harmonic, blue_harmonic = rgb_harmonics(position_distance_density_color_tensors[index, 5:])
         r = red_harmonic(viewing_angle[0], viewing_angle[1])
@@ -122,10 +119,13 @@ def channel_opacity(position_distance_density_color_tensors, viewing_angle):
         b = blue_harmonic(viewing_angle[0], viewing_angle[1])
         base_transmittance = transmittance * (1. - math.exp(
             - position_distance_density_color_vectors[index, 4] * position_distance_density_color_vectors[index, 3]))
-        density += base_transmittance * r
+        # if (base_transmittance > 1. or base_transmittance < 0.):
+        #     raise Exception(f"Transmittance was {base_transmittance}")
+        # if (r > 1. or r < 0. or g > 1. or g < 0. or b > 1. or b < 0.):
+        #     raise Exception(f"Harmonic values were ({r}, {g}, {b})")
         color_densities += torch.tensor([base_transmittance * r, base_transmittance * g,  base_transmittance * b])
 
-    return density, color_densities
+    return color_densities
 
 
 # tuples = torch.tensor([[1, 2, 3, 2, 0.2, 1, 1, 1], [1, 2, 3, 2, 0.2, 1, 1, 1]])
@@ -141,11 +141,16 @@ class VoxelGrid:
         self.grid_y = y
         self.grid_z = z
         # self.default_voxel = torch.tensor([0.005, 0.5, 0.6, 0.7])
-        self.default_voxel = torch.ones([28])
+        self.default_voxel = torch.rand([28])
         self.empty_voxel = torch.zeros([28])
         # self.default_voxel[:4] = torch.tensor([0.005, 0.5, 0.6, 0.7])
         self.default_voxel[0] = 0.005
         self.voxel_grid = torch.zeros([self.grid_x, self.grid_y, self.grid_z, 28])
+
+    def random_voxel(self):
+        voxel = torch.rand([28])
+        voxel[0] = 0.01
+        return voxel
 
     def at(self, x, y, z):
         if self.is_outside(x, y, z):
@@ -202,25 +207,32 @@ class VoxelGrid:
                 for k in range(self.grid_z):
                     self.voxel_grid[i, j, k] = self.default_voxel
 
-    def build_hollow_cube(self):
+    def build_random_hollow_cube(self):
+        self.build_hollow_cube(self.random_voxel)
+
+    def build_monochrome_hollow_cube(self):
+        self.build_hollow_cube(lambda : self.random_voxel)
+
+    def build_hollow_cube(self, make_voxel):
+        voxel_1, voxel_2, voxel_3, voxel_4, voxel_5, voxel_6 = make_voxel(), make_voxel(), make_voxel(), make_voxel(), make_voxel(), make_voxel()
         for i in range(10, self.grid_x - 10):
             for j in range(10, self.grid_y - 10):
-                self.voxel_grid[i, j, 9] = self.default_voxel
+                self.voxel_grid[i, j, 9] = voxel_1
         for i in range(10, self.grid_x - 10):
             for j in range(10, self.grid_y - 10):
-                self.voxel_grid[i, j, self.grid_z - 1 - 10] = self.default_voxel
+                self.voxel_grid[i, j, self.grid_z - 1 - 10] = voxel_2
         for i in range(10, self.grid_y - 10):
             for j in range(10, self.grid_z - 10):
-                self.voxel_grid[9, i, j] = self.default_voxel
+                self.voxel_grid[9, i, j] = voxel_3
         for i in range(10, self.grid_x - 10):
             for j in range(10, self.grid_y - 10):
-                self.voxel_grid[self.grid_x - 1 - 10, i, j] = self.default_voxel
+                self.voxel_grid[self.grid_x - 1 - 10, i, j] = voxel_4
         for i in range(10, self.grid_z - 10):
             for j in range(10, self.grid_x - 10):
-                self.voxel_grid[j, 9, i] = self.default_voxel
+                self.voxel_grid[j, 9, i] = voxel_5
         for i in range(10, self.grid_x - 10):
             for j in range(10, self.grid_y - 10):
-                self.voxel_grid[j, self.grid_y - 1 - 10, i] = self.default_voxel
+                self.voxel_grid[j, self.grid_y - 1 - 10, i] = voxel_6
 
 
 grid_x = 40
@@ -229,12 +241,12 @@ grid_z = 40
 
 world = VoxelGrid(grid_x, grid_y, grid_z)
 # world.build_solid_cube()
-world.build_hollow_cube()
+world.build_random_hollow_cube()
 
 look_at = torch.tensor([0., 0., 0., 1])
 # camera_center = torch.tensor([-60., 5., 15., 1.])
 # camera_center = torch.tensor([-10., -10., 15., 1.])
-camera_center = torch.tensor([-20., -20., 40., 1.])
+camera_center = torch.tensor([-20., -10., 40., 1.])
 focal_length = 1
 
 camera_basis = basis_from_depth(look_at, camera_center)
@@ -264,8 +276,8 @@ for i in range(0, world.grid_x):
 
 plt.show()
 fig2 = plt.figure()
-for i in np.linspace(-30, 30, 100):
-    for j in np.linspace(-10, 60, 100):
+for i in np.linspace(-35, 30, 100):
+    for j in np.linspace(-15, 60, 100):
         # print(f"({i}-{j})")
         ray_screen_intersection = camera_basis_x * i + camera_basis_y * j
         unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
@@ -290,17 +302,10 @@ for i in np.linspace(-30, 30, 100):
 
         # Make 1D tensor into 2D tensor
         ray_samples_with_distances = torch.cat([t1, torch.reshape(distance_tensors, (-1, 1))], 1)
-        total_transmitted_light, color_densities = world.density(ray_samples_with_distances, viewing_angle)
+        color_densities = world.density(ray_samples_with_distances, viewing_angle)
         print(color_densities)
 
-        total_transmitted_light = total_transmitted_light
-        if (total_transmitted_light > 1):
-            total_transmitted_light = 1
-        if (total_transmitted_light < 0.):
-            total_transmitted_light = 0
-        plt.plot(i, j, marker="o", color=str(1. - total_transmitted_light.item()))
+        plt.plot(i, j, marker="o", color= (1. - torch.clamp(color_densities, min=0, max=1).numpy()))
 
 plt.show()
 print("Done!!")
-
-# red_harmonic, green_harmonic, blue_harmonic = rgb_harmonics(torch.ones([27]))

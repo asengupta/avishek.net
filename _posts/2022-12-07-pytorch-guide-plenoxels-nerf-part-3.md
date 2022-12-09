@@ -51,6 +51,10 @@ Here is an example of an example 2nd order harmonic with some randomly chosen co
 
 ### Example Render using Spherical Harmonics and Opacity
 
+![Volumetric Rendering using Trilinear Interpolation with Spherical Harmonic-1](/assets/images/volumetric-rendering-trilinear-interpolation-spherical-harmonics.png)
+![Volumetric Rendering using Trilinear Interpolation with Spherical Harmonic-2](/assets/images/volumetric-rendering-trilinear-interpolation-spherical-harmonics-2.png)
+![Volumetric Rendering using Trilinear Interpolation with Spherical Harmonic-2](/assets/images/volumetric-rendering-trilinear-interpolation-spherical-harmonics-3.png)
+
 ### Calculating Loss
 
 ### Incorporating Training Images
