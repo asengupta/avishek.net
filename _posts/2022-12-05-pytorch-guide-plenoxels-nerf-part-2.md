@@ -35,22 +35,44 @@ In this article, we will not make full use of the RGB triplet; it will mostly be
 
 Addressing a voxel in a position which does not exist in this world will give us $$[0,0,0,0]$$. 
 
-### Incorporating the Volumetric Rendering Model
+### Volumetric Rendering Model
 
 We will take a bit of a pause to understand the optical model involved in volumetric rendering since it is essential to the actual rendering and the subsequent calculation of the loss. This article follows [Optical Model for Volumetric Rendering](https://www.youtube.com/watch?v=hiaHlTLN9TE) quite a bit. Solving differential equations is involved, but for the most part, you should be able to skip to the results, if you are not interested in the gory details.
 
-TODO: Insert transmittance image
+![Volumetric Rendering Model with Absorption and Emission](/assets/images/volumetric-rendering-model.png)
 
-Let's take the transmittance equation:
+Consider a cylinder with cross-sectional area $$E$$. Light flows in through the cylinder from the left. Assume a thin slab of the cylinder of length $$\Delta s$$. Let $$C$$ be the intensity of light (flux per unit area) entering this slab from the left. Let us assume a bunch of particles in this slab cylinder. The density of particles in this slab is $$\rho$$. These particles project circular occlusions of area $$A$$. If this slab is thin enough, the occlusions do not overlap.
+
+The number of particles in this slab is then $$\rho E \Delta s$$. The total area of occlusion of these particles are $$A \rho E \Delta s$$. The total area of this cross section is $$E$$. Thus, the fraction of light occluded is $$A \rho E \Delta s / E = A \rho \Delta s$$. Then, the intensity of light exiting the slab is $$C A \rho \Delta s.
+
+Let us also assume that these particles emit some light, with intensity $$c$$ per unit area. Then the total flux emitted is $$c A \rho E \Delta s$$. The intensity (flux per unit area) is thus $$c A \rho E \Delta s / E = c A \rho \Delta s$$
+
+Then, the delta change of intensity is:
 
 $$
+\Delta C = c A \rho \Delta s - C A \rho \Delta s \\
+\frac{\Delta C}{\Delta s} = c A \rho - C A \rho
+$$
+
+In the limit as the slab becomes infinitesmally thin, i.e., $$\Delta s \rightarrow 0$$, we get:
+
+$$
+\frac{dC}{ds} = c A \rho - C A \rho
+$$
+
+Define $$\sigma = A \rho$$ to get:
+
+$$
+\frac{dC}{ds} = \sigma c - \sigma C \\
 \begin{equation}
-\frac{dC}{ds} = \sigma(s)c(s) - \sigma(s)C(s)
+\frac{dC(s)}{ds} = \sigma(s) c(s) - \sigma(s) C(s)
 \label{eq:transmittance}
 \end{equation}
 $$
 
-Let's solve it fully, so I can show you the process, even though it's a very ordinary first-order differential equation.
+### Solving the Volumetric Rendering Model
+
+This is the transmittance equation which models emission and absorption. Let's solve it fully, so I can show you the process, even though it's a very ordinary first-order differential equation.
 
 Assume $$C=uv$$. Then, we can write by the Chain Rule of Differentiation:
 
@@ -98,20 +120,30 @@ Let's discount the constant factor of integration for the moment, and assume tha
 $$
 C(D).e^{\int_0^D \sigma(t) dt} = \int_0^D \sigma(s)c(s).e^{\int_0^s \sigma(t) dt} ds \\
 C(D) = \int_0^D \sigma(s)c(s).e^{\int_0^s \sigma(t) dt}.e^{-\int_0^D \sigma(t) dt} ds \\
-C(D) = \int_0^D \sigma(s)c(s).e^{-\int_s^D \sigma(t) dt} ds
+C(D) = \int_0^D \sigma(s)c(s).e^{-\int_s^D \sigma(t) dt} ds \\
+C(D) = \int_0^D \sigma(s)c(s).T'(s) ds
 $$
 
-We're almost there. We'd like to change our coordinate system, so that the origin lies at the viewer's eye, instead of at the back end of the volume. This then becomes:
+Note that $$T'(s)$$ is the transmittance from $$s$$ to the viewer. Let's flip the direction around so that the origin is at the viewer's eye. Then the transmittance calculation changes from $$e^{-\int_0^{s'} \sigma'(t) dt}$$ ($$\sigma'(s)$$ is the opacity function as a function of $$s$$ from the viewer's eye). The integration is still from 0 to $$D$$, merely in the other direction, which does not change the result. Then we get the overall colour turns out to be:
+
+$$
+C(D) = \int_0^D \sigma'(s)c(s).e^{-\int_0^s \sigma'(t) dt} ds \\
+T=e^{-\int_0^s \sigma'(t) dt}
+$$
+
+Let's drop the subscript of $$\sigma'$$, so that we get our final result.
 
 $$
 \begin{equation}
-C(D) = \int_0^D \sigma(s)c(s).e^{-\int_0^D \sigma(t) dt} ds
+C(D) = \int_0^D \sigma(s)c(s).T(s) ds \\
 \label{eq:volumetric-rendering-integration}
 \end{equation}
+T(s)=e^{-\int_0^D \sigma(t) dt}
 $$
 
-Note: I'm not very clear about how this change of coordinate is achieved. [Optical Models for Volumetric Rendering](https://courses.cs.duke.edu/spring03/cps296.8/papers/max95opticalModelsForDirectVolumeRendering.pdf) uses a coordinate system which originates from the back of the volume; the previous derivations are based on that. [Local and Global Illumination in the Volume Rendering Integral](https://drops.dagstuhl.de/opus/volltexte/2010/2709/pdf/18.pdf) uses a model which uses the viewing ray starting from the viewer's eye.
+**Note:** I'm not sure if there is a specific mathematical procedure about how this change of coordinate is achieved. [Optical Models for Volumetric Rendering](https://courses.cs.duke.edu/spring03/cps296.8/papers/max95opticalModelsForDirectVolumeRendering.pdf) uses a coordinate system which originates from the back of the volume; the previous derivations are based on that. [Local and Global Illumination in the Volume Rendering Integral](https://drops.dagstuhl.de/opus/volltexte/2010/2709/pdf/18.pdf) uses a model which uses the viewing ray starting from the viewer's eye; that's the model that we will start with to derive the discretised version for algorithmic implementation. Hence, the remapping.
 
+**Side Note**
 
 A very nice thing happens if $$c(s)$$ happens to be constant. Let us assume it is $$c$$. Then the above equation becomes:
 
@@ -140,6 +172,10 @@ C(D) = c \left[ 1 - e^{-\int_0^D \sigma(t) dt} \right]
 $$
 
 The above technique will be used to derive the discrete implementation of the integration of the transmittances along a given ray, which is what we will be using in our code.
+
+### The Discrete Volumetric Rendering Model
+
+We still need to translate the mathematical form of the volumetric rendering model into a form suitable for implementation in code. To do this, we will have to discretise the integration procedure.
 
 Let's assume two samples along a ray with their distances as $$s_i$$ and $$s_{i+1}$$. The quantities $$c(s)$$ and $$\sigma(s)$$ are constant within this segment, and are denoted as $$c_i$$ and $$\sigma_i$$ respectively. Let the distance between these two samples be $$d_i$$Let us substitute these limits in $$\eqref{eq:volumetric-rendering-integration}$$ to get:
 
