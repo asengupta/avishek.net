@@ -206,28 +206,10 @@ class VoxelGrid:
         self.build_hollow_cube(lambda: self.random_voxel)
 
     def build_hollow_cube(self, make_voxel):
-        voxel_1, voxel_2, voxel_3, voxel_4, voxel_5, voxel_6 = make_voxel(), make_voxel(), make_voxel(), make_voxel(), make_voxel(), make_voxel()
-        for i in range(10, self.grid_x - 10):
-            for j in range(10, self.grid_y - 10):
-                self.voxel_grid[i, j, 9] = voxel_1
-        for i in range(10, self.grid_x - 10):
-            for j in range(10, self.grid_y - 10):
-                self.voxel_grid[i, j, self.grid_z - 1 - 10] = voxel_2
-        for i in range(10, self.grid_y - 10):
-            for j in range(10, self.grid_z - 10):
-                self.voxel_grid[9, i, j] = voxel_3
-        for i in range(10, self.grid_x - 10):
-            for j in range(10, self.grid_y - 10):
-                self.voxel_grid[self.grid_x - 1 - 10, i, j] = voxel_4
-        for i in range(10, self.grid_z - 10):
-            for j in range(10, self.grid_x - 10):
-                self.voxel_grid[j, 9, i] = voxel_5
-        for i in range(10, self.grid_x - 10):
-            for j in range(10, self.grid_y - 10):
-                self.voxel_grid[j, self.grid_y - 1 - 10, i] = voxel_6
+        self.build_random_hollow_cube2(make_voxel, torch.tensor([10, 10, 10, 20, 20, 20]))
 
-    def build_random_hollow_cube2(self, make_voxel, spec):
-        x, y, z, dx, dy, dz = spec
+    def build_random_hollow_cube2(self, make_voxel, cube_spec):
+        x, y, z, dx, dy, dz = cube_spec
         voxel_1, voxel_2, voxel_3, voxel_4, voxel_5, voxel_6 = make_voxel(), make_voxel(), make_voxel(), make_voxel(), make_voxel(), make_voxel()
         for i in range(x, x + dx + 1):
             for j in range(y, y + dy + 1):
@@ -264,7 +246,7 @@ look_at = torch.tensor([0., 0., 0., 1])
 # camera_center = torch.tensor([-10., -10., 15., 1.])
 camera_center = torch.tensor([-20., -10., 40., 1.])
 # camera_center = torch.tensor([-20., -20., 40., 1.])
-focal_length = 100.
+focal_length = 1.
 
 camera_basis = basis_from_depth(look_at, camera_center)
 camera = Camera(focal_length, camera_center, camera_basis)
