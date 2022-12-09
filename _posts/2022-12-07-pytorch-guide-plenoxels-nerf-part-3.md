@@ -13,7 +13,7 @@ This is part of a series of posts breaking down the [Plenoxels: Radiance Fields 
 - [Part 3]({% post_url 2022-12-07-pytorch-guide-plenoxels-nerf-part-3 %})
 - Part 4 (Work in Progress)
 
-We continue looking at [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131). We start off with understanding Spherical Harmonics, and why we want to use them to capture colour information based on angular direction in 3D space.
+We continue looking at [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131). We start off with understanding **Spherical Harmonics**, and why we want to use them to capture colour information based on angular direction in 3D space.
 
 ### Spherical Harmonics
 
@@ -47,7 +47,7 @@ y = \text{sin } \theta . \text{sin } \phi \\
 z = \text{cos } \theta
 $$
 
-Here is an example of an example 2nd order harmonic with some randomly chosen coefficients. The colours have been modified based on the spherical harmonic value at that specific spherical angle.
+Here is an example of an example 2nd order harmonic with some randomly chosen coefficients. The colours have been modified based on the spherical harmonic value at that specific viewing angle.
 
 ![Random Spherical Harmonic](/assets/images/random-spherical-harmonic.png)
 
