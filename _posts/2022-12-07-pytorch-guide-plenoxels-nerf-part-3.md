@@ -6,6 +6,13 @@ tags: ["Machine Learning", "PyTorch", "Programming", "Deep Learning", "Neural Ra
 draft: false
 ---
 
+This is part of a series of posts breaking down the [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131), and providing (hopefully) well-annotated source code to aid in understanding.
+
+- [Part 1]({% post_url 2022-12-04-pytorch-guide-plenoxels-nerf-part-1 %})
+- [Part 2]({% post_url 2022-12-05-pytorch-guide-plenoxels-nerf-part-2 %})
+- [Part 3]({% post_url 2022-12-07-pytorch-guide-plenoxels-nerf-part-3 %})
+- Part 4 (Work in Progress)
+
 We continue looking at [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131). We start off with understanding Spherical Harmonics, and why we want to use them to capture colour information based on angular direction in 3D space.
 
 ### Spherical Harmonics
@@ -60,16 +67,16 @@ We also take this opportunity to do some obvious optimisations, like precomputin
 
 ### Example Renders using Spherical Harmonics
 
+Just to recap how our volume renderer has progressed, here is an evolution sequence.
+
+![Voxel Cube](/assets/images/voxel-cube.png)
+![Very Basic Volumetric Rendering of Cube](/assets/images/basic-volumetric-rendering-cube.png)
+![Volumetric Rendering Cube without Trilinear Interpolation](/assets/images/volumetric-rendering-cube-without-trilinear-interpolation.png)
+![Volumetric Rendering with Trilinear Interpolation](/assets/images/volumetric-rendering-cube-trilinear-interpolation.png)
 ![Volumetric Rendering using Trilinear Interpolation with Spherical Harmonic-1](/assets/images/volumetric-rendering-trilinear-interpolation-spherical-harmonics.png)
 ![Volumetric Rendering using Trilinear Interpolation with Spherical Harmonic-2](/assets/images/volumetric-rendering-trilinear-interpolation-spherical-harmonics-box-in-box.png)
 
-### Calculating Loss
-
-### Incorporating Training Images
-
-### Optimising using RMSProp
-
-### Reconstruction Results
+Our volumetric renderer is mostly ready; there might be some smaller changes that we will keep doing. However, the sequels will start looking at the actual reason we are looking at this paper, namely, the optimisation of the spherical harmonics to capture the voxel geometry of the scene. This will require us to first calculate loss, and that is where we will start.
 
 ### References
 

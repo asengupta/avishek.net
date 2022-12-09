@@ -6,6 +6,13 @@ tags: ["Machine Learning", "PyTorch", "Programming", "Deep Learning", "Neural Ra
 draft: false
 ---
 
+This is part of a series of posts breaking down the [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131), and providing (hopefully) well-annotated source code to aid in understanding.
+
+- [Part 1]({% post_url 2022-12-04-pytorch-guide-plenoxels-nerf-part-1 %})
+- [Part 2]({% post_url 2022-12-05-pytorch-guide-plenoxels-nerf-part-2 %})
+- [Part 3]({% post_url 2022-12-07-pytorch-guide-plenoxels-nerf-part-3 %})
+- Part 4 (Work in Progress)
+
 We continue looking at [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131). We set up a very contrived opacity model in our last post, which gave us an image like this:
 
 ![Very Basic Volumetric Rendering of Cube](/assets/images/basic-volumetric-rendering-cube.png)
