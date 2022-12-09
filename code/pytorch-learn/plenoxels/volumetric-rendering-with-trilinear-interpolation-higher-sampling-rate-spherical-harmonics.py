@@ -69,18 +69,20 @@ def line(marker="o"):
     return lambda p1, p2: plt.plot([p1[0][0], p2[0][0]], [p1[1][0], p2[1][0]], marker="o")
 
 HALF_SQRT_3_BY_PI = 0.5 * math.sqrt(3. / math.pi)
-HALF_SQRT_15_BY_PI = 0.5 * math.sqrt(3. / math.pi)
+HALF_SQRT_15_BY_PI = 0.5 * math.sqrt(15. / math.pi)
+QUARTER_SQRT_15_BY_PI = 0.25 * math.sqrt(15. / math.pi)
+QUARTER_SQRT_5_BY_PI = 0.25 * math.sqrt(5. / math.pi)
 
 Y_0_0 = 0.5 * math.sqrt(1. / math.pi)
-Y_m1_1 = lambda theta, phi: 0.5 * math.sqrt(3. / math.pi) * math.sin(theta) * math.sin(phi)
-Y_0_1 = lambda theta, phi: 0.5 * math.sqrt(3. / math.pi) * math.cos(theta)
-Y_1_1 = lambda theta, phi: 0.5 * math.sqrt(3. / math.pi) * math.sin(theta) * math.cos(phi)
-Y_m2_2 = lambda theta, phi: 0.5 * math.sqrt(15. / math.pi) * math.sin(theta) * math.cos(phi) * math.sin(
+Y_m1_1 = lambda theta, phi: HALF_SQRT_3_BY_PI * math.sin(theta) * math.sin(phi)
+Y_0_1 = lambda theta, phi: HALF_SQRT_3_BY_PI * math.cos(theta)
+Y_1_1 = lambda theta, phi: HALF_SQRT_3_BY_PI * math.sin(theta) * math.cos(phi)
+Y_m2_2 = lambda theta, phi: HALF_SQRT_15_BY_PI * math.sin(theta) * math.cos(phi) * math.sin(
     theta) * math.sin(phi)
-Y_m1_2 = lambda theta, phi: 0.5 * math.sqrt(15. / math.pi) * math.sin(theta) * math.sin(phi) * math.cos(theta)
-Y_0_2 = lambda theta, phi: 0.25 * math.sqrt(5. / math.pi) * (3 * math.cos(theta) * math.cos(theta) - 1)
-Y_1_2 = lambda theta, phi: 0.5 * math.sqrt(15. / math.pi) * math.sin(theta) * math.cos(phi) * math.cos(theta)
-Y_2_2 = lambda theta, phi: 0.25 * math.sqrt(15. / math.pi) * (
+Y_m1_2 = lambda theta, phi: HALF_SQRT_15_BY_PI * math.sin(theta) * math.sin(phi) * math.cos(theta)
+Y_0_2 = lambda theta, phi: QUARTER_SQRT_5_BY_PI * (3 * math.cos(theta) * math.cos(theta) - 1)
+Y_1_2 = lambda theta, phi: HALF_SQRT_15_BY_PI * math.sin(theta) * math.cos(phi) * math.cos(theta)
+Y_2_2 = lambda theta, phi: QUARTER_SQRT_15_BY_PI * (
         pow(math.sin(theta) * math.cos(phi), 2) - pow(math.sin(theta) * math.sin(phi), 2))
 
 
@@ -258,15 +260,15 @@ for i in range(0, world.grid_x):
 
 plt.show()
 fig2 = plt.figure()
-for i in np.linspace(-30, 30, 200):
-    for j in np.linspace(-10, 60, 200):
+for i in np.linspace(-30, 30, 100):
+    for j in np.linspace(-10, 60, 100):
         print(f"({i}-{j})")
         ray_screen_intersection = camera_basis_x * i + camera_basis_y * j
         unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
         density = 0.
         view_tensors = []
         # To remove artifacts, set ray step samples to be higher, like 200
-        for k in np.linspace(0, 100, 50):
+        for k in np.linspace(0, 100, 100):
             ray_endpoint = camera_center_inhomogenous + unit_ray * k
             ray_x, ray_y, ray_z = ray_endpoint
             if (world.is_outside(ray_x, ray_y, ray_z)):
