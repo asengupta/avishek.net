@@ -109,6 +109,7 @@ def channel_opacity(position_distance_density_color_tensors, viewing_angle):
             - position_distance_density_color_vectors[j, 4] * position_distance_density_color_vectors[j, 3]),
         range(0, i), 0.), range(1, number_of_samples + 1)))
     density = torch.tensor(0.)
+    color_densities = torch.zeros([3])
     for index, transmittance in enumerate(transmittances):
         if (position_distance_density_color_vectors[index, 4] == 0.):
             continue
@@ -119,10 +120,12 @@ def channel_opacity(position_distance_density_color_tensors, viewing_angle):
         r = red_harmonic(viewing_angle[0], viewing_angle[1])
         g = green_harmonic(viewing_angle[0], viewing_angle[1])
         b = blue_harmonic(viewing_angle[0], viewing_angle[1])
-        density += transmittance * (1. - math.exp(- position_distance_density_color_vectors[index, 4] *
-                                                  position_distance_density_color_vectors[index, 3])) * r
+        base_transmittance = transmittance * (1. - math.exp(
+            - position_distance_density_color_vectors[index, 4] * position_distance_density_color_vectors[index, 3]))
+        density += base_transmittance * r
+        color_densities += torch.tensor([base_transmittance * r, base_transmittance * g,  base_transmittance * b])
 
-    return density
+    return density, color_densities
 
 
 # tuples = torch.tensor([[1, 2, 3, 2, 0.2, 1, 1, 1], [1, 2, 3, 2, 0.2, 1, 1, 1]])
@@ -138,9 +141,10 @@ class VoxelGrid:
         self.grid_y = y
         self.grid_z = z
         # self.default_voxel = torch.tensor([0.005, 0.5, 0.6, 0.7])
-        self.default_voxel = torch.zeros([28])
+        self.default_voxel = torch.ones([28])
         self.empty_voxel = torch.zeros([28])
-        self.default_voxel[:4] = torch.tensor([0.005, 0.5, 0.6, 0.7])
+        # self.default_voxel[:4] = torch.tensor([0.005, 0.5, 0.6, 0.7])
+        self.default_voxel[0] = 0.005
         self.voxel_grid = torch.zeros([self.grid_x, self.grid_y, self.grid_z, 28])
 
     def at(self, x, y, z):
@@ -262,7 +266,7 @@ plt.show()
 fig2 = plt.figure()
 for i in np.linspace(-30, 30, 100):
     for j in np.linspace(-10, 60, 100):
-        print(f"({i}-{j})")
+        # print(f"({i}-{j})")
         ray_screen_intersection = camera_basis_x * i + camera_basis_y * j
         unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
         density = 0.
@@ -286,8 +290,8 @@ for i in np.linspace(-30, 30, 100):
 
         # Make 1D tensor into 2D tensor
         ray_samples_with_distances = torch.cat([t1, torch.reshape(distance_tensors, (-1, 1))], 1)
-        total_transmitted_light = world.density(ray_samples_with_distances, viewing_angle)
-        # print(total_transmitted_light)
+        total_transmitted_light, color_densities = world.density(ray_samples_with_distances, viewing_angle)
+        print(color_densities)
 
         total_transmitted_light = total_transmitted_light
         if (total_transmitted_light > 1):
