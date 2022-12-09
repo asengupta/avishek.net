@@ -49,11 +49,19 @@ Here is an example of an example 2nd order harmonic with some randomly chosen co
 ```
 ### Incorporating Spherical Harmonics
 
-### Example Render using Spherical Harmonics and Opacity
+Let's incorporate spherical harmonics into our rendering model. We have reached the point where each voxel in the world needs to be represented by a full-blown tensor of opacity and three set of 9 harmonic coefficients, hence 28 numbers.
+
+Also, we are no longer calculating a single density; we are calculating the intensity for each colour channel. It is the same calculation, however the colour will now be calculated using the spherical harmonic functions.
+
+```python
+{% include_absolute '/code/pytorch-learn/plenoxels/volumetric-rendering-with-trilinear-interpolation-higher-sampling-rate-spherical-harmonics.py' %}
+```
+We also take this opportunity to do some obvious optimisations, like precomputing the spherical harmonic constants.
+
+### Example Renders using Spherical Harmonics
 
 ![Volumetric Rendering using Trilinear Interpolation with Spherical Harmonic-1](/assets/images/volumetric-rendering-trilinear-interpolation-spherical-harmonics.png)
-![Volumetric Rendering using Trilinear Interpolation with Spherical Harmonic-2](/assets/images/volumetric-rendering-trilinear-interpolation-spherical-harmonics-2.png)
-![Volumetric Rendering using Trilinear Interpolation with Spherical Harmonic-2](/assets/images/volumetric-rendering-trilinear-interpolation-spherical-harmonics-3.png)
+![Volumetric Rendering using Trilinear Interpolation with Spherical Harmonic-2](/assets/images/volumetric-rendering-trilinear-interpolation-spherical-harmonics-box-in-box.png)
 
 ### Calculating Loss
 

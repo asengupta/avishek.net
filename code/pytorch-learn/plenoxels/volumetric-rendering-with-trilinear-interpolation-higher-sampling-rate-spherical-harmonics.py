@@ -68,6 +68,7 @@ def plot(style="bo"):
 def line(marker="o"):
     return lambda p1, p2: plt.plot([p1[0][0], p2[0][0]], [p1[1][0], p2[1][0]], marker="o")
 
+
 HALF_SQRT_3_BY_PI = 0.5 * math.sqrt(3. / math.pi)
 HALF_SQRT_15_BY_PI = 0.5 * math.sqrt(15. / math.pi)
 QUARTER_SQRT_15_BY_PI = 0.25 * math.sqrt(15. / math.pi)
@@ -94,7 +95,6 @@ def harmonic(C_0_0, C_m1_1, C_0_1, C_1_1, C_m2_2, C_m1_2, C_0_2, C_1_2, C_2_2):
 
 
 def rgb_harmonics(harmonic_coefficient_tensor):
-    # print(harmonic_coefficient_tensor)
     red_harmonic = harmonic(*harmonic_coefficient_tensor[:9])
     green_harmonic = harmonic(*harmonic_coefficient_tensor[9:18])
     blue_harmonic = harmonic(*harmonic_coefficient_tensor[18:])
@@ -123,16 +123,9 @@ def channel_opacity(position_distance_density_color_tensors, viewing_angle):
         #     raise Exception(f"Transmittance was {base_transmittance}")
         # if (r > 1. or r < 0. or g > 1. or g < 0. or b > 1. or b < 0.):
         #     raise Exception(f"Harmonic values were ({r}, {g}, {b})")
-        color_densities += torch.tensor([base_transmittance * r, base_transmittance * g,  base_transmittance * b])
+        color_densities += torch.tensor([base_transmittance * r, base_transmittance * g, base_transmittance * b])
 
     return color_densities
-
-
-# tuples = torch.tensor([[1, 2, 3, 2, 0.2, 1, 1, 1], [1, 2, 3, 2, 0.2, 1, 1, 1]])
-#
-# print(channel_opacity(tuples, torch.tensor([0., 0.])))
-
-# test_harmonic = harmonic(1, 2, 3, 4, 5, 6, 7, 8, 1)
 
 
 class VoxelGrid:
@@ -196,22 +189,21 @@ class VoxelGrid:
             c_1 = c_01 * (1 - y_d) + c_11 * y_d
 
             c = c_0 * (1 - z_d) + c_1 * z_d
-            # print(c)
-            # collected_voxels.append(self.at(ray_sample[0], ray_sample[1], ray_sample[2]))
+
             collected_voxels.append(c)
         return channel_opacity(torch.cat([ray_samples_with_distances, torch.stack(collected_voxels)], 1), viewing_angle)
 
     def build_solid_cube(self):
-        for i in range(self.grid_x):
-            for j in range(self.grid_y):
-                for k in range(self.grid_z):
+        for i in range(13, self.grid_x - 13):
+            for j in range(13, self.grid_y - 13):
+                for k in range(13, self.grid_z - 13):
                     self.voxel_grid[i, j, k] = self.default_voxel
 
     def build_random_hollow_cube(self):
         self.build_hollow_cube(self.random_voxel)
 
     def build_monochrome_hollow_cube(self):
-        self.build_hollow_cube(lambda : self.random_voxel)
+        self.build_hollow_cube(lambda: self.random_voxel)
 
     def build_hollow_cube(self, make_voxel):
         voxel_1, voxel_2, voxel_3, voxel_4, voxel_5, voxel_6 = make_voxel(), make_voxel(), make_voxel(), make_voxel(), make_voxel(), make_voxel()
@@ -234,6 +226,28 @@ class VoxelGrid:
             for j in range(10, self.grid_y - 10):
                 self.voxel_grid[j, self.grid_y - 1 - 10, i] = voxel_6
 
+    def build_random_hollow_cube2(self, make_voxel, spec):
+        x, y, z, dx, dy, dz = spec
+        voxel_1, voxel_2, voxel_3, voxel_4, voxel_5, voxel_6 = make_voxel(), make_voxel(), make_voxel(), make_voxel(), make_voxel(), make_voxel()
+        for i in range(x, x + dx + 1):
+            for j in range(y, y + dy + 1):
+                self.voxel_grid[i, j, z] = voxel_1
+        for i in range(x, x + dx + 1):
+            for j in range(y, y + dy + 1):
+                self.voxel_grid[i, j, z + dz] = voxel_2
+        for i in range(y, y + dy + 1):
+            for j in range(z, z + dz + 1):
+                self.voxel_grid[x, i, j] = voxel_3
+        for i in range(y, y + dy + 1):
+            for j in range(z, z + dz + 1):
+                self.voxel_grid[x + dx, i, j] = voxel_4
+        for i in range(z, z + dz + 1):
+            for j in range(x, x + dx + 1):
+                self.voxel_grid[j, y, i] = voxel_5
+        for i in range(z, z + dz + 1):
+            for j in range(x, x + dx + 1):
+                self.voxel_grid[j, y + dy, i] = voxel_6
+
 
 grid_x = 40
 grid_y = 40
@@ -241,13 +255,16 @@ grid_z = 40
 
 world = VoxelGrid(grid_x, grid_y, grid_z)
 # world.build_solid_cube()
-world.build_random_hollow_cube()
+# world.build_random_hollow_cube()
+world.build_random_hollow_cube2(world.random_voxel, torch.tensor([10, 10, 10, 20, 20, 20]))
+world.build_random_hollow_cube2(world.random_voxel, torch.tensor([15, 15, 15, 10, 10, 10]))
 
 look_at = torch.tensor([0., 0., 0., 1])
 # camera_center = torch.tensor([-60., 5., 15., 1.])
 # camera_center = torch.tensor([-10., -10., 15., 1.])
 camera_center = torch.tensor([-20., -10., 40., 1.])
-focal_length = 1
+# camera_center = torch.tensor([-20., -20., 40., 1.])
+focal_length = 100.
 
 camera_basis = basis_from_depth(look_at, camera_center)
 camera = Camera(focal_length, camera_center, camera_basis)
@@ -278,7 +295,6 @@ plt.show()
 fig2 = plt.figure()
 for i in np.linspace(-35, 30, 100):
     for j in np.linspace(-15, 60, 100):
-        # print(f"({i}-{j})")
         ray_screen_intersection = camera_basis_x * i + camera_basis_y * j
         unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
         density = 0.
@@ -305,7 +321,7 @@ for i in np.linspace(-35, 30, 100):
         color_densities = world.density(ray_samples_with_distances, viewing_angle)
         print(color_densities)
 
-        plt.plot(i, j, marker="o", color= (1. - torch.clamp(color_densities, min=0, max=1).numpy()))
+        plt.plot(i, j, marker="o", color=(1. - torch.clamp(color_densities, min=0, max=1).numpy()))
 
 plt.show()
 print("Done!!")
