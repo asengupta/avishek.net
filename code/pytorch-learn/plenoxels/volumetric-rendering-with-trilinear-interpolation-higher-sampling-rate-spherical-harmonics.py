@@ -274,8 +274,8 @@ plt.show()
 class Renderer:
     def __init__(self, camera, view_spec, ray_spec):
         self.camera = camera
-        self.num_ray_samples = ray_spec[1]
         self.ray_length = ray_spec[0]
+        self.num_ray_samples = ray_spec[1]
         self.x_1, self.x_2 = view_spec[0], view_spec[1]
         self.y_1, self.y_2 = view_spec[2], view_spec[3]
         self.num_view_samples = view_spec[4]
@@ -291,25 +291,25 @@ class Renderer:
             for j in np.linspace(self.y_1, self.y_2, self.num_view_samples):
                 ray_screen_intersection = camera_basis_x * i + camera_basis_y * j
                 unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
-                view_tensors = []
+                ray_samples = []
                 # To remove artifacts, set ray step samples to be higher, like 200
-                for k in np.linspace(0, 100, self.num_view_samples):
+                for k in np.linspace(0, self.ray_length, self.num_view_samples):
                     ray_endpoint = camera_center_inhomogenous + unit_ray * k
                     ray_x, ray_y, ray_z = ray_endpoint
                     if (world.is_outside(ray_x, ray_y, ray_z)):
                         continue
                     # We are in the box
-                    view_tensors.append([ray_x, ray_y, ray_z])
+                    ray_samples.append([ray_x, ray_y, ray_z])
 
-                full_view_tensors = torch.unique(torch.tensor(view_tensors), dim=0)
-                if (len(full_view_tensors) <= 1):
+                unique_ray_samples = torch.unique(torch.tensor(ray_samples), dim=0)
+                if (len(unique_ray_samples) <= 1):
                     continue
-                t1 = full_view_tensors[:-1]
-                t2 = full_view_tensors[1:]
-                distance_tensors = (t1 - t2).pow(2).sum(1).sqrt()
+                t1 = unique_ray_samples[:-1]
+                t2 = unique_ray_samples[1:]
+                consecutive_sample_distances = (t1 - t2).pow(2).sum(1).sqrt()
 
                 # Make 1D tensor into 2D tensor
-                ray_samples_with_distances = torch.cat([t1, torch.reshape(distance_tensors, (-1, 1))], 1)
+                ray_samples_with_distances = torch.cat([t1, torch.reshape(consecutive_sample_distances, (-1, 1))], 1)
                 color_densities = world.density(ray_samples_with_distances, viewing_angle)
                 print(color_densities)
 
