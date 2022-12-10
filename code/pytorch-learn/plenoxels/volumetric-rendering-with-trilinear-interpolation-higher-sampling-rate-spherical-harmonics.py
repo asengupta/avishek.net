@@ -31,6 +31,7 @@ class Camera:
         camera_basis_phi = math.atan(camera_basis_z[2] / camera_basis_z.norm())
         return torch.tensor([camera_basis_theta, camera_basis_phi])
 
+
 def camera_basis_from(camera_depth_z_vector):
     depth_vector = camera_depth_z_vector[:3]  # We just want the inhomogenous parts of the coordinates
 
@@ -107,33 +108,6 @@ def rgb_harmonics(harmonic_coefficient_tensor):
     return (red_harmonic, green_harmonic, blue_harmonic)
 
 
-def channel_opacity(position_distance_density_color_tensors, viewing_angle):
-    position_distance_density_color_vectors = position_distance_density_color_tensors.numpy()
-    number_of_samples = len(position_distance_density_color_vectors)
-    transmittances = list(map(lambda i: functools.reduce(
-        lambda acc, j: acc + math.exp(
-            - position_distance_density_color_vectors[j, 4] * position_distance_density_color_vectors[j, 3]),
-        range(0, i), 0.), range(1, number_of_samples + 1)))
-    color_densities = torch.zeros([3])
-    for index, transmittance in enumerate(transmittances):
-        if (position_distance_density_color_vectors[index, 4] == 0.):
-            continue
-        # density += (transmittance - transmittances[index + 1]) * position_distance_density_color_vectors[index, 5]
-        red_harmonic, green_harmonic, blue_harmonic = rgb_harmonics(position_distance_density_color_tensors[index, 5:])
-        r = red_harmonic(viewing_angle[0], viewing_angle[1])
-        g = green_harmonic(viewing_angle[0], viewing_angle[1])
-        b = blue_harmonic(viewing_angle[0], viewing_angle[1])
-        base_transmittance = transmittance * (1. - math.exp(
-            - position_distance_density_color_vectors[index, 4] * position_distance_density_color_vectors[index, 3]))
-        # if (base_transmittance > 1. or base_transmittance < 0.):
-        #     raise Exception(f"Transmittance was {base_transmittance}")
-        # if (r > 1. or r < 0. or g > 1. or g < 0. or b > 1. or b < 0.):
-        #     raise Exception(f"Harmonic values were ({r}, {g}, {b})")
-        color_densities += torch.tensor([base_transmittance * r, base_transmittance * g, base_transmittance * b])
-
-    return color_densities
-
-
 class VoxelGrid:
     def __init__(self, x, y, z):
         self.grid_x = x
@@ -166,38 +140,33 @@ class VoxelGrid:
     def is_outside(self, x, y, z):
         return not self.is_inside(x, y, z)
 
-    def density(self, ray_samples_with_distances, viewing_angle):
-        collected_voxels = []
-        for ray_sample in ray_samples_with_distances:
-            x = ray_sample[0]
-            y = ray_sample[1]
-            z = ray_sample[2]
-            x_0, x_1 = int(x), int(x) + 1
-            y_0, y_1 = int(y), int(y) + 1
-            z_0, z_1 = int(z), int(z) + 1
-            x_d = (x - x_0) / (x_1 - x_0)
-            y_d = (y - y_0) / (y_1 - y_0)
-            z_d = (z - z_0) / (z_1 - z_0)
-            c_000 = self.at(x_0, y_0, z_0)
-            c_001 = self.at(x_0, y_0, z_1)
-            c_010 = self.at(x_0, y_1, z_0)
-            c_011 = self.at(x_0, y_1, z_1)
-            c_100 = self.at(x_1, y_0, z_0)
-            c_101 = self.at(x_1, y_0, z_1)
-            c_110 = self.at(x_1, y_1, z_0)
-            c_111 = self.at(x_1, y_1, z_1)
-            c_00 = c_000 * (1 - x_d) + c_100 * x_d
-            c_01 = c_001 * (1 - x_d) + c_101 * x_d
-            c_10 = c_010 * (1 - x_d) + c_110 * x_d
-            c_11 = c_011 * (1 - x_d) + c_111 * x_d
+    def channel_opacity(self, position_distance_density_color_tensors, viewing_angle):
+        position_distance_density_color_vectors = position_distance_density_color_tensors.numpy()
+        number_of_samples = len(position_distance_density_color_vectors)
+        transmittances = list(map(lambda i: functools.reduce(
+            lambda acc, j: acc + math.exp(
+                - position_distance_density_color_vectors[j, 4] * position_distance_density_color_vectors[j, 3]),
+            range(0, i), 0.), range(1, number_of_samples + 1)))
+        color_densities = torch.zeros([3])
+        for index, transmittance in enumerate(transmittances):
+            if (position_distance_density_color_vectors[index, 4] == 0.):
+                continue
+            # density += (transmittance - transmittances[index + 1]) * position_distance_density_color_vectors[index, 5]
+            red_harmonic, green_harmonic, blue_harmonic = rgb_harmonics(
+                position_distance_density_color_tensors[index, 5:])
+            r = red_harmonic(viewing_angle[0], viewing_angle[1])
+            g = green_harmonic(viewing_angle[0], viewing_angle[1])
+            b = blue_harmonic(viewing_angle[0], viewing_angle[1])
+            base_transmittance = transmittance * (1. - math.exp(
+                - position_distance_density_color_vectors[index, 4] * position_distance_density_color_vectors[
+                    index, 3]))
+            # if (base_transmittance > 1. or base_transmittance < 0.):
+            #     raise Exception(f"Transmittance was {base_transmittance}")
+            # if (r > 1. or r < 0. or g > 1. or g < 0. or b > 1. or b < 0.):
+            #     raise Exception(f"Harmonic values were ({r}, {g}, {b})")
+            color_densities += torch.tensor([base_transmittance * r, base_transmittance * g, base_transmittance * b])
 
-            c_0 = c_00 * (1 - y_d) + c_10 * y_d
-            c_1 = c_01 * (1 - y_d) + c_11 * y_d
-
-            c = c_0 * (1 - z_d) + c_1 * z_d
-
-            collected_voxels.append(c)
-        return channel_opacity(torch.cat([ray_samples_with_distances, torch.stack(collected_voxels)], 1), viewing_angle)
+        return color_densities
 
     def build_solid_cube(self):
         for i in range(13, self.grid_x - 13):
@@ -235,6 +204,40 @@ class VoxelGrid:
         for i in range(z, z + dz + 1):
             for j in range(x, x + dx + 1):
                 self.voxel_grid[j, y + dy, i] = voxel_6
+
+    def density(self, ray_samples_with_distances, viewing_angle):
+        collected_voxels = []
+        for ray_sample in ray_samples_with_distances:
+            x = ray_sample[0]
+            y = ray_sample[1]
+            z = ray_sample[2]
+            x_0, x_1 = int(x), int(x) + 1
+            y_0, y_1 = int(y), int(y) + 1
+            z_0, z_1 = int(z), int(z) + 1
+            x_d = (x - x_0) / (x_1 - x_0)
+            y_d = (y - y_0) / (y_1 - y_0)
+            z_d = (z - z_0) / (z_1 - z_0)
+            c_000 = self.at(x_0, y_0, z_0)
+            c_001 = self.at(x_0, y_0, z_1)
+            c_010 = self.at(x_0, y_1, z_0)
+            c_011 = self.at(x_0, y_1, z_1)
+            c_100 = self.at(x_1, y_0, z_0)
+            c_101 = self.at(x_1, y_0, z_1)
+            c_110 = self.at(x_1, y_1, z_0)
+            c_111 = self.at(x_1, y_1, z_1)
+            c_00 = c_000 * (1 - x_d) + c_100 * x_d
+            c_01 = c_001 * (1 - x_d) + c_101 * x_d
+            c_10 = c_010 * (1 - x_d) + c_110 * x_d
+            c_11 = c_011 * (1 - x_d) + c_111 * x_d
+
+            c_0 = c_00 * (1 - y_d) + c_10 * y_d
+            c_1 = c_01 * (1 - y_d) + c_11 * y_d
+
+            c = c_0 * (1 - z_d) + c_1 * z_d
+
+            collected_voxels.append(c)
+        return self.channel_opacity(torch.cat([ray_samples_with_distances, torch.stack(collected_voxels)], 1),
+                                    viewing_angle)
 
 
 grid_x = 40
