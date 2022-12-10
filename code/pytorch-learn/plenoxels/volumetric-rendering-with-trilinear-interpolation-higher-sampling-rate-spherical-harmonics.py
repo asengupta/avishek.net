@@ -101,10 +101,10 @@ def harmonic(C_0_0, C_m1_1, C_0_1, C_1_1, C_m2_2, C_m1_2, C_0_2, C_1_2, C_2_2):
         theta, phi) + C_2_2 * Y_2_2(theta, phi)
 
 
-def rgb_harmonics(harmonic_coefficient_tensor):
-    red_harmonic = harmonic(*harmonic_coefficient_tensor[:9])
-    green_harmonic = harmonic(*harmonic_coefficient_tensor[9:18])
-    blue_harmonic = harmonic(*harmonic_coefficient_tensor[18:])
+def rgb_harmonics(rgb_harmonic_coefficients):
+    red_harmonic = harmonic(*rgb_harmonic_coefficients[:9])
+    green_harmonic = harmonic(*rgb_harmonic_coefficients[9:18])
+    blue_harmonic = harmonic(*rgb_harmonic_coefficients[18:])
     return (red_harmonic, green_harmonic, blue_harmonic)
 
 
@@ -117,7 +117,6 @@ class VoxelGrid:
         self.grid_z = z
         self.default_voxel = torch.rand([VoxelGrid.VOXEL_DIMENSION])
         self.empty_voxel = torch.zeros([VoxelGrid.VOXEL_DIMENSION])
-        # self.default_voxel[:4] = torch.tensor([0.005, 0.5, 0.6, 0.7])
         self.default_voxel[0] = 0.005
         self.voxel_grid = torch.zeros([self.grid_x, self.grid_y, self.grid_z, VoxelGrid.VOXEL_DIMENSION])
 
