@@ -69,14 +69,19 @@ We also take this opportunity to do some obvious optimisations, like precomputin
 
 Just to recap how our volume renderer has progressed, here is an evolution sequence.
 
+**Non-rendered voxel grid**
 ![Voxel Cube](/assets/images/voxel-cube.png)
+**Simple density-based voxel rendering**
 ![Very Basic Volumetric Rendering of Cube](/assets/images/basic-volumetric-rendering-cube.png)
+**Volumentric rendering without Linear Interpolation**
 ![Volumetric Rendering Cube without Trilinear Interpolation](/assets/images/volumetric-rendering-cube-without-trilinear-interpolation.png)
+**Volumentric rendering with Linear Interpolation**
 ![Volumetric Rendering with Trilinear Interpolation](/assets/images/volumetric-rendering-cube-trilinear-interpolation.png)
+**Volumentric rendering with Linear Interpolation and Spherical Harmonics**
 ![Volumetric Rendering using Trilinear Interpolation with Spherical Harmonic-1](/assets/images/volumetric-rendering-trilinear-interpolation-spherical-harmonics.png)
 ![Volumetric Rendering using Trilinear Interpolation with Spherical Harmonic-2](/assets/images/volumetric-rendering-trilinear-interpolation-spherical-harmonics-box-in-box.png)
 
-Our volumetric renderer is mostly ready; there might be some smaller changes that we will keep doing. However, the sequels will start looking at the actual reason we are looking at this paper, namely, the optimisation of the spherical harmonics to capture the voxel geometry of the scene. This will require us to first calculate loss, and that is where we will start.
+Our volumetric renderer is mostly ready; there might be some smaller changes that we will keep doing. However, the sequels will start looking at the actual reason we are looking at this paper, namely, the optimisation of the spherical harmonics to capture the voxel geometry of the scene. This will require us to first calculate loss, and that is where we will start next time.
 
 ### References
 
