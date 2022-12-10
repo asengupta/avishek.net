@@ -109,19 +109,20 @@ def rgb_harmonics(harmonic_coefficient_tensor):
 
 
 class VoxelGrid:
+    VOXEL_DIMENSION = 28
+
     def __init__(self, x, y, z):
         self.grid_x = x
         self.grid_y = y
         self.grid_z = z
-        # self.default_voxel = torch.tensor([0.005, 0.5, 0.6, 0.7])
-        self.default_voxel = torch.rand([28])
-        self.empty_voxel = torch.zeros([28])
+        self.default_voxel = torch.rand([VoxelGrid.VOXEL_DIMENSION])
+        self.empty_voxel = torch.zeros([VoxelGrid.VOXEL_DIMENSION])
         # self.default_voxel[:4] = torch.tensor([0.005, 0.5, 0.6, 0.7])
         self.default_voxel[0] = 0.005
-        self.voxel_grid = torch.zeros([self.grid_x, self.grid_y, self.grid_z, 28])
+        self.voxel_grid = torch.zeros([self.grid_x, self.grid_y, self.grid_z, VoxelGrid.VOXEL_DIMENSION])
 
     def random_voxel(self):
-        voxel = torch.rand([28])
+        voxel = torch.rand([VoxelGrid.VOXEL_DIMENSION])
         voxel[0] = 0.01
         return voxel
 
@@ -239,41 +240,6 @@ class VoxelGrid:
         return self.channel_opacity(torch.cat([ray_samples_with_distances, torch.stack(collected_voxels)], 1),
                                     viewing_angle)
 
-
-grid_x = 40
-grid_y = 40
-grid_z = 40
-
-world = VoxelGrid(grid_x, grid_y, grid_z)
-# world.build_solid_cube()
-# world.build_random_hollow_cube()
-world.build_random_hollow_cube2(world.random_voxel, torch.tensor([10, 10, 10, 20, 20, 20]))
-world.build_random_hollow_cube2(world.random_voxel, torch.tensor([15, 15, 15, 10, 10, 10]))
-
-look_at = torch.tensor([0., 0., 0., 1])
-# camera_center = torch.tensor([-60., 5., 15., 1.])
-# camera_center = torch.tensor([-10., -10., 15., 1.])
-camera_center = torch.tensor([-20., -10., 40., 1.])
-# camera_center = torch.tensor([-20., -20., 40., 1.])
-focal_length = 1.
-
-camera_basis = basis_from_depth(look_at, camera_center)
-camera = Camera(focal_length, camera_center, camera_basis)
-
-plt.rcParams['axes.facecolor'] = 'black'
-plt.axis("equal")
-fig1 = plt.figure()
-for i in range(0, world.grid_x):
-    for j in range(0, world.grid_y):
-        for k in range(0, world.grid_z):
-            voxel = world.at(i, j, k)
-            if (voxel[0] == 0.):
-                continue
-            d = camera.to_2D(torch.tensor([[i, j, k, 1.]]))
-            plt.plot(d[0][0], d[1][0], marker="o")
-plt.show()
-
-
 class Renderer:
     def __init__(self, camera, view_spec, ray_spec):
         self.camera = camera
@@ -321,6 +287,39 @@ class Renderer:
         plt.show()
         print("Done!!")
 
+
+GRID_X = 40
+GRID_Y = 40
+GRID_Z = 40
+
+world = VoxelGrid(GRID_X, GRID_Y, GRID_Z)
+# world.build_solid_cube()
+# world.build_random_hollow_cube()
+world.build_random_hollow_cube2(world.random_voxel, torch.tensor([10, 10, 10, 20, 20, 20]))
+world.build_random_hollow_cube2(world.random_voxel, torch.tensor([15, 15, 15, 10, 10, 10]))
+
+camera_look_at = torch.tensor([0., 0., 0., 1])
+# camera_center = torch.tensor([-60., 5., 15., 1.])
+# camera_center = torch.tensor([-10., -10., 15., 1.])
+camera_center = torch.tensor([-20., -10., 40., 1.])
+# camera_center = torch.tensor([-20., -20., 40., 1.])
+focal_length = 1.
+
+camera_basis = basis_from_depth(camera_look_at, camera_center)
+camera = Camera(focal_length, camera_center, camera_basis)
+
+plt.rcParams['axes.facecolor'] = 'black'
+plt.axis("equal")
+fig1 = plt.figure()
+for i in range(0, world.grid_x):
+    for j in range(0, world.grid_y):
+        for k in range(0, world.grid_z):
+            voxel = world.at(i, j, k)
+            if (voxel[0] == 0.):
+                continue
+            d = camera.to_2D(torch.tensor([[i, j, k, 1.]]))
+            plt.plot(d[0][0], d[1][0], marker="o")
+plt.show()
 
 r = Renderer(camera, torch.tensor([-35, 30, -15, 60, 100]), torch.tensor([100, 100]))
 r.render(plt)
