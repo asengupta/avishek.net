@@ -17,13 +17,13 @@ We continue looking at [Plenoxels: Radiance Fields without Neural Networks](http
 
 ### Spherical Harmonics
 
-Spherical harmonics essentially define a series (possibly infinite) of functions defined over a sphere, that is to say, the harmonics are parameterised by the angular coordinates of a 3D polar coordinate system. It's essentially like the Fourier Transform, in that the larger the degree of the harmonic, the more accurately a signal on a sphere can be encoded in the series.
+Spherical harmonics essentially define a series (theoretically infinite) of functions defined over a sphere, that is to say, the function values are parameterised by the angles of a spherical coordinate system. It's essentially like the Fourier Transform, in that the larger the degree of the harmonic, the more accurately a signal on a sphere can be encoded in the series.
 
 $$
 f(\theta, \phi) = \sum_{l=0}^N \sum_{m=-l}^l C^m_l Y^m_l (\theta, \phi)
 $$
 
-The paper expands only to the degree of 2. This implies that that the number of terms in the above series is $$1+3+5=9$$.
+Here, $$N$$ is the order, $$C^m_l$$ are the coefficients; this results in a linear combination of the basis functions $$Y^m_l$$, which represents the target function. How accurately the target is described depends upon how far the series is expanded. The paper expands only to degree 2. This implies that that the number of terms in the above series is $$1+3+5=9$$.
 
 The basis functions for degree 2 are listed below:
 
