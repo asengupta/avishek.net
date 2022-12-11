@@ -259,24 +259,28 @@ class Renderer:
         camera_center_inhomogenous = camera_center[:3]
         view_length = self.x_2 - self.x_1
         view_height = self.y_2 - self.y_1
+        plt.rcParams['axes.xmargin'] = 0
+        plt.rcParams['axes.ymargin'] = 0
+        plt.figure(frameon=False)
         plt.rcParams['axes.facecolor'] = 'black'
-        plt.axis("equal")
         plt.figure()
+        plt.axis("equal")
         plt.style.use("dark_background")
+        ax = plt.gca()
+        ax.set_aspect('equal')
 
-        ray_intersection_weights = list(map(lambda x: torch.mul(torch.rand(2), torch.tensor([view_length, view_height])) + torch.tensor([self.x_1, self.y_1]), list(range(0, num_stochastic_samples))))
-        print(len(ray_intersection_weights))
-        print(self.num_ray_samples)
-        print(self.ray_length)
+        ray_intersection_weights = list(
+            map(lambda x: torch.mul(torch.rand(2), torch.tensor([view_length, view_height])) + torch.tensor(
+                [self.x_1, self.y_1]), list(range(0, num_stochastic_samples))))
         red_channel = []
         green_channel = []
         blue_channel = []
 
         for ray_intersection_weight in ray_intersection_weights:
-            # print(ray_intersection_weight)
             ray_screen_intersection = camera_basis_x * ray_intersection_weight[0] + \
                                       camera_basis_y * ray_intersection_weight[1]
             unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
+            view_x, view_y = ray_intersection_weight[0], ray_intersection_weight[1]
             ray_samples = []
             for k in np.linspace(0, self.ray_length, self.num_ray_samples):
                 ray_endpoint = camera_center_inhomogenous + unit_ray * k
@@ -287,8 +291,11 @@ class Renderer:
                 ray_samples.append([ray_x, ray_y, ray_z])
 
             unique_ray_samples = torch.unique(torch.tensor(ray_samples), dim=0)
-            # print(len(unique_ray_samples))
             if (len(unique_ray_samples) <= 1):
+                red_channel.append(torch.tensor([view_x, view_y, 0.]))
+                green_channel.append(torch.tensor([view_x, view_y, 0.]))
+                blue_channel.append(torch.tensor([view_x, view_y, 0.]))
+                plt.plot(ray_intersection_weight[0], ray_intersection_weight[1], marker="o", color=[0, 0, 0])
                 continue
             t1 = unique_ray_samples[:-1]
             t2 = unique_ray_samples[1:]
@@ -301,7 +308,10 @@ class Renderer:
 
             color_tensor = 1. - torch.clamp(color_densities, min=0, max=1)
             plt.plot(ray_intersection_weight[0], ray_intersection_weight[1], marker="o", color=color_tensor.numpy())
-            view_x, view_y = ray_intersection_weight[0] * view_length, ray_intersection_weight[1] * view_height
+
+            if (view_x < view_x1 or view_x > view_x2
+                    or view_y < view_y1 or view_y > view_y2):
+                print(f"Warning: bad generation: {view_x}, {view_y}")
             red_channel.append(torch.tensor([view_x, view_y, color_tensor[0]]))
             green_channel.append(torch.tensor([view_x, view_y, color_tensor[1]]))
             blue_channel.append(torch.tensor([view_x, view_y, color_tensor[2]]))
@@ -320,16 +330,16 @@ class Renderer:
         viewing_angle = camera.viewing_angle()
         camera_center_inhomogenous = camera_center[:3]
 
-        # plt.rcParams['axes.xmargin'] = 0
-        # plt.rcParams['axes.ymargin'] = 0
-        # plt.figure(frameon=False)
+        plt.rcParams['axes.xmargin'] = 0
+        plt.rcParams['axes.ymargin'] = 0
+        plt.figure(frameon=False)
         plt.rcParams['axes.facecolor'] = 'black'
         plt.axis("equal")
         plt.figure()
         plt.style.use("dark_background")
-        # ax = plt.gca()
-        # ax.set_aspect('equal', adjustable='box')
-        # plt.axis("off")
+        ax = plt.gca()
+        ax.set_aspect('equal', adjustable='box')
+        plt.axis("off")
         for i in np.linspace(self.x_1, self.x_2, self.num_view_samples_x):
             red_column = []
             green_column = []
@@ -352,6 +362,7 @@ class Renderer:
                     red_column.append(torch.tensor(0))
                     green_column.append(torch.tensor(0))
                     blue_column.append(torch.tensor(0))
+                    plt.plot(i, j, marker="o", color=[0, 0, 0])
                     continue
                 t1 = unique_ray_samples[:-1]
                 t2 = unique_ray_samples[1:]
@@ -375,10 +386,40 @@ class Renderer:
         red_image_tensor = torch.flip(torch.stack(red_image).t(), [0])
         green_image_tensor = torch.flip(torch.stack(green_image).t(), [0])
         blue_image_tensor = torch.flip(torch.stack(blue_image).t(), [0])
-        plt.savefig("test.png", bbox_inches='tight', pad_inches=0)
         plt.show()
         print("Done!!")
         return (red_image_tensor, green_image_tensor, blue_image_tensor)
+
+
+def camera_to_image(x, y, view_spec, num_rays_x, num_rays_y):
+    view_x1, view_x2, view_y1, view_y2 = view_spec
+    step_x = (view_x2 - view_x1) / num_rays_x
+    step_y = (view_y2 - view_y1) / num_rays_y
+    return (int((x - view_x1) / step_x), int((view_y2 - y) / step_y))
+
+
+def samples_to_image(red_samples, green_samples, blue_samples, view_spec, num_rays_x, num_rays_y):
+    view_x1, view_x2, view_y1, view_y2 = view_spec
+    step_x = (view_x2 - view_x1) / num_rays_x
+    step_y = (view_y2 - view_y1) / num_rays_y
+    red_render_channel = torch.zeros([num_rays_y, num_rays_x])
+    green_render_channel = torch.zeros([num_rays_y, num_rays_x])
+    blue_render_channel = torch.zeros([num_rays_y, num_rays_x])
+    for index, pixel in enumerate(red_samples):
+        print(
+            f"({view_y2 - pixel[1]}, {pixel[0] - view_x1}) -> ({int((view_y2 - pixel[1]) / step_y)}, {int((pixel[0] - view_x1) / step_x)}), {pixel[2]}")
+        # red_render_channel[int((view_y2 - pixel[1]) / step_y), int((pixel[0] - view_x1) / step_x)] = red_samples[index][
+        #     2]
+        # green_render_channel[int((view_y2 - pixel[1]) / step_y), int((pixel[0] - view_x1) / step_x)] = \
+        # green_samples[index][2]
+        # blue_render_channel[int((view_y2 - pixel[1]) / step_y), int((pixel[0] - view_x1) / step_x)] = \
+        # blue_samples[index][2]
+        x, y = camera_to_image(pixel[0], pixel[1], view_spec, num_rays_x, num_rays_y)
+        red_render_channel[y, x] = red_samples[index][2]
+        green_render_channel[y, x] = green_samples[index][2]
+        blue_render_channel[y, x] = blue_samples[index][2]
+    image_data = torch.stack([red_render_channel, green_render_channel, blue_render_channel])
+    return image_data
 
 
 GRID_X = 40
@@ -388,8 +429,8 @@ GRID_Z = 40
 world = VoxelGrid(GRID_X, GRID_Y, GRID_Z)
 # world.build_solid_cube()
 # world.build_random_hollow_cube()
-# world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
-world.build_random_hollow_cube2(world.random_voxel, torch.tensor([10, 10, 10, 20, 20, 20]))
+world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
+# world.build_random_hollow_cube2(world.random_voxel, torch.tensor([10, 10, 10, 20, 20, 20]))
 # world.build_random_hollow_cube2(world.random_voxel, torch.tensor([15, 15, 15, 10, 10, 10]))
 
 camera_look_at = torch.tensor([0., 0., 0., 1])
@@ -401,38 +442,72 @@ focal_length = 1.
 
 camera_basis = basis_from_depth(camera_look_at, camera_center)
 camera = Camera(focal_length, camera_center, camera_basis)
-
-# plt.style.use("dark_background")
-# # plt.rcParams['axes.facecolor'] = 'black'
-# plt.axis("equal")
-# fig1 = plt.figure()
-# plt.axis("off")
-# for i in range(0, world.grid_x):
-#     for j in range(0, world.grid_y):
-#         for k in range(0, world.grid_z):
-#             voxel = world.at(i, j, k)
-#             if (voxel[0] == 0.):
-#                 continue
-#             d = camera.to_2D(torch.tensor([[i, j, k, 1.]]))
-#             plt.plot(d[0][0], d[1][0], marker="o")
-# plt.show()
-
 num_rays_x = 100
 num_rays_y = 100
-r = Renderer(camera, torch.tensor([-35, 30, -15, 60, num_rays_x, num_rays_y]), torch.tensor([100, 100]))
-r, g, b = r.render_image(1000, plt)
-print(r)
+view_x1 = -35
+view_x2 = 30
+view_y1 = -15
+view_y2 = 60
+view_spec = [view_x1, view_x2, view_y1, view_y2]
+r = Renderer(camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
+             torch.tensor([100, 100]))
+
+# This renders the volumetric model and shows the rendered image. Useful for training
 # red, green, blue = r.render(plt)
 # print(red.shape)
 # print(green.shape)
 # print(blue.shape)
-
 # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
-# t = transforms.Compose([transforms.Resize((100, 100)), transforms.ToTensor()])
-# dataset = datasets.ImageFolder("./images", transform=t)
-# data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
-# images, labels = next(iter(data_loader))
-# image = images[0]
+
+# This just loads training images and shows them
+t = transforms.Compose([transforms.ToTensor()])
+dataset = datasets.ImageFolder("./images", transform=t)
+data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
+images, labels = next(iter(data_loader))
+image = images[0]
+# transforms.ToPILImage()(image).show()
+
+# This draws stochastic rays and returns a set of samples with colours
+num_stochastic_rays = 2000
+r, g, b = r.render_image(num_stochastic_rays, plt)
+image_data = samples_to_image(r, g, b, view_spec, num_rays_x, num_rays_y)
+transforms.ToPILImage()(image_data).show()
+
+
+def mse(rendered_channel, true_channel, view_spec):
+    print(len(rendered_channel))
+    small_diffs = 0
+    medium_diffs = 0
+    large_diffs = 0
+    channel_total_error = 0.
+    for point in r:
+        x, y, intensity = point
+        intensity = intensity
+        x = int(x - view_spec[0])
+        # Flip y coordinate
+        y = int(view_spec[3] - y)
+        # print(f"({x},{y}) -> [{image[0][y,x]}, {intensity}]")
+        # print(image[0][y,x])
+        pixel_error = (true_channel[y, x] - intensity).pow(2)
+        if (pixel_error <= 0.001):
+            small_diffs += 1
+        elif (pixel_error > 0.001 and pixel_error <= 0.01):
+            medium_diffs += 1
+        else:
+            large_diffs += 1
+        channel_total_error += pixel_error
+
+    print(f"Small diffs = {small_diffs}")
+    print(f"Medium diffs = {medium_diffs}")
+    print(f"Large diffs = {large_diffs}")
+    return channel_total_error / len(rendered_channel)
+
+
+red_mse = mse(r, image[0], view_spec)
+green_mse = mse(g, image[1], view_spec)
+blue_mse = mse(b, image[2], view_spec)
+print(f"{red_mse}, {green_mse}, {blue_mse}")
+
 # total_num_rays = num_rays_x * num_rays_y
 # red_error = (red - image[0]).pow(2).sum() / total_num_rays
 # green_error = (green - image[1]).pow(2).sum() / total_num_rays
