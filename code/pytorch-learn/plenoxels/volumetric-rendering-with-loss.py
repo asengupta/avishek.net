@@ -116,7 +116,8 @@ class VoxelGrid:
         self.grid_x = x
         self.grid_y = y
         self.grid_z = z
-        self.default_voxel = torch.rand([VoxelGrid.VOXEL_DIMENSION])
+        # self.default_voxel = torch.rand([VoxelGrid.VOXEL_DIMENSION])
+        self.default_voxel = torch.tensor(np.ones(VoxelGrid.VOXEL_DIMENSION))
         self.empty_voxel = torch.zeros([VoxelGrid.VOXEL_DIMENSION])
         self.default_voxel[0] = 0.005
         self.voxel_grid = torch.zeros([self.grid_x, self.grid_y, self.grid_z, VoxelGrid.VOXEL_DIMENSION])
@@ -248,33 +249,91 @@ class Renderer:
         self.num_ray_samples = ray_spec[1]
         self.x_1, self.x_2 = view_spec[0], view_spec[1]
         self.y_1, self.y_2 = view_spec[2], view_spec[3]
-        self.num_view_samples = view_spec[4]
+        self.num_view_samples_x = view_spec[4]
+        self.num_view_samples_y = view_spec[5]
+
+    def render_image(self, num_stochastic_samples, plt):
+        camera_basis_x = camera.basis[0][:3]
+        camera_basis_y = camera.basis[1][:3]
+        viewing_angle = camera.viewing_angle()
+        camera_center_inhomogenous = camera_center[:3]
+        view_length = self.x_2 - self.x_1
+        view_height = self.y_2 - self.y_1
+        plt.rcParams['axes.facecolor'] = 'black'
+        plt.axis("equal")
+        plt.figure()
+        plt.style.use("dark_background")
+
+        ray_intersection_weights = list(map(lambda x: torch.mul(torch.rand(2), torch.tensor([view_length, view_height])) + torch.tensor([self.x_1, self.y_1]), list(range(0, num_stochastic_samples))))
+        print(len(ray_intersection_weights))
+        print(self.num_ray_samples)
+        print(self.ray_length)
+        render_points = []
+
+        for ray_intersection_weight in ray_intersection_weights:
+            # print(ray_intersection_weight)
+            ray_screen_intersection = camera_basis_x * ray_intersection_weight[0] + \
+                                      camera_basis_y * ray_intersection_weight[1]
+            unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
+            ray_samples = []
+            for k in np.linspace(0, self.ray_length, self.num_ray_samples):
+                ray_endpoint = camera_center_inhomogenous + unit_ray * k
+                ray_x, ray_y, ray_z = ray_endpoint
+                if (world.is_outside(ray_x, ray_y, ray_z)):
+                    continue
+                # We are in the box
+                ray_samples.append([ray_x, ray_y, ray_z])
+
+            unique_ray_samples = torch.unique(torch.tensor(ray_samples), dim=0)
+            # print(len(unique_ray_samples))
+            if (len(unique_ray_samples) <= 1):
+                continue
+            t1 = unique_ray_samples[:-1]
+            t2 = unique_ray_samples[1:]
+            consecutive_sample_distances = (t1 - t2).pow(2).sum(1).sqrt()
+
+            # Make 1D tensor into 2D tensor
+            ray_samples_with_distances = torch.cat([t1, torch.reshape(consecutive_sample_distances, (-1, 1))], 1)
+            color_densities = world.density(ray_samples_with_distances, viewing_angle)
+            # print(color_densities)
+
+            color_tensor = 1. - torch.clamp(color_densities, min=0, max=1)
+            plt.plot(ray_intersection_weight[0], ray_intersection_weight[1], marker="o", color=color_tensor.numpy())
+            # render_points.append()
+
+        # Remember to flip to prevent image being rendered upside down when saved to a file
+        plt.show()
+        print("Done!!")
 
     def render(self, plt):
-        image = []
+        red_image = []
+        green_image = []
+        blue_image = []
         camera_basis_x = camera.basis[0][:3]
         camera_basis_y = camera.basis[1][:3]
         viewing_angle = camera.viewing_angle()
         camera_center_inhomogenous = camera_center[:3]
 
-        plt.rcParams['axes.xmargin'] = 0
-        plt.rcParams['axes.ymargin'] = 0
+        # plt.rcParams['axes.xmargin'] = 0
+        # plt.rcParams['axes.ymargin'] = 0
+        # plt.figure(frameon=False)
+        plt.rcParams['axes.facecolor'] = 'black'
         plt.axis("equal")
-        plt.figure(frameon=False)
+        plt.figure()
         plt.style.use("dark_background")
-        ax = plt.gca()
-        ax.set_aspect('equal', adjustable='box')
-        plt.axis("off")
-        for i in np.linspace(self.x_1, self.x_2, self.num_view_samples):
+        # ax = plt.gca()
+        # ax.set_aspect('equal', adjustable='box')
+        # plt.axis("off")
+        for i in np.linspace(self.x_1, self.x_2, self.num_view_samples_x):
             red_column = []
             green_column = []
             blue_column = []
-            for j in np.linspace(self.y_1, self.y_2, self.num_view_samples):
+            for j in np.linspace(self.y_1, self.y_2, self.num_view_samples_y):
                 ray_screen_intersection = camera_basis_x * i + camera_basis_y * j
                 unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
                 ray_samples = []
                 # To remove artifacts, set ray step samples to be higher, like 200
-                for k in np.linspace(0, self.ray_length, self.num_view_samples):
+                for k in np.linspace(0, self.ray_length, self.num_ray_samples):
                     ray_endpoint = camera_center_inhomogenous + unit_ray * k
                     ray_x, ray_y, ray_z = ray_endpoint
                     if (world.is_outside(ray_x, ray_y, ray_z)):
@@ -284,7 +343,9 @@ class Renderer:
 
                 unique_ray_samples = torch.unique(torch.tensor(ray_samples), dim=0)
                 if (len(unique_ray_samples) <= 1):
-                    red_column.append(torch.tensor([0., 0., 0.]))
+                    red_column.append(torch.tensor(0))
+                    green_column.append(torch.tensor(0))
+                    blue_column.append(torch.tensor(0))
                     continue
                 t1 = unique_ray_samples[:-1]
                 t2 = unique_ray_samples[1:]
@@ -300,13 +361,18 @@ class Renderer:
                 red_column.append(color_tensor[0])
                 green_column.append(color_tensor[1])
                 blue_column.append(color_tensor[2])
-            column_tensor = torch.stack(red_column)
-            image.append(column_tensor)
-        image_tensor = torch.transpose(torch.stack(image), 0, 1)
+            red_image.append(torch.tensor(red_column))
+            green_image.append(torch.tensor(green_column))
+            blue_image.append(torch.tensor(blue_column))
+
+        # Flip to prevent image being rendered upside down when saved to a file
+        red_image_tensor = torch.flip(torch.stack(red_image).t(), [0])
+        green_image_tensor = torch.flip(torch.stack(green_image).t(), [0])
+        blue_image_tensor = torch.flip(torch.stack(blue_image).t(), [0])
         plt.savefig("test.png", bbox_inches='tight', pad_inches=0)
         plt.show()
         print("Done!!")
-        return image_tensor
+        return (red_image_tensor, green_image_tensor, blue_image_tensor)
 
 
 GRID_X = 40
@@ -316,8 +382,8 @@ GRID_Z = 40
 world = VoxelGrid(GRID_X, GRID_Y, GRID_Z)
 # world.build_solid_cube()
 # world.build_random_hollow_cube()
-world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
-# world.build_random_hollow_cube2(world.random_voxel, torch.tensor([10, 10, 10, 20, 20, 20]))
+# world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
+world.build_random_hollow_cube2(world.random_voxel, torch.tensor([10, 10, 10, 20, 20, 20]))
 # world.build_random_hollow_cube2(world.random_voxel, torch.tensor([15, 15, 15, 10, 10, 10]))
 
 camera_look_at = torch.tensor([0., 0., 0., 1])
@@ -345,21 +411,27 @@ camera = Camera(focal_length, camera_center, camera_basis)
 #             plt.plot(d[0][0], d[1][0], marker="o")
 # plt.show()
 
-# r = Renderer(camera, torch.tensor([-35, 30, -15, 60, 100]), torch.tensor([100, 100]))
-# image = r.render(plt)
-# print(image.shape)
+num_rays_x = 100
+num_rays_y = 100
+r = Renderer(camera, torch.tensor([-35, 30, -15, 60, num_rays_x, num_rays_y]), torch.tensor([100, 100]))
+r.render_image(1000, plt)
 
-# plt.style.use("dark_background")
-# plt.figure()
-# plt.axis("off")
-t = transforms.Compose([transforms.Resize((100, 100)), transforms.ToTensor()])
-dataset = datasets.ImageFolder("./images", transform=t)
-data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
-images, labels = next(iter(data_loader))
-# print(images[0])
-print(images[0].shape)
-# print(images[0].shape)
-# print(labels)
-# plt.imshow(images[0].permute(1, 2, 0))
-# plt.show()
-# print(dataset)
+# red, green, blue = r.render(plt)
+# print(red.shape)
+# print(green.shape)
+# print(blue.shape)
+
+# transforms.ToPILImage()(torch.stack([red, green, blue])).show()
+# t = transforms.Compose([transforms.Resize((100, 100)), transforms.ToTensor()])
+# dataset = datasets.ImageFolder("./images", transform=t)
+# data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
+# images, labels = next(iter(data_loader))
+# image = images[0]
+# total_num_rays = num_rays_x * num_rays_y
+# red_error = (red - image[0]).pow(2).sum() / total_num_rays
+# green_error = (green - image[1]).pow(2).sum() / total_num_rays
+# blue_error = (blue - image[2]).pow(2).sum() / total_num_rays
+#
+# print(red_error)
+# print(green_error)
+# print(blue_error)
