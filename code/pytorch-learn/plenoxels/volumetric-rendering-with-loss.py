@@ -126,8 +126,8 @@ class VoxelGrid:
         self.default_voxel = torch.ones(VoxelGrid.VOXEL_DIMENSION)
         self.empty_voxel = torch.zeros([VoxelGrid.VOXEL_DIMENSION])
         self.default_voxel[0] = 0.005
-        self.voxel_grid = torch.zeros([self.grid_x, self.grid_y, self.grid_z, VoxelGrid.VOXEL_DIMENSION],
-                                      requires_grad=False)
+        self.voxel_grid = torch.rand([self.grid_x, self.grid_y, self.grid_z, VoxelGrid.VOXEL_DIMENSION],
+                                      requires_grad=True)
 
     def random_voxel(self):
         voxel = torch.rand([VoxelGrid.VOXEL_DIMENSION])
@@ -165,14 +165,17 @@ class VoxelGrid:
             r = red_harmonic(viewing_angle[0], viewing_angle[1])
             g = green_harmonic(viewing_angle[0], viewing_angle[1])
             b = blue_harmonic(viewing_angle[0], viewing_angle[1])
-            base_transmittance = transmittance * (1. - math.exp(
+            base_transmittance = transmittance * (1. - torch.exp(
                 - position_distance_density_color_tensors[index, 4] * position_distance_density_color_tensors[
                     index, 3]))
+            # print(base_transmittance)
             # if (base_transmittance > 1. or base_transmittance < 0.):
             #     raise Exception(f"Transmittance was {base_transmittance}")
             # if (r > 1. or r < 0. or g > 1. or g < 0. or b > 1. or b < 0.):
             #     raise Exception(f"Harmonic values were ({r}, {g}, {b})")
-            color_densities += torch.tensor([base_transmittance * r, base_transmittance * g, base_transmittance * b])
+
+            # Stacking instead of cat-ing to preserve gradient
+            color_densities += torch.stack([base_transmittance * r, base_transmittance * g, base_transmittance * b])
 
         return color_densities
 
@@ -312,10 +315,9 @@ class Renderer:
             # Make 1D tensor into 2D tensor
             ray_samples_with_distances = torch.cat([t1, torch.reshape(consecutive_sample_distances, (-1, 1))], 1)
             color_densities = self.world.density(ray_samples_with_distances, viewing_angle)
-            # print(color_densities)
 
             color_tensor = 1. - torch.clamp(color_densities, min=0, max=1)
-            plt.plot(ray_intersection_weight[0], ray_intersection_weight[1], marker="o", color=color_tensor.numpy())
+            plt.plot(ray_intersection_weight[0], ray_intersection_weight[1], marker="o", color=color_tensor.detach().numpy())
 
             if (view_x < view_x1 or view_x > view_x2
                     or view_y < view_y1 or view_y > view_y2):
@@ -327,6 +329,7 @@ class Renderer:
         # Remember to flip to prevent image being rendered upside down when saved to a file
         plt.show()
         print("Done!!")
+        print(red_channel)
         return (red_channel, green_channel, blue_channel)
 
     def render(self, plt):
@@ -379,7 +382,7 @@ class Renderer:
                 # Make 1D tensor into 2D tensor
                 ray_samples_with_distances = torch.cat([t1, torch.reshape(consecutive_sample_distances, (-1, 1))], 1)
                 color_densities = self.world.density(ray_samples_with_distances, viewing_angle)
-                print(color_densities)
+                # print(color_densities)
 
                 color_tensor = 1. - torch.clamp(color_densities, min=0, max=1)
                 plt.plot(i, j, marker="o", color=color_tensor.numpy())
@@ -494,7 +497,7 @@ def training_loop(model, camera, view_spec, ray_spec, optimizer, n=1):
     training_image = images[0]
     for i in range(1):
         r, g, b = model([camera, view_spec, ray_spec])
-        print(r)
+        # print(r)
         red_mse = mse(r, training_image[0], view_spec)
 
         red_mse.backward()
@@ -511,7 +514,7 @@ GRID_Z = 40
 world = VoxelGrid(GRID_X, GRID_Y, GRID_Z)
 # world.build_solid_cube()
 # world.build_random_hollow_cube()
-world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
+# world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
 # world.build_random_hollow_cube2(world.random_voxel, torch.tensor([10, 10, 10, 20, 20, 20]))
 # world.build_random_hollow_cube2(world.random_voxel, torch.tensor([15, 15, 15, 10, 10, 10]))
 
@@ -536,11 +539,11 @@ r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, nu
              ray_spec)
 
 # This renders the volumetric model and shows the rendered image. Useful for training
-red, green, blue = r.render(plt)
-print(red.shape)
-print(green.shape)
-print(blue.shape)
-transforms.ToPILImage()(torch.stack([red, green, blue])).show()
+# red, green, blue = r.render(plt)
+# print(red.shape)
+# print(green.shape)
+# print(blue.shape)
+# transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
 # This just loads training images and shows them
 # t = transforms.Compose([transforms.ToTensor()])
@@ -551,19 +554,19 @@ transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 # transforms.ToPILImage()(image).show()
 
 # This draws stochastic rays and returns a set of samples with colours
-num_stochastic_rays = 2000
-r, g, b = r.render_image(num_stochastic_rays, plt)
-image_data = samples_to_image(r, g, b, view_spec)
-transforms.ToPILImage()(image_data).show()
+# num_stochastic_rays = 2000
+# r, g, b = r.render_image(num_stochastic_rays, plt)
+# image_data = samples_to_image(r, g, b, view_spec)
+# transforms.ToPILImage()(image_data).show()
 
 # red_mse = mse(r, image[0], view_spec, num_rays_x, num_rays_y)
 # green_mse = mse(g, image[1], view_spec, num_rays_x, num_rays_y)
 # blue_mse = mse(b, image[2], view_spec, num_rays_x, num_rays_y)
 # print(f"{red_mse}, {green_mse}, {blue_mse}")
 
-# model = PlenoxelModel(world)
-# optimizer = torch.optim.RMSprop(model.parameters(), lr=0.001)
-# training_loop(model, camera, view_spec, ray_spec, optimizer)
+model = PlenoxelModel(world)
+optimizer = torch.optim.RMSprop(model.parameters(), lr=0.001)
+training_loop(model, camera, view_spec, ray_spec, optimizer)
 
 # Calculates MSE against whole images
 # total_num_rays = num_rays_x * num_rays_y
