@@ -5,6 +5,7 @@ from torchvision import datasets, transforms
 import matplotlib.pyplot as plt
 import functools
 import torch.nn as nn
+from torch.functional import F
 
 RED_CHANNEL = 0
 GREEN_CHANNEL = 0
@@ -397,8 +398,9 @@ class Renderer:
         return (red_image_tensor, green_image_tensor, blue_image_tensor)
 
 
-def camera_to_image(x, y, view_spec, num_rays_x, num_rays_y):
-    view_x1, view_x2, view_y1, view_y2 = view_spec
+def camera_to_image(x, y, view_spec):
+    print(view_spec)
+    view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y = view_spec
     step_x = (view_x2 - view_x1) / num_rays_x
     step_y = (view_y2 - view_y1) / num_rays_y
     return (int((x - view_x1) / step_x), int((view_y2 - y) / step_y))
@@ -421,7 +423,7 @@ def samples_to_image(red_samples, green_samples, blue_samples, view_spec, num_ra
         # green_samples[index][2]
         # blue_render_channel[int((view_y2 - pixel[1]) / step_y), int((pixel[0] - view_x1) / step_x)] = \
         # blue_samples[index][2]
-        x, y = camera_to_image(pixel[X], pixel[Y], view_spec, num_rays_x, num_rays_y)
+        x, y = camera_to_image(pixel[X], pixel[Y], view_spec)
         red_render_channel[y, x] = red_samples[index][INTENSITY]
         green_render_channel[y, x] = green_samples[index][INTENSITY]
         blue_render_channel[y, x] = blue_samples[index][INTENSITY]
@@ -429,7 +431,7 @@ def samples_to_image(red_samples, green_samples, blue_samples, view_spec, num_ra
     return image_data
 
 
-def mse(rendered_channel, true_channel, view_spec, num_rays_x, num_rays_y):
+def mse(rendered_channel, true_channel, view_spec):
     print(len(rendered_channel))
     small_diffs = 0
     medium_diffs = 0
@@ -438,7 +440,7 @@ def mse(rendered_channel, true_channel, view_spec, num_rays_x, num_rays_y):
     for point in rendered_channel:
         x, y, intensity = point
         intensity = intensity
-        image_x, image_y = camera_to_image(x, y, view_spec, num_rays_x, num_rays_y)
+        image_x, image_y = camera_to_image(x, y, view_spec)
         pixel_error = (true_channel[image_y, image_x] - intensity).pow(2)
         if (pixel_error <= 0.001):
             small_diffs += 1
@@ -455,12 +457,13 @@ def mse(rendered_channel, true_channel, view_spec, num_rays_x, num_rays_y):
 
 
 class PlenoxelModel(nn.Module):
-    def __init__(self, renderer):
+    def __init__(self, world):
         super().__init__()
-        self.renderer = renderer
+        self.world = world
+        self.weights = nn.Parameter(world.voxel_grid, requires_grad=True)
 
     def forward(self, input):
-        world, camera, view_spec, ray_spec, training_image = input
+        camera, view_spec, ray_spec = input
         renderer = Renderer(world, camera, view_spec, ray_spec)
         # This just loads training images and shows them
         # t = transforms.Compose([transforms.ToTensor()])
@@ -473,13 +476,31 @@ class PlenoxelModel(nn.Module):
         # This draws stochastic rays and returns a set of samples with colours
         num_stochastic_rays = 2000
         r, g, b = renderer.render_image(num_stochastic_rays, plt)
-        # image_data = samples_to_image(r, g, b, view_spec, num_rays_x, num_rays_y)
+        # image_data = samples_to_image(r, g, b, view_spec)
         # transforms.ToPILImage()(image_data).show()
-
-        red_mse = mse(r, training_image[0], view_spec, num_rays_x, num_rays_y)
+        return r, g, b
         # green_mse = mse(g, image[1], view_spec, num_rays_x, num_rays_y)
         # blue_mse = mse(b, image[2], view_spec, num_rays_x, num_rays_y)
-        return red_mse
+        # return red_mse
+
+
+def training_loop(model, camera, view_spec, ray_spec, optimizer, n=1):
+    losses = []
+    # This just loads training images and shows them
+    t = transforms.Compose([transforms.ToTensor()])
+    dataset = datasets.ImageFolder("./images", transform=t)
+    data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
+    images, labels = next(iter(data_loader))
+    training_image = images[0]
+    for i in range(1):
+        r, g, b = model([camera, view_spec, ray_spec])
+        red_mse = mse(r, training_image[0], view_spec)
+
+        torch.tensor(red_mse).backward()
+        optimizer.step()
+        optimizer.zero_grad()
+        losses.append(red_mse)
+    return losses
 
 
 GRID_X = 40
@@ -520,24 +541,30 @@ r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, nu
 # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
 # This just loads training images and shows them
-t = transforms.Compose([transforms.ToTensor()])
-dataset = datasets.ImageFolder("./images", transform=t)
-data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
-images, labels = next(iter(data_loader))
-image = images[0]
+# t = transforms.Compose([transforms.ToTensor()])
+# dataset = datasets.ImageFolder("./images", transform=t)
+# data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
+# images, labels = next(iter(data_loader))
+# image = images[0]
 # transforms.ToPILImage()(image).show()
 
 # This draws stochastic rays and returns a set of samples with colours
-num_stochastic_rays = 2000
-r, g, b = r.render_image(num_stochastic_rays, plt)
-image_data = samples_to_image(r, g, b, view_spec, num_rays_x, num_rays_y)
+# num_stochastic_rays = 2000
+# r, g, b = r.render_image(num_stochastic_rays, plt)
+# image_data = samples_to_image(r, g, b, view_spec)
 # transforms.ToPILImage()(image_data).show()
 
-red_mse = mse(r, image[0], view_spec, num_rays_x, num_rays_y)
-green_mse = mse(g, image[1], view_spec, num_rays_x, num_rays_y)
-blue_mse = mse(b, image[2], view_spec, num_rays_x, num_rays_y)
-print(f"{red_mse}, {green_mse}, {blue_mse}")
+# red_mse = mse(r, image[0], view_spec, num_rays_x, num_rays_y)
+# green_mse = mse(g, image[1], view_spec, num_rays_x, num_rays_y)
+# blue_mse = mse(b, image[2], view_spec, num_rays_x, num_rays_y)
+# print(f"{red_mse}, {green_mse}, {blue_mse}")
 
+model = PlenoxelModel(world)
+optimizer = torch.optim.RMSprop(model.parameters(), lr=0.001)
+training_loop(model, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
+              torch.tensor([100, 100]), optimizer)
+
+# Calculates MSE against whole images
 # total_num_rays = num_rays_x * num_rays_y
 # red_error = (red - image[0]).pow(2).sum() / total_num_rays
 # green_error = (green - image[1]).pow(2).sum() / total_num_rays
