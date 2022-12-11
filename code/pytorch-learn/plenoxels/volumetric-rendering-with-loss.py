@@ -530,8 +530,9 @@ view_x2 = 30
 view_y1 = -15
 view_y2 = 60
 view_spec = [view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]
+ray_spec = torch.tensor([100, 100])
 r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
-             torch.tensor([100, 100]))
+             ray_spec)
 
 # This renders the volumetric model and shows the rendered image. Useful for training
 # red, green, blue = r.render(plt)
@@ -559,10 +560,9 @@ r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, nu
 # blue_mse = mse(b, image[2], view_spec, num_rays_x, num_rays_y)
 # print(f"{red_mse}, {green_mse}, {blue_mse}")
 
-# model = PlenoxelModel(world)
-# optimizer = torch.optim.RMSprop(model.parameters(), lr=0.001)
-# training_loop(model, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
-#               torch.tensor([100, 100]), optimizer)
+model = PlenoxelModel(world)
+optimizer = torch.optim.RMSprop(model.parameters(), lr=0.001)
+training_loop(model, camera, view_spec, ray_spec, optimizer)
 
 # Calculates MSE against whole images
 # total_num_rays = num_rays_x * num_rays_y
