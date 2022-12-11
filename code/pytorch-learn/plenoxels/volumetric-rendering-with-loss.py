@@ -116,7 +116,6 @@ class VoxelGrid:
         self.grid_x = x
         self.grid_y = y
         self.grid_z = z
-        # self.default_voxel = torch.rand([VoxelGrid.VOXEL_DIMENSION])
         self.default_voxel = torch.tensor(np.ones(VoxelGrid.VOXEL_DIMENSION))
         self.empty_voxel = torch.zeros([VoxelGrid.VOXEL_DIMENSION])
         self.default_voxel[0] = 0.005
@@ -422,6 +421,31 @@ def samples_to_image(red_samples, green_samples, blue_samples, view_spec, num_ra
     return image_data
 
 
+def mse(rendered_channel, true_channel, view_spec, num_rays_x, num_rays_y):
+    print(len(rendered_channel))
+    small_diffs = 0
+    medium_diffs = 0
+    large_diffs = 0
+    channel_total_error = 0.
+    for point in rendered_channel:
+        x, y, intensity = point
+        intensity = intensity
+        image_x, image_y = camera_to_image(x, y, view_spec, num_rays_x, num_rays_y)
+        pixel_error = (true_channel[image_y, image_x] - intensity).pow(2)
+        if (pixel_error <= 0.001):
+            small_diffs += 1
+        elif (pixel_error > 0.001 and pixel_error <= 0.01):
+            medium_diffs += 1
+        else:
+            large_diffs += 1
+        channel_total_error += pixel_error
+
+    print(f"Small diffs = {small_diffs}")
+    print(f"Medium diffs = {medium_diffs}")
+    print(f"Large diffs = {large_diffs}")
+    return channel_total_error / len(rendered_channel)
+
+
 GRID_X = 40
 GRID_Y = 40
 GRID_Z = 40
@@ -472,32 +496,6 @@ num_stochastic_rays = 2000
 r, g, b = r.render_image(num_stochastic_rays, plt)
 image_data = samples_to_image(r, g, b, view_spec, num_rays_x, num_rays_y)
 # transforms.ToPILImage()(image_data).show()
-
-
-def mse(rendered_channel, true_channel, view_spec, num_rays_x, num_rays_y):
-    print(len(rendered_channel))
-    small_diffs = 0
-    medium_diffs = 0
-    large_diffs = 0
-    channel_total_error = 0.
-    for point in rendered_channel:
-        x, y, intensity = point
-        intensity = intensity
-        image_x, image_y = camera_to_image(x, y, view_spec, num_rays_x, num_rays_y)
-        pixel_error = (true_channel[image_y, image_x] - intensity).pow(2)
-        if (pixel_error <= 0.001):
-            small_diffs += 1
-        elif (pixel_error > 0.001 and pixel_error <= 0.01):
-            medium_diffs += 1
-        else:
-            large_diffs += 1
-        channel_total_error += pixel_error
-
-    print(f"Small diffs = {small_diffs}")
-    print(f"Medium diffs = {medium_diffs}")
-    print(f"Large diffs = {large_diffs}")
-    return channel_total_error / len(rendered_channel)
-
 
 red_mse = mse(r, image[0], view_spec, num_rays_x, num_rays_y)
 green_mse = mse(g, image[1], view_spec, num_rays_x, num_rays_y)
