@@ -398,17 +398,17 @@ class Renderer:
         return (red_image_tensor, green_image_tensor, blue_image_tensor)
 
 
-def camera_to_image(x, y, view_spec, num_rays_x, num_rays_y):
+def camera_to_image(x, y, view_spec):
     print(view_spec)
-    view_x1, view_x2, view_y1, view_y2 = view_spec
+    view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y = view_spec
     step_x = (view_x2 - view_x1) / num_rays_x
     step_y = (view_y2 - view_y1) / num_rays_y
     return (int((x - view_x1) / step_x), int((view_y2 - y) / step_y))
 
 
-def samples_to_image(red_samples, green_samples, blue_samples, view_spec, num_rays_x, num_rays_y):
+def samples_to_image(red_samples, green_samples, blue_samples, view_spec):
     X, Y, INTENSITY = 0, 1, 2
-    view_x1, view_x2, view_y1, view_y2 = view_spec
+    view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y = view_spec
     step_x = (view_x2 - view_x1) / num_rays_x
     step_y = (view_y2 - view_y1) / num_rays_y
     red_render_channel = torch.zeros([num_rays_y, num_rays_x])
@@ -423,7 +423,7 @@ def samples_to_image(red_samples, green_samples, blue_samples, view_spec, num_ra
         # green_samples[index][2]
         # blue_render_channel[int((view_y2 - pixel[1]) / step_y), int((pixel[0] - view_x1) / step_x)] = \
         # blue_samples[index][2]
-        x, y = camera_to_image(pixel[X], pixel[Y], view_spec, num_rays_x, num_rays_y)
+        x, y = camera_to_image(pixel[X], pixel[Y], view_spec)
         red_render_channel[y, x] = red_samples[index][INTENSITY]
         green_render_channel[y, x] = green_samples[index][INTENSITY]
         blue_render_channel[y, x] = blue_samples[index][INTENSITY]
@@ -431,7 +431,7 @@ def samples_to_image(red_samples, green_samples, blue_samples, view_spec, num_ra
     return image_data
 
 
-def mse(rendered_channel, true_channel, view_spec, num_rays_x, num_rays_y):
+def mse(rendered_channel, true_channel, view_spec):
     print(len(rendered_channel))
     small_diffs = 0
     medium_diffs = 0
@@ -440,7 +440,7 @@ def mse(rendered_channel, true_channel, view_spec, num_rays_x, num_rays_y):
     for point in rendered_channel:
         x, y, intensity = point
         intensity = intensity
-        image_x, image_y = camera_to_image(x, y, view_spec, num_rays_x, num_rays_y)
+        image_x, image_y = camera_to_image(x, y, view_spec)
         pixel_error = (true_channel[image_y, image_x] - intensity).pow(2)
         if (pixel_error <= 0.001):
             small_diffs += 1
@@ -529,7 +529,7 @@ view_x1 = -35
 view_x2 = 30
 view_y1 = -15
 view_y2 = 60
-view_spec = [view_x1, view_x2, view_y1, view_y2]
+view_spec = [view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]
 r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
              torch.tensor([100, 100]))
 
@@ -549,10 +549,10 @@ r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, nu
 # transforms.ToPILImage()(image).show()
 
 # This draws stochastic rays and returns a set of samples with colours
-num_stochastic_rays = 2000
-r, g, b = r.render_image(num_stochastic_rays, plt)
-image_data = samples_to_image(r, g, b, view_spec, num_rays_x, num_rays_y)
-transforms.ToPILImage()(image_data).show()
+# num_stochastic_rays = 2000
+# r, g, b = r.render_image(num_stochastic_rays, plt)
+# image_data = samples_to_image(r, g, b, view_spec)
+# transforms.ToPILImage()(image_data).show()
 
 # red_mse = mse(r, image[0], view_spec, num_rays_x, num_rays_y)
 # green_mse = mse(g, image[1], view_spec, num_rays_x, num_rays_y)
