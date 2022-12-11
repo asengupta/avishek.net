@@ -471,24 +471,20 @@ image = images[0]
 num_stochastic_rays = 2000
 r, g, b = r.render_image(num_stochastic_rays, plt)
 image_data = samples_to_image(r, g, b, view_spec, num_rays_x, num_rays_y)
-transforms.ToPILImage()(image_data).show()
+# transforms.ToPILImage()(image_data).show()
 
 
-def mse(rendered_channel, true_channel, view_spec):
+def mse(rendered_channel, true_channel, view_spec, num_rays_x, num_rays_y):
     print(len(rendered_channel))
     small_diffs = 0
     medium_diffs = 0
     large_diffs = 0
     channel_total_error = 0.
-    for point in r:
+    for point in rendered_channel:
         x, y, intensity = point
         intensity = intensity
-        x = int(x - view_spec[0])
-        # Flip y coordinate
-        y = int(view_spec[3] - y)
-        # print(f"({x},{y}) -> [{image[0][y,x]}, {intensity}]")
-        # print(image[0][y,x])
-        pixel_error = (true_channel[y, x] - intensity).pow(2)
+        image_x, image_y = camera_to_image(x, y, view_spec, num_rays_x, num_rays_y)
+        pixel_error = (true_channel[image_y, image_x] - intensity).pow(2)
         if (pixel_error <= 0.001):
             small_diffs += 1
         elif (pixel_error > 0.001 and pixel_error <= 0.01):
@@ -503,9 +499,9 @@ def mse(rendered_channel, true_channel, view_spec):
     return channel_total_error / len(rendered_channel)
 
 
-red_mse = mse(r, image[0], view_spec)
-green_mse = mse(g, image[1], view_spec)
-blue_mse = mse(b, image[2], view_spec)
+red_mse = mse(r, image[0], view_spec, num_rays_x, num_rays_y)
+green_mse = mse(g, image[1], view_spec, num_rays_x, num_rays_y)
+blue_mse = mse(b, image[2], view_spec, num_rays_x, num_rays_y)
 print(f"{red_mse}, {green_mse}, {blue_mse}")
 
 # total_num_rays = num_rays_x * num_rays_y
