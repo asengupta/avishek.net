@@ -484,7 +484,7 @@ class PlenoxelModel(nn.Module):
         # return red_mse
 
 
-def training_loop(model, camera, view_spec, num_rays_x, num_rays_y, ray_spec, optimizer, n=1):
+def training_loop(model, camera, view_spec, ray_spec, optimizer, n=1):
     losses = []
     # This just loads training images and shows them
     t = transforms.Compose([transforms.ToTensor()])
@@ -494,7 +494,7 @@ def training_loop(model, camera, view_spec, num_rays_x, num_rays_y, ray_spec, op
     training_image = images[0]
     for i in range(1):
         r, g, b = model([camera, view_spec, ray_spec])
-        red_mse = mse(r, training_image[0], view_spec, num_rays_x, num_rays_y)
+        red_mse = mse(r, training_image[0], view_spec)
 
         torch.tensor(red_mse).backward()
         optimizer.step()
