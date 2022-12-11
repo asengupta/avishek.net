@@ -399,7 +399,6 @@ class Renderer:
 
 
 def camera_to_image(x, y, view_spec):
-    print(view_spec)
     view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y = view_spec
     step_x = (view_x2 - view_x1) / num_rays_x
     step_y = (view_y2 - view_y1) / num_rays_y
