@@ -122,10 +122,12 @@ class VoxelGrid:
         self.grid_x = x
         self.grid_y = y
         self.grid_z = z
-        self.default_voxel = torch.tensor(np.ones(VoxelGrid.VOXEL_DIMENSION))
+        self.training_voxel = torch.rand(VoxelGrid.VOXEL_DIMENSION)
+        self.default_voxel = torch.ones(VoxelGrid.VOXEL_DIMENSION)
         self.empty_voxel = torch.zeros([VoxelGrid.VOXEL_DIMENSION])
         self.default_voxel[0] = 0.005
-        self.voxel_grid = torch.zeros([self.grid_x, self.grid_y, self.grid_z, VoxelGrid.VOXEL_DIMENSION])
+        self.voxel_grid = torch.zeros([self.grid_x, self.grid_y, self.grid_z, VoxelGrid.VOXEL_DIMENSION],
+                                      requires_grad=False)
 
     def random_voxel(self):
         voxel = torch.rand([VoxelGrid.VOXEL_DIMENSION])
@@ -148,15 +150,14 @@ class VoxelGrid:
         return not self.is_inside(x, y, z)
 
     def channel_opacity(self, position_distance_density_color_tensors, viewing_angle):
-        position_distance_density_color_vectors = position_distance_density_color_tensors.numpy()
-        number_of_samples = len(position_distance_density_color_vectors)
+        number_of_samples = len(position_distance_density_color_tensors)
         transmittances = list(map(lambda i: functools.reduce(
             lambda acc, j: acc + math.exp(
-                - position_distance_density_color_vectors[j, 4] * position_distance_density_color_vectors[j, 3]),
+                - position_distance_density_color_tensors[j, 4] * position_distance_density_color_tensors[j, 3]),
             range(0, i), 0.), range(1, number_of_samples + 1)))
         color_densities = torch.zeros([3])
         for index, transmittance in enumerate(transmittances):
-            if (position_distance_density_color_vectors[index, 4] == 0.):
+            if (position_distance_density_color_tensors[index, 4] == 0.):
                 continue
             # density += (transmittance - transmittances[index + 1]) * position_distance_density_color_vectors[index, 5]
             red_harmonic, green_harmonic, blue_harmonic = rgb_harmonics(
@@ -165,7 +166,7 @@ class VoxelGrid:
             g = green_harmonic(viewing_angle[0], viewing_angle[1])
             b = blue_harmonic(viewing_angle[0], viewing_angle[1])
             base_transmittance = transmittance * (1. - math.exp(
-                - position_distance_density_color_vectors[index, 4] * position_distance_density_color_vectors[
+                - position_distance_density_color_tensors[index, 4] * position_distance_density_color_tensors[
                     index, 3]))
             # if (base_transmittance > 1. or base_transmittance < 0.):
             #     raise Exception(f"Transmittance was {base_transmittance}")
@@ -493,9 +494,10 @@ def training_loop(model, camera, view_spec, ray_spec, optimizer, n=1):
     training_image = images[0]
     for i in range(1):
         r, g, b = model([camera, view_spec, ray_spec])
+        print(r)
         red_mse = mse(r, training_image[0], view_spec)
 
-        torch.tensor(red_mse).backward()
+        red_mse.backward()
         optimizer.step()
         optimizer.zero_grad()
         losses.append(red_mse)
@@ -534,11 +536,11 @@ r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, nu
              ray_spec)
 
 # This renders the volumetric model and shows the rendered image. Useful for training
-# red, green, blue = r.render(plt)
-# print(red.shape)
-# print(green.shape)
-# print(blue.shape)
-# transforms.ToPILImage()(torch.stack([red, green, blue])).show()
+red, green, blue = r.render(plt)
+print(red.shape)
+print(green.shape)
+print(blue.shape)
+transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
 # This just loads training images and shows them
 # t = transforms.Compose([transforms.ToTensor()])
@@ -549,19 +551,19 @@ r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, nu
 # transforms.ToPILImage()(image).show()
 
 # This draws stochastic rays and returns a set of samples with colours
-# num_stochastic_rays = 2000
-# r, g, b = r.render_image(num_stochastic_rays, plt)
-# image_data = samples_to_image(r, g, b, view_spec)
-# transforms.ToPILImage()(image_data).show()
+num_stochastic_rays = 2000
+r, g, b = r.render_image(num_stochastic_rays, plt)
+image_data = samples_to_image(r, g, b, view_spec)
+transforms.ToPILImage()(image_data).show()
 
 # red_mse = mse(r, image[0], view_spec, num_rays_x, num_rays_y)
 # green_mse = mse(g, image[1], view_spec, num_rays_x, num_rays_y)
 # blue_mse = mse(b, image[2], view_spec, num_rays_x, num_rays_y)
 # print(f"{red_mse}, {green_mse}, {blue_mse}")
 
-model = PlenoxelModel(world)
-optimizer = torch.optim.RMSprop(model.parameters(), lr=0.001)
-training_loop(model, camera, view_spec, ray_spec, optimizer)
+# model = PlenoxelModel(world)
+# optimizer = torch.optim.RMSprop(model.parameters(), lr=0.001)
+# training_loop(model, camera, view_spec, ray_spec, optimizer)
 
 # Calculates MSE against whole images
 # total_num_rays = num_rays_x * num_rays_y
