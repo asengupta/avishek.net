@@ -268,7 +268,9 @@ class Renderer:
         print(len(ray_intersection_weights))
         print(self.num_ray_samples)
         print(self.ray_length)
-        render_points = []
+        red_channel = []
+        green_channel = []
+        blue_channel = []
 
         for ray_intersection_weight in ray_intersection_weights:
             # print(ray_intersection_weight)
@@ -299,11 +301,15 @@ class Renderer:
 
             color_tensor = 1. - torch.clamp(color_densities, min=0, max=1)
             plt.plot(ray_intersection_weight[0], ray_intersection_weight[1], marker="o", color=color_tensor.numpy())
-            # render_points.append()
+            view_x, view_y = ray_intersection_weight[0] * view_length, ray_intersection_weight[1] * view_height
+            red_channel.append(torch.tensor([view_x, view_y, color_tensor[0]]))
+            green_channel.append(torch.tensor([view_x, view_y, color_tensor[1]]))
+            blue_channel.append(torch.tensor([view_x, view_y, color_tensor[2]]))
 
         # Remember to flip to prevent image being rendered upside down when saved to a file
         plt.show()
         print("Done!!")
+        return (red_channel, green_channel, blue_channel)
 
     def render(self, plt):
         red_image = []
@@ -414,8 +420,8 @@ camera = Camera(focal_length, camera_center, camera_basis)
 num_rays_x = 100
 num_rays_y = 100
 r = Renderer(camera, torch.tensor([-35, 30, -15, 60, num_rays_x, num_rays_y]), torch.tensor([100, 100]))
-r.render_image(1000, plt)
-
+r, g, b = r.render_image(1000, plt)
+print(r)
 # red, green, blue = r.render(plt)
 # print(red.shape)
 # print(green.shape)
