@@ -4,6 +4,11 @@ import torch
 from torchvision import datasets, transforms
 import matplotlib.pyplot as plt
 import functools
+import torch.nn as nn
+
+RED_CHANNEL = 0
+GREEN_CHANNEL = 0
+BLUE_CHANNEL = 0
 
 
 class Camera:
@@ -242,7 +247,8 @@ class VoxelGrid:
 
 
 class Renderer:
-    def __init__(self, camera, view_spec, ray_spec):
+    def __init__(self, world, camera, view_spec, ray_spec):
+        self.world = world
         self.camera = camera
         self.ray_length = ray_spec[0]
         self.num_ray_samples = ray_spec[1]
@@ -268,6 +274,7 @@ class Renderer:
         ax = plt.gca()
         ax.set_aspect('equal')
 
+        # Need to convert the range [Random(0,1), Random(0,1)] into bounds of [[x1, x2], [y1, y2]]
         ray_intersection_weights = list(
             map(lambda x: torch.mul(torch.rand(2), torch.tensor([view_length, view_height])) + torch.tensor(
                 [self.x_1, self.y_1]), list(range(0, num_stochastic_samples))))
@@ -284,7 +291,7 @@ class Renderer:
             for k in np.linspace(0, self.ray_length, self.num_ray_samples):
                 ray_endpoint = camera_center_inhomogenous + unit_ray * k
                 ray_x, ray_y, ray_z = ray_endpoint
-                if (world.is_outside(ray_x, ray_y, ray_z)):
+                if (self.world.is_outside(ray_x, ray_y, ray_z)):
                     continue
                 # We are in the box
                 ray_samples.append([ray_x, ray_y, ray_z])
@@ -302,7 +309,7 @@ class Renderer:
 
             # Make 1D tensor into 2D tensor
             ray_samples_with_distances = torch.cat([t1, torch.reshape(consecutive_sample_distances, (-1, 1))], 1)
-            color_densities = world.density(ray_samples_with_distances, viewing_angle)
+            color_densities = self.world.density(ray_samples_with_distances, viewing_angle)
             # print(color_densities)
 
             color_tensor = 1. - torch.clamp(color_densities, min=0, max=1)
@@ -311,9 +318,9 @@ class Renderer:
             if (view_x < view_x1 or view_x > view_x2
                     or view_y < view_y1 or view_y > view_y2):
                 print(f"Warning: bad generation: {view_x}, {view_y}")
-            red_channel.append(torch.tensor([view_x, view_y, color_tensor[0]]))
-            green_channel.append(torch.tensor([view_x, view_y, color_tensor[1]]))
-            blue_channel.append(torch.tensor([view_x, view_y, color_tensor[2]]))
+            red_channel.append(torch.tensor([view_x, view_y, color_tensor[RED_CHANNEL]]))
+            green_channel.append(torch.tensor([view_x, view_y, color_tensor[GREEN_CHANNEL]]))
+            blue_channel.append(torch.tensor([view_x, view_y, color_tensor[BLUE_CHANNEL]]))
 
         # Remember to flip to prevent image being rendered upside down when saved to a file
         plt.show()
@@ -351,7 +358,7 @@ class Renderer:
                 for k in np.linspace(0, self.ray_length, self.num_ray_samples):
                     ray_endpoint = camera_center_inhomogenous + unit_ray * k
                     ray_x, ray_y, ray_z = ray_endpoint
-                    if (world.is_outside(ray_x, ray_y, ray_z)):
+                    if (self.world.is_outside(ray_x, ray_y, ray_z)):
                         continue
                     # We are in the box
                     ray_samples.append([ray_x, ray_y, ray_z])
@@ -369,14 +376,14 @@ class Renderer:
 
                 # Make 1D tensor into 2D tensor
                 ray_samples_with_distances = torch.cat([t1, torch.reshape(consecutive_sample_distances, (-1, 1))], 1)
-                color_densities = world.density(ray_samples_with_distances, viewing_angle)
+                color_densities = self.world.density(ray_samples_with_distances, viewing_angle)
                 print(color_densities)
 
                 color_tensor = 1. - torch.clamp(color_densities, min=0, max=1)
                 plt.plot(i, j, marker="o", color=color_tensor.numpy())
-                red_column.append(color_tensor[0])
-                green_column.append(color_tensor[1])
-                blue_column.append(color_tensor[2])
+                red_column.append(color_tensor[RED_CHANNEL])
+                green_column.append(color_tensor[GREEN_CHANNEL])
+                blue_column.append(color_tensor[BLUE_CHANNEL])
             red_image.append(torch.tensor(red_column))
             green_image.append(torch.tensor(green_column))
             blue_image.append(torch.tensor(blue_column))
@@ -398,6 +405,7 @@ def camera_to_image(x, y, view_spec, num_rays_x, num_rays_y):
 
 
 def samples_to_image(red_samples, green_samples, blue_samples, view_spec, num_rays_x, num_rays_y):
+    X, Y, INTENSITY = 0, 1, 2
     view_x1, view_x2, view_y1, view_y2 = view_spec
     step_x = (view_x2 - view_x1) / num_rays_x
     step_y = (view_y2 - view_y1) / num_rays_y
@@ -413,10 +421,10 @@ def samples_to_image(red_samples, green_samples, blue_samples, view_spec, num_ra
         # green_samples[index][2]
         # blue_render_channel[int((view_y2 - pixel[1]) / step_y), int((pixel[0] - view_x1) / step_x)] = \
         # blue_samples[index][2]
-        x, y = camera_to_image(pixel[0], pixel[1], view_spec, num_rays_x, num_rays_y)
-        red_render_channel[y, x] = red_samples[index][2]
-        green_render_channel[y, x] = green_samples[index][2]
-        blue_render_channel[y, x] = blue_samples[index][2]
+        x, y = camera_to_image(pixel[X], pixel[Y], view_spec, num_rays_x, num_rays_y)
+        red_render_channel[y, x] = red_samples[index][INTENSITY]
+        green_render_channel[y, x] = green_samples[index][INTENSITY]
+        blue_render_channel[y, x] = blue_samples[index][INTENSITY]
     image_data = torch.stack([red_render_channel, green_render_channel, blue_render_channel])
     return image_data
 
@@ -446,6 +454,34 @@ def mse(rendered_channel, true_channel, view_spec, num_rays_x, num_rays_y):
     return channel_total_error / len(rendered_channel)
 
 
+class PlenoxelModel(nn.Module):
+    def __init__(self, renderer):
+        super().__init__()
+        self.renderer = renderer
+
+    def forward(self, input):
+        world, camera, view_spec, ray_spec, training_image = input
+        renderer = Renderer(world, camera, view_spec, ray_spec)
+        # This just loads training images and shows them
+        # t = transforms.Compose([transforms.ToTensor()])
+        # dataset = datasets.ImageFolder("./images", transform=t)
+        # data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
+        # images, labels = next(iter(data_loader))
+        # image = images[0]
+        # transforms.ToPILImage()(image).show()
+
+        # This draws stochastic rays and returns a set of samples with colours
+        num_stochastic_rays = 2000
+        r, g, b = renderer.render_image(num_stochastic_rays, plt)
+        # image_data = samples_to_image(r, g, b, view_spec, num_rays_x, num_rays_y)
+        # transforms.ToPILImage()(image_data).show()
+
+        red_mse = mse(r, training_image[0], view_spec, num_rays_x, num_rays_y)
+        # green_mse = mse(g, image[1], view_spec, num_rays_x, num_rays_y)
+        # blue_mse = mse(b, image[2], view_spec, num_rays_x, num_rays_y)
+        return red_mse
+
+
 GRID_X = 40
 GRID_Y = 40
 GRID_Z = 40
@@ -473,7 +509,7 @@ view_x2 = 30
 view_y1 = -15
 view_y2 = 60
 view_spec = [view_x1, view_x2, view_y1, view_y2]
-r = Renderer(camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
+r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
              torch.tensor([100, 100]))
 
 # This renders the volumetric model and shows the rendered image. Useful for training
