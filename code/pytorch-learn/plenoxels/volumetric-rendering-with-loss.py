@@ -122,29 +122,27 @@ class VoxelGrid:
         self.grid_x = x
         self.grid_y = y
         self.grid_z = z
-        training_voxel = lambda: torch.rand(VoxelGrid.VOXEL_DIMENSION, requires_grad=True)
-        self.default_voxel = torch.ones(VoxelGrid.VOXEL_DIMENSION)
-        self.empty_voxel = torch.zeros([VoxelGrid.VOXEL_DIMENSION])
-        self.default_voxel[0] = 0.005
+        self.training_voxel = lambda: torch.ones(VoxelGrid.VOXEL_DIMENSION, requires_grad=True)
+        self.default_voxel = lambda: torch.ones(VoxelGrid.VOXEL_DIMENSION, requires_grad=True)
+        self.empty_voxel = lambda: torch.zeros([VoxelGrid.VOXEL_DIMENSION], requires_grad=True)
+        # self.default_voxel[0] = 0.005
         # self.voxel_grid = torch.rand([self.grid_x, self.grid_y, self.grid_z, VoxelGrid.VOXEL_DIMENSION],
         #                              requires_grad=True)
         self.voxel_grid = np.ndarray((self.grid_x, self.grid_y, self.grid_z), dtype=torch.Tensor)
         for i in range(self.grid_x):
             for j in range(self.grid_y):
                 for k in range(self.grid_z):
-                    voxel = training_voxel()
-                    # print(voxel)
-                    self.voxel_grid[i,j,k] = voxel
+                    self.voxel_grid[i, j, k] = self.empty_voxel()
         # print(self.voxel_grid)
 
     def random_voxel(self):
-        voxel = torch.rand([VoxelGrid.VOXEL_DIMENSION])
+        voxel = torch.rand([VoxelGrid.VOXEL_DIMENSION], requires_grad=True)
         voxel[0] = 0.01
         return voxel
 
     def at(self, x, y, z):
         if self.is_outside(x, y, z):
-            return self.empty_voxel
+            return self.empty_voxel()
         else:
             return self.voxel_grid[int(x), int(y), int(z)]
 
@@ -191,13 +189,13 @@ class VoxelGrid:
         for i in range(13, self.grid_x - 13):
             for j in range(13, self.grid_y - 13):
                 for k in range(13, self.grid_z - 13):
-                    self.voxel_grid[i, j, k] = self.default_voxel
+                    self.voxel_grid[i, j, k] = self.default_voxel()
 
     def build_random_hollow_cube(self):
         self.build_hollow_cube(self.random_voxel)
 
     def build_monochrome_hollow_cube(self, cube_spec):
-        self.build_random_hollow_cube2(lambda: self.default_voxel, cube_spec)
+        self.build_random_hollow_cube2(self.training_voxel, cube_spec)
 
     def build_hollow_cube(self, make_voxel):
         self.build_random_hollow_cube2(make_voxel, torch.tensor([10, 10, 10, 20, 20, 20]))
@@ -207,22 +205,22 @@ class VoxelGrid:
         voxel_1, voxel_2, voxel_3, voxel_4, voxel_5, voxel_6 = make_voxel(), make_voxel(), make_voxel(), make_voxel(), make_voxel(), make_voxel()
         for i in range(x, x + dx + 1):
             for j in range(y, y + dy + 1):
-                self.voxel_grid[i, j, z] = voxel_1
+                self.voxel_grid[i, j, z] = make_voxel()
         for i in range(x, x + dx + 1):
             for j in range(y, y + dy + 1):
-                self.voxel_grid[i, j, z + dz] = voxel_2
+                self.voxel_grid[i, j, z + dz] = make_voxel()
         for i in range(y, y + dy + 1):
             for j in range(z, z + dz + 1):
-                self.voxel_grid[x, i, j] = voxel_3
+                self.voxel_grid[x, i, j] = make_voxel()
         for i in range(y, y + dy + 1):
             for j in range(z, z + dz + 1):
-                self.voxel_grid[x + dx, i, j] = voxel_4
+                self.voxel_grid[x + dx, i, j] = make_voxel()
         for i in range(z, z + dz + 1):
             for j in range(x, x + dx + 1):
-                self.voxel_grid[j, y, i] = voxel_5
+                self.voxel_grid[j, y, i] = make_voxel()
         for i in range(z, z + dz + 1):
             for j in range(x, x + dx + 1):
-                self.voxel_grid[j, y + dy, i] = voxel_6
+                self.voxel_grid[j, y + dy, i] = make_voxel()
 
     def density(self, ray_samples_with_distances, viewing_angle):
         collected_voxels = []
@@ -406,10 +404,10 @@ class Renderer:
                 # Make 1D tensor into 2D tensor
                 ray_samples_with_distances = torch.cat([t1, torch.reshape(consecutive_sample_distances, (-1, 1))], 1)
                 color_densities = self.world.density(ray_samples_with_distances, viewing_angle)
-                # print(color_densities)
+                print(color_densities)
 
                 color_tensor = 1. - torch.clamp(color_densities, min=0, max=1)
-                plt.plot(i, j, marker="o", color=color_tensor.numpy())
+                plt.plot(i, j, marker="o", color=color_tensor.detach().numpy())
                 red_column.append(color_tensor[RED_CHANNEL])
                 green_column.append(color_tensor[GREEN_CHANNEL])
                 blue_column.append(color_tensor[BLUE_CHANNEL])
@@ -503,7 +501,7 @@ class PlenoxelModel(nn.Module):
         # transforms.ToPILImage()(image).show()
 
         # This draws stochastic rays and returns a set of samples with colours
-        num_stochastic_rays = 200
+        num_stochastic_rays = 2000
         r, g, b, voxels = renderer.render_image(num_stochastic_rays, plt)
         # image_data = samples_to_image(r, g, b, view_spec)
         # transforms.ToPILImage()(image_data).show()
@@ -563,7 +561,7 @@ GRID_Z = 40
 world = VoxelGrid(GRID_X, GRID_Y, GRID_Z)
 # world.build_solid_cube()
 # world.build_random_hollow_cube()
-# world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
+world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
 # world.build_random_hollow_cube2(world.random_voxel, torch.tensor([10, 10, 10, 20, 20, 20]))
 # world.build_random_hollow_cube2(world.random_voxel, torch.tensor([15, 15, 15, 10, 10, 10]))
 
@@ -588,11 +586,11 @@ r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, nu
              ray_spec)
 
 # This renders the volumetric model and shows the rendered image. Useful for training
-# red, green, blue = r.render(plt)
-# print(red.shape)
-# print(green.shape)
-# print(blue.shape)
-# transforms.ToPILImage()(torch.stack([red, green, blue])).show()
+red, green, blue = r.render(plt)
+print(red.shape)
+print(green.shape)
+print(blue.shape)
+transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
 # This just loads training images and shows them
 # t = transforms.Compose([transforms.ToTensor()])
@@ -613,11 +611,11 @@ r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, nu
 # blue_mse = mse(b, image[2], view_spec, num_rays_x, num_rays_y)
 # print(f"{red_mse}, {green_mse}, {blue_mse}")
 
-model = PlenoxelModel(world)
-print(world.at(0,0,0).requires_grad)
-optimizer = torch.optim.RMSprop(world.voxel_grid.flatten(), lr=0.01)
-print(world.at(0,0,0).requires_grad)
-training_loop(model, camera, view_spec, ray_spec, optimizer, 20)
+# model = PlenoxelModel(world)
+# print(world.at(0,0,0).requires_grad)
+# optimizer = torch.optim.RMSprop(world.voxel_grid.flatten(), lr=0.01)
+# print(world.at(0,0,0).requires_grad)
+# training_loop(model, camera, view_spec, ray_spec, optimizer, 20)
 
 # Calculates MSE against whole images
 # total_num_rays = num_rays_x * num_rays_y
