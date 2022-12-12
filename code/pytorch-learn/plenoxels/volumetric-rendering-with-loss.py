@@ -15,7 +15,7 @@ BLUE_CHANNEL = 0
 class Camera:
     def __init__(self, focal_length, center, basis):
         self.basis = basis
-        camera_center = center.detach().clone()
+        camera_center = center
         transposed_basis = torch.transpose(basis, 0, 1)
         camera_center[:3] = camera_center[
                             :3] * -1  # We don't want to multiply the homogenous coordinate component; it needs to remain 1
@@ -122,12 +122,20 @@ class VoxelGrid:
         self.grid_x = x
         self.grid_y = y
         self.grid_z = z
-        self.training_voxel = torch.rand(VoxelGrid.VOXEL_DIMENSION)
+        training_voxel = lambda: torch.rand(VoxelGrid.VOXEL_DIMENSION, requires_grad=True)
         self.default_voxel = torch.ones(VoxelGrid.VOXEL_DIMENSION)
         self.empty_voxel = torch.zeros([VoxelGrid.VOXEL_DIMENSION])
         self.default_voxel[0] = 0.005
-        self.voxel_grid = torch.rand([self.grid_x, self.grid_y, self.grid_z, VoxelGrid.VOXEL_DIMENSION],
-                                      requires_grad=True)
+        # self.voxel_grid = torch.rand([self.grid_x, self.grid_y, self.grid_z, VoxelGrid.VOXEL_DIMENSION],
+        #                              requires_grad=True)
+        self.voxel_grid = np.ndarray((self.grid_x, self.grid_y, self.grid_z), dtype=torch.Tensor)
+        for i in range(self.grid_x):
+            for j in range(self.grid_y):
+                for k in range(self.grid_z):
+                    voxel = training_voxel()
+                    # print(voxel)
+                    self.voxel_grid[i,j,k] = voxel
+        # print(self.voxel_grid)
 
     def random_voxel(self):
         voxel = torch.rand([VoxelGrid.VOXEL_DIMENSION])
@@ -287,10 +295,13 @@ class Renderer:
         green_channel = []
         blue_channel = []
 
+        intersecting_voxels = []
         for ray_intersection_weight in ray_intersection_weights:
             ray_screen_intersection = camera_basis_x * ray_intersection_weight[0] + \
                                       camera_basis_y * ray_intersection_weight[1]
             unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
+            # print("Unit Ray")
+            # print(unit_ray)
             view_x, view_y = ray_intersection_weight[0], ray_intersection_weight[1]
             ray_samples = []
             for k in np.linspace(0, self.ray_length, self.num_ray_samples):
@@ -299,7 +310,15 @@ class Renderer:
                 if (self.world.is_outside(ray_x, ray_y, ray_z)):
                     continue
                 # We are in the box
+                # print("Rayssss")
+                # print(ray_x)
+                # print(ray_y)
+                # print(ray_z)
                 ray_samples.append([ray_x, ray_y, ray_z])
+                # intersecting_voxels.append(torch.stack([ray_x, ray_y, ray_z]))
+                at = world.at(ray_x, ray_y, ray_z)
+                # print(at.requires_grad)
+                intersecting_voxels.append(at)
 
             unique_ray_samples = torch.unique(torch.tensor(ray_samples), dim=0)
             if (len(unique_ray_samples) <= 1):
@@ -315,22 +334,27 @@ class Renderer:
             # Make 1D tensor into 2D tensor
             ray_samples_with_distances = torch.cat([t1, torch.reshape(consecutive_sample_distances, (-1, 1))], 1)
             color_densities = self.world.density(ray_samples_with_distances, viewing_angle)
+            # print(color_densities)
 
             color_tensor = 1. - torch.clamp(color_densities, min=0, max=1)
-            plt.plot(ray_intersection_weight[0], ray_intersection_weight[1], marker="o", color=color_tensor.detach().numpy())
+            plt.plot(ray_intersection_weight[0], ray_intersection_weight[1], marker="o",
+                     color=color_tensor.detach().numpy())
 
             if (view_x < view_x1 or view_x > view_x2
                     or view_y < view_y1 or view_y > view_y2):
                 print(f"Warning: bad generation: {view_x}, {view_y}")
-            red_channel.append(torch.tensor([view_x, view_y, color_tensor[RED_CHANNEL]]))
-            green_channel.append(torch.tensor([view_x, view_y, color_tensor[GREEN_CHANNEL]]))
-            blue_channel.append(torch.tensor([view_x, view_y, color_tensor[BLUE_CHANNEL]]))
+
+            red_channel.append(torch.stack([view_x, view_y, color_tensor[RED_CHANNEL]]))
+            green_channel.append(torch.stack([view_x, view_y, color_tensor[GREEN_CHANNEL]]))
+            blue_channel.append(torch.stack([view_x, view_y, color_tensor[BLUE_CHANNEL]]))
 
         # Remember to flip to prevent image being rendered upside down when saved to a file
         plt.show()
         print("Done!!")
-        print(red_channel)
-        return (red_channel, green_channel, blue_channel)
+        intersecting_voxels = torch.stack(intersecting_voxels)
+        red_channel, green_channel, blue_channel = torch.stack(red_channel), torch.stack(green_channel), torch.stack(
+            blue_channel)
+        return (red_channel, green_channel, blue_channel, intersecting_voxels)
 
     def render(self, plt):
         red_image = []
@@ -435,7 +459,7 @@ def samples_to_image(red_samples, green_samples, blue_samples, view_spec):
 
 
 def mse(rendered_channel, true_channel, view_spec):
-    print(len(rendered_channel))
+    # print(len(rendered_channel))
     small_diffs = 0
     medium_diffs = 0
     large_diffs = 0
@@ -445,6 +469,7 @@ def mse(rendered_channel, true_channel, view_spec):
         intensity = intensity
         image_x, image_y = camera_to_image(x, y, view_spec)
         pixel_error = (true_channel[image_y, image_x] - intensity).pow(2)
+        # print(pixel_error)
         if (pixel_error <= 0.001):
             small_diffs += 1
         elif (pixel_error > 0.001 and pixel_error <= 0.01):
@@ -453,9 +478,9 @@ def mse(rendered_channel, true_channel, view_spec):
             large_diffs += 1
         channel_total_error += pixel_error
 
-    print(f"Small diffs = {small_diffs}")
-    print(f"Medium diffs = {medium_diffs}")
-    print(f"Large diffs = {large_diffs}")
+    # print(f"Small diffs = {small_diffs}")
+    # print(f"Medium diffs = {medium_diffs}")
+    # print(f"Large diffs = {large_diffs}")
     return channel_total_error / len(rendered_channel)
 
 
@@ -463,7 +488,8 @@ class PlenoxelModel(nn.Module):
     def __init__(self, world):
         super().__init__()
         self.world = world
-        self.weights = nn.Parameter(world.voxel_grid, requires_grad=True)
+
+        # self.weights = nn.ParameterList(list(map(lambda t: nn.Parameter(t), world.voxel_grid.flatten())))
 
     def forward(self, input):
         camera, view_spec, ray_spec = input
@@ -477,11 +503,11 @@ class PlenoxelModel(nn.Module):
         # transforms.ToPILImage()(image).show()
 
         # This draws stochastic rays and returns a set of samples with colours
-        num_stochastic_rays = 2000
-        r, g, b = renderer.render_image(num_stochastic_rays, plt)
+        num_stochastic_rays = 200
+        r, g, b, voxels = renderer.render_image(num_stochastic_rays, plt)
         # image_data = samples_to_image(r, g, b, view_spec)
         # transforms.ToPILImage()(image_data).show()
-        return r, g, b
+        return r, g, b, voxels
         # green_mse = mse(g, image[1], view_spec, num_rays_x, num_rays_y)
         # blue_mse = mse(b, image[2], view_spec, num_rays_x, num_rays_y)
         # return red_mse
@@ -495,15 +521,38 @@ def training_loop(model, camera, view_spec, ray_spec, optimizer, n=1):
     data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
     images, labels = next(iter(data_loader))
     training_image = images[0]
-    for i in range(1):
-        r, g, b = model([camera, view_spec, ray_spec])
-        # print(r)
+    print(f"{n} epochs")
+    parameters = list(model.parameters())
+    # print(parameters)
+    # for p in parameters:
+    #     p.requires_grad = False
+    # model.world.voxel_grid.requires_grad = False
+    for i in range(n):
+        for x in range(model.world.grid_x):
+            for y in range(model.world.grid_y):
+                for z in range(model.world.grid_x):
+                    model.world.voxel_grid[x, y, z].requires_grad = True
+        print(f"Epoch={i}")
+        r, g, b, voxels = model([camera, view_spec, ray_spec])
         red_mse = mse(r, training_image[0], view_spec)
-
-        red_mse.backward()
-        optimizer.step()
+        green_mse = mse(g, training_image[0], view_spec)
+        blue_mse = mse(b, training_image[0], view_spec)
+        total_mse = red_mse + green_mse + blue_mse
+        print(f"MSE={total_mse}")
+        # print(len(voxels))
+        for x in range(model.world.grid_x):
+            for y in range(model.world.grid_y):
+                for z in range(model.world.grid_x):
+                    model.world.voxel_grid[x, y, z].requires_grad = False
+        # print(voxels)
+        # voxels.requires_grad = True
+        # for v in voxels:
+        #     v.requires_grad = True
+        # model.weights = nn.Parameter(voxels, requires_grad=True)
         optimizer.zero_grad()
-        losses.append(red_mse)
+        total_mse.backward()
+        optimizer.step()
+        losses.append(total_mse)
     return losses
 
 
@@ -565,8 +614,10 @@ r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, nu
 # print(f"{red_mse}, {green_mse}, {blue_mse}")
 
 model = PlenoxelModel(world)
-optimizer = torch.optim.RMSprop(model.parameters(), lr=0.001)
-training_loop(model, camera, view_spec, ray_spec, optimizer)
+print(world.at(0,0,0).requires_grad)
+optimizer = torch.optim.RMSprop(world.voxel_grid.flatten(), lr=0.01)
+print(world.at(0,0,0).requires_grad)
+training_loop(model, camera, view_spec, ray_spec, optimizer, 20)
 
 # Calculates MSE against whole images
 # total_num_rays = num_rays_x * num_rays_y
