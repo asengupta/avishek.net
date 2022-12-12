@@ -130,11 +130,11 @@ class VoxelGrid:
         for i in range(self.grid_x):
             for j in range(self.grid_y):
                 for k in range(self.grid_z):
-                    self.voxel_grid[i, j, k] = self.empty_voxel()
+                    self.voxel_grid[i, j, k] = self.random_voxel()
 
     def random_voxel(self):
-        voxel = torch.rand([VoxelGrid.VOXEL_DIMENSION], requires_grad=True)
-        voxel[0] = 0.01
+        voxel = torch.cat([torch.tensor([0.0005]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
+        voxel.requires_grad = True
         return voxel
 
     def default_voxel(self):
@@ -497,7 +497,7 @@ class PlenoxelModel(nn.Module):
         # transforms.ToPILImage()(image).show()
 
         # This draws stochastic rays and returns a set of samples with colours
-        num_stochastic_rays = 200
+        num_stochastic_rays = 500
         r, g, b, voxels = renderer.render_image(num_stochastic_rays, plt)
         # image_data = samples_to_image(r, g, b, view_spec)
         # transforms.ToPILImage()(image_data).show()
@@ -557,7 +557,7 @@ GRID_Z = 40
 world = VoxelGrid(GRID_X, GRID_Y, GRID_Z)
 # world.build_solid_cube()
 # world.build_random_hollow_cube()
-world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
+# world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
 # world.build_random_hollow_cube2(world.random_voxel, torch.tensor([10, 10, 10, 20, 20, 20]))
 # world.build_random_hollow_cube2(world.random_voxel, torch.tensor([15, 15, 15, 10, 10, 10]))
 
@@ -582,11 +582,11 @@ r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, nu
              ray_spec)
 
 # This renders the volumetric model and shows the rendered image. Useful for training
-red, green, blue = r.render(plt)
-print(red.shape)
-print(green.shape)
-print(blue.shape)
-transforms.ToPILImage()(torch.stack([red, green, blue])).show()
+# red, green, blue = r.render(plt)
+# print(red.shape)
+# print(green.shape)
+# print(blue.shape)
+# transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
 # This just loads training images and shows them
 # t = transforms.Compose([transforms.ToTensor()])
@@ -607,9 +607,15 @@ transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 # blue_mse = mse(b, image[2], view_spec, num_rays_x, num_rays_y)
 # print(f"{red_mse}, {green_mse}, {blue_mse}")
 
-# model = PlenoxelModel(world)
-# optimizer = torch.optim.RMSprop(world.voxel_grid.flatten(), lr=0.01)
-# training_loop(model, camera, view_spec, ray_spec, optimizer, 20)
+# red, green, blue = r.render(plt)
+# transforms.ToPILImage()(torch.stack([red, green, blue])).show()
+
+model = PlenoxelModel(world)
+optimizer = torch.optim.RMSprop(world.voxel_grid.flatten(), lr=0.1)
+training_loop(model, camera, view_spec, ray_spec, optimizer, 5)
+
+red, green, blue = r.render(plt)
+transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
 # Calculates MSE against whole images
 # total_num_rays = num_rays_x * num_rays_y
