@@ -15,7 +15,7 @@ BLUE_CHANNEL = 0
 class Camera:
     def __init__(self, focal_length, center, basis):
         self.basis = basis
-        camera_center = center
+        camera_center = center.detach().clone()
         transposed_basis = torch.transpose(basis, 0, 1)
         camera_center[:3] = camera_center[
                             :3] * -1  # We don't want to multiply the homogenous coordinate component; it needs to remain 1
@@ -123,21 +123,22 @@ class VoxelGrid:
         self.grid_y = y
         self.grid_z = z
         self.training_voxel = lambda: torch.ones(VoxelGrid.VOXEL_DIMENSION, requires_grad=True)
-        self.default_voxel = lambda: torch.ones(VoxelGrid.VOXEL_DIMENSION, requires_grad=True)
         self.empty_voxel = lambda: torch.zeros([VoxelGrid.VOXEL_DIMENSION], requires_grad=True)
-        # self.default_voxel[0] = 0.005
-        # self.voxel_grid = torch.rand([self.grid_x, self.grid_y, self.grid_z, VoxelGrid.VOXEL_DIMENSION],
-        #                              requires_grad=True)
-        self.voxel_grid = np.ndarray((self.grid_x, self.grid_y, self.grid_z), dtype=torch.Tensor)
-        for i in range(self.grid_x):
-            for j in range(self.grid_y):
-                for k in range(self.grid_z):
-                    self.voxel_grid[i, j, k] = self.empty_voxel()
-        # print(self.voxel_grid)
+        self.voxel_grid = torch.zeros([self.grid_x, self.grid_y, self.grid_z, VoxelGrid.VOXEL_DIMENSION],
+                                     requires_grad=False)
+        # self.voxel_grid = np.ndarray((self.grid_x, self.grid_y, self.grid_z), dtype=torch.Tensor)
+        # for i in range(self.grid_x):
+        #     for j in range(self.grid_y):
+        #         for k in range(self.grid_z):
+        #             self.voxel_grid[i, j, k] = self.empty_voxel()
 
     def random_voxel(self):
         voxel = torch.rand([VoxelGrid.VOXEL_DIMENSION], requires_grad=True)
         voxel[0] = 0.01
+        return voxel
+    def default_voxel(self):
+        voxel = torch.ones(VoxelGrid.VOXEL_DIMENSION, requires_grad=False)
+        voxel[0] = 0.005
         return voxel
 
     def at(self, x, y, z):
@@ -195,7 +196,7 @@ class VoxelGrid:
         self.build_hollow_cube(self.random_voxel)
 
     def build_monochrome_hollow_cube(self, cube_spec):
-        self.build_random_hollow_cube2(self.training_voxel, cube_spec)
+        self.build_random_hollow_cube2(self.default_voxel, cube_spec)
 
     def build_hollow_cube(self, make_voxel):
         self.build_random_hollow_cube2(make_voxel, torch.tensor([10, 10, 10, 20, 20, 20]))
@@ -298,8 +299,6 @@ class Renderer:
             ray_screen_intersection = camera_basis_x * ray_intersection_weight[0] + \
                                       camera_basis_y * ray_intersection_weight[1]
             unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
-            # print("Unit Ray")
-            # print(unit_ray)
             view_x, view_y = ray_intersection_weight[0], ray_intersection_weight[1]
             ray_samples = []
             for k in np.linspace(0, self.ray_length, self.num_ray_samples):
@@ -308,10 +307,6 @@ class Renderer:
                 if (self.world.is_outside(ray_x, ray_y, ray_z)):
                     continue
                 # We are in the box
-                # print("Rayssss")
-                # print(ray_x)
-                # print(ray_y)
-                # print(ray_z)
                 ray_samples.append([ray_x, ray_y, ray_z])
                 # intersecting_voxels.append(torch.stack([ray_x, ray_y, ray_z]))
                 at = world.at(ray_x, ray_y, ray_z)
@@ -342,16 +337,16 @@ class Renderer:
                     or view_y < view_y1 or view_y > view_y2):
                 print(f"Warning: bad generation: {view_x}, {view_y}")
 
-            red_channel.append(torch.stack([view_x, view_y, color_tensor[RED_CHANNEL]]))
-            green_channel.append(torch.stack([view_x, view_y, color_tensor[GREEN_CHANNEL]]))
-            blue_channel.append(torch.stack([view_x, view_y, color_tensor[BLUE_CHANNEL]]))
+            red_channel.append(torch.tensor([view_x, view_y, color_tensor[RED_CHANNEL]]))
+            green_channel.append(torch.tensor([view_x, view_y, color_tensor[GREEN_CHANNEL]]))
+            blue_channel.append(torch.tensor([view_x, view_y, color_tensor[BLUE_CHANNEL]]))
 
         # Remember to flip to prevent image being rendered upside down when saved to a file
         plt.show()
         print("Done!!")
         intersecting_voxels = torch.stack(intersecting_voxels)
-        red_channel, green_channel, blue_channel = torch.stack(red_channel), torch.stack(green_channel), torch.stack(
-            blue_channel)
+        # red_channel, green_channel, blue_channel = torch.stack(red_channel), torch.stack(green_channel), torch.stack(
+        #     blue_channel)
         return (red_channel, green_channel, blue_channel, intersecting_voxels)
 
     def render(self, plt):
@@ -601,8 +596,8 @@ transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 # transforms.ToPILImage()(image).show()
 
 # This draws stochastic rays and returns a set of samples with colours
-# num_stochastic_rays = 2000
-# r, g, b = r.render_image(num_stochastic_rays, plt)
+# num_stochastic_rays = 800
+# r, g, b, intersecting_voxels = r.render_image(num_stochastic_rays, plt)
 # image_data = samples_to_image(r, g, b, view_spec)
 # transforms.ToPILImage()(image_data).show()
 
