@@ -338,9 +338,10 @@ class Renderer:
                     or view_y < view_y1 or view_y > view_y2):
                 print(f"Warning: bad generation: {view_x}, {view_y}")
 
-            red_channel.append(torch.tensor([view_x, view_y, color_tensor[RED_CHANNEL]]))
-            green_channel.append(torch.tensor([view_x, view_y, color_tensor[GREEN_CHANNEL]]))
-            blue_channel.append(torch.tensor([view_x, view_y, color_tensor[BLUE_CHANNEL]]))
+            # print(color_tensor)
+            red_channel.append(torch.stack([view_x, view_y, color_tensor[RED_CHANNEL]]))
+            green_channel.append(torch.stack([view_x, view_y, color_tensor[GREEN_CHANNEL]]))
+            blue_channel.append(torch.stack([view_x, view_y, color_tensor[BLUE_CHANNEL]]))
 
         # Remember to flip to prevent image being rendered upside down when saved to a file
         plt.show()
@@ -453,7 +454,6 @@ def samples_to_image(red_samples, green_samples, blue_samples, view_spec):
 
 
 def mse(rendered_channel, true_channel, view_spec):
-    # print(len(rendered_channel))
     small_diffs = 0
     medium_diffs = 0
     large_diffs = 0
@@ -582,11 +582,11 @@ r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, nu
              ray_spec)
 
 # This renders the volumetric model and shows the rendered image. Useful for training
-# red, green, blue = r.render(plt)
-# print(red.shape)
-# print(green.shape)
-# print(blue.shape)
-# transforms.ToPILImage()(torch.stack([red, green, blue])).show()
+red, green, blue = r.render(plt)
+print(red.shape)
+print(green.shape)
+print(blue.shape)
+transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
 # This just loads training images and shows them
 # t = transforms.Compose([transforms.ToTensor()])
@@ -597,10 +597,10 @@ r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, nu
 # transforms.ToPILImage()(image).show()
 
 # This draws stochastic rays and returns a set of samples with colours
-num_stochastic_rays = 800
-r, g, b, intersecting_voxels = r.render_image(num_stochastic_rays, plt)
-image_data = samples_to_image(r, g, b, view_spec)
-transforms.ToPILImage()(image_data).show()
+# num_stochastic_rays = 800
+# r, g, b, intersecting_voxels = r.render_image(num_stochastic_rays, plt)
+# image_data = samples_to_image(r, g, b, view_spec)
+# transforms.ToPILImage()(image_data).show()
 
 # red_mse = mse(r, image[0], view_spec, num_rays_x, num_rays_y)
 # green_mse = mse(g, image[1], view_spec, num_rays_x, num_rays_y)
