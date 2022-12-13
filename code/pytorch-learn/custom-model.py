@@ -36,6 +36,17 @@ world = torch.rand([2, 2], requires_grad=True)
 
 # world *=4
 # world += 10
+def mse(rendered_channel):
+    true_channel = torch.ones([2, 2]) * 10
+    channel_total_error = torch.tensor(0.)
+    for point in rendered_channel:
+        x, y, intensity = point
+        intensity = intensity
+        image_x, image_y = x, y
+        pixel_error = (true_channel[int(image_y), int(image_x)] - intensity).pow(2)
+        # print(pixel_error)
+        channel_total_error += pixel_error
+    return channel_total_error / len(rendered_channel)
 
 class CustomModel(nn.Module):
     def __init__(self):
@@ -44,55 +55,70 @@ class CustomModel(nn.Module):
         self.initial = world
         # self.parameter = nn.Parameter(self.initial)
         print("Rendered image")
-        # r, g, b, intersecting = render_image(voxel_grid)
-        self.voxels = nn.Parameter(voxels)
+        r, g, b, intersecting = render_image(voxel_grid)
+        self.voxels = nn.Parameter(intersecting)
 
     def forward(self, x):
-        result = torch.stack([torch.stack([self.parameter[0, 0], self.parameter[0, 0] * 2]),
-                              torch.stack([self.parameter[0, 0], self.parameter[0, 0] * 2])])
-        result2 = self.parameter[1, 0] + self.parameter[1, 0]
-        # print(result)
-        return result, result2
+        r, g, b, intersecting = render_image(voxel_grid)
+        return r, g, b, intersecting
+
+model = CustomModel()
+optimizer = torch.optim.RMSprop(model.parameters(), lr=0.01, momentum=0.9)
+optimizer.zero_grad()
+r, g, b, intersecting = model([])
+red_mse = mse(r)
+green_mse = mse(g)
+blue_mse = mse(b)
+total_mse = red_mse + green_mse + blue_mse
+print(f"MSE=")
+print(total_mse)
+
+print(list(model.parameters()))
+for param in model.parameters():
+    print(f"Param before={param.grad}")
+total_mse.backward()
+for param in model.parameters():
+    print(f"Param after={param.grad}")
 
 
-net = CustomModel()
-print(net)
-print(list(net.parameters()))
-
-learning_rate = 0.0001
-simple_optimiser = torch.optim.SGD(net.parameters(), lr=learning_rate, momentum=0.9)
-target = torch.tensor(200.)
-loss_criterion = nn.MSELoss()
-
-
-# net.train()
-
-def custom_loss(output, target):
-    return (output - target).pow(2)
-
-
-print(list(net.parameters()))
-for i in range(1):
-    simple_optimiser.zero_grad()
-    # output = net(torch.tensor(20.))
-    output1, output2 = net([])
-    make_dot(net.initial, params=dict(list(net.named_parameters()))).render("custom_model", format="png")
-    # print(f"Output={output}")
-
-    print(f"output1={output1}")
-    loss1 = output1[0, 0] - 200
-    loss2 = custom_loss(output2, 200)
-    print(f"Loss = {loss1}, {loss2}")
-    for p in net.parameters():
-        print(f"Before={p.grad}")
-
-    loss3 = loss1 + loss2
-    loss3.backward()
-    for p in net.parameters():
-        print("AHA")
-        print(f"After={p.grad}")
-    simple_optimiser.step()
-
+# net = CustomModel()
+# print(net)
 # print(list(net.parameters()))
-net.eval()
-print(net(torch.tensor(1.)))
+#
+# learning_rate = 0.0001
+# simple_optimiser = torch.optim.SGD(net.parameters(), lr=learning_rate, momentum=0.9)
+# target = torch.tensor(200.)
+# loss_criterion = nn.MSELoss()
+#
+#
+# # net.train()
+#
+# def custom_loss(output, target):
+#     return (output - target).pow(2)
+#
+#
+# print(list(net.parameters()))
+# for i in range(1):
+#     simple_optimiser.zero_grad()
+#     # output = net(torch.tensor(20.))
+#     output1, output2 = net([])
+#     make_dot(net.initial, params=dict(list(net.named_parameters()))).render("custom_model", format="png")
+#     # print(f"Output={output}")
+#
+#     print(f"output1={output1}")
+#     loss1 = output1[0, 0] - 200
+#     loss2 = custom_loss(output2, 200)
+#     print(f"Loss = {loss1}, {loss2}")
+#     for p in net.parameters():
+#         print(f"Before={p.grad}")
+#
+#     loss3 = loss1 + loss2
+#     loss3.backward()
+#     for p in net.parameters():
+#         print("AHA")
+#         print(f"After={p.grad}")
+#     simple_optimiser.step()
+#
+# # print(list(net.parameters()))
+# net.eval()
+# print(net(torch.tensor(1.)))
