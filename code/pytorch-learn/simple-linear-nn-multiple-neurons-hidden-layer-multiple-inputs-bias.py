@@ -31,7 +31,11 @@ for i in range(100):
     print(f"Loss = {loss}")
 
     loss.backward()
+    for param in net.parameters():
+        print(f"Param before ={param.grad}")
     simple_optimiser.step()
+    for param in net.parameters():
+        print(f"Param after ={param.grad}")
 
 print(list(net.parameters()))
 net.eval()

@@ -274,7 +274,11 @@ class Renderer:
         self.num_view_samples_x = view_spec[4]
         self.num_view_samples_y = view_spec[5]
 
-    def render_image(self, num_stochastic_samples, plt):
+    def render_image(self, num_stochastic_samples, plt, requires_grad=False):
+        for i in range(self.world.grid_x):
+            for j in range(self.world.grid_y):
+                for k in range(self.world.grid_z):
+                    self.world.at(i, j, k).requires_grad = requires_grad
         camera_basis_x = camera.basis[0][:3]
         camera_basis_y = camera.basis[1][:3]
         viewing_angle = camera.viewing_angle()
@@ -483,10 +487,16 @@ def mse(rendered_channel, true_channel, view_spec):
 
 
 class PlenoxelModel(nn.Module):
-    def __init__(self, voxels):
-        super().__init__()
+    def __init__(self, input):
+        super(PlenoxelModel).__init__()
+        camera, view_spec, ray_spec = input
         self.world = world
+        r, g, b, voxels = PlenoxelModel.run(world, [camera, view_spec, ray_spec])
+        self.before = voxels.clone()
         self.voxels = nn.Parameter(voxels)
+        self.r = r
+        self.g = g
+        self.b = b
 
     @staticmethod
     def run(world, input):
@@ -494,7 +504,7 @@ class PlenoxelModel(nn.Module):
         renderer = Renderer(world, camera, view_spec, ray_spec)
         # This draws stochastic rays and returns a set of samples with colours
         num_stochastic_rays = 500
-        r, g, b, voxels = renderer.render_image(num_stochastic_rays, plt)
+        r, g, b, voxels = renderer.render_image(num_stochastic_rays, plt, requires_grad=False)
         return r, g, b, voxels
 
     def forward(self, input):
@@ -510,7 +520,7 @@ class PlenoxelModel(nn.Module):
 
         # This draws stochastic rays and returns a set of samples with colours
         num_stochastic_rays = 500
-        r, g, b, voxels = renderer.render_image(num_stochastic_rays, plt)
+        r, g, b, voxels = renderer.render_image(num_stochastic_rays, plt, requires_grad=True)
         # image_data = samples_to_image(r, g, b, view_spec)
         # transforms.ToPILImage()(image_data).show()
         return r, g, b, voxels
@@ -531,10 +541,13 @@ def training_loop(world, camera, view_spec, ray_spec, n=1):
 
     for i in range(n):
         print(f"Epoch={i}")
-        r, g, b, voxels = PlenoxelModel.run(world, [camera, view_spec, ray_spec])
-        model = PlenoxelModel(voxels)
+        model = PlenoxelModel([camera, view_spec, ray_spec])
         # print(list(model.parameters()))
         # r, g, b, voxels = model([camera, view_spec, ray_spec])
+        optimizer = torch.optim.RMSprop(model.parameters(), lr=0.01)
+        optimizer.zero_grad()
+        r, g, b, voxels = model([camera, view_spec, ray_spec])
+
         red_mse = mse(r, training_image[0], view_spec)
         green_mse = mse(g, training_image[0], view_spec)
         blue_mse = mse(b, training_image[0], view_spec)
@@ -546,18 +559,18 @@ def training_loop(world, camera, view_spec, ray_spec, n=1):
         # # print(voxels)
         # print(f"Optimising {len(voxels)} voxels...")
         #
-        before = voxels.clone()
-        optimizer = torch.optim.RMSprop(model.parameters(), lr=0.01)
+        # before = voxels.clone()
         # # print(optimizer.param_groups)
-        optimizer.zero_grad()
         print("Backward")
         total_mse.backward()
-        print(voxels)
+        print(total_mse)
         for param in model.parameters():
-            print(f"Param={param.grad}")
+            print(f"Param before={param.grad}")
         optimizer.step()
-        after = torch.stack(list(model.parameters()))
-        print((after - before).abs().sum())
+        for param in model.parameters():
+            print(f"Param after={param.grad}")
+        # after = torch.stack(list(model.parameters()))
+        # print((after - before).abs().sum())
         # weight_change = (before - voxels).abs().sum()
         # print(f"Weight change={weight_change}")
         # losses.append(total_mse)
