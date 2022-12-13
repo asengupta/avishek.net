@@ -6,7 +6,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torchvision import datasets, transforms
-import random
+from torchviz import make_dot
 
 RED_CHANNEL = 0
 GREEN_CHANNEL = 0
@@ -486,9 +486,17 @@ def mse(rendered_channel, true_channel, view_spec):
     return channel_total_error / len(rendered_channel)
 
 
+# Our drawing graph functions. We rely / have borrowed from the following
+# python libraries:
+# https://github.com/szagoruyko/pytorchviz/blob/master/torchviz/dot.py
+# https://github.com/willmcgugan/rich
+# https://graphviz.readthedocs.io/en/stable/
+
+
+
 class PlenoxelModel(nn.Module):
     def __init__(self, input):
-        super(PlenoxelModel).__init__()
+        super().__init__()
         camera, view_spec, ray_spec = input
         self.world = world
         r, g, b, voxels = PlenoxelModel.run(world, [camera, view_spec, ray_spec])
@@ -503,7 +511,7 @@ class PlenoxelModel(nn.Module):
         camera, view_spec, ray_spec = input
         renderer = Renderer(world, camera, view_spec, ray_spec)
         # This draws stochastic rays and returns a set of samples with colours
-        num_stochastic_rays = 500
+        num_stochastic_rays = 2
         r, g, b, voxels = renderer.render_image(num_stochastic_rays, plt, requires_grad=False)
         return r, g, b, voxels
 
@@ -519,7 +527,7 @@ class PlenoxelModel(nn.Module):
         # transforms.ToPILImage()(image).show()
 
         # This draws stochastic rays and returns a set of samples with colours
-        num_stochastic_rays = 500
+        num_stochastic_rays = 2
         r, g, b, voxels = renderer.render_image(num_stochastic_rays, plt, requires_grad=True)
         # image_data = samples_to_image(r, g, b, view_spec)
         # transforms.ToPILImage()(image_data).show()
@@ -544,7 +552,7 @@ def training_loop(world, camera, view_spec, ray_spec, n=1):
         model = PlenoxelModel([camera, view_spec, ray_spec])
         # print(list(model.parameters()))
         # r, g, b, voxels = model([camera, view_spec, ray_spec])
-        optimizer = torch.optim.RMSprop(model.parameters(), lr=0.01)
+        optimizer = torch.optim.RMSprop(model.parameters(), lr=0.01, momentum=0.9)
         optimizer.zero_grad()
         r, g, b, voxels = model([camera, view_spec, ray_spec])
 
@@ -553,6 +561,8 @@ def training_loop(world, camera, view_spec, ray_spec, n=1):
         blue_mse = mse(b, training_image[0], view_spec)
         total_mse = red_mse + green_mse + blue_mse
         print(f"MSE={total_mse}")
+        make_dot(r, params=dict(list(model.named_parameters()))).render("rnn_torchviz", format="png")
+        print(total_mse)
         # state_dict = model.state_dict()
         # state_dict['classifier.weight'] = voxels
         # model.load_state_dict(state_dict)
@@ -564,11 +574,11 @@ def training_loop(world, camera, view_spec, ray_spec, n=1):
         print("Backward")
         total_mse.backward()
         print(total_mse)
-        for param in model.parameters():
-            print(f"Param before={param.grad}")
+        # for param in model.parameters():
+        #     print(f"Param before={param.grad}")
         optimizer.step()
-        for param in model.parameters():
-            print(f"Param after={param.grad}")
+        # for param in model.parameters():
+        #     print(f"Param after={param.grad}")
         # after = torch.stack(list(model.parameters()))
         # print((after - before).abs().sum())
         # weight_change = (before - voxels).abs().sum()
