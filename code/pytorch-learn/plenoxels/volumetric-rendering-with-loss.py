@@ -483,11 +483,19 @@ def mse(rendered_channel, true_channel, view_spec):
 
 
 class PlenoxelModel(nn.Module):
-    def __init__(self, world):
+    def __init__(self, voxels):
         super().__init__()
         self.world = world
+        self.voxels = nn.Parameter(voxels)
 
-        # self.weights = nn.ParameterList(list(map(lambda t: nn.Parameter(t), world.voxel_grid.flatten())))
+    @staticmethod
+    def run(world, input):
+        camera, view_spec, ray_spec = input
+        renderer = Renderer(world, camera, view_spec, ray_spec)
+        # This draws stochastic rays and returns a set of samples with colours
+        num_stochastic_rays = 500
+        r, g, b, voxels = renderer.render_image(num_stochastic_rays, plt)
+        return r, g, b, voxels
 
     def forward(self, input):
         camera, view_spec, ray_spec = input
@@ -511,7 +519,7 @@ class PlenoxelModel(nn.Module):
         # return red_mse
 
 
-def training_loop(model, camera, view_spec, ray_spec, n=1):
+def training_loop(world, camera, view_spec, ray_spec, n=1):
     losses = []
     # This just loads training images and shows them
     t = transforms.Compose([transforms.ToTensor()])
@@ -520,40 +528,39 @@ def training_loop(model, camera, view_spec, ray_spec, n=1):
     images, labels = next(iter(data_loader))
     training_image = images[0]
     print(f"{n} epochs")
-    parameters = list(model.parameters())
-    # print(parameters)
-    # for p in parameters:
-    #     p.requires_grad = False
-    # model.world.voxel_grid.requires_grad = False
 
     for i in range(n):
         print(f"Epoch={i}")
-        r, g, b, voxels = model([camera, view_spec, ray_spec])
+        r, g, b, voxels = PlenoxelModel.run(world, [camera, view_spec, ray_spec])
+        model = PlenoxelModel(voxels)
+        # print(list(model.parameters()))
+        # r, g, b, voxels = model([camera, view_spec, ray_spec])
         red_mse = mse(r, training_image[0], view_spec)
         green_mse = mse(g, training_image[0], view_spec)
         blue_mse = mse(b, training_image[0], view_spec)
         total_mse = red_mse + green_mse + blue_mse
         print(f"MSE={total_mse}")
-        # print(len(voxels))
-        print(voxels)
-        print(f"Optimising {len(voxels)} voxels...")
-        # print(voxels)
-        # parameter_tensor = torch.flatten(voxels)
-        # parameters = []
-        for v in voxels:
-            parameters.append(nn.Parameter(model.world.at(v[0].item(), v[1].item(), v[2].item())))
-
-        # parameters = torch.flatten(voxels)
-        # print(parameters)
-        before = voxels.clone().detach()
-        optimizer = torch.optim.RMSprop(parameters, lr=1000)
-        # print(optimizer.param_groups)
+        # state_dict = model.state_dict()
+        # state_dict['classifier.weight'] = voxels
+        # model.load_state_dict(state_dict)
+        # # print(voxels)
+        # print(f"Optimising {len(voxels)} voxels...")
+        #
+        before = voxels.clone()
+        optimizer = torch.optim.RMSprop(model.parameters(), lr=0.01)
+        # # print(optimizer.param_groups)
         optimizer.zero_grad()
+        print("Backward")
         total_mse.backward()
+        print(voxels)
+        for param in model.parameters():
+            print(f"Param={param.grad}")
         optimizer.step()
-        weight_change = (before - voxels).abs().sum()
-        print(f"Weight change={weight_change}")
-        losses.append(total_mse)
+        after = torch.stack(list(model.parameters()))
+        print((after - before).abs().sum())
+        # weight_change = (before - voxels).abs().sum()
+        # print(f"Weight change={weight_change}")
+        # losses.append(total_mse)
     return losses
 
 
@@ -617,9 +624,8 @@ r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, nu
 # red, green, blue = r.render(plt)
 # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
-model = PlenoxelModel(world)
-training_loop(model, camera, view_spec, ray_spec, 15)
-
+training_loop(world, camera, view_spec, ray_spec, 1)
+print("Optimisation complete!")
 # red, green, blue = r.render(plt)
 # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
