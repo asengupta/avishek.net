@@ -6,6 +6,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torchvision import datasets, transforms
+import random
 
 RED_CHANNEL = 0
 GREEN_CHANNEL = 0
@@ -126,21 +127,17 @@ class VoxelGrid:
         self.empty_voxel = lambda: torch.zeros([VoxelGrid.VOXEL_DIMENSION], requires_grad=True)
         # self.voxel_grid = torch.zeros([self.grid_x, self.grid_y, self.grid_z, VoxelGrid.VOXEL_DIMENSION],
         #                              requires_grad=True)
-        self.voxel_grid = np.ndarray((self.grid_x, self.grid_y, self.grid_z), dtype=torch.Tensor)
+        self.voxel_grid = np.ndarray((self.grid_x, self.grid_y, self.grid_z), dtype=list)
         for i in range(self.grid_x):
             for j in range(self.grid_y):
                 for k in range(self.grid_z):
                     self.voxel_grid[i, j, k] = self.random_voxel()
+                    print(f"({i},{j},{k})")
 
     def random_voxel(self):
-
-        x = np.random(VoxelGrid.VOXEL_DIMENSION)
-        map(lambda x: torch.tensor(), range(VoxelGrid.VOXEL_DIMENSION))
-        x[0] = 0.5
-        voxel = torch.cat([torch.tensor([0.5]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
-        for i in range()
-        for e in voxel:
-            e.requires_grad = True
+        voxel = list(map(lambda x: torch.tensor(random.random(), requires_grad=True), range(VoxelGrid.VOXEL_DIMENSION)))
+        voxel[0] = 0.5
+        # voxel = torch.cat([torch.tensor([0.5]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
         # voxel.requires_grad = True
         return voxel
 
@@ -319,7 +316,7 @@ class Renderer:
                 # intersecting_voxels.append(torch.stack([ray_x, ray_y, ray_z]))
                 at = world.at(ray_x, ray_y, ray_z)
                 # print(at.requires_grad)
-                intersecting_voxels.append(torch.cat([ torch.stack([ray_x, ray_y, ray_z]), at]))
+                intersecting_voxels.append(torch.cat([torch.stack([ray_x, ray_y, ray_z]), at]))
 
             unique_ray_samples = torch.unique(torch.tensor(ray_samples), dim=0)
             if (len(unique_ray_samples) <= 1):
@@ -623,9 +620,10 @@ r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, nu
 # red, green, blue = r.render(plt)
 # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
-model = PlenoxelModel(world)
-world.voxel_grid[0,0,0][0].requires_grad = True
-print(world.voxel_grid[0,0,0][0].requires_grad)
+# model = PlenoxelModel(world)
+# world.voxel_grid[0, 0, 0][0].requires_grad = True
+print("LOL")
+print(world.voxel_grid[0, 0, 0, 0])
 # all_tensor_parameters = world.voxel_grid.flatten().tolist()
 # parameters = []
 # for index, i in enumerate(all_tensor_parameters):
