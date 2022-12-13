@@ -133,8 +133,15 @@ class VoxelGrid:
                     self.voxel_grid[i, j, k] = self.random_voxel()
 
     def random_voxel(self):
-        voxel = torch.cat([torch.tensor([0.0005]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
-        voxel.requires_grad = True
+
+        x = np.random(VoxelGrid.VOXEL_DIMENSION)
+        map(lambda x: torch.tensor(), range(VoxelGrid.VOXEL_DIMENSION))
+        x[0] = 0.5
+        voxel = torch.cat([torch.tensor([0.5]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
+        for i in range()
+        for e in voxel:
+            e.requires_grad = True
+        # voxel.requires_grad = True
         return voxel
 
     def default_voxel(self):
@@ -312,7 +319,7 @@ class Renderer:
                 # intersecting_voxels.append(torch.stack([ray_x, ray_y, ray_z]))
                 at = world.at(ray_x, ray_y, ray_z)
                 # print(at.requires_grad)
-                intersecting_voxels.append(at)
+                intersecting_voxels.append(torch.cat([ torch.stack([ray_x, ray_y, ray_z]), at]))
 
             unique_ray_samples = torch.unique(torch.tensor(ray_samples), dim=0)
             if (len(unique_ray_samples) <= 1):
@@ -521,6 +528,7 @@ def training_loop(model, camera, view_spec, ray_spec, optimizer, n=1):
     # for p in parameters:
     #     p.requires_grad = False
     # model.world.voxel_grid.requires_grad = False
+
     for i in range(n):
         for x in range(model.world.grid_x):
             for y in range(model.world.grid_y):
@@ -528,6 +536,7 @@ def training_loop(model, camera, view_spec, ray_spec, optimizer, n=1):
                     model.world.voxel_grid[x, y, z].requires_grad = True
         print(f"Epoch={i}")
         r, g, b, voxels = model([camera, view_spec, ray_spec])
+        before = model.world.voxel_grid.flatten().sum().detach()
         red_mse = mse(r, training_image[0], view_spec)
         green_mse = mse(g, training_image[0], view_spec)
         blue_mse = mse(b, training_image[0], view_spec)
@@ -536,16 +545,20 @@ def training_loop(model, camera, view_spec, ray_spec, optimizer, n=1):
         # print(len(voxels))
         for x in range(model.world.grid_x):
             for y in range(model.world.grid_y):
-                for z in range(model.world.grid_x):
+                for z in range(model.world.grid_z):
                     model.world.voxel_grid[x, y, z].requires_grad = False
         # print(voxels)
         # voxels.requires_grad = True
-        # for v in voxels:
-        #     v.requires_grad = True
-        # model.weights = nn.Parameter(voxels, requires_grad=True)
+        print(f"Optimising {len(voxels)} voxels...")
+        for v in voxels:
+            # print(f"({v[0], v[1], v[2]})")
+            model.world.at(v[0], v[1], v[2]).requires_grad = True
+            # v.requires_grad = True
         optimizer.zero_grad()
         total_mse.backward()
         optimizer.step()
+        total_weight_change = (before - model.world.voxel_grid).flatten().abs().sum()
+        print(f"Total weight change = {total_weight_change}")
         losses.append(total_mse)
     return losses
 
@@ -611,11 +624,26 @@ r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, nu
 # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
 model = PlenoxelModel(world)
-optimizer = torch.optim.RMSprop(world.voxel_grid.flatten(), lr=0.1)
-training_loop(model, camera, view_spec, ray_spec, optimizer, 5)
+world.voxel_grid[0,0,0][0].requires_grad = True
+print(world.voxel_grid[0,0,0][0].requires_grad)
+# all_tensor_parameters = world.voxel_grid.flatten().tolist()
+# parameters = []
+# for index, i in enumerate(all_tensor_parameters):
+#     print(f"{index} -> {i}")
+#     for t in i:
+#         parameters.append( t)
+#
+# print(len(parameters))
+# # parameters[0].requires_grad = False
+# print(parameters[0].requires_grad)
+# print(all_parameters[0])
+# all_parameters[0].requires_grad = False
+# print(all_parameters)
+# optimizer = torch.optim.RMSprop(world.voxel_grid.flatten(), lr=0.001)
+# training_loop(model, camera, view_spec, ray_spec, optimizer, 15)
 
-red, green, blue = r.render(plt)
-transforms.ToPILImage()(torch.stack([red, green, blue])).show()
+# red, green, blue = r.render(plt)
+# transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
 # Calculates MSE against whole images
 # total_num_rays = num_rays_x * num_rays_y
