@@ -33,5 +33,7 @@ for i in range(100):
     simple_optimiser.step()
 
 print(list(net.parameters()))
+print("Param Groups")
+print(simple_optimiser.param_groups)
 net.eval()
 print(net(torch.tensor([1., 1.])))

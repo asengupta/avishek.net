@@ -535,16 +535,19 @@ def training_loop(model, camera, view_spec, ray_spec, n=1):
         total_mse = red_mse + green_mse + blue_mse
         print(f"MSE={total_mse}")
         # print(len(voxels))
+        print(voxels)
         print(f"Optimising {len(voxels)} voxels...")
         # print(voxels)
         # parameter_tensor = torch.flatten(voxels)
         # parameters = []
         for v in voxels:
-            parameters.append(model.world.at(v[0].item(), v[1].item(), v[2].item()))
+            parameters.append(nn.Parameter(model.world.at(v[0].item(), v[1].item(), v[2].item())))
 
+        # parameters = torch.flatten(voxels)
         # print(parameters)
         before = voxels.clone().detach()
-        optimizer = torch.optim.RMSprop(parameters, lr=0.1)
+        optimizer = torch.optim.RMSprop(parameters, lr=1000)
+        # print(optimizer.param_groups)
         optimizer.zero_grad()
         total_mse.backward()
         optimizer.step()
@@ -615,27 +618,6 @@ r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, nu
 # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
 model = PlenoxelModel(world)
-# world.voxel_grid[0, 0, 0][0].requires_grad = True
-# print(world.voxel_grid[0, 0, 0])
-# all_tensor_parameters = world.voxel_grid.flatten().tolist()
-
-# parameters = []
-# # parameters = torch.cat(all_tensor_parameters)
-# for index, i in enumerate(all_tensor_parameters):
-#     print(f"{index} -> {i}")
-#     for t in i:
-#         parameters.append(t)
-#
-# print(len(parameters))
-
-# world.voxel_grid[0,0,0].requires_grad = False
-# print(world.voxel_grid[0,0,0].requires_grad)
-# print(world.voxel_grid[0,0,0])
-# print(world.voxel_grid[0,0,0][0])
-# print(all_tensor_parameters[27])
-# print(all_parameters[0])
-# all_parameters[0].requires_grad = False
-# print(all_parameters)
 training_loop(model, camera, view_spec, ray_spec, 15)
 
 # red, green, blue = r.render(plt)
