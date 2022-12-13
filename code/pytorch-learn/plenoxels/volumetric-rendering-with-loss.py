@@ -6,6 +6,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torchvision import datasets, transforms
+from torchviz import make_dot
 
 RED_CHANNEL = 0
 GREEN_CHANNEL = 0
@@ -114,6 +115,7 @@ def rgb_harmonics(rgb_harmonic_coefficients):
     blue_harmonic = harmonic(*rgb_harmonic_coefficients[18:])
     return (red_harmonic, green_harmonic, blue_harmonic)
 
+
 class Voxel:
     @staticmethod
     def random_voxel():
@@ -147,7 +149,6 @@ class VoxelGrid:
                 for k in range(self.grid_z):
                     self.voxel_grid[i, j, k] = Voxel.random_voxel()
                     # print(f"({i},{j},{k})")
-
 
     def at(self, x, y, z):
         if self.is_outside(x, y, z):
@@ -278,11 +279,12 @@ class Renderer:
         self.num_view_samples_y = view_spec[5]
 
     def render_image(self, num_stochastic_samples, plt, requires_grad=False):
-        test_voxel = Voxel.default_voxel()
+        test_voxel = self.world.at(0, 0, 0)
+
         proxy_intersecting_voxels = torch.stack([test_voxel])
-        proxy_red_channel = torch.rand([2,2])
-        proxy_green_channel = torch.rand([2,2])
-        proxy_blue_channel = torch.rand([2,2])
+        proxy_red_channel = torch.stack([torch.stack([torch.tensor(0), torch.tensor(0), test_voxel[5] * 5])])
+        proxy_green_channel = torch.stack([torch.stack([torch.tensor(0), torch.tensor(0), test_voxel[5] * 5])])
+        proxy_blue_channel = torch.stack([torch.stack([torch.tensor(0), torch.tensor(0), test_voxel[5] * 5])])
         return (proxy_red_channel, proxy_green_channel, proxy_blue_channel, proxy_intersecting_voxels)
         for i in range(self.world.grid_x):
             for j in range(self.world.grid_y):
@@ -470,15 +472,20 @@ def samples_to_image(red_samples, green_samples, blue_samples, view_spec):
     return image_data
 
 
+def camera_to_image_test(x, y, view_spec):
+    return int(x), int(y)
+
+
 def mse(rendered_channel, true_channel, view_spec):
+    true_channel = torch.ones([2, 2]) * 10
     small_diffs = 0
     medium_diffs = 0
     large_diffs = 0
-    channel_total_error = 0.
+    channel_total_error = torch.tensor(0.)
     for point in rendered_channel:
         x, y, intensity = point
         intensity = intensity
-        image_x, image_y = camera_to_image(x, y, view_spec)
+        image_x, image_y = camera_to_image_test(x, y, view_spec)
         pixel_error = (true_channel[image_y, image_x] - intensity).pow(2)
         # print(pixel_error)
         if (pixel_error <= 0.001):
@@ -496,6 +503,7 @@ def mse(rendered_channel, true_channel, view_spec):
 
 
 NUM_STOCHASTIC_RAYS = 200
+
 
 class PlenoxelModel(nn.Module):
     def __init__(self, input):
@@ -564,23 +572,23 @@ def training_loop(world, camera, view_spec, ray_spec, n=1):
         blue_mse = mse(b, training_image[0], view_spec)
         total_mse = red_mse + green_mse + blue_mse
         print(f"MSE={total_mse}")
-        # make_dot(r, params=dict(list(model.named_parameters()))).render("rnn_torchviz", format="png")
-        # state_dict = model.state_dict()
-        # state_dict['classifier.weight'] = voxels
-        # model.load_state_dict(state_dict)
-        # # print(voxels)
         # print(f"Optimising {len(voxels)} voxels...")
-        #
         # before = voxels.clone()
         # # print(optimizer.param_groups)
-        print("Backward")
+        # print("Backward")
         total_mse.backward()
+        make_dot(total_mse, params=dict(list(model.named_parameters()))).render("mse", format="png")
+        make_dot(r, params=dict(list(model.named_parameters()))).render("channel", format="png")
+        print(f"shape={r.shape}")
+        print(r)
         print(total_mse)
-        for param in model.parameters():
-            print(f"Param before={param}")
-        optimizer.step()
+        print(world.at(0, 0, 0))
+        print(list(model.parameters()))
         # for param in model.parameters():
-        #     print(f"Param after={param.grad}")
+        #     print(f"Param before={param}")
+        optimizer.step()
+        for param in model.parameters():
+            print(f"Param after={param.grad}")
         # after = torch.stack(list(model.parameters()))
         # print((after - before).abs().sum())
         # weight_change = (before - voxels).abs().sum()
@@ -594,6 +602,7 @@ GRID_Y = 40
 GRID_Z = 40
 
 world = VoxelGrid(GRID_X, GRID_Y, GRID_Z)
+proxy_world = VoxelGrid(2, 2, 2)
 # world.build_solid_cube()
 # world.build_random_hollow_cube()
 # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
@@ -617,7 +626,7 @@ view_y1 = -15
 view_y2 = 60
 view_spec = [view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]
 ray_spec = torch.tensor([100, 100])
-r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
+r = Renderer(proxy_world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
              ray_spec)
 
 # This renders the volumetric model and shows the rendered image. Useful for training
