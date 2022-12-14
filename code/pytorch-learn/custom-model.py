@@ -29,6 +29,8 @@ class CustomModel(nn.Module):
 
     def forward(self, x):
         x1 = self.voxels[0] * x
+        # The following line will give zero gradient. Treat the parameter as the actual object itself
+        # x1 = self.intersecting[0] * x
         return x1
 
 
