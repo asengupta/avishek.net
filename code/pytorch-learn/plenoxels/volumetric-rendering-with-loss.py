@@ -278,6 +278,9 @@ class Renderer:
         self.num_view_samples_x = view_spec[4]
         self.num_view_samples_y = view_spec[5]
 
+    # Break up render_image() into two parts:
+    # 1) One part will simply create ray samples hashed by rays. This will be used in init() of the custom model
+    # 2) The second part will calculate the (r,g,b) triplet and will be used in the forward() pass of the custom model
     def render_image(self, num_stochastic_samples, plt, requires_grad=False):
         test_voxel = self.world.at(0, 0, 0)
 
@@ -528,6 +531,7 @@ class PlenoxelModel(nn.Module):
 
     def forward(self, input):
         camera, view_spec, ray_spec = input
+        # Use self.voxels as the weights, take camera as input
         renderer = Renderer(world, camera, view_spec, ray_spec)
         # This just loads training images and shows them
         # t = transforms.Compose([transforms.ToTensor()])
