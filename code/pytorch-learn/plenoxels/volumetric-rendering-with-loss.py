@@ -372,7 +372,7 @@ class Renderer:
             blue_channel)
         return (red_channel, green_channel, blue_channel, intersecting_voxels)
 
-    def render_from_rays(self, view_points, voxel_positions_by_rays, voxels_by_rays, plt):
+    def render_from_rays(self, view_points, voxel_positions_by_rays, voxels_by_rays, voxel_pointers, plt):
         viewing_angle = camera.viewing_angle()
         plt.rcParams['axes.xmargin'] = 0
         plt.rcParams['axes.ymargin'] = 0
@@ -440,6 +440,9 @@ class Renderer:
         voxels_by_rays = []
         voxel_positions_by_rays = []
         view_points = []
+        voxel_pointers = []
+        all_voxels = []
+        counter = 0
         for ray_intersection_weight in ray_intersection_weights:
             ray_screen_intersection = camera_basis_x * ray_intersection_weight[0] + \
                                       camera_basis_y * ray_intersection_weight[1]
@@ -455,6 +458,7 @@ class Renderer:
                 # We are in the box
                 at = world.at(ray_x, ray_y, ray_z)
                 voxels_per_ray.append(at)
+                all_voxels.append(at)
                 # voxels_per_ray.append(torch.cat([torch.stack([ray_x, ray_y, ray_z]), at]))
                 voxel_positions_per_ray.append([ray_x, ray_y, ray_z])
             if (not voxels_per_ray):
@@ -462,13 +466,21 @@ class Renderer:
             voxels_by_rays.append(torch.stack(voxels_per_ray))
             view_points.append((view_x, view_y))
             voxel_positions_by_rays.append(voxel_positions_per_ray)
+            voxel_pointers.append((counter, counter + len(voxels_per_ray)))
+            counter += len(voxels_per_ray)
 
             if (view_x < view_x1 or view_x > view_x2
                     or view_y < view_y1 or view_y > view_y2):
                 print(f"Warning: bad generation: {view_x}, {view_y}")
         print("Done!!")
         # intersecting_voxels = torch.stack(intersecting_voxels)
-        return view_points, voxel_positions_by_rays, voxels_by_rays
+        counter = 0
+        voxel_pointers = []
+        for voxels in voxels_by_rays:
+            voxel_pointers.append((counter, counter + len(voxels)))
+            counter += len(voxels)
+
+        return view_points, voxel_positions_by_rays, voxels_by_rays, voxel_pointers, all_voxels
 
     def render(self, plt):
         red_image = []
@@ -610,12 +622,11 @@ class PlenoxelModel(nn.Module):
         super().__init__()
         camera, view_spec, ray_spec = input
         self.world = world
-        r, g, b, voxels = PlenoxelModel.run(world, [camera, view_spec, ray_spec])
-        self.before = voxels.clone()
-        self.voxels = nn.Parameter(voxels)
-        self.r = r
-        self.g = g
-        self.b = b
+        view_points, voxel_positions_by_rays, voxels_by_rays, voxel_pointers = PlenoxelModel.run(world, [camera, view_spec, ray_spec])
+        self.voxels = nn.Parameter(torch.stack(voxels_by_rays))
+        self.view_points = view_points
+        self.voxel_positions_by_rays = voxel_positions_by_rays
+        self.voxel_pointers = voxel_pointers
 
     @staticmethod
     def run(world, input):
@@ -623,8 +634,8 @@ class PlenoxelModel(nn.Module):
         renderer = Renderer(world, camera, view_spec, ray_spec)
         # This draws stochastic rays and returns a set of samples with colours
         num_stochastic_rays = NUM_STOCHASTIC_RAYS
-        r, g, b, voxels = renderer.render_image(num_stochastic_rays, plt, requires_grad=False)
-        return r, g, b, voxels
+        view_points, voxel_positions_by_rays, voxels_by_ray, voxel_pointers, all_voxels = renderer.build_rays(num_stochastic_rays)
+        return view_points, voxel_positions_by_rays, voxels_by_ray, voxel_pointers
 
     def forward(self, input):
         camera, view_spec, ray_spec = input
@@ -640,10 +651,12 @@ class PlenoxelModel(nn.Module):
 
         # This draws stochastic rays and returns a set of samples with colours
         num_stochastic_rays = NUM_STOCHASTIC_RAYS
-        r, g, b, voxels = renderer.render_image(num_stochastic_rays, plt, requires_grad=True)
+        voxels_by_rays = self.voxels
+        r, g, b = renderer.render_from_rays(self.view_points, self.voxel_positions_by_rays, voxels_by_rays, plt)
+        # r, g, b, voxels = renderer.render_image(num_stochastic_rays, plt, requires_grad=True)
         # image_data = samples_to_image(r, g, b, view_spec)
         # transforms.ToPILImage()(image_data).show()
-        return r, g, b, voxels
+        return r, g, b
         # green_mse = mse(g, image[1], view_spec, num_rays_x, num_rays_y)
         # blue_mse = mse(b, image[2], view_spec, num_rays_x, num_rays_y)
         # return red_mse
@@ -666,7 +679,7 @@ def training_loop(world, camera, view_spec, ray_spec, n=1):
         # r, g, b, voxels = model([camera, view_spec, ray_spec])
         optimizer = torch.optim.RMSprop(model.parameters(), lr=0.01, momentum=0.9)
         optimizer.zero_grad()
-        r, g, b, voxels = model([camera, view_spec, ray_spec])
+        r, g, b = model([camera, view_spec, ray_spec])
 
         red_mse = mse(r, training_image[0], view_spec)
         green_mse = mse(g, training_image[0], view_spec)
@@ -678,18 +691,18 @@ def training_loop(world, camera, view_spec, ray_spec, n=1):
         # # print(optimizer.param_groups)
         # print("Backward")
         total_mse.backward()
-        make_dot(total_mse, params=dict(list(model.named_parameters()))).render("mse", format="png")
-        make_dot(r, params=dict(list(model.named_parameters()))).render("channel", format="png")
-        print(f"shape={r.shape}")
-        print(r)
-        print(total_mse)
-        print(world.at(0, 0, 0))
-        print(list(model.parameters()))
+        for param in model.parameters():
+            print(f"Param after={param.grad}")
+        # make_dot(total_mse, params=dict(list(model.named_parameters()))).render("mse", format="png")
+        # make_dot(r, params=dict(list(model.named_parameters()))).render("channel", format="png")
+        # print(f"shape={r.shape}")
+        # print(r)
+        # print(total_mse)
+        # print(world.at(0, 0, 0))
+        # print(list(model.parameters()))
         # for param in model.parameters():
         #     print(f"Param before={param}")
         optimizer.step()
-        for param in model.parameters():
-            print(f"Param after={param.grad}")
         # after = torch.stack(list(model.parameters()))
         # print((after - before).abs().sum())
         # weight_change = (before - voxels).abs().sum()
@@ -754,10 +767,11 @@ num_stochastic_rays = 2000
 # This draws stochastic rays and returns a set of samples with colours
 # However, it separates out the determining the intersecting voxels and the transmittance
 # calculations, so that it can be put through a Plenoxel model optimisation
-view_points, voxel_positions_by_rays, voxels_by_ray = r.build_rays(num_stochastic_rays)
-r, g, b = r.render_from_rays(view_points, voxel_positions_by_rays, voxels_by_ray, plt)
+view_points, voxel_positions_by_rays, voxels_by_rays, voxel_pointers, all_voxels = r.build_rays(num_stochastic_rays)
+r, g, b = r.render_from_rays(view_points, voxel_positions_by_rays, voxels_by_rays, voxel_pointers, plt)
 image_data = samples_to_image(r, g, b, view_spec)
-transforms.ToPILImage()(image_data).show()
+# transforms.ToPILImage()(image_data).show()
+print(voxel_pointers)
 print("Render complete")
 
 # red_mse = mse(r, image[0], view_spec, num_rays_x, num_rays_y)
@@ -782,3 +796,16 @@ print("Render complete")
 # print(red_error)
 # print(green_error)
 # print(blue_error)
+
+# x = np.array([[1, 2], [3, 4, 5], [6, 7, 8, 9]], dtype=object)
+# counter = 0
+# pointers = []
+# for i in x:
+#     pointers.append((counter, counter + len(i)))
+#     counter += len(i)
+#
+# print(pointers)
+# x = np.concatenate(x).ravel()
+# print(x)
+# print(pointers[2][0])
+# print(x[pointers[2][0]: pointers[2][1]])
