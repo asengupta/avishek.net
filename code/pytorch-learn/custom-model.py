@@ -18,62 +18,17 @@ for i in range(x):
         for k in range(z):
             voxel_grid[i, j, k] = random_voxel()
 
-
-def render_image(world):
-    test_voxel = world[0, 0, 0]
-
-    proxy_intersecting_voxels = torch.stack([test_voxel])
-    # proxy_red_channel = torch.stack([torch.stack([torch.tensor(0), torch.tensor(0), test_voxel[2] * 5])])
-    # proxy_green_channel = torch.stack([torch.stack([torch.tensor(0), torch.tensor(0), test_voxel[2] * 5])])
-    # proxy_blue_channel = torch.stack([torch.stack([torch.tensor(0), torch.tensor(0), test_voxel[2] * 5])])
-    # return (proxy_red_channel, proxy_green_channel, proxy_blue_channel, proxy_intersecting_voxels)
-    # return (proxy_red_channel, proxy_intersecting_voxels)
-    return proxy_intersecting_voxels
-
-
-# print(render_image(voxel_grid))
-
 world = torch.rand([2, 2], requires_grad=True)
-
-
-# world *=4
-# world += 10
-# def mse(rendered_channel):
-def mse(rendered_channel):
-    # return rendered_channel[0, 2]
-    return rendered_channel[2]
-    # true_channel = torch.ones([2, 2]) * 10
-    # channel_total_error = torch.tensor(0.)
-    # for point in rendered_channel:
-    #     x, y, intensity = point
-    #     intensity = intensity
-    #     image_x, image_y = x, y
-    #     pixel_error = (true_channel[int(image_y), int(image_x)] - intensity).pow(2)
-    #     # print(pixel_error)
-    #     channel_total_error += pixel_error
-    # return channel_total_error / len(rendered_channel)
-
 
 class CustomModel(nn.Module):
     def __init__(self):
         super().__init__()
-        # self.initial = torch.rand([2, 2], requires_grad=True)
-        self.initial = world
-        # self.parameter = nn.Parameter(self.initial)
-        print("Rendered image")
-        # intersecting = render_image(voxel_grid).detach()
-        self.intersecting = torch.tensor([[0.005, 1., 1.]], requires_grad=True)
-        # intersecting = torch.stack([torch.cat([torch.tensor([0.005]), torch.ones(2)])])
-        self.voxels = nn.Parameter(self.intersecting)
+        # self.intersecting = torch.tensor([[0.005, 1., 1.]], requires_grad=True)
+        intersecting = torch.tensor([0.005, 1., 1.], requires_grad=True)
+        self.voxels = nn.Parameter(intersecting)
 
     def forward(self, x):
-        x1 = self.intersecting * x
-        # intersecting = render_image(voxel_grid)
-        # print("===================================================================")
-        # print(x1)
-        # print("===================================================================")
-        # print(intersecting)
-        # print("===================================================================")
+        x1 = self.voxels[0] * x
         return x1
 
 
@@ -81,16 +36,10 @@ model = CustomModel()
 
 optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 optimizer.zero_grad()
-# r, g, b, intersecting = model([])
 intersecting = model(2)
-# red_mse = mse(intersecting[0])
-# red_mse = mse(intersecting[0])
 print("------------------OUTPUT------------------")
 print(intersecting)
-red_mse = nn.MSELoss()(intersecting, torch.tensor([[500., 500., 500.]]))
-# green_mse = mse(g)
-# blue_mse = mse(b)
-# total_mse = red_mse + green_mse + blue_mse
+red_mse = nn.MSELoss()(intersecting, torch.tensor(500.))
 total_mse = red_mse
 print(f"MSE=")
 print(total_mse)
