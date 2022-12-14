@@ -135,6 +135,7 @@ class Voxel:
     def empty_voxel():
         return torch.zeros([VoxelGrid.VOXEL_DIMENSION], requires_grad=True)
 
+
 class VoxelGrid:
     VOXEL_DIMENSION = 28
 
@@ -235,7 +236,7 @@ class VoxelGrid:
                 self.voxel_grid[j, y + dy, i] = make_voxel()
 
     def density(self, ray_samples_with_distances, viewing_angle):
-        collected_voxels = []
+        collected_intensities = []
         for ray_sample in ray_samples_with_distances:
             x = ray_sample[0]
             y = ray_sample[1]
@@ -264,8 +265,8 @@ class VoxelGrid:
 
             c = c_0 * (1 - z_d) + c_1 * z_d
 
-            collected_voxels.append(c)
-        return self.channel_opacity(torch.cat([ray_samples_with_distances, torch.stack(collected_voxels)], 1),
+            collected_intensities.append(c)
+        return self.channel_opacity(torch.cat([ray_samples_with_distances, torch.stack(collected_intensities)], 1),
                                     viewing_angle)
 
 
@@ -371,10 +372,63 @@ class Renderer:
             blue_channel)
         return (red_channel, green_channel, blue_channel, intersecting_voxels)
 
+    def render_from_rays(self, view_points, voxel_positions_by_rays, voxels_by_rays, plt):
+        viewing_angle = camera.viewing_angle()
+        plt.rcParams['axes.xmargin'] = 0
+        plt.rcParams['axes.ymargin'] = 0
+        plt.figure(frameon=False)
+        plt.rcParams['axes.facecolor'] = 'black'
+        plt.figure()
+        plt.axis("equal")
+        plt.style.use("dark_background")
+        ax = plt.gca()
+        ax.set_aspect('equal')
+
+        # Need to convert the range [Random(0,1), Random(0,1)] into bounds of [[x1, x2], [y1, y2]]
+        red_channel = []
+        green_channel = []
+        blue_channel = []
+
+        for ray_index, voxels_in_ray in enumerate(voxels_by_rays):
+            voxel_positions = voxel_positions_by_rays[ray_index]
+            unique_ray_samples = torch.unique(torch.tensor(voxel_positions), dim=0)
+            view_x, view_y = view_points[ray_index]
+            if (len(unique_ray_samples) <= 1):
+                red_channel.append(torch.tensor([view_x, view_y, 0.]))
+                green_channel.append(torch.tensor([view_x, view_y, 0.]))
+                blue_channel.append(torch.tensor([view_x, view_y, 0.]))
+                plt.plot(view_x, view_y, marker="o", color=[0, 0, 0])
+                continue
+            t1 = unique_ray_samples[:-1]
+            t2 = unique_ray_samples[1:]
+            consecutive_sample_distances = (t1 - t2).pow(2).sum(1).sqrt()
+
+            # Make 1D tensor into 2D tensor
+            # List of tensors, last element of each tensor is distance to the next tensor
+            ray_samples_with_distances = torch.cat([t1, torch.reshape(consecutive_sample_distances, (-1, 1))], 1)
+            color_densities = self.world.density(ray_samples_with_distances, viewing_angle)
+            color_tensor = 1. - torch.clamp(color_densities, min=0, max=1)
+            plt.plot(view_x, view_y, marker="o",
+                     color=color_tensor.detach().numpy())
+
+            if (view_x < view_x1 or view_x > view_x2
+                    or view_y < view_y1 or view_y > view_y2):
+                print(f"Warning: bad generation: {view_x}, {view_y}")
+
+            # print(color_tensor)
+            red_channel.append(torch.stack([view_x, view_y, color_tensor[RED_CHANNEL]]))
+            green_channel.append(torch.stack([view_x, view_y, color_tensor[GREEN_CHANNEL]]))
+            blue_channel.append(torch.stack([view_x, view_y, color_tensor[BLUE_CHANNEL]]))
+
+        plt.show()
+        print("Done!!")
+        red_channel, green_channel, blue_channel = torch.stack(red_channel), torch.stack(green_channel), torch.stack(
+            blue_channel)
+        return (red_channel, green_channel, blue_channel)
+
     def build_rays(self, num_stochastic_samples):
         camera_basis_x = camera.basis[0][:3]
         camera_basis_y = camera.basis[1][:3]
-        # viewing_angle = camera.viewing_angle()
         camera_center_inhomogenous = camera_center[:3]
         view_length = self.x_2 - self.x_1
         view_height = self.y_2 - self.y_1
@@ -383,70 +437,38 @@ class Renderer:
         ray_intersection_weights = list(
             map(lambda x: torch.mul(torch.rand(2), torch.tensor([view_length, view_height])) + torch.tensor(
                 [self.x_1, self.y_1]), list(range(0, num_stochastic_samples))))
-        # red_channel = []
-        # green_channel = []
-        # blue_channel = []
-
-        intersecting_voxels = []
+        voxels_by_rays = []
+        voxel_positions_by_rays = []
+        view_points = []
         for ray_intersection_weight in ray_intersection_weights:
             ray_screen_intersection = camera_basis_x * ray_intersection_weight[0] + \
                                       camera_basis_y * ray_intersection_weight[1]
             unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
             view_x, view_y = ray_intersection_weight[0], ray_intersection_weight[1]
-            ray_samples = []
-            voxels_per_rayt = []
-            print(f"VPR={voxels_per_rayt}")
+            voxels_per_ray = []
+            voxel_positions_per_ray = []
             for k in np.linspace(0, self.ray_length, self.num_ray_samples):
                 ray_endpoint = camera_center_inhomogenous + unit_ray * k
                 ray_x, ray_y, ray_z = ray_endpoint
                 if (self.world.is_outside(ray_x, ray_y, ray_z)):
                     continue
                 # We are in the box
-                ray_samples.append([ray_x, ray_y, ray_z])
-                # intersecting_voxels.append(torch.stack([ray_x, ray_y, ray_z]))
                 at = world.at(ray_x, ray_y, ray_z)
-                # print(at.requires_grad)
-                voxels_per_rayt.append(torch.cat([torch.stack([ray_x, ray_y, ray_z]), at]))
-
-            print(f"VPR={voxels_per_rayt}")
-            intersecting_voxels.append(torch.stack(voxels_by_rayt))
-
-        # unique_ray_samples = torch.unique(torch.tensor(ray_samples), dim=0)
-            # if (len(unique_ray_samples) <= 1):
-            #     red_channel.append(torch.tensor([view_x, view_y, 0.]))
-            #     green_channel.append(torch.tensor([view_x, view_y, 0.]))
-            #     blue_channel.append(torch.tensor([view_x, view_y, 0.]))
-            #     plt.plot(ray_intersection_weight[0], ray_intersection_weight[1], marker="o", color=[0, 0, 0])
-            #     continue
-            # t1 = unique_ray_samples[:-1]
-            # t2 = unique_ray_samples[1:]
-            # consecutive_sample_distances = (t1 - t2).pow(2).sum(1).sqrt()
-
-            # Make 1D tensor into 2D tensor
-            # ray_samples_with_distances = torch.cat([t1, torch.reshape(consecutive_sample_distances, (-1, 1))], 1)
-            # color_densities = self.world.density(ray_samples_with_distances, viewing_angle)
-            # print(color_densities)
-
-            # color_tensor = 1. - torch.clamp(color_densities, min=0, max=1)
-            # plt.plot(ray_intersection_weight[0], ray_intersection_weight[1], marker="o",
-            #          color=color_tensor.detach().numpy())
+                voxels_per_ray.append(at)
+                # voxels_per_ray.append(torch.cat([torch.stack([ray_x, ray_y, ray_z]), at]))
+                voxel_positions_per_ray.append([ray_x, ray_y, ray_z])
+            if (not voxels_per_ray):
+                continue
+            voxels_by_rays.append(torch.stack(voxels_per_ray))
+            view_points.append((view_x, view_y))
+            voxel_positions_by_rays.append(voxel_positions_per_ray)
 
             if (view_x < view_x1 or view_x > view_x2
                     or view_y < view_y1 or view_y > view_y2):
                 print(f"Warning: bad generation: {view_x}, {view_y}")
-
-            # print(color_tensor)
-            # red_channel.append(torch.stack([view_x, view_y, color_tensor[RED_CHANNEL]]))
-            # green_channel.append(torch.stack([view_x, view_y, color_tensor[GREEN_CHANNEL]]))
-            # blue_channel.append(torch.stack([view_x, view_y, color_tensor[BLUE_CHANNEL]]))
-
-        # Remember to flip to prevent image being rendered upside down when saved to a file
-        # plt.show()
         print("Done!!")
         # intersecting_voxels = torch.stack(intersecting_voxels)
-        # red_channel, green_channel, blue_channel = torch.stack(red_channel), torch.stack(green_channel), torch.stack(
-        #     blue_channel)
-        return intersecting_voxels
+        return view_points, voxel_positions_by_rays, voxels_by_rays
 
     def render(self, plt):
         red_image = []
@@ -724,12 +746,20 @@ r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, nu
 # transforms.ToPILImage()(image).show()
 
 # This draws stochastic rays and returns a set of samples with colours
-num_stochastic_rays = 200
+num_stochastic_rays = 2000
 # r, g, b, intersecting_voxels = r.render_image(num_stochastic_rays, plt)
 # image_data = samples_to_image(r, g, b, view_spec)
 # transforms.ToPILImage()(image_data).show()
-voxels_by_rayx = r.build_rays(num_stochastic_rays)
-print(voxels_by_rayx.shape)
+
+# This draws stochastic rays and returns a set of samples with colours
+# However, it separates out the determining the intersecting voxels and the transmittance
+# calculations, so that it can be put through a Plenoxel model optimisation
+view_points, voxel_positions_by_rays, voxels_by_ray = r.build_rays(num_stochastic_rays)
+r, g, b = r.render_from_rays(view_points, voxel_positions_by_rays, voxels_by_ray, plt)
+image_data = samples_to_image(r, g, b, view_spec)
+transforms.ToPILImage()(image_data).show()
+print("Render complete")
+
 # red_mse = mse(r, image[0], view_spec, num_rays_x, num_rays_y)
 # green_mse = mse(g, image[1], view_spec, num_rays_x, num_rays_y)
 # blue_mse = mse(b, image[2], view_spec, num_rays_x, num_rays_y)
