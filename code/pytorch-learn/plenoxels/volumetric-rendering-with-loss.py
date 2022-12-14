@@ -372,7 +372,7 @@ class Renderer:
             blue_channel)
         return (red_channel, green_channel, blue_channel, intersecting_voxels)
 
-    def render_from_rays(self, view_points, voxel_positions_by_rays, voxels_by_rays, voxel_pointers, plt):
+    def render_from_rays(self, view_points, voxel_positions_by_rays, all_voxels, voxel_pointers, plt):
         viewing_angle = camera.viewing_angle()
         plt.rcParams['axes.xmargin'] = 0
         plt.rcParams['axes.ymargin'] = 0
@@ -389,7 +389,8 @@ class Renderer:
         green_channel = []
         blue_channel = []
 
-        for ray_index, voxels_in_ray in enumerate(voxels_by_rays):
+        for ray_index, voxels_pointer in enumerate(voxel_pointers):
+            voxels_in_ray = all_voxels[voxels_pointer[0]: voxels_pointer[1]]
             voxel_positions = voxel_positions_by_rays[ray_index]
             unique_ray_samples = torch.unique(torch.tensor(voxel_positions), dim=0)
             view_x, view_y = view_points[ray_index]
@@ -473,12 +474,6 @@ class Renderer:
                     or view_y < view_y1 or view_y > view_y2):
                 print(f"Warning: bad generation: {view_x}, {view_y}")
         print("Done!!")
-        # intersecting_voxels = torch.stack(intersecting_voxels)
-        counter = 0
-        voxel_pointers = []
-        for voxels in voxels_by_rays:
-            voxel_pointers.append((counter, counter + len(voxels)))
-            counter += len(voxels)
 
         return view_points, voxel_positions_by_rays, voxels_by_rays, voxel_pointers, all_voxels
 
@@ -768,7 +763,7 @@ num_stochastic_rays = 2000
 # However, it separates out the determining the intersecting voxels and the transmittance
 # calculations, so that it can be put through a Plenoxel model optimisation
 view_points, voxel_positions_by_rays, voxels_by_rays, voxel_pointers, all_voxels = r.build_rays(num_stochastic_rays)
-r, g, b = r.render_from_rays(view_points, voxel_positions_by_rays, voxels_by_rays, voxel_pointers, plt)
+r, g, b = r.render_from_rays(view_points, voxel_positions_by_rays, all_voxels, voxel_pointers, plt)
 image_data = samples_to_image(r, g, b, view_spec)
 # transforms.ToPILImage()(image_data).show()
 print(voxel_pointers)
