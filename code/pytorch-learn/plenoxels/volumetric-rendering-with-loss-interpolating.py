@@ -136,6 +136,28 @@ class Voxel:
         return torch.zeros([VoxelGrid.VOXEL_DIMENSION], requires_grad=True)
 
 
+class Ray:
+    def __init__(self, view_point, voxel_positions, voxels):
+        self.view_point = view_point
+        self.voxels = voxels
+        self.voxel_positions = voxel_positions
+
+    def at(self, index):
+        return self.voxel_positions[index * 8: index * 8 + 8], self.voxels[index * 8: index * 8 + 8]
+
+class VoxelAccess:
+    def __init__(self, view_points, voxel_pointers, all_voxels, all_voxel_positions):
+        self.view_points = view_points
+        self.voxel_positions = all_voxel_positions
+        self.all_voxels = all_voxels
+        self.voxel_pointers = voxel_pointers
+
+    def for_ray(self, ray_index):
+        ptr = self.voxel_pointers[ray_index]
+        start, end = ptr
+        return Ray(self.view_points[ray_index], self.voxel_positions[start:end], self.all_voxels[start:end])
+
+
 class VoxelGrid:
     VOXEL_DIMENSION = 28
 
@@ -464,8 +486,7 @@ class Renderer:
         ray_intersection_weights = list(
             map(lambda x: torch.mul(torch.rand(2), torch.tensor([view_length, view_height])) + torch.tensor(
                 [self.x_1, self.y_1]), list(range(0, num_stochastic_samples))))
-        voxels_by_rays = []
-        voxel_positions_by_rays = []
+        all_voxel_positions = []
         view_points = []
         voxel_pointers = []
         all_voxels = []
@@ -475,7 +496,7 @@ class Renderer:
                                       camera_basis_y * ray_intersection_weight[1]
             unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
             view_x, view_y = ray_intersection_weight[0], ray_intersection_weight[1]
-            voxels_per_ray = []
+            voxel_groups_per_ray = []
             voxel_positions_per_ray = []
             for k in np.linspace(0, self.ray_length, self.num_ray_samples):
                 ray_endpoint = camera_center_inhomogenous + unit_ray * k
@@ -484,25 +505,27 @@ class Renderer:
                     continue
                 # We are in the box
                 at = world.at(ray_x, ray_y, ray_z)
-                interpolating_voxels, interpolating_voxel_positions = neighbours(world, ray_x, ray_y, ray_z)
-                voxels_per_ray.append(at)
-                all_voxels.append(at)
+                interpolating_voxels, interpolating_voxel_positions = neighbours(ray_x, ray_y, ray_z, world)
+                voxel_groups_per_ray.append(interpolating_voxels)
+                # voxels_per_ray.append(at)
+                # all_voxels.append(at)
+                all_voxels += interpolating_voxels
+                all_voxel_positions += interpolating_voxel_positions
                 # voxels_per_ray.append(torch.cat([torch.stack([ray_x, ray_y, ray_z]), at]))
-                voxel_positions_per_ray.append([ray_x, ray_y, ray_z])
-            if (not voxels_per_ray):
+                # voxel_positions_per_ray.append([ray_x, ray_y, ray_z])
+                voxel_positions_per_ray += interpolating_voxel_positions
+            if (not voxel_groups_per_ray):
                 continue
-            voxels_by_rays.append(torch.stack(voxels_per_ray))
             view_points.append((view_x, view_y))
-            voxel_positions_by_rays.append(voxel_positions_per_ray)
-            voxel_pointers.append((counter, counter + len(voxels_per_ray)))
-            counter += len(voxels_per_ray)
+            voxel_pointers.append((counter, counter + 8 * len(voxel_groups_per_ray)))
+            counter += 8 * len(voxel_groups_per_ray)
 
             if (view_x < view_x1 or view_x > view_x2
                     or view_y < view_y1 or view_y > view_y2):
                 print(f"Warning: bad generation: {view_x}, {view_y}")
         print("Done!!")
 
-        return view_points, voxel_positions_by_rays, voxels_by_rays, voxel_pointers, all_voxels
+        return VoxelAccess(view_points, voxel_pointers, all_voxels, all_voxel_positions)
 
     def render(self, plt):
         red_image = []
@@ -794,7 +817,12 @@ num_stochastic_rays = 2000
 # This draws stochastic rays and returns a set of samples with colours
 # However, it separates out the determining the intersecting voxels and the transmittance
 # calculations, so that it can be put through a Plenoxel model optimisation
+
+voxel_access = r.build_rays(num_stochastic_rays)
 # view_points, voxel_positions_by_rays, voxels_by_rays, voxel_pointers, all_voxels = r.build_rays(num_stochastic_rays)
+
+ray = voxel_access.for_ray(0)
+# print(ray.at(0))
 # r, g, b = r.render_from_rays(view_points, voxel_positions_by_rays, voxel_pointers, all_voxels, plt)
 # image_data = samples_to_image(r, g, b, view_spec)
 # transforms.ToPILImage()(image_data).show()
@@ -809,7 +837,7 @@ num_stochastic_rays = 2000
 # red, green, blue = r.render(plt)
 # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
-training_loop(world, camera, view_spec, ray_spec, 1)
+# training_loop(world, camera, view_spec, ray_spec, 1)
 # print("Optimisation complete!")
 # red, green, blue = r.render(plt)
 # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
