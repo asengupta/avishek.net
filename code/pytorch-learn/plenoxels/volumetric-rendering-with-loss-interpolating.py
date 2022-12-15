@@ -129,7 +129,13 @@ class Voxel:
 
     @staticmethod
     def default_voxel():
-        voxel = torch.cat([torch.tensor([0.005]), torch.ones(VoxelGrid.VOXEL_DIMENSION - 1)])
+        voxel = torch.cat([torch.tensor([0.05]), torch.ones(VoxelGrid.VOXEL_DIMENSION - 1)])
+        voxel.requires_grad = True
+        return voxel
+
+    @staticmethod
+    def occupied_voxel():
+        voxel = torch.cat([torch.tensor([1.]), torch.ones(VoxelGrid.VOXEL_DIMENSION - 1)])
         voxel.requires_grad = True
         return voxel
 
@@ -177,7 +183,6 @@ class VoxelGrid:
         self.grid_x = x
         self.grid_y = y
         self.grid_z = z
-        self.training_voxel = lambda: torch.ones(VoxelGrid.VOXEL_DIMENSION, requires_grad=True)
         # self.voxel_grid = torch.zeros([self.grid_x, self.grid_y, self.grid_z, VoxelGrid.VOXEL_DIMENSION],
         #                              requires_grad=True)
         self.voxel_grid = np.ndarray((self.grid_x, self.grid_y, self.grid_z), dtype=list)
@@ -253,21 +258,21 @@ class VoxelGrid:
         for i in range(x, x + dx + 1):
             for j in range(y, y + dy + 1):
                 self.voxel_grid[i, j, z] = make_voxel()
-        for i in range(x, x + dx + 1):
-            for j in range(y, y + dy + 1):
-                self.voxel_grid[i, j, z + dz] = make_voxel()
-        for i in range(y, y + dy + 1):
-            for j in range(z, z + dz + 1):
-                self.voxel_grid[x, i, j] = make_voxel()
-        for i in range(y, y + dy + 1):
-            for j in range(z, z + dz + 1):
-                self.voxel_grid[x + dx, i, j] = make_voxel()
-        for i in range(z, z + dz + 1):
-            for j in range(x, x + dx + 1):
-                self.voxel_grid[j, y, i] = make_voxel()
-        for i in range(z, z + dz + 1):
-            for j in range(x, x + dx + 1):
-                self.voxel_grid[j, y + dy, i] = make_voxel()
+        # for i in range(x, x + dx + 1):
+        #     for j in range(y, y + dy + 1):
+        #         self.voxel_grid[i, j, z + dz] = make_voxel()
+        # for i in range(y, y + dy + 1):
+        #     for j in range(z, z + dz + 1):
+        #         self.voxel_grid[x, i, j] = make_voxel()
+        # for i in range(y, y + dy + 1):
+        #     for j in range(z, z + dz + 1):
+        #         self.voxel_grid[x + dx, i, j] = make_voxel()
+        # for i in range(z, z + dz + 1):
+        #     for j in range(x, x + dx + 1):
+        #         self.voxel_grid[j, y, i] = make_voxel()
+        # for i in range(z, z + dz + 1):
+        #     for j in range(x, x + dx + 1):
+        #         self.voxel_grid[j, y + dy, i] = make_voxel()
 
     def density(self, ray_samples_with_distances, viewing_angle):
         global MASTER_VOXELS_STRUCTURE
@@ -323,8 +328,8 @@ def neighbours(x, y, z, world):
     c111 = world.at(x1, y1, z1)
 
     # if (int(x) == 3 and int(y) == 31 and int(z) == 16):
-        # print(f"Identified: ({x},{y},{z})")
-        # print(f"World voxel neighbours are: {[c000, c001, c010, c011, c100, c101, c110, c111]}")
+    # print(f"Identified: ({x},{y},{z})")
+    # print(f"World voxel neighbours are: {[c000, c001, c010, c011, c100, c101, c110, c111]}")
     return ([c000, c001, c010, c011, c100, c101, c110, c111], [(x0, y0, z0),
                                                                (x0, y0, z1),
                                                                (x0, y1, z0),
@@ -718,11 +723,12 @@ def stochastic_samples(num_stochastic_samples, view_spec):
     view_length = x_2 - x_1
     view_height = y_2 - y_1
 
-# Need to convert the range [Random(0,1), Random(0,1)] into bounds of [[x1, x2], [y1, y2]]
+    # Need to convert the range [Random(0,1), Random(0,1)] into bounds of [[x1, x2], [y1, y2]]
     ray_intersection_weights = list(
         map(lambda x: torch.mul(torch.rand(2), torch.tensor([view_length, view_height])) + torch.tensor(
             [x_1, y_1]), list(range(0, num_stochastic_samples))))
     return ray_intersection_weights
+
 
 def fullscreen_samples(view_spec):
     x_1, x_2 = view_spec[0], view_spec[1]
@@ -735,6 +741,7 @@ def fullscreen_samples(view_spec):
         for j in np.linspace(y_1, y_2, num_view_samples_y):
             ray_intersection_weights.append(torch.tensor([i, j]))
     return ray_intersection_weights
+
 
 def camera_to_image(x, y, view_spec):
     view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y = view_spec
@@ -807,7 +814,7 @@ class PlenoxelModel(nn.Module):
         camera, view_spec, ray_spec = input
         self.world = world
         self.voxel_access = PlenoxelModel.run(world, [camera, view_spec, ray_spec])
-        self.x = nn.Parameter(torch.stack(self.voxel_access.all_voxels), requires_grad=True)
+        self.voxels = nn.Parameter(torch.stack(self.voxel_access.all_voxels), requires_grad=True)
 
     @staticmethod
     def run(world, input):
@@ -832,7 +839,7 @@ class PlenoxelModel(nn.Module):
 
         # This draws stochastic rays and returns a set of samples with colours
         num_stochastic_rays = NUM_STOCHASTIC_RAYS
-        all_voxels = self.x
+        all_voxels = self.voxels
         self.voxel_access.all_voxels = all_voxels
         r, g, b = renderer.render_from_rays(self.voxel_access, plt, self.world)
         # r, g, b, voxels = renderer.render_image(num_stochastic_rays, plt, requires_grad=True)
@@ -854,41 +861,41 @@ def training_loop(world, camera, view_spec, ray_spec, n=1):
     training_image = images[0]
     print(f"{n} epochs")
 
-    for j in range(1):
-        model = PlenoxelModel([camera, view_spec, ray_spec])
-        for i in range(n):
-            print(f"Epoch={i}")
-            optimizer = torch.optim.RMSprop(model.parameters(), lr=0.001, momentum=0.9)
-            optimizer.zero_grad()
-            r, g, b = model([camera, view_spec, ray_spec])
+    model = PlenoxelModel([camera, view_spec, ray_spec])
+    for i in range(n):
+        print(f"Epoch={i}")
+        optimizer = torch.optim.RMSprop(model.parameters(), lr=0.001, momentum=0.9)
+        optimizer.zero_grad()
+        r, g, b = model([camera, view_spec, ray_spec])
 
-            red_mse = mse(r, training_image[0], view_spec)
-            green_mse = mse(g, training_image[0], view_spec)
-            blue_mse = mse(b, training_image[0], view_spec)
-            total_mse = red_mse + green_mse + blue_mse
-            print(f"MSE={total_mse}")
-            # print(f"Optimising {len(voxels)} voxels...")
-            # before = voxels.clone()
-            # # print(optimizer.param_groups)
-            # print("Backward")
-            total_mse.backward()
-            for param in model.parameters():
-                print(f"Param after={param.grad.shape}")
-            # make_dot(total_mse, params=dict(list(model.named_parameters()))).render("mse", format="png")
-            # make_dot(r, params=dict(list(model.named_parameters()))).render("channel", format="png")
-            # print(f"shape={r.shape}")
-            # print(r)
-            # print(total_mse)
-            # print(list(model.parameters()))
-            # for param in model.parameters():
-            #     print(f"Param before={param}")
-            optimizer.step()
-            # after = torch.stack(list(model.parameters()))
-            # print((after - before).abs().sum())
-            # weight_change = (before - voxels).abs().sum()
-            # print(f"Weight change={weight_change}")
-            # losses.append(total_mse)
-    return losses
+        red_mse = mse(r, training_image[0], view_spec)
+        green_mse = mse(g, training_image[0], view_spec)
+        blue_mse = mse(b, training_image[0], view_spec)
+        total_mse = red_mse + green_mse + blue_mse
+        print(f"MSE={total_mse}")
+        # print(f"Optimising {len(voxels)} voxels...")
+        # before = voxels.clone()
+        # # print(optimizer.param_groups)
+        # print("Backward")
+        total_mse.backward()
+        for param in model.parameters():
+            print(f"Param after={param.grad.shape}")
+        # make_dot(total_mse, params=dict(list(model.named_parameters()))).render("mse", format="png")
+        # make_dot(r, params=dict(list(model.named_parameters()))).render("channel", format="png")
+        # print(f"shape={r.shape}")
+        # print(r)
+        # print(total_mse)
+        # print(list(model.parameters()))
+        # for param in model.parameters():
+        #     print(f"Param before={param}")
+        optimizer.step()
+        # after = torch.stack(list(model.parameters()))
+        # print((after - before).abs().sum())
+        # weight_change = (before - voxels).abs().sum()
+        # print(f"Weight change={weight_change}")
+        # losses.append(total_mse)
+
+    return model.voxel_access, model.voxels, losses
 
 
 GRID_X = 40
@@ -972,10 +979,25 @@ print("Render complete")
 # red, green, blue = r.render(plt)
 # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
-training_loop(world, camera, view_spec, ray_spec, 5)
+voxel_access, voxels, losses = training_loop(world, camera, view_spec, ray_spec, 5)
 print("Optimisation complete!")
-voxel_access = r.build_rays(fullscreen_samples(view_spec))
-r, g, b = r.render_from_rays(voxel_access, plt, world)
+
+voxel_access.all_voxels = voxels
+for ray_index, view_point in enumerate(voxel_access.view_points):
+    ray = voxel_access.for_ray(ray_index)
+    for i in range(ray.num_samples):
+        sample_position, voxel_positions, voxels = ray.at(i)
+        for index, voxel_position in enumerate(voxel_positions):
+            x, y, z = voxel_position
+            voxel = voxels[index]
+            if (x < 0 or x > GRID_X - 1 or
+                    y < 0 or y > GRID_Y - 1 or
+                    z < 0 or z > GRID_Z - 1):
+                continue
+            world.voxel_grid[x, y, z] = voxel
+
+# voxel_access = r.build_rays(fullscreen_samples(view_spec))
+r, g, b = r.render(plt)
 print("Rendered final result")
 
 # red, green, blue = r.render(plt)
