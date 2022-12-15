@@ -895,10 +895,8 @@ num_stochastic_rays = 1000
 # However, it separates out the determining the intersecting voxels and the transmittance
 # calculations, so that it can be put through a Plenoxel model optimisation
 
-# voxel_access = r.build_rays(num_stochastic_rays)
-# view_points, voxel_positions_by_rays, voxels_by_rays, voxel_pointers, all_voxels = r.build_rays(num_stochastic_rays)
-
-# r, g, b = r.render_from_rays(voxel_access, plt)
+voxel_access = r.build_rays(num_stochastic_rays)
+r, g, b = r.render_from_rays(voxel_access, plt)
 # image_data = samples_to_image(r, g, b, view_spec)
 # transforms.ToPILImage()(image_data).show()
 # print(voxel_pointers)
