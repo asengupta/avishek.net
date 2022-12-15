@@ -12,6 +12,8 @@ RED_CHANNEL = 0
 GREEN_CHANNEL = 0
 BLUE_CHANNEL = 0
 
+MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE = []
+MASTER_VOXELS_STRUCTURE = []
 
 class Camera:
     def __init__(self, focal_length, center, basis):
@@ -268,6 +270,7 @@ class VoxelGrid:
                 self.voxel_grid[j, y + dy, i] = make_voxel()
 
     def density(self, ray_samples_with_distances, viewing_angle):
+        global MASTER_VOXELS_STRUCTURE
         collected_intensities = []
         for ray_sample in ray_samples_with_distances:
             x = ray_sample[0]
@@ -296,6 +299,7 @@ class VoxelGrid:
             c_1 = c_01 * (1 - y_d) + c_11 * y_d
 
             c = c_0 * (1 - z_d) + c_1 * z_d
+            MASTER_VOXELS_STRUCTURE += [c_000, c_001, c_010, c_011, c_100, c_101, c_110, c_111]
 
             collected_intensities.append(c)
         return self.channel_opacity(torch.cat([ray_samples_with_distances, torch.stack(collected_intensities)], 1),
@@ -527,9 +531,9 @@ class Renderer:
             # voxels_in_ray = all_voxels[voxels_pointer[0]: voxels_pointer[1]]
             # voxel_positions = ray.for_ray(ray_index)
             unique_ray_samples = ray_sample_positions
-            unique_ray_samples2 = torch.unique(torch.tensor(unique_ray_samples), dim=0)
-            if (len(unique_ray_samples) != len(unique_ray_samples2)):
-                raise Exception("Duplicate rays found")
+            # unique_ray_samples2 = torch.unique(torch.tensor(unique_ray_samples), dim=0)
+            # if (len(unique_ray_samples) != len(unique_ray_samples2)):
+            #     raise Exception("Duplicate rays found")
             view_x, view_y = ray.view_point
 
             if (len(unique_ray_samples) <= 1):
@@ -596,24 +600,31 @@ class Renderer:
             unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
             view_x, view_y = ray_intersection_weight[0], ray_intersection_weight[1]
             num_voxel_groups_per_ray = 0
+
+            all_voxels_per_ray = []
+            all_voxel_positions_per_ray = []
+            ray_sample_positions_per_ray = []
             for k in np.linspace(0, self.ray_length, self.num_ray_samples):
                 ray_endpoint = camera_center_inhomogenous + unit_ray * k
                 ray_x, ray_y, ray_z = ray_endpoint
                 if (self.world.is_outside(ray_x, ray_y, ray_z)):
                     continue
                 # We are in the box
-                at = world.at(ray_x, ray_y, ray_z)
                 interpolating_voxels, interpolating_voxel_positions = neighbours(ray_x, ray_y, ray_z, world)
                 num_voxel_groups_per_ray += 1
                 # voxels_per_ray.append(at)
                 # all_voxels.append(at)
-                all_voxels += interpolating_voxels
-                all_voxel_positions += interpolating_voxel_positions
-                ray_sample_positions.append(torch.tensor([ray_x, ray_y, ray_z]))
+                all_voxels_per_ray += interpolating_voxels
+                all_voxel_positions_per_ray += interpolating_voxel_positions
+                ray_sample_positions_per_ray.append(torch.tensor([ray_x, ray_y, ray_z]))
                 # voxels_per_ray.append(torch.cat([torch.stack([ray_x, ray_y, ray_z]), at]))
                 # voxel_positions_per_ray.append([ray_x, ray_y, ray_z])
-                if (not num_voxel_groups_per_ray):
-                    continue
+            if (num_voxel_groups_per_ray == 0):
+                continue
+            all_voxels += all_voxels_per_ray
+            all_voxel_positions += all_voxel_positions_per_ray
+            ray_sample_positions += ray_sample_positions_per_ray
+
             view_points.append((view_x, view_y))
             voxel_pointers.append((counter, counter + 8 * num_voxel_groups_per_ray, num_voxel_groups_per_ray))
             counter += 8 * num_voxel_groups_per_ray
@@ -627,6 +638,7 @@ class Renderer:
                            all_voxel_positions)
 
     def render(self, plt):
+        global MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE
         red_image = []
         green_image = []
         blue_image = []
@@ -660,15 +672,19 @@ class Renderer:
                     if (self.world.is_outside(ray_x, ray_y, ray_z)):
                         continue
                     # We are in the box
+                    MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE.append([ray_x, ray_y, ray_z])
                     ray_samples.append([ray_x, ray_y, ray_z])
 
-                unique_ray_samples = torch.unique(torch.tensor(ray_samples), dim=0)
+                # unique_ray_samples = torch.unique(torch.tensor(ray_samples), dim=0)
+                unique_ray_samples = torch.tensor(ray_samples)
                 if (len(unique_ray_samples) <= 1):
                     red_column.append(torch.tensor(0))
                     green_column.append(torch.tensor(0))
                     blue_column.append(torch.tensor(0))
                     plt.plot(i, j, marker="o", color=[0, 0, 0])
+                    # print("Too few")
                     continue
+
                 t1 = unique_ray_samples[:-1]
                 t2 = unique_ray_samples[1:]
                 consecutive_sample_distances = (t1 - t2).pow(2).sum(1).sqrt()
@@ -890,7 +906,7 @@ r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, nu
              ray_spec)
 
 # This renders the volumetric model and shows the rendered image. Useful for training
-# red, green, blue = r.render(plt)
+red, green, blue = r.render(plt)
 # print(red.shape)
 # print(green.shape)
 # print(blue.shape)
@@ -920,6 +936,12 @@ r, g, b = r.render_from_rays(voxel_access, plt, world)
 # transforms.ToPILImage()(image_data).show()
 # print(voxel_pointers)
 print("Render complette")
+
+print(f"No of total total ray samples benchmark={len(MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE)}")
+print(f"No of total total ray samples current={len(voxel_access.ray_sample_positions)}")
+print(f"Difference={(torch.tensor(MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE) - torch.tensor(voxel_access.ray_sample_positions)).pow(2).sum()}")
+print(f"Total voxels benchmark={len(MASTER_VOXELS_STRUCTURE)}")
+print(f"Total voxels current={len(voxel_access.all_voxels)}")
 
 # red_mse = mse(r, image[0], view_spec, num_rays_x, num_rays_y)
 # green_mse = mse(g, image[1], view_spec, num_rays_x, num_rays_y)
