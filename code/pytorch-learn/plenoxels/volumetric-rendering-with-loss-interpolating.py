@@ -186,8 +186,7 @@ class VoxelGrid:
         for i in range(self.grid_x):
             for j in range(self.grid_y):
                 for k in range(self.grid_z):
-                    self.voxel_grid[i, j, k] = Voxel.empty_voxel()
-                    # print(f"({i},{j},{k})")
+                    self.voxel_grid[i, j, k] = Voxel.random_voxel()
 
     def at(self, x, y, z):
         if self.is_outside(x, y, z):
@@ -353,17 +352,7 @@ def density_z(ray_sample_distances, ray, viewing_angle, world):
         y_d = (y - y_0) / (y_1 - y_0)
         z_d = (z - z_0) / (z_1 - z_0)
 
-        # c_000 = world.at(x_0, y_0, z_0)
-        # c_001 = world.at(x_0, y_0, z_1)
-        # c_010 = world.at(x_0, y_1, z_0)
-        # c_011 = world.at(x_0, y_1, z_1)
-        # c_100 = world.at(x_1, y_0, z_0)
-        # c_101 = world.at(x_1, y_0, z_1)
-        # c_110 = world.at(x_1, y_1, z_0)
-        # c_111 = world.at(x_1, y_1, z_1)
-
-        neighbours_from_world = [c_000, c_001, c_010, c_011, c_100, c_101, c_110, c_111]
-
+        # neighbours_from_world = [c_000, c_001, c_010, c_011, c_100, c_101, c_110, c_111]
         # if (int(x) == 3 and int(y) == 31 and int(z) == 16):
         #     difference = (torch.stack(neighbours_from_world) - torch.stack(voxels)).pow(2).sum()
         #     if (difference != 0.):
@@ -828,7 +817,7 @@ class PlenoxelModel(nn.Module):
         renderer = Renderer(world, camera, view_spec, ray_spec)
         # This draws stochastic rays and returns a set of samples with colours
         num_stochastic_rays = NUM_STOCHASTIC_RAYS
-        voxel_access = r.build_rays(num_stochastic_rays)
+        voxel_access = r.build_rays(stochastic_samples(num_stochastic_rays, view_spec))
         return voxel_access
 
     def forward(self, input):
@@ -847,7 +836,7 @@ class PlenoxelModel(nn.Module):
         num_stochastic_rays = NUM_STOCHASTIC_RAYS
         all_voxels = self.x
         self.voxel_access.all_voxels = all_voxels
-        r, g, b = renderer.render_from_rays(self.voxel_access, plt)
+        r, g, b = renderer.render_from_rays(self.voxel_access, plt, self.world)
         # r, g, b, voxels = renderer.render_image(num_stochastic_rays, plt, requires_grad=True)
         # image_data = samples_to_image(r, g, b, view_spec)
         # transforms.ToPILImage()(image_data).show()
@@ -867,14 +856,11 @@ def training_loop(world, camera, view_spec, ray_spec, n=1):
     training_image = images[0]
     print(f"{n} epochs")
 
-    for j in range(5):
+    for j in range(1):
         model = PlenoxelModel([camera, view_spec, ray_spec])
         for i in range(n):
             print(f"Epoch={i}")
-            # print(list(model.parameters()))
-            # r, g, b, voxels = model([camera, view_spec, ray_spec])
             optimizer = torch.optim.RMSprop(model.parameters(), lr=0.01, momentum=0.9)
-            # print(list(model.parameters()))
             optimizer.zero_grad()
             r, g, b = model([camera, view_spec, ray_spec])
 
@@ -895,7 +881,6 @@ def training_loop(world, camera, view_spec, ray_spec, n=1):
             # print(f"shape={r.shape}")
             # print(r)
             # print(total_mse)
-            # print(world.at(0, 0, 0))
             # print(list(model.parameters()))
             # for param in model.parameters():
             #     print(f"Param before={param}")
@@ -917,7 +902,7 @@ proxy_world = VoxelGrid(2, 2, 2)
 # world.build_solid_cube()
 # world.build_random_hollow_cube()
 # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
-world.build_random_hollow_cube2(Voxel.default_voxel, torch.tensor([10, 10, 10, 20, 20, 20]))
+# world.build_random_hollow_cube2(Voxel.default_voxel, torch.tensor([10, 10, 10, 20, 20, 20]))
 # world.build_random_hollow_cube2(Voxel.random_voxel, torch.tensor([15, 15, 15, 10, 10, 10]))
 
 camera_look_at = torch.tensor([0., 0., 0., 1])
@@ -966,21 +951,20 @@ num_stochastic_rays = 1000
 # This draws stochastic rays and returns a set of samples with colours
 # However, it separates out the determining the intersecting voxels and the transmittance
 # calculations, so that it can be put through a Plenoxel model optimisation
-
 # voxel_access = r.build_rays(fullscreen_samples(view_spec))
-voxel_access = r.build_rays(stochastic_samples(2000, view_spec))
-r, g, b = r.render_from_rays(voxel_access, plt, world)
+# voxel_access = r.build_rays(stochastic_samples(2000, view_spec))
+# r, g, b = r.render_from_rays(voxel_access, plt, world)
 # image_data = samples_to_image(r, g, b, view_spec)
 # transforms.ToPILImage()(image_data).show()
 # print(voxel_pointers)
-print("Render complette")
+print("Render complete")
 
-print(f"No of total total ray samples benchmark={len(MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE)}")
-print(f"No of total total ray samples current={len(voxel_access.ray_sample_positions)}")
+# print(f"No of total total ray samples benchmark={len(MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE)}")
+# print(f"No of total total ray samples current={len(voxel_access.ray_sample_positions)}")
 # print(f"Difference={(torch.tensor(MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE) - torch.tensor(voxel_access.ray_sample_positions)).pow(2).sum()}")
-print(f"Total voxels benchmark={len(MASTER_VOXELS_STRUCTURE)}")
-print(f"Total voxels current={len(voxel_access.all_voxels)}")
-print(f"Voxels not used={VOXELS_NOT_USED}")
+# print(f"Total voxels benchmark={len(MASTER_VOXELS_STRUCTURE)}")
+# print(f"Total voxels current={len(voxel_access.all_voxels)}")
+# print(f"Voxels not used={VOXELS_NOT_USED}")
 
 # red_mse = mse(r, image[0], view_spec, num_rays_x, num_rays_y)
 # green_mse = mse(g, image[1], view_spec, num_rays_x, num_rays_y)
@@ -990,8 +974,12 @@ print(f"Voxels not used={VOXELS_NOT_USED}")
 # red, green, blue = r.render(plt)
 # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
-# training_loop(world, camera, view_spec, ray_spec, 5)
-# print("Optimisation complete!")
+training_loop(world, camera, view_spec, ray_spec, 5)
+print("Optimisation complete!")
+voxel_access = r.build_rays(fullscreen_samples(view_spec))
+r, g, b = r.render_from_rays(voxel_access, plt, world)
+print("Rendered final result")
+
 # red, green, blue = r.render(plt)
 # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
