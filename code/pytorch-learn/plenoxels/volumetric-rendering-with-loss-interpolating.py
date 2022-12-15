@@ -14,6 +14,8 @@ BLUE_CHANNEL = 0
 
 MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE = []
 MASTER_VOXELS_STRUCTURE = []
+VOXELS_NOT_USED = 0
+
 
 class Camera:
     def __init__(self, focal_length, center, basis):
@@ -149,8 +151,8 @@ class Ray:
             print(f"WARNING: num_samples = {num_samples}, sample_positions = {ray_sample_positions}")
 
     def at(self, index):
-        return self.ray_sample_positions, self.voxel_positions[index * 8: index * 8 + 8], self.voxels[
-                                                                                          index * 8: index * 8 + 8]
+        return self.ray_sample_positions[index], self.voxel_positions[index * 8: index * 8 + 8], self.voxels[
+                                                                                                 index * 8: index * 8 + 8]
 
 
 class VoxelAccess:
@@ -165,7 +167,8 @@ class VoxelAccess:
         ptr = self.voxel_pointers[ray_index]
         start, end, num_samples = ptr
         return Ray(num_samples, self.view_points[ray_index],
-                   self.ray_sample_positions[ray_index:ray_index + num_samples], self.voxel_positions[start:end],
+                   self.ray_sample_positions[int(start / 8): int(end / 8)],
+                   self.voxel_positions[start:end],
                    self.all_voxels[start:end])
 
 
@@ -322,6 +325,9 @@ def neighbours(x, y, z, world):
     c110 = world.at(x1, y1, z0)
     c111 = world.at(x1, y1, z1)
 
+    if (int(x) == 3 and int(y) == 31 and int(z) == 16):
+        print(f"Identified: ({x},{y},{z})")
+        print(f"World voxel neighbours are: {[c000, c001, c010, c011, c100, c101, c110, c111]}")
     return ([c000, c001, c010, c011, c100, c101, c110, c111], [(x0, y0, z0),
                                                                (x0, y0, z1),
                                                                (x0, y1, z0),
@@ -335,11 +341,11 @@ def neighbours(x, y, z, world):
 def density_z(ray_sample_distances, ray, viewing_angle, world):
     collected_intensities = []
     for index, distance in enumerate(ray_sample_distances):
-        ray_sample_positions, voxel_positions, voxels = ray.at(index)
+        ray_sample_position, voxel_positions, voxels = ray.at(index)
         if len(voxels) == 0:
             return torch.tensor([0., 0., 0.])
         c_000, c_001, c_010, c_011, c_100, c_101, c_110, c_111 = voxels
-        x, y, z = ray_sample_positions[index]
+        x, y, z = ray_sample_position
         x_0, x_1 = int(x), int(x) + 1
         y_0, y_1 = int(y), int(y) + 1
         z_0, z_1 = int(z), int(z) + 1
@@ -347,14 +353,25 @@ def density_z(ray_sample_distances, ray, viewing_angle, world):
         y_d = (y - y_0) / (y_1 - y_0)
         z_d = (z - z_0) / (z_1 - z_0)
 
-        # c_000 = world.at(x_0, y_0, z_0)
-        # c_001 = world.at(x_0, y_0, z_1)
-        # c_010 = world.at(x_0, y_1, z_0)
-        # c_011 = world.at(x_0, y_1, z_1)
-        # c_100 = world.at(x_1, y_0, z_0)
-        # c_101 = world.at(x_1, y_0, z_1)
-        # c_110 = world.at(x_1, y_1, z_0)
-        # c_111 = world.at(x_1, y_1, z_1)
+        c_000 = world.at(x_0, y_0, z_0)
+        c_001 = world.at(x_0, y_0, z_1)
+        c_010 = world.at(x_0, y_1, z_0)
+        c_011 = world.at(x_0, y_1, z_1)
+        c_100 = world.at(x_1, y_0, z_0)
+        c_101 = world.at(x_1, y_0, z_1)
+        c_110 = world.at(x_1, y_1, z_0)
+        c_111 = world.at(x_1, y_1, z_1)
+
+        neighbours_from_world = [c_000, c_001, c_010, c_011, c_100, c_101, c_110, c_111]
+
+        if (int(x) == 3 and int(y) == 31 and int(z) == 16):
+            # if (x == 3.2531 and y == 31.6136 and z == 16.6955):
+            difference = (torch.stack(neighbours_from_world) - torch.stack(voxels)).pow(2).sum()
+            if (difference != 0.):
+                print("WARNING!")
+                print(f"From world: {neighbours_from_world}")
+                print(f"From pointers: {voxels}")
+                print(f"Ray sample position: {ray_sample_position}")
 
         c_00 = c_000 * (1 - x_d) + c_100 * x_d
         c_01 = c_001 * (1 - x_d) + c_101 * x_d
@@ -582,7 +599,7 @@ class Renderer:
         ray_intersection_weights = []
         for i in np.linspace(self.x_1, self.x_2, self.num_view_samples_x):
             for j in np.linspace(self.y_1, self.y_2, self.num_view_samples_y):
-                ray_intersection_weights.append(torch.tensor([i,j]))
+                ray_intersection_weights.append(torch.tensor([i, j]))
 
         # Need to convert the range [Random(0,1), Random(0,1)] into bounds of [[x1, x2], [y1, y2]]
         # ray_intersection_weights = list(
@@ -599,7 +616,7 @@ class Renderer:
                                       camera_basis_y * ray_intersection_weight[1]
             unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
             view_x, view_y = ray_intersection_weight[0], ray_intersection_weight[1]
-            num_voxel_groups_per_ray = 0
+            num_intersecting_voxels = 0
 
             all_voxels_per_ray = []
             all_voxel_positions_per_ray = []
@@ -611,7 +628,7 @@ class Renderer:
                     continue
                 # We are in the box
                 interpolating_voxels, interpolating_voxel_positions = neighbours(ray_x, ray_y, ray_z, world)
-                num_voxel_groups_per_ray += 1
+                num_intersecting_voxels += 1
                 # voxels_per_ray.append(at)
                 # all_voxels.append(at)
                 all_voxels_per_ray += interpolating_voxels
@@ -619,15 +636,15 @@ class Renderer:
                 ray_sample_positions_per_ray.append(torch.tensor([ray_x, ray_y, ray_z]))
                 # voxels_per_ray.append(torch.cat([torch.stack([ray_x, ray_y, ray_z]), at]))
                 # voxel_positions_per_ray.append([ray_x, ray_y, ray_z])
-            if (num_voxel_groups_per_ray == 0):
+            if (num_intersecting_voxels <= 1):
                 continue
             all_voxels += all_voxels_per_ray
             all_voxel_positions += all_voxel_positions_per_ray
             ray_sample_positions += ray_sample_positions_per_ray
 
             view_points.append((view_x, view_y))
-            voxel_pointers.append((counter, counter + 8 * num_voxel_groups_per_ray, num_voxel_groups_per_ray))
-            counter += 8 * num_voxel_groups_per_ray
+            voxel_pointers.append((counter, counter + 8 * num_intersecting_voxels, num_intersecting_voxels))
+            counter += 8 * num_intersecting_voxels
 
             if (view_x < view_x1 or view_x > view_x2
                     or view_y < view_y1 or view_y > view_y2):
@@ -638,6 +655,7 @@ class Renderer:
                            all_voxel_positions)
 
     def render(self, plt):
+        global VOXELS_NOT_USED
         global MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE
         red_image = []
         green_image = []
@@ -672,7 +690,6 @@ class Renderer:
                     if (self.world.is_outside(ray_x, ray_y, ray_z)):
                         continue
                     # We are in the box
-                    MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE.append([ray_x, ray_y, ray_z])
                     ray_samples.append([ray_x, ray_y, ray_z])
 
                 # unique_ray_samples = torch.unique(torch.tensor(ray_samples), dim=0)
@@ -685,6 +702,9 @@ class Renderer:
                     # print("Too few")
                     continue
 
+                MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE += unique_ray_samples
+
+                VOXELS_NOT_USED += 8
                 t1 = unique_ray_samples[:-1]
                 t2 = unique_ray_samples[1:]
                 consecutive_sample_distances = (t1 - t2).pow(2).sum(1).sqrt()
@@ -939,9 +959,10 @@ print("Render complette")
 
 print(f"No of total total ray samples benchmark={len(MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE)}")
 print(f"No of total total ray samples current={len(voxel_access.ray_sample_positions)}")
-print(f"Difference={(torch.tensor(MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE) - torch.tensor(voxel_access.ray_sample_positions)).pow(2).sum()}")
+# print(f"Difference={(torch.tensor(MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE) - torch.tensor(voxel_access.ray_sample_positions)).pow(2).sum()}")
 print(f"Total voxels benchmark={len(MASTER_VOXELS_STRUCTURE)}")
 print(f"Total voxels current={len(voxel_access.all_voxels)}")
+print(f"Voxels not used={VOXELS_NOT_USED}")
 
 # red_mse = mse(r, image[0], view_spec, num_rays_x, num_rays_y)
 # green_mse = mse(g, image[1], view_spec, num_rays_x, num_rays_y)
