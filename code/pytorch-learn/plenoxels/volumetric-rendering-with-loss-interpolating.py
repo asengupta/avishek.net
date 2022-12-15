@@ -123,8 +123,6 @@ def rgb_harmonics(rgb_harmonic_coefficients):
 class Voxel:
     @staticmethod
     def random_voxel():
-        # voxel = list(map(lambda x: torch.tensor(random.random(), requires_grad=True), range(VoxelGrid.VOXEL_DIMENSION)))
-        # voxel[0] = 0.5
         voxel = torch.cat([torch.tensor([0.0005]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
         voxel.requires_grad = True
         return voxel
@@ -132,12 +130,12 @@ class Voxel:
     @staticmethod
     def default_voxel():
         voxel = torch.cat([torch.tensor([0.005]), torch.ones(VoxelGrid.VOXEL_DIMENSION - 1)])
-        # voxel.requires_grad = True
+        voxel.requires_grad = True
         return voxel
 
     @staticmethod
     def empty_voxel():
-        return torch.zeros([VoxelGrid.VOXEL_DIMENSION], requires_grad=False)
+        return torch.zeros([VoxelGrid.VOXEL_DIMENSION], requires_grad=True)
 
 
 class Ray:
@@ -424,7 +422,7 @@ class Renderer:
     # Break up render_image() into two parts:
     # 1) One part will simply create ray samples hashed by rays. This will be used in init() of the custom model
     # 2) The second part will calculate the (r,g,b) triplet and will be used in the forward() pass of the custom model
-    def render_image(self, num_stochastic_samples, plt, requires_grad=False):
+    def render_image(self, num_stochastic_samples, plt):
         # test_voxel = self.world.at(0, 0, 0)
         #
         # proxy_intersecting_voxels = torch.stack([test_voxel])
@@ -800,7 +798,7 @@ def mse(rendered_channel, true_channel, view_spec):
     return channel_total_error / len(rendered_channel)
 
 
-NUM_STOCHASTIC_RAYS = 500
+NUM_STOCHASTIC_RAYS = 1000
 
 
 class PlenoxelModel(nn.Module):
@@ -860,7 +858,7 @@ def training_loop(world, camera, view_spec, ray_spec, n=1):
         model = PlenoxelModel([camera, view_spec, ray_spec])
         for i in range(n):
             print(f"Epoch={i}")
-            optimizer = torch.optim.RMSprop(model.parameters(), lr=0.01, momentum=0.9)
+            optimizer = torch.optim.RMSprop(model.parameters(), lr=0.001, momentum=0.9)
             optimizer.zero_grad()
             r, g, b = model([camera, view_spec, ray_spec])
 
