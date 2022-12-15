@@ -325,9 +325,9 @@ def neighbours(x, y, z, world):
     c110 = world.at(x1, y1, z0)
     c111 = world.at(x1, y1, z1)
 
-    if (int(x) == 3 and int(y) == 31 and int(z) == 16):
-        print(f"Identified: ({x},{y},{z})")
-        print(f"World voxel neighbours are: {[c000, c001, c010, c011, c100, c101, c110, c111]}")
+    # if (int(x) == 3 and int(y) == 31 and int(z) == 16):
+        # print(f"Identified: ({x},{y},{z})")
+        # print(f"World voxel neighbours are: {[c000, c001, c010, c011, c100, c101, c110, c111]}")
     return ([c000, c001, c010, c011, c100, c101, c110, c111], [(x0, y0, z0),
                                                                (x0, y0, z1),
                                                                (x0, y1, z0),
@@ -353,25 +353,24 @@ def density_z(ray_sample_distances, ray, viewing_angle, world):
         y_d = (y - y_0) / (y_1 - y_0)
         z_d = (z - z_0) / (z_1 - z_0)
 
-        c_000 = world.at(x_0, y_0, z_0)
-        c_001 = world.at(x_0, y_0, z_1)
-        c_010 = world.at(x_0, y_1, z_0)
-        c_011 = world.at(x_0, y_1, z_1)
-        c_100 = world.at(x_1, y_0, z_0)
-        c_101 = world.at(x_1, y_0, z_1)
-        c_110 = world.at(x_1, y_1, z_0)
-        c_111 = world.at(x_1, y_1, z_1)
+        # c_000 = world.at(x_0, y_0, z_0)
+        # c_001 = world.at(x_0, y_0, z_1)
+        # c_010 = world.at(x_0, y_1, z_0)
+        # c_011 = world.at(x_0, y_1, z_1)
+        # c_100 = world.at(x_1, y_0, z_0)
+        # c_101 = world.at(x_1, y_0, z_1)
+        # c_110 = world.at(x_1, y_1, z_0)
+        # c_111 = world.at(x_1, y_1, z_1)
 
         neighbours_from_world = [c_000, c_001, c_010, c_011, c_100, c_101, c_110, c_111]
 
-        if (int(x) == 3 and int(y) == 31 and int(z) == 16):
-            # if (x == 3.2531 and y == 31.6136 and z == 16.6955):
-            difference = (torch.stack(neighbours_from_world) - torch.stack(voxels)).pow(2).sum()
-            if (difference != 0.):
-                print("WARNING!")
-                print(f"From world: {neighbours_from_world}")
-                print(f"From pointers: {voxels}")
-                print(f"Ray sample position: {ray_sample_position}")
+        # if (int(x) == 3 and int(y) == 31 and int(z) == 16):
+        #     difference = (torch.stack(neighbours_from_world) - torch.stack(voxels)).pow(2).sum()
+        #     if (difference != 0.):
+        #         print("WARNING!")
+        #         print(f"From world: {neighbours_from_world}")
+        #         print(f"From pointers: {voxels}")
+        #         print(f"Ray sample position: {ray_sample_position}")
 
         c_00 = c_000 * (1 - x_d) + c_100 * x_d
         c_01 = c_001 * (1 - x_d) + c_101 * x_d
@@ -545,12 +544,8 @@ class Renderer:
         for ray_index, view_point in enumerate(voxel_access.view_points):
             ray = voxel_access.for_ray(ray_index)
             ray_sample_positions = ray.ray_sample_positions
-            # voxels_in_ray = all_voxels[voxels_pointer[0]: voxels_pointer[1]]
-            # voxel_positions = ray.for_ray(ray_index)
             unique_ray_samples = ray_sample_positions
             # unique_ray_samples2 = torch.unique(torch.tensor(unique_ray_samples), dim=0)
-            # if (len(unique_ray_samples) != len(unique_ray_samples2)):
-            #     raise Exception("Duplicate rays found")
             view_x, view_y = ray.view_point
 
             if (len(unique_ray_samples) <= 1):
@@ -589,17 +584,15 @@ class Renderer:
             blue_channel)
         return (red_channel, green_channel, blue_channel)
 
-    def build_rays(self, num_stochastic_samples):
+    def build_rays(self, ray_intersection_weights):
         camera_basis_x = camera.basis[0][:3]
         camera_basis_y = camera.basis[1][:3]
         camera_center_inhomogenous = camera_center[:3]
-        view_length = self.x_2 - self.x_1
-        view_height = self.y_2 - self.y_1
 
-        ray_intersection_weights = []
-        for i in np.linspace(self.x_1, self.x_2, self.num_view_samples_x):
-            for j in np.linspace(self.y_1, self.y_2, self.num_view_samples_y):
-                ray_intersection_weights.append(torch.tensor([i, j]))
+        # ray_intersection_weights = []
+        # for i in np.linspace(self.x_1, self.x_2, self.num_view_samples_x):
+        #     for j in np.linspace(self.y_1, self.y_2, self.num_view_samples_y):
+        #         ray_intersection_weights.append(torch.tensor([i, j]))
 
         # Need to convert the range [Random(0,1), Random(0,1)] into bounds of [[x1, x2], [y1, y2]]
         # ray_intersection_weights = list(
@@ -731,6 +724,30 @@ class Renderer:
         print("Done!!")
         return (red_image_tensor, green_image_tensor, blue_image_tensor)
 
+
+def stochastic_samples(num_stochastic_samples, view_spec):
+    x_1, x_2 = view_spec[0], view_spec[1]
+    y_1, y_2 = view_spec[2], view_spec[3]
+    view_length = x_2 - x_1
+    view_height = y_2 - y_1
+
+# Need to convert the range [Random(0,1), Random(0,1)] into bounds of [[x1, x2], [y1, y2]]
+    ray_intersection_weights = list(
+        map(lambda x: torch.mul(torch.rand(2), torch.tensor([view_length, view_height])) + torch.tensor(
+            [x_1, y_1]), list(range(0, num_stochastic_samples))))
+    return ray_intersection_weights
+
+def fullscreen_samples(view_spec):
+    x_1, x_2 = view_spec[0], view_spec[1]
+    y_1, y_2 = view_spec[2], view_spec[3]
+    num_view_samples_x = view_spec[4]
+    num_view_samples_y = view_spec[5]
+
+    ray_intersection_weights = []
+    for i in np.linspace(x_1, x_2, num_view_samples_x):
+        for j in np.linspace(y_1, y_2, num_view_samples_y):
+            ray_intersection_weights.append(torch.tensor([i, j]))
+    return ray_intersection_weights
 
 def camera_to_image(x, y, view_spec):
     view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y = view_spec
@@ -926,7 +943,7 @@ r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, nu
              ray_spec)
 
 # This renders the volumetric model and shows the rendered image. Useful for training
-red, green, blue = r.render(plt)
+# red, green, blue = r.render(plt)
 # print(red.shape)
 # print(green.shape)
 # print(blue.shape)
@@ -950,7 +967,8 @@ num_stochastic_rays = 1000
 # However, it separates out the determining the intersecting voxels and the transmittance
 # calculations, so that it can be put through a Plenoxel model optimisation
 
-voxel_access = r.build_rays(num_stochastic_rays)
+# voxel_access = r.build_rays(fullscreen_samples(view_spec))
+voxel_access = r.build_rays(stochastic_samples(2000, view_spec))
 r, g, b = r.render_from_rays(voxel_access, plt, world)
 # image_data = samples_to_image(r, g, b, view_spec)
 # transforms.ToPILImage()(image_data).show()
