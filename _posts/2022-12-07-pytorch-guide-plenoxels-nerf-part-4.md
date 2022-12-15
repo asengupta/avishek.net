@@ -8,9 +8,11 @@ draft: true
 
 We continue looking at [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131). We have built our volumetric renderer; it is now time to start calculating loss from training images. We start off with trying out some test images, the source of which will be our renderer itself, as a kind of control set.
 
-### Incorporating Training Images
-
 ### Calculating Loss
+
+### Refactoring the Data Structure
+
+### Incorporating A Single Training Image
 
 ### Optimising using RMSProp
 
