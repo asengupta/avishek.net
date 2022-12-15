@@ -128,12 +128,12 @@ class Voxel:
     @staticmethod
     def default_voxel():
         voxel = torch.cat([torch.tensor([0.005]), torch.ones(VoxelGrid.VOXEL_DIMENSION - 1)])
-        voxel.requires_grad = True
+        # voxel.requires_grad = True
         return voxel
 
     @staticmethod
     def empty_voxel():
-        return torch.zeros([VoxelGrid.VOXEL_DIMENSION], requires_grad=True)
+        return torch.zeros([VoxelGrid.VOXEL_DIMENSION], requires_grad=False)
 
 
 class Ray:
@@ -181,7 +181,7 @@ class VoxelGrid:
         for i in range(self.grid_x):
             for j in range(self.grid_y):
                 for k in range(self.grid_z):
-                    self.voxel_grid[i, j, k] = Voxel.random_voxel()
+                    self.voxel_grid[i, j, k] = Voxel.empty_voxel()
                     # print(f"({i},{j},{k})")
 
     def at(self, x, y, z):
@@ -328,7 +328,7 @@ def neighbours(x, y, z, world):
                                                                (x1, y1, z1)])
 
 
-def density_z(ray_sample_distances, ray, viewing_angle):
+def density_z(ray_sample_distances, ray, viewing_angle, world):
     collected_intensities = []
     for index, distance in enumerate(ray_sample_distances):
         ray_sample_positions, voxel_positions, voxels = ray.at(index)
@@ -342,6 +342,16 @@ def density_z(ray_sample_distances, ray, viewing_angle):
         x_d = (x - x_0) / (x_1 - x_0)
         y_d = (y - y_0) / (y_1 - y_0)
         z_d = (z - z_0) / (z_1 - z_0)
+
+        # c_000 = world.at(x_0, y_0, z_0)
+        # c_001 = world.at(x_0, y_0, z_1)
+        # c_010 = world.at(x_0, y_1, z_0)
+        # c_011 = world.at(x_0, y_1, z_1)
+        # c_100 = world.at(x_1, y_0, z_0)
+        # c_101 = world.at(x_1, y_0, z_1)
+        # c_110 = world.at(x_1, y_1, z_0)
+        # c_111 = world.at(x_1, y_1, z_1)
+
         c_00 = c_000 * (1 - x_d) + c_100 * x_d
         c_01 = c_001 * (1 - x_d) + c_101 * x_d
         c_10 = c_010 * (1 - x_d) + c_110 * x_d
@@ -493,7 +503,7 @@ class Renderer:
             blue_channel)
         return (red_channel, green_channel, blue_channel, intersecting_voxels)
 
-    def render_from_rays(self, voxel_access, plt):
+    def render_from_rays(self, voxel_access, plt, world):
         viewing_angle = camera.viewing_angle()
         plt.rcParams['axes.xmargin'] = 0
         plt.rcParams['axes.ymargin'] = 0
@@ -517,7 +527,9 @@ class Renderer:
             # voxels_in_ray = all_voxels[voxels_pointer[0]: voxels_pointer[1]]
             # voxel_positions = ray.for_ray(ray_index)
             unique_ray_samples = ray_sample_positions
-            # unique_ray_samples = torch.unique(torch.tensor(voxel_positions), dim=0)
+            unique_ray_samples2 = torch.unique(torch.tensor(unique_ray_samples), dim=0)
+            if (len(unique_ray_samples) != len(unique_ray_samples2)):
+                raise Exception("Duplicate rays found")
             view_x, view_y = ray.view_point
 
             if (len(unique_ray_samples) <= 1):
@@ -536,7 +548,7 @@ class Renderer:
             # ray_samples_with_distances = torch.cat([t1, torch.reshape(consecutive_sample_distances, (-1, 1))], 1)
             ray_sample_distances = torch.reshape(consecutive_sample_distances, (-1, 1))
             # color_densities = torch.tensor([0., 0., 0.])
-            color_densities = density_z(ray_sample_distances, ray, viewing_angle)
+            color_densities = density_z(ray_sample_distances, ray, viewing_angle, world)
             color_tensor = 1. - torch.clamp(color_densities, min=0, max=1)
             plt.plot(view_x, view_y, marker="o", color=color_tensor.detach().numpy())
             # plt.plot(view_x, view_y, marker="o",color="green")
@@ -563,10 +575,15 @@ class Renderer:
         view_length = self.x_2 - self.x_1
         view_height = self.y_2 - self.y_1
 
+        ray_intersection_weights = []
+        for i in np.linspace(self.x_1, self.x_2, self.num_view_samples_x):
+            for j in np.linspace(self.y_1, self.y_2, self.num_view_samples_y):
+                ray_intersection_weights.append(torch.tensor([i,j]))
+
         # Need to convert the range [Random(0,1), Random(0,1)] into bounds of [[x1, x2], [y1, y2]]
-        ray_intersection_weights = list(
-            map(lambda x: torch.mul(torch.rand(2), torch.tensor([view_length, view_height])) + torch.tensor(
-                [self.x_1, self.y_1]), list(range(0, num_stochastic_samples))))
+        # ray_intersection_weights = list(
+        #     map(lambda x: torch.mul(torch.rand(2), torch.tensor([view_length, view_height])) + torch.tensor(
+        #         [self.x_1, self.y_1]), list(range(0, num_stochastic_samples))))
         all_voxel_positions = []
         view_points = []
         voxel_pointers = []
@@ -847,7 +864,7 @@ proxy_world = VoxelGrid(2, 2, 2)
 # world.build_solid_cube()
 # world.build_random_hollow_cube()
 # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
-# world.build_random_hollow_cube2(Voxel.default_voxel, torch.tensor([10, 10, 10, 20, 20, 20]))
+world.build_random_hollow_cube2(Voxel.default_voxel, torch.tensor([10, 10, 10, 20, 20, 20]))
 # world.build_random_hollow_cube2(Voxel.random_voxel, torch.tensor([15, 15, 15, 10, 10, 10]))
 
 camera_look_at = torch.tensor([0., 0., 0., 1])
@@ -866,7 +883,9 @@ view_x2 = 30
 view_y1 = -15
 view_y2 = 60
 view_spec = [view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]
-ray_spec = torch.tensor([100, 100])
+ray_length = 100
+num_ray_samples = 50
+ray_spec = torch.tensor([ray_length, num_ray_samples])
 r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
              ray_spec)
 
@@ -896,11 +915,11 @@ num_stochastic_rays = 1000
 # calculations, so that it can be put through a Plenoxel model optimisation
 
 voxel_access = r.build_rays(num_stochastic_rays)
-r, g, b = r.render_from_rays(voxel_access, plt)
+r, g, b = r.render_from_rays(voxel_access, plt, world)
 # image_data = samples_to_image(r, g, b, view_spec)
 # transforms.ToPILImage()(image_data).show()
 # print(voxel_pointers)
-# print("Render complete")
+print("Render complette")
 
 # red_mse = mse(r, image[0], view_spec, num_rays_x, num_rays_y)
 # green_mse = mse(g, image[1], view_spec, num_rays_x, num_rays_y)
