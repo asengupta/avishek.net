@@ -22,9 +22,25 @@ We will add in regularisation later. Let's test the loss on images generated wit
 ### Refactoring the Data Structure
 We will also use the original renderer to generate ground truth that we can use to validate that the refactored renderer still generates correct images.
 
+```python
+{% include_absolute '/code/pytorch-learn/plenoxels/volumetric-rendering-with-loss-interpolating.py' %}
+```
+
 ### Incorporating A Single Training Image
 
 ### Optimising using RMSProp
+
+### A Tale of Debugging
+
+- Using PyTorchViz
+- Interpreting the gradient graph
+- Replicating the issue
+- Whittling it down to the smallest reproducible example
+
+```python
+{% include_absolute '/code/pytorch-learn/plenoxels/custom-model-bug.py' %}
+```
+
 
 ### Reconstruction Results
 
@@ -36,6 +52,6 @@ We will also use the original renderer to generate ground truth that we can use 
 
 ### References
 
-- [Spherical Harmonics](https://patapom.com/blog/SHPortal/#fn:2)
 - [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131)
 - [Plenoxels Explained](https://deeprender.ai/blog/plenoxels-radiance-fields-without-neural-networks)
+- [How to use Pytorch as a general optimizer](https://towardsdatascience.com/how-to-use-pytorch-as-a-general-optimizer-a91cbf72a7fb)
