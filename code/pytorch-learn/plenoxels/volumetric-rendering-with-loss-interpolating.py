@@ -862,7 +862,7 @@ def training_loop(world, camera, view_spec, ray_spec, n=1):
     model = PlenoxelModel([camera, view_spec, ray_spec])
     for i in range(n):
         print(f"Epoch={i}")
-        optimizer = torch.optim.RMSprop(model.parameters(), lr=0.001, momentum=0.9)
+        optimizer = torch.optim.RMSprop(model.parameters(), lr=0.00005, momentum=0.9)
         optimizer.zero_grad()
         r, g, b = model([camera, view_spec, ray_spec])
 
@@ -891,7 +891,7 @@ def training_loop(world, camera, view_spec, ray_spec, n=1):
         # print((after - before).abs().sum())
         # weight_change = (before - voxels).abs().sum()
         # print(f"Weight change={weight_change}")
-        # losses.append(total_mse)
+        losses.append(total_mse)
 
     return model.voxel_access, model.voxels, losses
 
