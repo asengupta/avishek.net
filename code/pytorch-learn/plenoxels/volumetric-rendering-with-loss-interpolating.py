@@ -840,7 +840,7 @@ def mse(rendered_channel, true_channel, view_spec):
     return channel_total_error / len(rendered_channel)
 
 
-NUM_STOCHASTIC_RAYS = 800
+NUM_STOCHASTIC_RAYS = 1200
 
 
 class PlenoxelModel(nn.Module):
@@ -903,9 +903,6 @@ def training_loop(world, camera, view_spec, ray_spec, n=1):
         optimizer = torch.optim.RMSprop(model.parameters(), lr=0.0005, momentum=0.9)
         optimizer.zero_grad()
         r, g, b = model([camera, view_spec, ray_spec])
-        # r = torch.clamp(r, min=0., max=1.)
-        # g = torch.clamp(g, min=0., max=1.)
-        # b = torch.clamp(b, min=0., max=1.)
 
         red_mse = mse(r, training_image[0], view_spec)
         green_mse = mse(g, training_image[1], view_spec)
@@ -958,11 +955,12 @@ GRID_Y = 40
 GRID_Z = 40
 
 random_world = VoxelGrid.build_random_world(GRID_X, GRID_Y, GRID_Z)
+empty_world = VoxelGrid.build_empty_world(GRID_X, GRID_Y, GRID_Z)
 proxy_world = VoxelGrid(2, 2, 2, Voxel.default_voxel)
 # world.build_solid_cube()
 # world.build_random_hollow_cube()
 # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
-# world.build_hollow_cube_with_randomly_coloured_sides(Voxel.random_coloured_voxel,
+# empty_world.build_hollow_cube_with_randomly_coloured_sides(Voxel.random_coloured_voxel,
 #                                                      torch.tensor([10, 10, 10, 20, 20, 20]))
 # world.build_random_hollow_cube2(Voxel.random_voxel, torch.tensor([15, 15, 15, 10, 10, 10]))
 
@@ -990,9 +988,6 @@ r = Renderer(random_world, camera, torch.tensor([view_x1, view_x2, view_y1, view
 
 # This renders the volumetric model and shows the rendered image. Useful for training
 # red, green, blue = r.render(plt)
-# print(red.shape)
-# print(green.shape)
-# print(blue.shape)
 # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
 # This just loads training images and shows them

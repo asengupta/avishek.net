@@ -52,6 +52,9 @@ We will also use the original renderer to generate ground truth that we can use 
 ![Plenoxels Cube Image](/assets/images/plenoxels-cube-training.png)
 ![Plenoxels Cube 5 Epochs 1 Image](/assets/images/plenoxels-cube-5-epochs-1-image.png)
 
+![Plenoxels Multicoloured Cube Image](/assets/images/plenoxels-multicoloured-cube-training.png)
+![Plenoxels Multicoloured Cube 15 Epochs 1 Image](/assets/images/plenoxels-multicoloured-cube-1-image-15-epochs.png)
+
 ### References
 
 - [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131)
