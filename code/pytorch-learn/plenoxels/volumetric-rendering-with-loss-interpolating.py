@@ -555,7 +555,7 @@ class Renderer:
             ray_sample_distances = torch.reshape(consecutive_sample_distances, (-1, 1))
             # color_densities = torch.tensor([0., 0., 0.])
             color_densities = density_split(ray_sample_distances, ray, viewing_angle, world)
-            color_tensor = 1. - torch.clamp(color_densities, min=0, max=1)
+            color_tensor = torch.clamp(color_densities, min=0, max=1)
             plt.plot(view_x, view_y, marker="o", color=color_tensor.detach().numpy())
             # plt.plot(view_x, view_y, marker="o",color="green")
 
@@ -697,7 +697,7 @@ class Renderer:
                 color_densities = self.world.density(ray_samples_with_distances, viewing_angle)
                 print(color_densities)
 
-                color_tensor = 1. - torch.clamp(color_densities, min=0, max=1)
+                color_tensor = torch.clamp(color_densities, min=0, max=1)
                 plt.plot(i, j, marker="o", color=color_tensor.detach().numpy())
                 red_column.append(color_tensor[RED_CHANNEL])
                 green_column.append(color_tensor[GREEN_CHANNEL])
@@ -866,6 +866,9 @@ def training_loop(world, camera, view_spec, ray_spec, n=1):
         optimizer = torch.optim.RMSprop(model.parameters(), lr=0.005, momentum=0.9)
         optimizer.zero_grad()
         r, g, b = model([camera, view_spec, ray_spec])
+        # r = torch.clamp(r, min=0., max=1.)
+        # g = torch.clamp(g, min=0., max=1.)
+        # b = torch.clamp(b, min=0., max=1.)
 
         red_mse = mse(r, training_image[0], view_spec)
         green_mse = mse(g, training_image[1], view_spec)
@@ -1000,6 +1003,9 @@ update_world(voxels, voxel_access, world)
 # r, g, b = r.render(plt)
 
 red, green, blue = r.render(plt)
+red = torch.clamp(red, min=0, max=1)
+green = torch.clamp(green, min=0, max=1)
+blue = torch.clamp(blue, min=0, max=1)
 transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 print("Rendered final result")
 
