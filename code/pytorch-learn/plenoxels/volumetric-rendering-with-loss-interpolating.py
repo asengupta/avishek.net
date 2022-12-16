@@ -509,7 +509,7 @@ class Renderer:
                 # We are in the box
                 ray_samples.append([ray_x, ray_y, ray_z])
                 # intersecting_voxels.append(torch.stack([ray_x, ray_y, ray_z]))
-                at = world.at(ray_x, ray_y, ray_z)
+                at = self.world.at(ray_x, ray_y, ray_z)
                 # print(at.requires_grad)
                 intersecting_voxels.append(torch.cat([torch.stack([ray_x, ray_y, ray_z]), at]))
 
@@ -647,7 +647,7 @@ class Renderer:
                 if (self.world.is_outside(ray_x, ray_y, ray_z)):
                     continue
                 # We are in the box
-                interpolating_voxels, interpolating_voxel_positions = neighbours(ray_x, ray_y, ray_z, world)
+                interpolating_voxels, interpolating_voxel_positions = neighbours(ray_x, ray_y, ray_z, self.world)
                 num_intersecting_voxels += 1
                 # voxels_per_ray.append(at)
                 # all_voxels.append(at)
@@ -840,11 +840,11 @@ def mse(rendered_channel, true_channel, view_spec):
     return channel_total_error / len(rendered_channel)
 
 
-NUM_STOCHASTIC_RAYS = 1500
+NUM_STOCHASTIC_RAYS = 800
 
 
 class PlenoxelModel(nn.Module):
-    def __init__(self, input):
+    def __init__(self, input, world):
         super().__init__()
         camera, view_spec, ray_spec = input
         self.world = world
@@ -863,7 +863,7 @@ class PlenoxelModel(nn.Module):
     def forward(self, input):
         camera, view_spec, ray_spec = input
         # Use self.voxels as the weights, take camera as input
-        renderer = Renderer(world, camera, view_spec, ray_spec)
+        renderer = Renderer(self.world, camera, view_spec, ray_spec)
         # This just loads training images and shows them
         # t = transforms.Compose([transforms.ToTensor()])
         # dataset = datasets.ImageFolder("./images", transform=t)
@@ -897,7 +897,7 @@ def training_loop(world, camera, view_spec, ray_spec, n=1):
     print(f"{n} epochs")
     print(f"Shape = {training_image.shape}")
 
-    model = PlenoxelModel([camera, view_spec, ray_spec])
+    model = PlenoxelModel([camera, view_spec, ray_spec], world)
     for i in range(n):
         print(f"Epoch={i}")
         optimizer = torch.optim.RMSprop(model.parameters(), lr=0.0005, momentum=0.9)
@@ -957,7 +957,7 @@ GRID_X = 40
 GRID_Y = 40
 GRID_Z = 40
 
-world = VoxelGrid.build_random_world(GRID_X, GRID_Y, GRID_Z)
+random_world = VoxelGrid.build_random_world(GRID_X, GRID_Y, GRID_Z)
 proxy_world = VoxelGrid(2, 2, 2, Voxel.default_voxel)
 # world.build_solid_cube()
 # world.build_random_hollow_cube()
@@ -985,7 +985,7 @@ view_spec = [view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]
 ray_length = 100
 num_ray_samples = 50
 ray_spec = torch.tensor([ray_length, num_ray_samples])
-r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
+r = Renderer(random_world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
              ray_spec)
 
 # This renders the volumetric model and shows the rendered image. Useful for training
@@ -1035,9 +1035,9 @@ print("Render complete")
 # red, green, blue = r.render(plt)
 # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
-voxel_access, voxels, losses = training_loop(world, camera, view_spec, ray_spec, 5)
+voxel_access, voxels, losses = training_loop(random_world, camera, view_spec, ray_spec, 15)
 print("Optimisation complete!")
-update_world(voxels, voxel_access, world)
+update_world(voxels, voxel_access, random_world)
 red, green, blue = r.render(plt)
 transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 print("Rendered final result")
