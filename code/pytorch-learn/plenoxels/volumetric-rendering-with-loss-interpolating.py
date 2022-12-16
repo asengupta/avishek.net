@@ -121,7 +121,7 @@ class Voxel:
 
     @staticmethod
     def random_voxel():
-        voxel = torch.cat([torch.tensor([0.0005]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
+        voxel = torch.cat([torch.tensor([0.0005]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1) / 100])
         voxel.requires_grad = True
         return voxel
 
@@ -803,7 +803,7 @@ def mse(rendered_channel, true_channel, view_spec):
     return channel_total_error / len(rendered_channel)
 
 
-NUM_STOCHASTIC_RAYS = 1000
+NUM_STOCHASTIC_RAYS = 1500
 
 
 class PlenoxelModel(nn.Module):
@@ -858,17 +858,18 @@ def training_loop(world, camera, view_spec, ray_spec, n=1):
     images, labels = next(iter(data_loader))
     training_image = images[0]
     print(f"{n} epochs")
+    print(f"Shape = {training_image.shape}")
 
     model = PlenoxelModel([camera, view_spec, ray_spec])
     for i in range(n):
         print(f"Epoch={i}")
-        optimizer = torch.optim.RMSprop(model.parameters(), lr=0.00005, momentum=0.9)
+        optimizer = torch.optim.RMSprop(model.parameters(), lr=0.005, momentum=0.9)
         optimizer.zero_grad()
         r, g, b = model([camera, view_spec, ray_spec])
 
         red_mse = mse(r, training_image[0], view_spec)
-        green_mse = mse(g, training_image[0], view_spec)
-        blue_mse = mse(b, training_image[0], view_spec)
+        green_mse = mse(g, training_image[1], view_spec)
+        blue_mse = mse(b, training_image[2], view_spec)
         total_mse = red_mse + green_mse + blue_mse
         print(f"MSE={total_mse}")
         # print(f"Optimising {len(voxels)} voxels...")
@@ -895,6 +896,20 @@ def training_loop(world, camera, view_spec, ray_spec, n=1):
 
     return model.voxel_access, model.voxels, losses
 
+def update_world(optimised_voxels, voxel_access, world):
+    voxel_access.all_voxels = optimised_voxels
+    for ray_index, view_point in enumerate(voxel_access.view_points):
+        ray = voxel_access.for_ray(ray_index)
+        for i in range(ray.num_samples):
+            sample_position, voxel_positions, voxels = ray.at(i)
+            for index, voxel_position in enumerate(voxel_positions):
+                x, y, z = voxel_position
+                voxel = voxels[index]
+                if (x < 0 or x > GRID_X - 1 or
+                        y < 0 or y > GRID_Y - 1 or
+                        z < 0 or z > GRID_Z - 1):
+                    continue
+                world.voxel_grid[x, y, z] = voxel
 
 GRID_X = 40
 GRID_Y = 40
@@ -979,20 +994,7 @@ print("Render complete")
 
 voxel_access, voxels, losses = training_loop(world, camera, view_spec, ray_spec, 5)
 print("Optimisation complete!")
-
-voxel_access.all_voxels = voxels
-for ray_index, view_point in enumerate(voxel_access.view_points):
-    ray = voxel_access.for_ray(ray_index)
-    for i in range(ray.num_samples):
-        sample_position, voxel_positions, voxels = ray.at(i)
-        for index, voxel_position in enumerate(voxel_positions):
-            x, y, z = voxel_position
-            voxel = voxels[index]
-            if (x < 0 or x > GRID_X - 1 or
-                    y < 0 or y > GRID_Y - 1 or
-                    z < 0 or z > GRID_Z - 1):
-                continue
-            world.voxel_grid[x, y, z] = voxel
+update_world(voxels, voxel_access, world)
 
 # voxel_access = r.build_rays(fullscreen_samples(view_spec))
 # r, g, b = r.render(plt)
