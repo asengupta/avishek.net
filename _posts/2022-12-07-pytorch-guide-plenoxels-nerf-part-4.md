@@ -46,6 +46,8 @@ We will also use the original renderer to generate ground truth that we can use 
 
 ### Reconstruction Results
 
+these are using just one image, and the reconstruction is correct only from that specific viewpoint
+
 ![Plenoxels Flat Surface Training Image](/assets/images/plenoxels-flat-surface-training.png)
 ![Plenoxels Flat Surface 5 Epochs 1 Image](/assets/images/plenoxel-flat-surface-1-image-5-epochs.png)
 
