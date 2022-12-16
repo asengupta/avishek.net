@@ -900,7 +900,7 @@ def training_loop(world, camera, view_spec, ray_spec, n=1):
     model = PlenoxelModel([camera, view_spec, ray_spec])
     for i in range(n):
         print(f"Epoch={i}")
-        optimizer = torch.optim.RMSprop(model.parameters(), lr=0.005, momentum=0.9)
+        optimizer = torch.optim.RMSprop(model.parameters(), lr=0.0005, momentum=0.9)
         optimizer.zero_grad()
         r, g, b = model([camera, view_spec, ray_spec])
         # r = torch.clamp(r, min=0., max=1.)
@@ -957,13 +957,13 @@ GRID_X = 40
 GRID_Y = 40
 GRID_Z = 40
 
-world = VoxelGrid.build_empty_world(GRID_X, GRID_Y, GRID_Z)
+world = VoxelGrid.build_random_world(GRID_X, GRID_Y, GRID_Z)
 proxy_world = VoxelGrid(2, 2, 2, Voxel.default_voxel)
 # world.build_solid_cube()
 # world.build_random_hollow_cube()
 # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
-world.build_hollow_cube_with_randomly_coloured_sides(Voxel.random_coloured_voxel,
-                                                     torch.tensor([10, 10, 10, 20, 20, 20]))
+# world.build_hollow_cube_with_randomly_coloured_sides(Voxel.random_coloured_voxel,
+#                                                      torch.tensor([10, 10, 10, 20, 20, 20]))
 # world.build_random_hollow_cube2(Voxel.random_voxel, torch.tensor([15, 15, 15, 10, 10, 10]))
 
 camera_look_at = torch.tensor([0., 0., 0., 1])
@@ -989,14 +989,11 @@ r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, nu
              ray_spec)
 
 # This renders the volumetric model and shows the rendered image. Useful for training
-red, green, blue = r.render(plt)
+# red, green, blue = r.render(plt)
 # print(red.shape)
 # print(green.shape)
 # print(blue.shape)
-transforms.ToPILImage()(torch.stack([red, green, blue])).show()
-print((red - green).sum())
-print((blue - green).sum())
-print((red - blue).sum())
+# transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
 # This just loads training images and shows them
 # t = transforms.Compose([transforms.ToTensor()])
@@ -1038,12 +1035,12 @@ print("Render complete")
 # red, green, blue = r.render(plt)
 # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
-# voxel_access, voxels, losses = training_loop(world, camera, view_spec, ray_spec, 5)
-# print("Optimisation complete!")
-# update_world(voxels, voxel_access, world)
-# red, green, blue = r.render(plt)
-# transforms.ToPILImage()(1. - torch.stack([red, green, blue])).show()
-# print("Rendered final result")
+voxel_access, voxels, losses = training_loop(world, camera, view_spec, ray_spec, 5)
+print("Optimisation complete!")
+update_world(voxels, voxel_access, world)
+red, green, blue = r.render(plt)
+transforms.ToPILImage()(torch.stack([red, green, blue])).show()
+print("Rendered final result")
 
 # Calculates MSE against whole images
 # total_num_rays = num_rays_x * num_rays_y
