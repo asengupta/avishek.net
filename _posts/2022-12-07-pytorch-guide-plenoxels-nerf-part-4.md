@@ -6,7 +6,7 @@ tags: ["Machine Learning", "PyTorch", "Programming", "Deep Learning", "Neural Ra
 draft: false
 ---
 
-This is part of a series of posts breaking down the [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131), and providing (hopefully) well-annotated source code to aid in understanding.
+This is part of a series of posts breaking down the paper [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131), and providing (hopefully) well-annotated source code to aid in understanding.
 
 - [Part 1]({% post_url 2022-12-04-pytorch-guide-plenoxels-nerf-part-1 %})
 - [Part 2]({% post_url 2022-12-05-pytorch-guide-plenoxels-nerf-part-2 %})
@@ -21,6 +21,8 @@ We will add in regularisation later. Let's test the loss on images generated wit
 
 ### Refactoring the Data Structure
 We will also use the original renderer to generate ground truth that we can use to validate that the refactored renderer still generates correct images.
+
+![Plenoxels Data Structure](/assets/images/plenoxels-data-structures.png)
 
 ```python
 {% include_absolute '/code/pytorch-learn/plenoxels/volumetric-rendering-with-loss-interpolating.py' %}
