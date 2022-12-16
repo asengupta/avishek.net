@@ -84,10 +84,6 @@ def plot(style="bo"):
     return lambda p: plt.plot(p[0][0], p[1][0], style)
 
 
-def line(marker="o"):
-    return lambda p1, p2: plt.plot([p1[0][0], p2[0][0]], [p1[1][0], p2[1][0]], marker="o")
-
-
 HALF_SQRT_3_BY_PI = 0.5 * math.sqrt(3. / math.pi)
 HALF_SQRT_15_BY_PI = 0.5 * math.sqrt(15. / math.pi)
 QUARTER_SQRT_15_BY_PI = 0.25 * math.sqrt(15. / math.pi)
@@ -121,6 +117,8 @@ def rgb_harmonics(rgb_harmonic_coefficients):
 
 
 class Voxel:
+    NUM_INTERPOLATING_NEIGHBOURS = 8
+
     @staticmethod
     def random_voxel():
         voxel = torch.cat([torch.tensor([0.0005]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
@@ -155,8 +153,11 @@ class Ray:
             print(f"WARNING: num_samples = {num_samples}, sample_positions = {ray_sample_positions}")
 
     def at(self, index):
-        return self.ray_sample_positions[index], self.voxel_positions[index * 8: index * 8 + 8], self.voxels[
-                                                                                                 index * 8: index * 8 + 8]
+        start = index * Voxel.NUM_INTERPOLATING_NEIGHBOURS
+        end = start + Voxel.NUM_INTERPOLATING_NEIGHBOURS
+        return self.ray_sample_positions[index], \
+               self.voxel_positions[start: end], \
+               self.voxels[start: end]
 
 
 class VoxelAccess:
@@ -183,8 +184,6 @@ class VoxelGrid:
         self.grid_x = x
         self.grid_y = y
         self.grid_z = z
-        # self.voxel_grid = torch.zeros([self.grid_x, self.grid_y, self.grid_z, VoxelGrid.VOXEL_DIMENSION],
-        #                              requires_grad=True)
         self.voxel_grid = np.ndarray((self.grid_x, self.grid_y, self.grid_z), dtype=list)
         for i in range(self.grid_x):
             for j in range(self.grid_y):
@@ -207,7 +206,6 @@ class VoxelGrid:
         return not self.is_inside(x, y, z)
 
     def channel_opacity(self, position_distance_density_color_tensors, viewing_angle):
-        # 3 is distance, 4 is density
         number_of_samples = len(position_distance_density_color_tensors)
         transmittances = list(map(lambda i: functools.reduce(
             lambda acc, j: acc + math.exp(
@@ -258,21 +256,21 @@ class VoxelGrid:
         for i in range(x, x + dx + 1):
             for j in range(y, y + dy + 1):
                 self.voxel_grid[i, j, z] = make_voxel()
-        # for i in range(x, x + dx + 1):
-        #     for j in range(y, y + dy + 1):
-        #         self.voxel_grid[i, j, z + dz] = make_voxel()
-        # for i in range(y, y + dy + 1):
-        #     for j in range(z, z + dz + 1):
-        #         self.voxel_grid[x, i, j] = make_voxel()
-        # for i in range(y, y + dy + 1):
-        #     for j in range(z, z + dz + 1):
-        #         self.voxel_grid[x + dx, i, j] = make_voxel()
-        # for i in range(z, z + dz + 1):
-        #     for j in range(x, x + dx + 1):
-        #         self.voxel_grid[j, y, i] = make_voxel()
-        # for i in range(z, z + dz + 1):
-        #     for j in range(x, x + dx + 1):
-        #         self.voxel_grid[j, y + dy, i] = make_voxel()
+        for i in range(x, x + dx + 1):
+            for j in range(y, y + dy + 1):
+                self.voxel_grid[i, j, z + dz] = make_voxel()
+        for i in range(y, y + dy + 1):
+            for j in range(z, z + dz + 1):
+                self.voxel_grid[x, i, j] = make_voxel()
+        for i in range(y, y + dy + 1):
+            for j in range(z, z + dz + 1):
+                self.voxel_grid[x + dx, i, j] = make_voxel()
+        for i in range(z, z + dz + 1):
+            for j in range(x, x + dx + 1):
+                self.voxel_grid[j, y, i] = make_voxel()
+        for i in range(z, z + dz + 1):
+            for j in range(x, x + dx + 1):
+                self.voxel_grid[j, y + dy, i] = make_voxel()
 
     def density(self, ray_samples_with_distances, viewing_angle):
         global MASTER_VOXELS_STRUCTURE
@@ -340,7 +338,7 @@ def neighbours(x, y, z, world):
                                                                (x1, y1, z1)])
 
 
-def density_z(ray_sample_distances, ray, viewing_angle, world):
+def density_split(ray_sample_distances, ray, viewing_angle, world):
     collected_intensities = []
     for index, distance in enumerate(ray_sample_distances):
         ray_sample_position, voxel_positions, voxels = ray.at(index)
@@ -377,11 +375,11 @@ def density_z(ray_sample_distances, ray, viewing_angle, world):
         collected_intensities.append(c)
 
     # print(ray_sample_distances)
-    return channel_opacity_z(torch.cat([ray_sample_distances, torch.stack(collected_intensities)], 1),
-                             viewing_angle)
+    return channel_opacity_split(torch.cat([ray_sample_distances, torch.stack(collected_intensities)], 1),
+                                 viewing_angle)
 
 
-def channel_opacity_z(distance_density_color_tensors, viewing_angle):
+def channel_opacity_split(distance_density_color_tensors, viewing_angle):
     # 3 is distance, 4 is density
     number_of_samples = len(distance_density_color_tensors)
     transmittances = list(map(lambda i: functools.reduce(
@@ -556,7 +554,7 @@ class Renderer:
             # ray_samples_with_distances = torch.cat([t1, torch.reshape(consecutive_sample_distances, (-1, 1))], 1)
             ray_sample_distances = torch.reshape(consecutive_sample_distances, (-1, 1))
             # color_densities = torch.tensor([0., 0., 0.])
-            color_densities = density_z(ray_sample_distances, ray, viewing_angle, world)
+            color_densities = density_split(ray_sample_distances, ray, viewing_angle, world)
             color_tensor = 1. - torch.clamp(color_densities, min=0, max=1)
             plt.plot(view_x, view_y, marker="o", color=color_tensor.detach().numpy())
             # plt.plot(view_x, view_y, marker="o",color="green")

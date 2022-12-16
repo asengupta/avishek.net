@@ -18,8 +18,11 @@ We continue looking at [Plenoxels: Radiance Fields without Neural Networks](http
 
 ### Reconstruction Results
 
-![Plenoxels Flat Surface Training](/assets/images/plenoxels-flat-surface-training.png)
+![Plenoxels Flat Surface Training Image](/assets/images/plenoxels-flat-surface-training.png)
 ![Plenoxels Flat Surface 5 Epochs 1 Image](/assets/images/plenoxel-flat-surface-1-image-5-epochs.png)
+
+![Plenoxels Cube Image](/assets/images/plenoxels-cube-training.png)
+![Plenoxels Cube 5 Epochs 1 Image](/assets/images/plenoxels-cube-5-epochs-1-image.png)
 
 ### References
 
