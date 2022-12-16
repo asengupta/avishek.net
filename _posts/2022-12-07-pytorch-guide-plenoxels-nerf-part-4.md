@@ -10,7 +10,10 @@ We continue looking at [Plenoxels: Radiance Fields without Neural Networks](http
 
 ### Calculating Loss
 
+We will add in regularisation later. Let's test the loss on images generated with the exact renderer which generates the test images. The loss should be essentially zero.
+
 ### Refactoring the Data Structure
+We will also use the original renderer to generate ground truth that we can use to validate that the refactored renderer still generates correct images.
 
 ### Incorporating A Single Training Image
 
