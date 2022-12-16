@@ -997,11 +997,11 @@ for ray_index, view_point in enumerate(voxel_access.view_points):
             world.voxel_grid[x, y, z] = voxel
 
 # voxel_access = r.build_rays(fullscreen_samples(view_spec))
-r, g, b = r.render(plt)
-print("Rendered final result")
+# r, g, b = r.render(plt)
 
-# red, green, blue = r.render(plt)
-# transforms.ToPILImage()(torch.stack([red, green, blue])).show()
+red, green, blue = r.render(plt)
+transforms.ToPILImage()(torch.stack([red, green, blue])).show()
+print("Rendered final result")
 
 # Calculates MSE against whole images
 # total_num_rays = num_rays_x * num_rays_y
