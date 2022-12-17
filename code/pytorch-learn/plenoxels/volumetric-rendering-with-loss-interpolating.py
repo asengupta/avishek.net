@@ -21,6 +21,7 @@ VOXELS_NOT_USED = 0
 class Camera:
     def __init__(self, focal_length, center, basis):
         self.basis = basis
+        self.focal_length = focal_length
         camera_center = center.detach().clone()
         transposed_basis = torch.transpose(basis, 0, 1)
         camera_center[:3] = camera_center[
@@ -40,8 +41,8 @@ class Camera:
 
     def viewing_angle(self):
         camera_basis_z = self.basis[2][:3]
-        camera_basis_theta = math.atan(camera_basis_z[1] / camera_basis_z[2])
-        camera_basis_phi = math.atan(camera_basis_z[2] / camera_basis_z.norm())
+        camera_basis_theta = math.atan(camera_basis_z[1] / camera_basis_z[0]) if (camera_basis_z[0] != 0) else math.pi / 2
+        camera_basis_phi = math.atan((camera_basis_z[0]**2 + camera_basis_z[1] ** 2)  / camera_basis_z[2]) if (camera_basis_z[2] != 0) else math.pi / 2
         return torch.tensor([camera_basis_theta, camera_basis_phi])
 
 
@@ -143,7 +144,7 @@ class Voxel:
 
     @staticmethod
     def random_coloured_voxel():
-        voxel = torch.cat([torch.tensor([0.03]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
+        voxel = torch.cat([torch.tensor([0.5]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
         voxel.requires_grad = True
         return voxel
 
@@ -237,11 +238,13 @@ class VoxelGrid:
         return not self.is_inside(x, y, z)
 
     def channel_opacity(self, position_distance_density_color_tensors, viewing_angle):
+        # print("Calculating opacity...")
         number_of_samples = len(position_distance_density_color_tensors)
         transmittances = list(map(lambda i: functools.reduce(
             lambda acc, j: acc + math.exp(
                 - position_distance_density_color_tensors[j, 4] * position_distance_density_color_tensors[j, 3]),
             range(0, i), 0.), range(1, number_of_samples + 1)))
+        # print(f"Transmittances={transmittances}")
         color_densities = torch.zeros([3])
         for index, transmittance in enumerate(transmittances):
             if (position_distance_density_color_tensors[index, 4] == 0.):
@@ -255,15 +258,17 @@ class VoxelGrid:
             base_transmittance = transmittance * (1. - torch.exp(
                 - position_distance_density_color_tensors[index, 4] * position_distance_density_color_tensors[
                     index, 3]))
+            # print(f"Base transmittance={base_transmittance}, r={r}, g={g}, b={b}, viewing_angle={viewing_angle}")
             # Stacking instead of cat-ing to preserve gradient
             color_densities += torch.stack([base_transmittance * r, base_transmittance * g, base_transmittance * b])
 
+        # print(f"COLOR DENSITIES={color_densities}")
         return color_densities
 
     def build_solid_cube(self):
-        for i in range(13, self.grid_x - 13):
-            for j in range(13, self.grid_y - 13):
-                for k in range(13, self.grid_z - 13):
+        for i in range(10, 20):
+            for j in range(10, 20):
+                for k in range(10, 20):
                     self.voxel_grid[i, j, k] = Voxel.default_voxel()
 
     def build_random_hollow_cube(self):
@@ -352,6 +357,7 @@ class VoxelGrid:
             MASTER_VOXELS_STRUCTURE += [c_000, c_001, c_010, c_011, c_100, c_101, c_110, c_111]
 
             collected_intensities.append(c)
+        # print(f"Collected intensitie in density()s={collected_intensities}")
         return self.channel_opacity(torch.cat([ray_samples_with_distances, torch.stack(collected_intensities)], 1),
                                     viewing_angle)
 
@@ -564,6 +570,7 @@ class Renderer:
         blue_image = []
         camera_basis_x = camera.basis[0][:3]
         camera_basis_y = camera.basis[1][:3]
+        camera_basis_z = camera.basis[2][:3]
         viewing_angle = camera.viewing_angle()
         camera_center_inhomogenous = camera_center[:3]
 
@@ -577,12 +584,16 @@ class Renderer:
         ax = plt.gca()
         ax.set_aspect('equal', adjustable='box')
         plt.axis("off")
+        print(f"Camera basis={camera.basis}")
+        view_screen_origin = camera_basis_z * camera.focal_length + camera_center_inhomogenous
+        print(f"View screen origin={view_screen_origin}")
         for i in np.linspace(self.x_1, self.x_2, self.num_view_samples_x):
             red_column = []
             green_column = []
             blue_column = []
             for j in np.linspace(self.y_1, self.y_2, self.num_view_samples_y):
-                ray_screen_intersection = camera_basis_x * i + camera_basis_y * j
+                ray_screen_intersection = camera_basis_x * i + camera_basis_y * j + view_screen_origin
+                # ray_screen_intersection = camera_basis_x * i + camera_basis_y * j
                 unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
                 # print(f"Camera basis is {camera.basis}, Camera center is {camera_center_inhomogenous}, intersection is {ray_screen_intersection}, Unit ray is [{unit_ray}]")
                 ray_samples = []
@@ -591,7 +602,7 @@ class Renderer:
                     ray_endpoint = camera_center_inhomogenous + unit_ray * k
                     ray_x, ray_y, ray_z = ray_endpoint
                     if (self.world.is_outside(ray_x, ray_y, ray_z)):
-                        # print(f"Skipping [{ray_x},{ray_y},{ray_z}]")
+                        # print(f"Skipping [{ray_x},{ray_y},{ray_z}], k={k}, unit ray={unit_ray}, camera is {camera_center_inhomogenous}")
                         continue
                     # We are in the box
                     ray_samples.append([ray_x, ray_y, ray_z])
@@ -607,11 +618,12 @@ class Renderer:
                     continue
 
                 MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE += unique_ray_samples
-
                 VOXELS_NOT_USED += 8
                 t1 = unique_ray_samples[:-1]
                 t2 = unique_ray_samples[1:]
                 consecutive_sample_distances = (t1 - t2).pow(2).sum(1).sqrt()
+                # print("I AM HERE")
+                # print(consecutive_sample_distances)
 
                 # Make 1D tensor into 2D tensor
                 ray_samples_with_distances = torch.cat([t1, torch.reshape(consecutive_sample_distances, (-1, 1))], 1)
@@ -827,7 +839,7 @@ GRID_Z = 40
 random_world = VoxelGrid.build_random_world(GRID_X, GRID_Y, GRID_Z)
 empty_world = VoxelGrid.build_empty_world(GRID_X, GRID_Y, GRID_Z)
 proxy_world = VoxelGrid(2, 2, 2, Voxel.default_voxel)
-# world.build_solid_cube()
+# empty_world.build_solid_cube()
 # world.build_random_hollow_cube()
 # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
 empty_world.build_hollow_cube_with_randomly_coloured_sides(Voxel.random_coloured_voxel,
@@ -855,21 +867,21 @@ camera_look_at = cube_center
 # This centers the cube properly
 # camera_center = torch.tensor([-20., -10., 40., 1.])
 print(camera_positions[0])
-camera_center = torch.tensor([0., 20., 20., 1.])
+camera_center = torch.tensor([0., 0., 35., 1.])
 
 # Exact diagonal centering of cube
 # camera_center = torch.tensor([40., 40., 40., 1.])
 # camera_center = torch.tensor([-20., -20., 40., 1.])
-focal_length = 1
+focal_length = 0.5
 
 camera_basis = basis_from_depth(camera_look_at, camera_center)
 camera = Camera(focal_length, camera_center, camera_basis)
 num_rays_x = 100
 num_rays_y = 100
-view_x1 = -50
-view_x2 = 50
-view_y1 = -50
-view_y2 = 50
+view_x1 = -1
+view_x2 = 1
+view_y1 = -1
+view_y2 = 1
 view_spec = [view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]
 ray_length = 100
 num_ray_samples = 50
