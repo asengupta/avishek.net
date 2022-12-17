@@ -144,7 +144,7 @@ class Voxel:
 
     @staticmethod
     def random_coloured_voxel():
-        voxel = torch.cat([torch.tensor([0.05]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
+        voxel = torch.cat([torch.tensor([0.1]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
         voxel.requires_grad = True
         return voxel
 
@@ -697,9 +697,10 @@ def samples_to_image(red_samples, green_samples, blue_samples, view_spec):
         # blue_render_channel[int((view_y2 - pixel[1]) / step_y), int((pixel[0] - view_x1) / step_x)] = \
         # blue_samples[index][2]
         x, y = camera_to_image(pixel[X], pixel[Y], view_spec)
-        red_render_channel[y, x] = red_samples[index][INTENSITY]
-        green_render_channel[y, x] = green_samples[index][INTENSITY]
-        blue_render_channel[y, x] = blue_samples[index][INTENSITY]
+        print(f"({x},{y})")
+        red_render_channel[y - 1, x - 1] = red_samples[index][INTENSITY]
+        green_render_channel[y - 1, x - 1] = green_samples[index][INTENSITY]
+        blue_render_channel[y - 1, x - 1] = blue_samples[index][INTENSITY]
     image_data = torch.stack([red_render_channel, green_render_channel, blue_render_channel])
     return image_data
 
@@ -844,7 +845,7 @@ empty_world.build_hollow_cube_with_randomly_coloured_sides(Voxel.random_coloured
                                                            torch.tensor([10, 10, 10, 20, 20, 20]))
 # world.build_random_hollow_cube2(Voxel.random_voxel, torch.tensor([15, 15, 15, 10, 10, 10]))
 cube_center = torch.tensor([20., 20., 20., 1.])
-radius = 45.
+radius = 25.
 
 camera_positions = list(map(lambda theta: list(map(lambda phi: [radius * math.sin(phi) * math.cos(theta),
                                                                 radius * math.sin(phi) * math.sin(theta),
@@ -854,18 +855,18 @@ camera_positions = list(map(lambda theta: list(map(lambda phi: [radius * math.si
 
 camera_positions = cube_center + torch.tensor(functools.reduce(lambda acc, x: acc + x, camera_positions, []))
 print(camera_positions)
-# for camera_position in camera_positions:
-#     empty_world.set(camera_position, Voxel.occupied_voxel())
+for camera_position in camera_positions:
+    empty_world.set(camera_position, Voxel.occupied_voxel())
 
 
-# empty_world.voxel_grid *= 100
 # camera_look_at = torch.tensor([0., 0., 0., 1])
 camera_look_at = cube_center
 
 # This centers the cube properly
 # camera_center = torch.tensor([-20., -10., 40., 1.])
-print(camera_positions[0])
-camera_center = torch.tensor([-15., 0., 40., 1.])
+
+# camera_center = torch.tensor([-15., 0., 40., 1.])
+camera_center = camera_positions[12]
 
 # Exact diagonal centering of cube
 # camera_center = torch.tensor([40., 40., 40., 1.])
