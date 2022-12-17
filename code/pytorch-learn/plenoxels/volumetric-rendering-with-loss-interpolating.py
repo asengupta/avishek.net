@@ -792,7 +792,7 @@ def training_loop(world, camera, view_spec, ray_spec, n=1):
         optimizer.zero_grad()
         r, g, b = model([camera, view_spec, ray_spec])
 
-        red_mse = mse(r, training_image[0], view_spec)x
+        red_mse = mse(r, training_image[0], view_spec)
         green_mse = mse(g, training_image[1], view_spec)
         blue_mse = mse(b, training_image[2], view_spec)
         total_mse = red_mse + green_mse + blue_mse
