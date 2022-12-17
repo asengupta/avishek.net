@@ -217,7 +217,7 @@ class VoxelGrid:
 
     @staticmethod
     def build_random_world(x, y, z):
-        return VoxelGrid(x, y, z, Voxel.default_voxel)
+        return VoxelGrid(x, y, z, Voxel.random_coloured_voxel)
 
     def at(self, x, y, z):
         if self.is_outside(x, y, z):
@@ -445,6 +445,7 @@ def channel_opacity_split(distance_density_color_tensors, viewing_angle):
 
 
 class Renderer:
+    SIGMOID =nn.Sigmoid()
     def __init__(self, world, camera, view_spec, ray_spec):
         self.world = world
         self.camera = camera
@@ -494,7 +495,8 @@ class Renderer:
             ray_sample_distances = torch.reshape(consecutive_sample_distances, (-1, 1))
             # color_densities = torch.tensor([0., 0., 0.])
             color_densities = density_split(ray_sample_distances, ray, viewing_angle, self.world)
-            color_tensor = torch.clamp(color_densities, min=0, max=1)
+            # color_tensor = torch.clamp(color_densities, min=0, max=1)
+            color_tensor = Renderer.SIGMOID(color_densities)
             plt.plot(view_x, view_y, marker="o", color=color_tensor.detach().numpy())
             # plt.plot(view_x, view_y, marker="o",color="green")
 
@@ -632,7 +634,8 @@ class Renderer:
                 color_densities = self.world.density(ray_samples_with_distances, viewing_angle)
                 print(color_densities)
 
-                color_tensor = torch.clamp(color_densities, min=0, max=1)
+                # color_tensor = torch.clamp(color_densities, min=0, max=1)
+                color_tensor = Renderer.SIGMOID(color_densities)
                 plt.plot(i, j, marker="o", color=color_tensor.detach().numpy())
                 red_column.append(color_tensor[RED_CHANNEL])
                 green_column.append(color_tensor[GREEN_CHANNEL])
@@ -785,11 +788,11 @@ def training_loop(world, camera, view_spec, ray_spec, n=1):
     model = PlenoxelModel([camera, view_spec, ray_spec], world)
     for i in range(n):
         print(f"Epoch={i}")
-        optimizer = torch.optim.RMSprop(model.parameters(), lr=0.05, momentum=0.9)
+        optimizer = torch.optim.RMSprop(model.parameters(), lr=0.005, momentum=0.9)
         optimizer.zero_grad()
         r, g, b = model([camera, view_spec, ray_spec])
 
-        red_mse = mse(r, training_image[0], view_spec)
+        red_mse = mse(r, training_image[0], view_spec)x
         green_mse = mse(g, training_image[1], view_spec)
         blue_mse = mse(b, training_image[2], view_spec)
         total_mse = red_mse + green_mse + blue_mse
@@ -893,7 +896,7 @@ r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, nu
              ray_spec)
 
 # This renders the volumetric model and shows the rendered image. Useful for training
-red, green, blue = r.render(plt)
+# red, green, blue = r.render(plt)
 # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
 # This just loads training images and shows them
@@ -935,12 +938,12 @@ num_stochastic_rays = 1000
 # red, green, blue = r.render(plt)
 # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
-# voxel_access, voxels, losses = training_loop(random_world, camera, view_spec, ray_spec, 15)
-# print("Optimisation complete!")
-# update_world(voxels, voxel_access, random_world)
-# red, green, blue = r.render(plt)
-# transforms.ToPILImage()(torch.stack([red, green, blue])).show()
-# print("Rendered final result")
+voxel_access, voxels, losses = training_loop(random_world, camera, view_spec, ray_spec, 15)
+print("Optimisation complete!")
+update_world(voxels, voxel_access, random_world)
+red, green, blue = r.render(plt)
+transforms.ToPILImage()(torch.stack([red, green, blue])).show()
+print("Rendered final result")
 
 # Calculates MSE against whole images
 # total_num_rays = num_rays_x * num_rays_y
