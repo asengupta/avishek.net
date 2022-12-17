@@ -820,7 +820,7 @@ def update_world(optimised_voxels, voxel_access, world):
                         y < 0 or y > GRID_Y - 1 or
                         z < 0 or z > GRID_Z - 1):
                     continue
-                world.voxel_grid[x, y, z] = voxel
+                world.set((x, y, z), voxel)
 
 
 GRID_X = 40
