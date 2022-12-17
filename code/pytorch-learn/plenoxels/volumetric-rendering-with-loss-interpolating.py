@@ -142,8 +142,8 @@ class Voxel:
 
     @staticmethod
     def default_voxel():
-        voxel = torch.cat([torch.tensor([0.25]), torch.ones(VoxelGrid.VOXEL_DIMENSION - 1)])
-        voxel.requires_grad = True
+        voxel = torch.tensor(Voxel.uniform_harmonic(), requires_grad=True)
+        # voxel = torch.cat([torch.tensor([0.25]), torch.ones(VoxelGrid.VOXEL_DIMENSION - 1)])
         return voxel
 
     @staticmethod
@@ -153,9 +153,12 @@ class Voxel:
         return voxel
 
     @staticmethod
+    def uniform_harmonic():
+        return [1.] + ([1.] + [0.] * (VoxelGrid.PER_CHANNEL_DIMENSION - 1)) * 3
+
+    @staticmethod
     def occupied_voxel():
-        voxel = torch.cat([torch.tensor([1.]), torch.ones(VoxelGrid.VOXEL_DIMENSION - 1)])
-        voxel.requires_grad = True
+        voxel = torch.tensor(Voxel.uniform_harmonic(), requires_grad=True)
         return voxel
 
     @staticmethod
@@ -200,6 +203,7 @@ class VoxelAccess:
 
 class VoxelGrid:
     VOXEL_DIMENSION = 28
+    PER_CHANNEL_DIMENSION = 9
 
     def __init__(self, x, y, z, make_voxel):
         self.grid_x = x
@@ -605,11 +609,13 @@ class Renderer:
                     ray_endpoint = camera_center_inhomogenous + unit_ray * k
                     ray_x, ray_y, ray_z = ray_endpoint
                     if (self.world.is_outside(ray_x, ray_y, ray_z)):
-                        # print(f"Skipping [{ray_x},{ray_y},{ray_z}], k={k}, unit ray={unit_ray}, camera is {camera_center_inhomogenous}")
+                        # print(
+                            # f"Skipping [{ray_x},{ray_y},{ray_z}], k={k}, unit ray={unit_ray}, camera is {camera_center_inhomogenous}")
                         continue
                     # We are in the box
                     ray_samples.append([ray_x, ray_y, ray_z])
-                    # print(f"Sample at ({[ray_x, ray_y, ray_z]}), voxel value here is {self.world.at(ray_x, ray_y, ray_z)}")
+                    # print(
+                    #     f"Sample at ({[ray_x, ray_y, ray_z]}), voxel value here is {self.world.at(ray_x, ray_y, ray_z)}")
 
                 # unique_ray_samples = torch.unique(torch.tensor(ray_samples), dim=0)
                 unique_ray_samples = torch.tensor(ray_samples)
@@ -626,14 +632,13 @@ class Renderer:
                 t1 = unique_ray_samples[:-1]
                 t2 = unique_ray_samples[1:]
                 consecutive_sample_distances = (t1 - t2).pow(2).sum(1).sqrt()
-                # print("I AM HERE")
                 # print(consecutive_sample_distances)
 
                 # Make 1D tensor into 2D tensor
                 ray_samples_with_distances = torch.cat([t1, torch.reshape(consecutive_sample_distances, (-1, 1))], 1)
                 # print(ray_samples_with_distances)
                 color_densities = self.world.density(ray_samples_with_distances, viewing_angle)
-                # print(color_densities)
+                print(color_densities)
 
                 # color_tensor = torch.clamp(color_densities, min=0, max=1)
                 color_tensor = Renderer.SIGMOID(color_densities)
@@ -863,8 +868,9 @@ camera_look_at = cube_center
 # This centers the cube properly
 # camera_center = torch.tensor([-20., -10., 40., 1.])
 
-# camera_center = torch.tensor([-15., 20., 26., 1.])
-camera_center = torch.tensor([20.,  20., -15., 1.])
+# camera_center = torch.tensor([-15., 20., 20., 1.])
+camera_center = torch.tensor([20., -15., 20., 1.])
+# camera_center = torch.tensor([20.,  20., -15., 1.])
 # camera_center = camera_positions[12]
 
 # Exact diagonal centering of cube
@@ -885,6 +891,7 @@ ray_length = 100
 num_ray_samples = 50
 ray_spec = torch.tensor([ray_length, num_ray_samples])
 
+# camera_positions = [camera_center]
 print(camera_positions)
 # This generates training data
 # for camera_index, camera_position in enumerate(camera_positions):
