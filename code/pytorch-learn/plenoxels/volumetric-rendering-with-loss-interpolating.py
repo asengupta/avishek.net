@@ -144,7 +144,7 @@ class Voxel:
 
     @staticmethod
     def random_coloured_voxel():
-        voxel = torch.cat([torch.tensor([0.5]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
+        voxel = torch.cat([torch.tensor([0.05]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
         voxel.requires_grad = True
         return voxel
 
@@ -238,13 +238,11 @@ class VoxelGrid:
         return not self.is_inside(x, y, z)
 
     def channel_opacity(self, position_distance_density_color_tensors, viewing_angle):
-        # print("Calculating opacity...")
         number_of_samples = len(position_distance_density_color_tensors)
         transmittances = list(map(lambda i: functools.reduce(
             lambda acc, j: acc + math.exp(
                 - position_distance_density_color_tensors[j, 4] * position_distance_density_color_tensors[j, 3]),
             range(0, i), 0.), range(1, number_of_samples + 1)))
-        # print(f"Transmittances={transmittances}")
         color_densities = torch.zeros([3])
         for index, transmittance in enumerate(transmittances):
             if (position_distance_density_color_tensors[index, 4] == 0.):
@@ -258,11 +256,10 @@ class VoxelGrid:
             base_transmittance = transmittance * (1. - torch.exp(
                 - position_distance_density_color_tensors[index, 4] * position_distance_density_color_tensors[
                     index, 3]))
-            # print(f"Base transmittance={base_transmittance}, r={r}, g={g}, b={b}, viewing_angle={viewing_angle}")
+
             # Stacking instead of cat-ing to preserve gradient
             color_densities += torch.stack([base_transmittance * r, base_transmittance * g, base_transmittance * b])
 
-        # print(f"COLOR DENSITIES={color_densities}")
         return color_densities
 
     def build_solid_cube(self):
@@ -357,7 +354,6 @@ class VoxelGrid:
             MASTER_VOXELS_STRUCTURE += [c_000, c_001, c_010, c_011, c_100, c_101, c_110, c_111]
 
             collected_intensities.append(c)
-        # print(f"Collected intensitie in density()s={collected_intensities}")
         return self.channel_opacity(torch.cat([ray_samples_with_distances, torch.stack(collected_intensities)], 1),
                                     viewing_angle)
 
@@ -516,16 +512,18 @@ class Renderer:
     def build_rays(self, ray_intersection_weights):
         camera_basis_x = camera.basis[0][:3]
         camera_basis_y = camera.basis[1][:3]
+        camera_basis_z = camera.basis[2][:3]
         camera_center_inhomogenous = camera_center[:3]
         all_voxel_positions = []
         view_points = []
         voxel_pointers = []
         all_voxels = []
         ray_sample_positions = []
+        view_screen_origin = camera_basis_z * camera.focal_length + camera_center_inhomogenous
         counter = 0
         for ray_intersection_weight in ray_intersection_weights:
             ray_screen_intersection = camera_basis_x * ray_intersection_weight[0] + \
-                                      camera_basis_y * ray_intersection_weight[1]
+                                      camera_basis_y * ray_intersection_weight[1] + view_screen_origin
             unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
             view_x, view_y = ray_intersection_weight[0], ray_intersection_weight[1]
             num_intersecting_voxels = 0
@@ -867,12 +865,12 @@ camera_look_at = cube_center
 # This centers the cube properly
 # camera_center = torch.tensor([-20., -10., 40., 1.])
 print(camera_positions[0])
-camera_center = torch.tensor([0., 0., 35., 1.])
+camera_center = torch.tensor([-15., 0., 40., 1.])
 
 # Exact diagonal centering of cube
 # camera_center = torch.tensor([40., 40., 40., 1.])
 # camera_center = torch.tensor([-20., -20., 40., 1.])
-focal_length = 0.5
+focal_length = 1.
 
 camera_basis = basis_from_depth(camera_look_at, camera_center)
 camera = Camera(focal_length, camera_center, camera_basis)
@@ -884,14 +882,14 @@ view_y1 = -1
 view_y2 = 1
 view_spec = [view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]
 ray_length = 100
-num_ray_samples = 50
+num_ray_samples = 150
 ray_spec = torch.tensor([ray_length, num_ray_samples])
 r = Renderer(empty_world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
              ray_spec)
 
 # This renders the volumetric model and shows the rendered image. Useful for training
-red, green, blue = r.render(plt)
-transforms.ToPILImage()(torch.stack([red, green, blue])).show()
+# red, green, blue = r.render(plt)
+# transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
 # This just loads training images and shows them
 # t = transforms.Compose([transforms.ToTensor()])
@@ -909,11 +907,11 @@ num_stochastic_rays = 1000
 # This draws stochastic rays and returns a set of samples with colours
 # However, it separates out the determining the intersecting voxels and the transmittance
 # calculations, so that it can be put through a Plenoxel model optimisation
-# voxel_access = r.build_rays(fullscreen_samples(view_spec))
+voxel_access = r.build_rays(fullscreen_samples(view_spec))
 # voxel_access = r.build_rays(stochastic_samples(2000, view_spec))
-# r, g, b = r.render_from_rays(voxel_access, plt, world)
-# image_data = samples_to_image(r, g, b, view_spec)
-# transforms.ToPILImage()(image_data).show()
+r, g, b = r.render_from_rays(voxel_access, plt)
+image_data = samples_to_image(r, g, b, view_spec)
+transforms.ToPILImage()(image_data).show()
 # print(voxel_pointers)
 print("Render complete")
 
