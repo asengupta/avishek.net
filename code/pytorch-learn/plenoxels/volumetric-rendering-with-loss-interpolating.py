@@ -869,8 +869,11 @@ camera_look_at = cube_center
 # camera_center = torch.tensor([-20., -10., 40., 1.])
 
 # camera_center = torch.tensor([-15., 20., 20., 1.])
-camera_center = torch.tensor([20., -15., 20., 1.])
+# camera_center = torch.tensor([20., -15., 20., 1.])
 # camera_center = torch.tensor([20.,  20., -15., 1.])
+# camera_center = torch.tensor([20.,  20.,  55., 1.])
+# camera_center = torch.tensor([20.,  55.,  20., 1.])
+camera_center = torch.tensor([55.,  20.,  20., 1.])
 # camera_center = camera_positions[12]
 
 # Exact diagonal centering of cube
