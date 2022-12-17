@@ -11,6 +11,7 @@ from torchviz import make_dot
 RED_CHANNEL = 0
 GREEN_CHANNEL = 1
 BLUE_CHANNEL = 2
+INHOMOGENEOUS_ZERO_VECTOR = torch.tensor([0., 0., 0.])
 
 MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE = []
 MASTER_VOXELS_STRUCTURE = []
@@ -55,6 +56,12 @@ def camera_basis_from(camera_depth_z_vector):
         depth_vector, depth_vector)
     camera_up_vector = cartesian_z_vector - cartesian_z_projection_lambda * depth_vector
 
+    # This special case is for when the camera is directly pointing up or down, then
+    # there is no way to decide which way to orient its up vector in the X-Y plane.
+    # We choose to align the up veector with the X-axis in this case.
+    if (torch.equal(camera_up_vector, INHOMOGENEOUS_ZERO_VECTOR)):
+        camera_up_vector = torch.tensor([1., 0., 0.])
+    print(f"Up vector is: {camera_up_vector}")
     # The camera coordinate system now has the direction of camera and the up direction of the camera.
     # We need to find the third vector which needs to be orthogonal to both the previous vectors.
     # Taking the cross product of these vectors gives us this third component
@@ -68,6 +75,8 @@ def camera_basis_from(camera_depth_z_vector):
 
 
 def basis_from_depth(look_at, camera_center):
+    print(f"Looking at: {look_at}")
+    print(f"Looking from: {camera_center}")
     depth_vector = torch.sub(look_at, camera_center)
     depth_vector[3] = 1.
     return camera_basis_from(depth_vector)
@@ -134,7 +143,7 @@ class Voxel:
 
     @staticmethod
     def random_coloured_voxel():
-        voxel = torch.cat([torch.tensor([0.05]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
+        voxel = torch.cat([torch.tensor([0.03]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
         voxel.requires_grad = True
         return voxel
 
@@ -203,7 +212,7 @@ class VoxelGrid:
 
     @staticmethod
     def build_random_world(x, y, z):
-        return VoxelGrid(x, y, z, Voxel.random_voxel)
+        return VoxelGrid(x, y, z, Voxel.random_coloured_voxel)
 
     def at(self, x, y, z):
         if self.is_outside(x, y, z):
@@ -575,12 +584,14 @@ class Renderer:
             for j in np.linspace(self.y_1, self.y_2, self.num_view_samples_y):
                 ray_screen_intersection = camera_basis_x * i + camera_basis_y * j
                 unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
+                # print(f"Camera basis is {camera.basis}, Camera center is {camera_center_inhomogenous}, intersection is {ray_screen_intersection}, Unit ray is [{unit_ray}]")
                 ray_samples = []
                 # To remove artifacts, set ray step samples to be higher, like 200
                 for k in np.linspace(0, self.ray_length, self.num_ray_samples):
                     ray_endpoint = camera_center_inhomogenous + unit_ray * k
                     ray_x, ray_y, ray_z = ray_endpoint
                     if (self.world.is_outside(ray_x, ray_y, ray_z)):
+                        # print(f"Skipping [{ray_x},{ray_y},{ray_z}]")
                         continue
                     # We are in the box
                     ray_samples.append([ray_x, ray_y, ray_z])
@@ -823,34 +834,42 @@ empty_world.build_hollow_cube_with_randomly_coloured_sides(Voxel.random_coloured
                                                            torch.tensor([10, 10, 10, 20, 20, 20]))
 # world.build_random_hollow_cube2(Voxel.random_voxel, torch.tensor([15, 15, 15, 10, 10, 10]))
 cube_center = torch.tensor([20., 20., 20., 1.])
-radius = 15.
+radius = 45.
 
 camera_positions = list(map(lambda theta: list(map(lambda phi: [radius * math.sin(phi) * math.cos(theta),
-                                                           radius * math.sin(phi) * math.sin(theta),
-                                                           radius * math.cos(phi), 1.], np.linspace(0, 2 * math.pi, 10))),
-                                                           np.linspace(0, 2 * math.pi, 10)))
+                                                                radius * math.sin(phi) * math.sin(theta),
+                                                                radius * math.cos(phi), 0.],
+                                                   np.linspace(0, 2 * math.pi, 10))),
+                            np.linspace(0, 2 * math.pi, 10)))
 
 camera_positions = cube_center + torch.tensor(functools.reduce(lambda acc, x: acc + x, camera_positions, []))
 print(camera_positions)
-for camera_position in camera_positions:
-    empty_world.set(camera_position, Voxel.occupied_voxel())
+# for camera_position in camera_positions:
+#     empty_world.set(camera_position, Voxel.occupied_voxel())
 
-camera_look_at = torch.tensor([0., 0., 0., 1])
-# camera_look_at = cube_center
-# camera_center = torch.tensor([-60., 5., 15., 1.])
-# camera_center = torch.tensor([-10., -10., 15., 1.])
-camera_center = torch.tensor([-20., -10., 40., 1.])
+
+# empty_world.voxel_grid *= 100
+# camera_look_at = torch.tensor([0., 0., 0., 1])
+camera_look_at = cube_center
+
+# This centers the cube properly
+# camera_center = torch.tensor([-20., -10., 40., 1.])
+print(camera_positions[0])
+camera_center = torch.tensor([0., 20., 20., 1.])
+
+# Exact diagonal centering of cube
+# camera_center = torch.tensor([40., 40., 40., 1.])
 # camera_center = torch.tensor([-20., -20., 40., 1.])
-focal_length = 1.
+focal_length = 1
 
 camera_basis = basis_from_depth(camera_look_at, camera_center)
 camera = Camera(focal_length, camera_center, camera_basis)
 num_rays_x = 100
 num_rays_y = 100
-view_x1 = -35
-view_x2 = 30
-view_y1 = -15
-view_y2 = 60
+view_x1 = -50
+view_x2 = 50
+view_y1 = -50
+view_y2 = 50
 view_spec = [view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]
 ray_length = 100
 num_ray_samples = 50
