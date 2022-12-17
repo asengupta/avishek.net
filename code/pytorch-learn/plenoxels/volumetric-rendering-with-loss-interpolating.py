@@ -1,5 +1,6 @@
 import functools
 import math
+import random
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -41,8 +42,10 @@ class Camera:
 
     def viewing_angle(self):
         camera_basis_z = self.basis[2][:3]
-        camera_basis_theta = math.atan(camera_basis_z[1] / camera_basis_z[0]) if (camera_basis_z[0] != 0) else math.pi / 2
-        camera_basis_phi = math.atan((camera_basis_z[0]**2 + camera_basis_z[1] ** 2)  / camera_basis_z[2]) if (camera_basis_z[2] != 0) else math.pi / 2
+        camera_basis_theta = math.atan(camera_basis_z[1] / camera_basis_z[0]) if (
+                    camera_basis_z[0] != 0) else math.pi / 2
+        camera_basis_phi = math.atan((camera_basis_z[0] ** 2 + camera_basis_z[1] ** 2) / camera_basis_z[2]) if (
+                    camera_basis_z[2] != 0) else math.pi / 2
         return torch.tensor([camera_basis_theta, camera_basis_phi])
 
 
@@ -128,23 +131,24 @@ def rgb_harmonics(rgb_harmonic_coefficients):
 
 class Voxel:
     NUM_INTERPOLATING_NEIGHBOURS = 8
+    DEFAULT_OPACITY = 0.05
 
     @staticmethod
-    def random_voxel():
-        voxel = torch.cat([torch.tensor([0.005]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1) / 1000])
+    def random_voxel(opacity=DEFAULT_OPACITY):
+        voxel = torch.cat([torch.tensor([opacity]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1) / 1000])
         # voxel = torch.cat([torch.tensor([0.5]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
         voxel.requires_grad = True
         return voxel
 
     @staticmethod
     def default_voxel():
-        voxel = torch.cat([torch.tensor([0.05]), torch.ones(VoxelGrid.VOXEL_DIMENSION - 1)])
+        voxel = torch.cat([torch.tensor([0.25]), torch.full([VoxelGrid.VOXEL_DIMENSION - 1], -0.5)])
         voxel.requires_grad = True
         return voxel
 
     @staticmethod
-    def random_coloured_voxel():
-        voxel = torch.cat([torch.tensor([0.1]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
+    def random_coloured_voxel(opacity=DEFAULT_OPACITY):
+        voxel = torch.cat([torch.tensor([0.5]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
         voxel.requires_grad = True
         return voxel
 
@@ -213,7 +217,7 @@ class VoxelGrid:
 
     @staticmethod
     def build_random_world(x, y, z):
-        return VoxelGrid(x, y, z, Voxel.random_coloured_voxel)
+        return VoxelGrid(x, y, z, Voxel.default_voxel)
 
     def at(self, x, y, z):
         if self.is_outside(x, y, z):
@@ -735,7 +739,7 @@ def mse(rendered_channel, true_channel, view_spec):
     return channel_total_error / len(rendered_channel)
 
 
-NUM_STOCHASTIC_RAYS = 1200
+NUM_STOCHASTIC_RAYS = 2000
 
 
 class PlenoxelModel(nn.Module):
@@ -781,7 +785,7 @@ def training_loop(world, camera, view_spec, ray_spec, n=1):
     model = PlenoxelModel([camera, view_spec, ray_spec], world)
     for i in range(n):
         print(f"Epoch={i}")
-        optimizer = torch.optim.RMSprop(model.parameters(), lr=0.0005, momentum=0.9)
+        optimizer = torch.optim.RMSprop(model.parameters(), lr=0.05, momentum=0.9)
         optimizer.zero_grad()
         r, g, b = model([camera, view_spec, ray_spec])
 
@@ -837,15 +841,16 @@ GRID_Z = 40
 
 random_world = VoxelGrid.build_random_world(GRID_X, GRID_Y, GRID_Z)
 empty_world = VoxelGrid.build_empty_world(GRID_X, GRID_Y, GRID_Z)
+world = random_world
 proxy_world = VoxelGrid(2, 2, 2, Voxel.default_voxel)
 # empty_world.build_solid_cube()
 # world.build_random_hollow_cube()
 # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
-empty_world.build_hollow_cube_with_randomly_coloured_sides(Voxel.random_coloured_voxel,
-                                                           torch.tensor([10, 10, 10, 20, 20, 20]))
+# world.build_hollow_cube_with_randomly_coloured_sides(Voxel.random_coloured_voxel,
+#                                                      torch.tensor([10, 10, 10, 20, 20, 20]))
 # world.build_random_hollow_cube2(Voxel.random_voxel, torch.tensor([15, 15, 15, 10, 10, 10]))
 cube_center = torch.tensor([20., 20., 20., 1.])
-radius = 25.
+radius = 35.
 
 camera_positions = list(map(lambda theta: list(map(lambda phi: [radius * math.sin(phi) * math.cos(theta),
                                                                 radius * math.sin(phi) * math.sin(theta),
@@ -856,8 +861,7 @@ camera_positions = list(map(lambda theta: list(map(lambda phi: [radius * math.si
 camera_positions = cube_center + torch.tensor(functools.reduce(lambda acc, x: acc + x, camera_positions, []))
 print(camera_positions)
 for camera_position in camera_positions:
-    empty_world.set(camera_position, Voxel.occupied_voxel())
-
+    world.set(camera_position, Voxel.occupied_voxel())
 
 # camera_look_at = torch.tensor([0., 0., 0., 1])
 camera_look_at = cube_center
@@ -883,13 +887,13 @@ view_y1 = -1
 view_y2 = 1
 view_spec = [view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]
 ray_length = 100
-num_ray_samples = 150
+num_ray_samples = 50
 ray_spec = torch.tensor([ray_length, num_ray_samples])
-r = Renderer(empty_world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
+r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
              ray_spec)
 
 # This renders the volumetric model and shows the rendered image. Useful for training
-# red, green, blue = r.render(plt)
+red, green, blue = r.render(plt)
 # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
 # This just loads training images and shows them
@@ -908,13 +912,13 @@ num_stochastic_rays = 1000
 # This draws stochastic rays and returns a set of samples with colours
 # However, it separates out the determining the intersecting voxels and the transmittance
 # calculations, so that it can be put through a Plenoxel model optimisation
-voxel_access = r.build_rays(fullscreen_samples(view_spec))
+# voxel_access = r.build_rays(fullscreen_samples(view_spec))
 # voxel_access = r.build_rays(stochastic_samples(2000, view_spec))
-r, g, b = r.render_from_rays(voxel_access, plt)
-image_data = samples_to_image(r, g, b, view_spec)
-transforms.ToPILImage()(image_data).show()
+# r, g, b = r.render_from_rays(voxel_access, plt)
+# image_data = samples_to_image(r, g, b, view_spec)
+# transforms.ToPILImage()(image_data).show()
 # print(voxel_pointers)
-print("Render complete")
+# print("Render complete")
 
 # print(f"No of total total ray samples benchmark={len(MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE)}")
 # print(f"No of total total ray samples current={len(voxel_access.ray_sample_positions)}")
