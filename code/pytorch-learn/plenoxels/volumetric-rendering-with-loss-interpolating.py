@@ -493,12 +493,9 @@ class Renderer:
             # List of tensors, last element of each tensor is distance to the next tensor
             # ray_samples_with_distances = torch.cat([t1, torch.reshape(consecutive_sample_distances, (-1, 1))], 1)
             ray_sample_distances = torch.reshape(consecutive_sample_distances, (-1, 1))
-            # color_densities = torch.tensor([0., 0., 0.])
             color_densities = density_split(ray_sample_distances, ray, viewing_angle, self.world)
-            # color_tensor = torch.clamp(color_densities, min=0, max=1)
             color_tensor = Renderer.SIGMOID(color_densities)
             plt.plot(view_x, view_y, marker="o", color=color_tensor.detach().numpy())
-            # plt.plot(view_x, view_y, marker="o",color="green")
 
             if (view_x < view_x1 or view_x > view_x2
                     or view_y < view_y1 or view_y > view_y2):
@@ -597,7 +594,6 @@ class Renderer:
             blue_column = []
             for j in np.linspace(self.y_1, self.y_2, self.num_view_samples_y):
                 ray_screen_intersection = camera_basis_x * i + camera_basis_y * j + view_screen_origin
-                # ray_screen_intersection = camera_basis_x * i + camera_basis_y * j
                 unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
                 # print(f"Camera basis is {camera.basis}, Camera center is {camera_center_inhomogenous}, intersection is {ray_screen_intersection}, Unit ray is [{unit_ray}]")
                 ray_samples = []
@@ -683,6 +679,8 @@ def camera_to_image(x, y, view_spec):
     view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y = view_spec
     step_x = (view_x2 - view_x1) / num_rays_x
     step_y = (view_y2 - view_y1) / num_rays_y
+
+    # (view_y2 - y) implies we are flipping the Y-axis
     return (int((x - view_x1) / step_x), int((view_y2 - y) / step_y))
 
 
@@ -797,26 +795,13 @@ def training_loop(world, camera, view_spec, ray_spec, n=1):
         blue_mse = mse(b, training_image[2], view_spec)
         total_mse = red_mse + green_mse + blue_mse
         print(f"MSE={total_mse}")
-        # print(f"Optimising {len(voxels)} voxels...")
-        # before = voxels.clone()
-        # # print(optimizer.param_groups)
-        # print("Backward")
         total_mse.backward()
         for param in model.parameters():
             print(f"Param after={param.grad.shape}")
         # make_dot(total_mse, params=dict(list(model.named_parameters()))).render("mse", format="png")
         # make_dot(r, params=dict(list(model.named_parameters()))).render("channel", format="png")
-        # print(f"shape={r.shape}")
-        # print(r)
-        # print(total_mse)
-        # print(list(model.parameters()))
-        # for param in model.parameters():
-        #     print(f"Param before={param}")
         optimizer.step()
         # after = torch.stack(list(model.parameters()))
-        # print((after - before).abs().sum())
-        # weight_change = (before - voxels).abs().sum()
-        # print(f"Weight change={weight_change}")
         losses.append(total_mse)
 
     return model.voxel_access, model.voxels, losses
@@ -938,7 +923,7 @@ num_stochastic_rays = 1000
 # red, green, blue = r.render(plt)
 # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
-voxel_access, voxels, losses = training_loop(random_world, camera, view_spec, ray_spec, 15)
+voxel_access, voxels, losses = training_loop(random_world, camera, view_spec, ray_spec, 3)
 print("Optimisation complete!")
 update_world(voxels, voxel_access, random_world)
 red, green, blue = r.render(plt)
