@@ -148,8 +148,8 @@ class Voxel:
 
     @staticmethod
     def random_coloured_voxel(opacity=DEFAULT_OPACITY):
-        voxel = torch.cat([torch.tensor([0.05]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
-        # voxel = Voxel.uniform_harmonic_random_colour()
+        # voxel = torch.cat([torch.tensor([0.05]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
+        voxel = Voxel.uniform_harmonic_random_colour()
         return voxel
 
     @staticmethod
@@ -160,7 +160,7 @@ class Voxel:
     def uniform_harmonic_random_colour():
         random_harmonic_coefficient_set = lambda: ([random.random()] + [0.] * (VoxelGrid.PER_CHANNEL_DIMENSION - 1))
         return torch.tensor([
-                                random.random()] + random_harmonic_coefficient_set() + random_harmonic_coefficient_set() + random_harmonic_coefficient_set(), requires_grad=True)
+                                0.2] + random_harmonic_coefficient_set() + random_harmonic_coefficient_set() + random_harmonic_coefficient_set(), requires_grad=True)
 
     @staticmethod
     def occupied_voxel():
@@ -456,8 +456,8 @@ def channel_opacity_split(distance_density_color_tensors, viewing_angle):
 
 
 class Renderer:
-    SIGMOID =nn.Sigmoid()
-    # SIGMOID = lambda t: torch.clamp(t, min=0, max=1)
+    # SIGMOID =nn.Sigmoid()
+    SIGMOID = lambda t: torch.clamp(t, min=0, max=1)
 
     def __init__(self, world, camera, view_spec, ray_spec):
         self.world = world
@@ -658,7 +658,7 @@ class Renderer:
         red_image_tensor = torch.flip(torch.stack(red_image).t(), [0])
         green_image_tensor = torch.flip(torch.stack(green_image).t(), [0])
         blue_image_tensor = torch.flip(torch.stack(blue_image).t(), [0])
-        plt.show()
+        # figure.show()
         print("Done!!")
         return (red_image_tensor, green_image_tensor, blue_image_tensor)
 
@@ -754,7 +754,7 @@ def mse(rendered_channel, true_channel, view_spec):
     return channel_total_error / len(rendered_channel)
 
 
-NUM_STOCHASTIC_RAYS = 1000
+NUM_STOCHASTIC_RAYS = 2000
 
 
 class PlenoxelModel(nn.Module):
@@ -843,22 +843,47 @@ GRID_Z = 40
 
 random_world = VoxelGrid.build_random_world(GRID_X, GRID_Y, GRID_Z)
 empty_world = VoxelGrid.build_empty_world(GRID_X, GRID_Y, GRID_Z)
-world = random_world
+world = empty_world
 proxy_world = VoxelGrid(2, 2, 2, Voxel.default_voxel)
 # empty_world.build_solid_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
 # world.build_random_hollow_cube()
 # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
-# world.build_hollow_cube_with_randomly_coloured_sides(Voxel.random_coloured_voxel,
-#                                                      torch.tensor([10, 10, 10, 20, 20, 20]))
+world.build_hollow_cube_with_randomly_coloured_sides(Voxel.random_coloured_voxel,
+                                                     torch.tensor([10, 10, 10, 20, 20, 20]))
 # world.build_random_hollow_cube2(Voxel.random_voxel, torch.tensor([15, 15, 15, 10, 10, 10]))
 cube_center = torch.tensor([20., 20., 20., 1.])
+radius = 35.
+
+camera_positions = list(map(lambda theta: list(map(lambda phi: [radius * math.sin(phi) * math.cos(theta),
+                                                                radius * math.sin(phi) * math.sin(theta),
+                                                                radius * math.cos(phi), 0.],
+                                                   np.linspace(0, 2 * math.pi, 5))),
+                            np.linspace(0, 2 * math.pi, 5)))
+
+camera_positions = torch.unique(
+    cube_center + torch.tensor(functools.reduce(lambda acc, x: acc + x, camera_positions, [])), dim=0)
+print(len(camera_positions))
+for camera_position in camera_positions:
+    world.set(camera_position, Voxel.occupied_voxel())
+
 # camera_look_at = torch.tensor([0., 0., 0., 1])
 camera_look_at = cube_center
+
+# This centers the cube properly
+# camera_center = torch.tensor([-20., -10., 40., 1.])
+
+# camera_center = torch.tensor([-15., 20., 20., 1.])
+# camera_center = torch.tensor([20., -15., 20., 1.])
+# camera_center = torch.tensor([20.,  20., -15., 1.])
+# camera_center = torch.tensor([20.,  20.,  55., 1.])
+# camera_center = torch.tensor([20.,  55.,  20., 1.])
+# camera_center = torch.tensor([55.,  20.,  20., 1.])
+# camera_center = camera_positions[12]
 
 # Exact diagonal centering of cube
 # camera_center = torch.tensor([40., 40., 40., 1.])
 camera_center = torch.tensor([-20., -10., 40., 1.])
-focal_length = 3.
+focal_length = 2.
 
 camera_basis = basis_from_depth(camera_look_at, camera_center)
 camera = Camera(focal_length, camera_center, camera_basis)
@@ -873,14 +898,35 @@ ray_length = 100
 num_ray_samples = 50
 ray_spec = torch.tensor([ray_length, num_ray_samples])
 
+# camera_positions = [camera_center]
+print(camera_positions)
+# This generates training data
+# for camera_index, camera_position in enumerate(camera_positions):
+#     print(f"Generating training image for {camera_position}")
+#     camera_basis = basis_from_depth(cube_center, camera_position)
+#     camera = Camera(focal_length, camera_position, camera_basis)
+#     r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
+#                  ray_spec)
+#     red, green, blue = r.render(plt)
+#     image_tensor = torch.stack([red, green, blue])
+#     print(f"red shape={red.shape}")
+#     print(f"red max={torch.max(red)}, min={torch.min(red)}")
+#     print(f"green max={torch.max(green)}, min={torch.min(green)}")
+#     print(f"blue max={torch.max(blue)}, min={torch.min(blue)}")
+# transforms.ToPILImage()(image_tensor).show()
+# save_image(image_tensor, f"./images/training/rotating_cube-{camera_index}.png")
+
 r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
              ray_spec)
 
 # This renders the volumetric model and shows the rendered image. Useful for training
-# red, green, blue = r.render(plt)
-# image_tensor = torch.stack([red, green, blue])
-# image = transforms.ToPILImage()(image_tensor)
-# image.show()
+red, green, blue = r.render(plt)
+image_tensor = torch.stack([red, green, blue])
+image = transforms.ToPILImage()(image_tensor)
+image.show()
+plt.show()
+input()
+save_image(image_tensor, "./images/training/rotating_cube.png")
 
 # This just loads training images and shows them
 # t = transforms.Compose([transforms.ToTensor()])
@@ -921,12 +967,12 @@ num_stochastic_rays = 1000
 # red, green, blue = r.render(plt)
 # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
-voxel_access, voxels, losses = training_loop(random_world, camera, view_spec, ray_spec, 3)
-print("Optimisation complete!")
-update_world(voxels, voxel_access, random_world)
-red, green, blue = r.render(plt)
-transforms.ToPILImage()(torch.stack([red, green, blue])).show()
-print("Rendered final result")
+# voxel_access, voxels, losses = training_loop(random_world, camera, view_spec, ray_spec, 3)
+# print("Optimisation complete!")
+# update_world(voxels, voxel_access, random_world)
+# red, green, blue = r.render(plt)
+# transforms.ToPILImage()(torch.stack([red, green, blue])).show()
+# print("Rendered final result")
 
 # Calculates MSE against whole images
 # total_num_rays = num_rays_x * num_rays_y
