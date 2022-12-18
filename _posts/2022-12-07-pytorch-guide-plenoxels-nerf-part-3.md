@@ -12,6 +12,7 @@ This is part of a series of posts breaking down the paper [Plenoxels: Radiance F
 - [Part 2]({% post_url 2022-12-05-pytorch-guide-plenoxels-nerf-part-2 %})
 - [Part 3 (this one)]({% post_url 2022-12-07-pytorch-guide-plenoxels-nerf-part-3 %})
 - [Part 4]({% post_url 2022-12-18-pytorch-guide-plenoxels-nerf-part-4 %})
+- [Part 5]({% post_url 2022-12-19-pytorch-guide-plenoxels-nerf-part-5 %})
 
 We continue looking at [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131). We start off with understanding **Spherical Harmonics**, and why we want to use them to capture colour information based on angular direction in 3D space.
 
