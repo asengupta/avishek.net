@@ -141,7 +141,6 @@ There is one thing that we should also address: the code as it is, had some bugs
 - **Before refactoring complicated rendering logic, have a ground truth version at all times to check your refactored work**: This is very useful when performing a refactoring where you might make mistake at any point, and need a reference to check your ongoing work.
 
 ### Conclusion
-
 We have come quite far in our implementation of the paper. We will progress to training using multiple training images in the sequel and (probably) add TV regularisation.
 
 ### References
