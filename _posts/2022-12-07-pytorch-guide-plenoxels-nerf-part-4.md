@@ -84,6 +84,14 @@ The new data structure is shown below; the structure of one viewing ray is elabo
 
 ![Plenoxels Data Structure](/assets/images/plenoxels-data-structures.png)
 
+Here is a quick explanation of the structures involved.
+
+- **view_points**: These represent each point on the screen that will actually be rendered, and thus are represented by $$(x,y)$$ pairs. Each point ultimately corresponds to one viewing ray.
+- **ray_sample_positions**: Volumetric rendering requires sampling the voxels at specific samples along the ray. This structure contains a flat list of all these sample positions along all rays. The start and end sample of a given ray is located using the ```voxel_pointers``` structure.
+- **voxel_positions**: For each ray sample, the 8 neighbouring voxels have their coefficients interpolated to yield the coefficients for that sample. Thus, each sample has 8 voxels; if there are $$n$$ ray samples i a ray, there are $$8n$$ voxels in that way. All the voxel positions of all the rays are stored in this data structure.
+- **voxel_pointers**: The indices of the start voxel and the end voxel of each ray are stored i each entry of this data structure. Using this, we can reference any voxel group for any sample given the index $$i$$ of the sample. Each entry here is a ```(start, end)``` tuple, corresponding to one ray.
+- **all_voxels**: Each entry here is a voxel tensor containing the opacity and the 27 spherical harmonic coefficients. There is an ordered 1:1 correspondence between each entry here and the ```voxel_positions``` structure.
+
 So far, our renderer has simply iterated over a contiguous rectangular area and rendered each point in that area. For training, we will select a stochastic set of rays (5000 in the paper) and use those to calculate the loss. Thus, our renderer should be prepared to render only specific rays. Some refactoring on this front is also done.
 
 ### Incorporating A Single Training Image
@@ -117,18 +125,22 @@ These are using just one image, and the reconstruction is correct only from that
 The code for this article can be found here: [Volumetric Rendering Code](https://github.com/asengupta/avishek.net/blob/master/code/pytorch-learn/plenoxels/volumetric-rendering-with-loss-interpolating.py)
 
 ### Debugging Tips
+
 There is one thing that we should also address: the code as it is, had some bugs that resulted in the rendering looking wonky from certain angles, and not working at all from other angles. Sometimes bugs may not become apparent till much later; having said that, here are some debugging tips I found helpful. Note that most, if not all, of these are general practices when you are trying to debug any code, not just ML code. These become especially important, though, when you are debugging a rendering error which involves thousands of pixels.
 
 - **Find the simplest program which can reproduce the issue, preferably in a self-contained code fragment:** This is what we had to do when puzzling over why the optimisation wasn't actually updating any of the parameters. Whittling down the entire code to about 70 lines of isolated code helped identify the problem by comparing it with toy examples which were already working. The code for reproducing that particular bug can be found [here](https://github.com/asengupta/avishek.net/blob/master/code/pytorch-learn/plenoxels/custom-model-bug.py).
 - **Track gradient function propagation throughout calculations:** This is the easiest, but messy, way of pinpointing where your gradient propagation breaks. Log the output tensor at each stage; if you don't see a ```grad_fn``` in the tensor description, or simply something like ```tensor(XXX., requires_grad=True)``` in the middle of your calculations, go back to the previous step and see which calculation was not done using PyTorch's APIs. In particular, do not wrap outputs using ```torch.tensor(...)```.
-- **Check gradient propagation graph using PyTorchViz:**
-- **For loops, reduce it to a single degenerate / problematic value and trace**:
+- **Check gradient propagation graph using PyTorchViz:** This can be prohibitively mind-boggling if you are trying to make sense of the entire graph when your code is not a toy example; for example, see below for the renderer graph at one stage of my debugging. It can be useful to make sure that all your computations are included in the chain and that it's not broken somewhere in the middle.
+
+![Gradient Graph Visualisation](/assets/images/plenoxels-full-gradient-propagation-graph-debugging.png)
+
+- **For loops, reduce it to a single degenerate / problematic value and trace**: This is especially pertinent when you are rendering hundreds (if not thousands) of rays, and your rendering is not correct. Reduce it to a degenerate case: loop once with a known camera position that you can visualise easily using pen and paper, and log ray intersections, skipped voxels, and transmittance values. More often than not, you will be able to find the problem almost immediately after seeing the output. This helped me fix a bug where some randomly-initialised voxels were not rendering: I realised that some of the random spherical harmonic coefficients yielded negative RGB values, which were then clamped down very close to zero.
 - **Beware of divide-by-zero errors:** A simple example is calculating the viewing angles of the camera given its Cartesian coordinates. This involves converting to spherical coordinates. If the viewing angles happen to align with some of the Cartesian basis vectors, the denominator in some of these calculations becomes zero, and you get $$nan$$.
-- **Before refactoring complicated rendering logic, have a ground truth version at all times to check your refactored work**:
+- **Before refactoring complicated rendering logic, have a ground truth version at all times to check your refactored work**: This is very useful when performing a refactoring where you might make mistake at any point, and need a reference to check your ongoing work.
 
 ### Conclusion
 
-We have come quite far in our implementation of the paper. We will progress to training using multiple training images in the sequel.
+We have come quite far in our implementation of the paper. We will progress to training using multiple training images in the sequel and (probably) add TV regularisation.
 
 ### References
 
