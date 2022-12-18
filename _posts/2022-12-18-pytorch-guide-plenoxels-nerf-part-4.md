@@ -15,6 +15,8 @@ This is part of a series of posts breaking down the paper [Plenoxels: Radiance F
 
 We continue looking at [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131). We have built our volumetric renderer; it is now time to start calculating loss from training images. We start off with trying out some test images, the source of which will be our renderer itself, as a kind of control set.
 
+The code for this article can be found here: [Volumetric Rendering Code](https://github.com/asengupta/avishek.net/blob/master/code/pytorch-learn/plenoxels/volumetric-rendering-with-loss-interpolating.py)
+
 Before we begin however, let's talk quickly about some technical details of the code.
 
 ### Technical Comments on the Code
@@ -121,10 +123,6 @@ These are using just one image, and the reconstruction is correct only from that
 
 ![Plenoxels Refactored Cube Image](/assets/images/plenoxels-refactored-cube-training.png)
 ![Plenoxels Refactored Cube 3 Epochs 1 Image](/assets/images/plenoxels-refactored-cube-reconstruction-1-image-3-epochs.png)
-
-### Code
-
-The code for this article can be found here: [Volumetric Rendering Code](https://github.com/asengupta/avishek.net/blob/master/code/pytorch-learn/plenoxels/volumetric-rendering-with-loss-interpolating.py)
 
 ### Debugging Tips
 
