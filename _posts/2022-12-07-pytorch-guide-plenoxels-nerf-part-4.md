@@ -15,13 +15,15 @@ This is part of a series of posts breaking down the paper [Plenoxels: Radiance F
 
 We continue looking at [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131). We have built our volumetric renderer; it is now time to start calculating loss from training images. We start off with trying out some test images, the source of which will be our renderer itself, as a kind of control set.
 
-### Comments on the code
+Before we begin however, let's talk quickly about some technical details of the code.
+
+### Technical Comments on the Code
 
 **1. How is the camera basis calculated?**
 
-We wanted to simplify our calculations for creating the camera coordinate system. Usually, you'd be given a camera basis or a camera transformation matrix explicitly. To make it easier to generate scenes and not worry about having to calculate an orthogonal basis by hand every time, our camera simply uses two parameters: the ```look_at``` and ```camera_center``` parameters. Together, these immediately give us a vector which points in the direction that the camera is looking, which is the Z-axis in the camera's system.
+We wanted to simplify our calculations for creating the camera coordinate system. Usually, you'd be given a camera basis or a **camera transformation matrix** explicitly. To make it easier to generate scenes and not worry about having to calculate an **orthogonal basis** by hand every time, our camera simply uses two parameters: the ```look_at``` and ```camera_center``` parameters. Together, these immediately give us a vector which points in the direction that the camera is looking, which is the Z-axis in the camera's system.
 
-We now need to generate two orthogonal vectors from this to complete the coordinate system. First, we need to define the "up-vector". In most situations, we want the camera to be upright; loosely, the world's Z-axis should always be up.
+We now need to generate two orthogonal vectors from this to complete the coordinate system. First, we need to define the **"up-vector"**. In most situations, we want the camera to be upright; loosely, the world's Z-axis should always be up.
 
 In the calculation below, $$x_c$$, $$y_c$$, and $$z_c$$ represent the three basis vectors of the camera, and $$z_w$$ represents the world's Z-axis.
 
@@ -51,11 +53,11 @@ The calculation is depicted in the figure below.
 
 ![Camera Basis Calculation](/assets/images/camera-basis-calculation.png)
 
-Note that we also normalise these vectors to unit length before returning the basis.
+Note that we also **normalise** these vectors to unit length before returning the basis.
 
 **2. How are the rays on screen calculated?**
 
-We have seen above how to calculate the camera basis. We need to now calculate the focal plane, because the viewing rays originating from the camera will intersect this plane. In fact, this plane will be important in deciding which viewing rays to actually fire.
+We have seen above how to calculate the camera basis. We need to now calculate where the **focal plane** is, because the viewing rays originating from the camera will intersect this plane. In fact, this plane will be important in deciding which viewing rays to actually fire.
 The normal to the focal plane is instantly given by $$z_c$$, the camera's Z-axis. We want to render everything which is within the bounds of the focal plane screen. This in turn depends upon the length and height of the screen. We can pick any dimension: in the code, we have chosen a square of size $$[-1, 1] \times [-1, 1]$$, with a resolution of 100 samples in each direction.
 
 For each of these points $$(x_s,y_s)$$, we want to translate from $${\mathbb{R}}^2 \in [0,1] \times [0,1]$$ into world coordinates. This is done by simply scaling the camera's unit basis vectors $$x_c$$ and $$y_c$$ by the corresponding amounts.
@@ -92,7 +94,7 @@ Here is a quick explanation of the structures involved.
 - **voxel_pointers**: The indices of the start voxel and the end voxel of each ray are stored i each entry of this data structure. Using this, we can reference any voxel group for any sample given the index $$i$$ of the sample. Each entry here is a ```(start, end)``` tuple, corresponding to one ray.
 - **all_voxels**: Each entry here is a voxel tensor containing the opacity and the 27 spherical harmonic coefficients. There is an ordered 1:1 correspondence between each entry here and the ```voxel_positions``` structure.
 
-So far, our renderer has simply iterated over a contiguous rectangular area and rendered each point in that area. For training, we will select a stochastic set of rays (5000 in the paper) and use those to calculate the loss. Thus, our renderer should be prepared to render only specific rays. Some refactoring on this front is also done.
+So far, our renderer has simply iterated over a contiguous rectangular area and rendered each point in that area. For training, we will select a stochastic set of rays (5000 in the paper, about 500-1000 in our implementation) and use those to calculate the loss. Thus, our renderer should be prepared to render only specific rays. Some refactoring on this front is also done.
 
 ### Incorporating A Single Training Image
 
@@ -101,8 +103,8 @@ Let's test the optimisation on images generated with the exact renderer which wi
 - We use only one training image for demonstration.
 - The initial world is filled with voxels with random opacities and spherical harmonic coefficients between 0 and 1.
 - ```PlenoxelModel``` is our custom PyTorch model. This will hold our parameters. These parameters are essentially a flat list of voxels which are intersected by about 1000 viewing rays. The parameters to be optimised are the opacity and the 27 spherical harmonic coefficients in each voxel.
-- We train for 3-5 epochs with a low learning rate of around 0.001 on the same image for the same set of voxels. Yes, this is not what we will end up with, but it's a simple starting point.
-- The mean squared error for each channel is calculated and summed up across channels. This gives us the total MSE. We will add in the Total Variance regularisation later.
+- We train for **3-5 epochs** with a low learning rate of around 0.001 on the same image for the same set of voxels. Yes, this is not what we will end up with, but it's a simple starting point.
+- The **mean squared error** for each channel is calculated and summed up across channels. This gives us the total MSE. We will add in the **Total Variance regularisation** later.
 
 ### Reconstruction Results
 
