@@ -11,7 +11,7 @@ This is part of a series of posts breaking down the paper [Plenoxels: Radiance F
 - [Part 1]({% post_url 2022-12-04-pytorch-guide-plenoxels-nerf-part-1 %})
 - [Part 2]({% post_url 2022-12-05-pytorch-guide-plenoxels-nerf-part-2 %})
 - [Part 3]({% post_url 2022-12-07-pytorch-guide-plenoxels-nerf-part-3 %})
-- [Part 4 (this one)]({% post_url 2022-12-07-pytorch-guide-plenoxels-nerf-part-4 %})
+- [Part 4 (this one)]({% post_url 2022-12-18-pytorch-guide-plenoxels-nerf-part-4 %})
 
 We continue looking at [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131). We have built our volumetric renderer; it is now time to start calculating loss from training images. We start off with trying out some test images, the source of which will be our renderer itself, as a kind of control set.
 

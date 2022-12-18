@@ -11,7 +11,7 @@ This is part of a series of posts breaking down the paper [Plenoxels: Radiance F
 - [Part 1 (this one)]({% post_url 2022-12-04-pytorch-guide-plenoxels-nerf-part-1 %})
 - [Part 2]({% post_url 2022-12-05-pytorch-guide-plenoxels-nerf-part-2 %})
 - [Part 3]({% post_url 2022-12-07-pytorch-guide-plenoxels-nerf-part-3 %})
-- [Part 4]({% post_url 2022-12-07-pytorch-guide-plenoxels-nerf-part-4 %})
+- [Part 4]({% post_url 2022-12-18-pytorch-guide-plenoxels-nerf-part-4 %})
 
 The relevant paper is [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131). We will also use [this explanation](https://deeprender.ai/blog/plenoxels-radiance-fields-without-neural-networks) to understand some parts of this paper a little better.
 
