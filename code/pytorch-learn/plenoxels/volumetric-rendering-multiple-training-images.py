@@ -656,7 +656,7 @@ class Renderer:
                 ray_samples_with_distances = torch.cat([t1, torch.reshape(consecutive_sample_distances, (-1, 1))], 1)
                 # print(ray_samples_with_distances)
                 color_densities = self.world.density(ray_samples_with_distances, viewing_angle)
-                print(color_densities)
+                # print(color_densities)
 
                 # color_tensor = torch.clamp(color_densities, min=0, max=1)
                 color_tensor = Renderer.SIGMOID(color_densities)
@@ -859,20 +859,21 @@ random_world = VoxelGrid.build_random_world(GRID_X, GRID_Y, GRID_Z)
 empty_world = VoxelGrid.build_empty_world(GRID_X, GRID_Y, GRID_Z)
 world = empty_world
 proxy_world = VoxelGrid(2, 2, 2, Voxel.default_voxel)
-# empty_world.build_solid_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
+empty_world.build_solid_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
 # world.build_random_hollow_cube()
 # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
-world.build_hollow_cube_with_randomly_coloured_sides(Voxel.random_coloured_voxel,
-                                                     torch.tensor([10, 10, 10, 20, 20, 20]))
+# world.build_hollow_cube_with_randomly_coloured_sides(Voxel.random_coloured_voxel,
+#                                                      torch.tensor([10, 10, 10, 20, 20, 20]))
 # world.build_random_hollow_cube2(Voxel.random_voxel, torch.tensor([15, 15, 15, 10, 10, 10]))
 cube_center = torch.tensor([20., 20., 20., 1.])
 radius = 35.
+num_cameras_per_circumference = 7
 
 camera_positions = list(map(lambda theta: list(map(lambda phi: [radius * math.sin(phi) * math.cos(theta),
                                                                 radius * math.sin(phi) * math.sin(theta),
                                                                 radius * math.cos(phi), 0.],
-                                                   np.linspace(0, 2 * math.pi, 5))),
-                            np.linspace(0, 2 * math.pi, 5)))
+                                                   np.linspace(0, 2 * math.pi, num_cameras_per_circumference))),
+                            np.linspace(0, 2 * math.pi, num_cameras_per_circumference)))
 
 camera_positions = torch.unique(
     cube_center + torch.tensor(functools.reduce(lambda acc, x: acc + x, camera_positions, [])), dim=0)
@@ -887,7 +888,6 @@ camera_look_at = cube_center
 # camera_center = torch.tensor([-20., -10., 40., 1.])
 
 camera_center = torch.tensor([-15., 20., 20., 1.])
-camera_center2 = torch.tensor([20., -15., 20., 1.])
 # camera_center = torch.tensor([20.,  20., -15., 1.])
 # camera_center = torch.tensor([20.,  20.,  55., 1.])
 # camera_center = torch.tensor([20.,  55.,  20., 1.])
@@ -900,21 +900,21 @@ camera_center2 = torch.tensor([20., -15., 20., 1.])
 focal_length = 2.
 
 camera = Camera(focal_length, camera_center, camera_look_at)
-num_rays_x = 100
-num_rays_y = 100
+num_rays_x = 50
+num_rays_y = 50
 view_x1 = -1
 view_x2 = 1
 view_y1 = -1
 view_y2 = 1
 # view_spec = torch.tensor(view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y)
-ray_length = 100
+ray_length = 70
 num_ray_samples = 50
 ray_spec = torch.tensor([ray_length, num_ray_samples])
 
 # camera_positions = [camera_center]
 print(camera_positions)
 # This generates training data
-for camera_index, camera_position in enumerate(camera_positions[:2]):
+for camera_index, camera_position in enumerate(camera_positions):
     print(f"Generating training image for {camera_position}")
     surrounding_camera = Camera(focal_length, camera_position, camera_look_at)
     print(f"Camera index={camera_index}")
@@ -931,12 +931,9 @@ for camera_index, camera_position in enumerate(camera_positions[:2]):
 
 # r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
 #              ray_spec)
-# r2 = Renderer(world, camera2, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
-#               ray_spec)
 
 # This renders the volumetric model and shows the rendered image. Useful for training
 # red, green, blue = r.render(plt)
-# red2, green2, blue3 = r2.render(plt)
 # image_tensor = torch.stack([red, green, blue])
 # image = transforms.ToPILImage()(image_tensor)
 # image.show()
