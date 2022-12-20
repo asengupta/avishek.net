@@ -177,6 +177,13 @@ class Voxel:
     def empty_voxel():
         return torch.zeros([VoxelGrid.VOXEL_DIMENSION], requires_grad=True)
 
+    @staticmethod
+    def partially_transparent_voxel():
+        random_harmonic_coefficient_set = lambda: ([random.random()] + [0.] * (VoxelGrid.PER_CHANNEL_DIMENSION - 1))
+        return torch.tensor([
+                                0.02] + random_harmonic_coefficient_set() + random_harmonic_coefficient_set() + random_harmonic_coefficient_set(),
+                            requires_grad=True)
+
 
 class Ray:
     def __init__(self, num_samples, view_point, ray_sample_positions, voxel_positions, voxels):
@@ -287,7 +294,7 @@ class VoxelGrid:
         for i in range(x, x + dx):
             for j in range(y, y + dy):
                 for k in range(z, z + dz):
-                    self.voxel_grid[i, j, k] = Voxel.occupied_voxel()
+                    self.voxel_grid[i, j, k] = Voxel.partially_transparent_voxel()
 
     def build_random_hollow_cube(self):
         self.build_hollow_cube(Voxel.random_voxel)
@@ -859,11 +866,11 @@ random_world = VoxelGrid.build_random_world(GRID_X, GRID_Y, GRID_Z)
 empty_world = VoxelGrid.build_empty_world(GRID_X, GRID_Y, GRID_Z)
 world = empty_world
 proxy_world = VoxelGrid(2, 2, 2, Voxel.default_voxel)
-empty_world.build_solid_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
+# empty_world.build_solid_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
 # world.build_random_hollow_cube()
 # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
-# world.build_hollow_cube_with_randomly_coloured_sides(Voxel.random_coloured_voxel,
-#                                                      torch.tensor([10, 10, 10, 20, 20, 20]))
+world.build_hollow_cube_with_randomly_coloured_sides(Voxel.random_coloured_voxel,
+                                                     torch.tensor([10, 10, 10, 20, 20, 20]))
 # world.build_random_hollow_cube2(Voxel.random_voxel, torch.tensor([15, 15, 15, 10, 10, 10]))
 cube_center = torch.tensor([20., 20., 20., 1.])
 radius = 35.
@@ -926,8 +933,8 @@ for camera_index, camera_position in enumerate(camera_positions):
     print(f"red max={torch.max(red)}, min={torch.min(red)}")
     print(f"green max={torch.max(green)}, min={torch.min(green)}")
     print(f"blue max={torch.max(blue)}, min={torch.min(blue)}")
-# transforms.ToPILImage()(image_tensor).show()
-# save_image(image_tensor, f"./images/training/rotating_cube-{camera_index}.png")
+    # transforms.ToPILImage()(image_tensor).show()
+    save_image(image_tensor, f"./images/training/rotating_cube-{camera_index}.png")
 
 # r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
 #              ray_spec)
