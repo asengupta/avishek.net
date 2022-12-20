@@ -8,6 +8,10 @@ import torch
 import torch.nn as nn
 from torchvision import datasets, transforms
 from torchviz import make_dot
+import matplotlib
+
+print(f"Backend={matplotlib.get_backend()}")
+matplotlib.use("WebAgg")
 
 RED_CHANNEL = 0
 GREEN_CHANNEL = 1
@@ -20,11 +24,12 @@ VOXELS_NOT_USED = 0
 
 
 class Camera:
-    def __init__(self, focal_length, center, basis):
-        self.basis = basis
+    def __init__(self, focal_length, center, look_at):
+        self.center = center
+        self.basis = Camera.basis_from_depth(look_at, center)
         self.focal_length = focal_length
         camera_center = center.detach().clone()
-        transposed_basis = torch.transpose(basis, 0, 1)
+        transposed_basis = torch.transpose(self.basis, 0, 1)
         camera_center[:3] = camera_center[
                             :3] * -1  # We don't want to multiply the homogenous coordinate component; it needs to remain 1
         camera_origin_translation = torch.eye(4, 4)
@@ -48,42 +53,42 @@ class Camera:
                 camera_basis_z[2] != 0) else math.pi / 2
         return torch.tensor([camera_basis_theta, camera_basis_phi])
 
+    @staticmethod
+    def basis_from_depth(look_at, camera_center):
+        print(f"Looking at: {look_at}")
+        print(f"Looking from: {camera_center}")
+        depth_vector = torch.sub(look_at, camera_center)
+        depth_vector[3] = 1.
+        return Camera.camera_basis_from(depth_vector)
 
-def camera_basis_from(camera_depth_z_vector):
-    depth_vector = camera_depth_z_vector[:3]  # We just want the inhomogenous parts of the coordinates
+    @staticmethod
+    def camera_basis_from(camera_depth_z_vector):
+        depth_vector = camera_depth_z_vector[:3]  # We just want the inhomogenous parts of the coordinates
 
-    # This calculates the projection of the world z-axis onto the surface defined by the camera direction,
-    # since we want to derive the coordinate system of the camera to be orthogonal without having
-    # to calculate it manually.
-    cartesian_z_vector = torch.tensor([0., 0., 1.])
-    cartesian_z_projection_lambda = torch.dot(depth_vector, cartesian_z_vector) / torch.dot(
-        depth_vector, depth_vector)
-    camera_up_vector = cartesian_z_vector - cartesian_z_projection_lambda * depth_vector
+        # This calculates the projection of the world z-axis onto the surface defined by the camera direction,
+        # since we want to derive the coordinate system of the camera to be orthogonal without having
+        # to calculate it manually.
+        cartesian_z_vector = torch.tensor([0., 0., 1.])
+        cartesian_z_projection_lambda = torch.dot(depth_vector, cartesian_z_vector) / torch.dot(
+            depth_vector, depth_vector)
+        camera_up_vector = cartesian_z_vector - cartesian_z_projection_lambda * depth_vector
 
-    # This special case is for when the camera is directly pointing up or down, then
-    # there is no way to decide which way to orient its up vector in the X-Y plane.
-    # We choose to align the up veector with the X-axis in this case.
-    if (torch.equal(camera_up_vector, INHOMOGENEOUS_ZERO_VECTOR)):
-        camera_up_vector = torch.tensor([1., 0., 0.])
-    print(f"Up vector is: {camera_up_vector}")
-    # The camera coordinate system now has the direction of camera and the up direction of the camera.
-    # We need to find the third vector which needs to be orthogonal to both the previous vectors.
-    # Taking the cross product of these vectors gives us this third component
-    camera_x_vector = torch.linalg.cross(depth_vector, camera_up_vector)
-    inhomogeneous_basis = torch.stack([camera_x_vector, camera_up_vector, depth_vector, torch.tensor([0., 0., 0.])])
-    homogeneous_basis = torch.hstack((inhomogeneous_basis, torch.tensor([[0.], [0.], [0.], [1.]])))
-    homogeneous_basis[0] = unit_vector(homogeneous_basis[0])
-    homogeneous_basis[1] = unit_vector(homogeneous_basis[1])
-    homogeneous_basis[2] = unit_vector(homogeneous_basis[2])
-    return homogeneous_basis
-
-
-def basis_from_depth(look_at, camera_center):
-    print(f"Looking at: {look_at}")
-    print(f"Looking from: {camera_center}")
-    depth_vector = torch.sub(look_at, camera_center)
-    depth_vector[3] = 1.
-    return camera_basis_from(depth_vector)
+        # This special case is for when the camera is directly pointing up or down, then
+        # there is no way to decide which way to orient its up vector in the X-Y plane.
+        # We choose to align the up veector with the X-axis in this case.
+        if (torch.equal(camera_up_vector, INHOMOGENEOUS_ZERO_VECTOR)):
+            camera_up_vector = torch.tensor([1., 0., 0.])
+        print(f"Up vector is: {camera_up_vector}")
+        # The camera coordinate system now has the direction of camera and the up direction of the camera.
+        # We need to find the third vector which needs to be orthogonal to both the previous vectors.
+        # Taking the cross product of these vectors gives us this third component
+        camera_x_vector = torch.linalg.cross(depth_vector, camera_up_vector)
+        inhomogeneous_basis = torch.stack([camera_x_vector, camera_up_vector, depth_vector, torch.tensor([0., 0., 0.])])
+        homogeneous_basis = torch.hstack((inhomogeneous_basis, torch.tensor([[0.], [0.], [0.], [1.]])))
+        homogeneous_basis[0] = unit_vector(homogeneous_basis[0])
+        homogeneous_basis[1] = unit_vector(homogeneous_basis[1])
+        homogeneous_basis[2] = unit_vector(homogeneous_basis[2])
+        return homogeneous_basis
 
 
 def unit_vector(camera_basis_vector):
@@ -160,7 +165,8 @@ class Voxel:
     def uniform_harmonic_random_colour():
         random_harmonic_coefficient_set = lambda: ([random.random()] + [0.] * (VoxelGrid.PER_CHANNEL_DIMENSION - 1))
         return torch.tensor([
-                                0.2] + random_harmonic_coefficient_set() + random_harmonic_coefficient_set() + random_harmonic_coefficient_set(), requires_grad=True)
+                                0.2] + random_harmonic_coefficient_set() + random_harmonic_coefficient_set() + random_harmonic_coefficient_set(),
+                            requires_grad=True)
 
     @staticmethod
     def occupied_voxel():
@@ -470,6 +476,7 @@ class Renderer:
         self.num_view_samples_y = view_spec[5]
 
     def render_from_rays(self, voxel_access, plt):
+        camera = self.camera
         viewing_angle = camera.viewing_angle()
         plt.rcParams['axes.xmargin'] = 0
         plt.rcParams['axes.ymargin'] = 0
@@ -525,10 +532,11 @@ class Renderer:
         return (red_channel, green_channel, blue_channel)
 
     def build_rays(self, ray_intersection_weights):
+        camera = self.camera
         camera_basis_x = camera.basis[0][:3]
         camera_basis_y = camera.basis[1][:3]
         camera_basis_z = camera.basis[2][:3]
-        camera_center_inhomogenous = camera_center[:3]
+        camera_center_inhomogenous = camera.center[:3]
         all_voxel_positions = []
         view_points = []
         voxel_pointers = []
@@ -575,9 +583,10 @@ class Renderer:
         return VoxelAccess(view_points, torch.stack(ray_sample_positions), voxel_pointers, all_voxels,
                            all_voxel_positions)
 
-    def render(self, plt):
+    def render(self, plt, index):
         global VOXELS_NOT_USED
         global MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE
+        camera = self.camera
         red_image = []
         green_image = []
         blue_image = []
@@ -585,17 +594,21 @@ class Renderer:
         camera_basis_y = camera.basis[1][:3]
         camera_basis_z = camera.basis[2][:3]
         viewing_angle = camera.viewing_angle()
-        camera_center_inhomogenous = camera_center[:3]
+        camera_center_inhomogenous = camera.center[:3]
 
         plt.rcParams['axes.xmargin'] = 0
         plt.rcParams['axes.ymargin'] = 0
-        figure = plt.figure(f"{random.random()}", frameon=False)
+        figure = plt.figure(frameon=False)
         plt.rcParams['axes.facecolor'] = 'black'
         plt.axis("equal")
         plt.style.use("dark_background")
         ax = plt.gca()
         ax.set_aspect('equal', adjustable='box')
         plt.axis("off")
+        # plt.plot([random.random(), random.random(), random.random()],
+        #          [random.random(), random.random(), random.random()], color="green")
+        # return torch.tensor(10), torch.tensor(10), torch.tensor(10)
+
         print(f"Camera basis={camera.basis}")
         view_screen_origin = camera_basis_z * camera.focal_length + camera_center_inhomogenous
         print(f"View screen origin={view_screen_origin}")
@@ -614,10 +627,11 @@ class Renderer:
                     ray_x, ray_y, ray_z = ray_endpoint
                     if (self.world.is_outside(ray_x, ray_y, ray_z)):
                         # print(
-                        # f"Skipping [{ray_x},{ray_y},{ray_z}], k={k}, unit ray={unit_ray}, camera is {camera_center_inhomogenous}")
+                        #     f"Skipping [{ray_x},{ray_y},{ray_z}], k={k}, unit ray={unit_ray}, camera is {camera_center_inhomogenous}")
                         continue
                     # We are in the box
                     ray_samples.append([ray_x, ray_y, ray_z])
+                    # if (index == 1):
                     # print(
                     #     f"Sample at ({[ray_x, ray_y, ray_z]}), voxel value here is {self.world.at(ray_x, ray_y, ray_z)}")
 
@@ -872,8 +886,8 @@ camera_look_at = cube_center
 # This centers the cube properly
 # camera_center = torch.tensor([-20., -10., 40., 1.])
 
-# camera_center = torch.tensor([-15., 20., 20., 1.])
-# camera_center = torch.tensor([20., -15., 20., 1.])
+camera_center = torch.tensor([-15., 20., 20., 1.])
+camera_center2 = torch.tensor([20., -15., 20., 1.])
 # camera_center = torch.tensor([20.,  20., -15., 1.])
 # camera_center = torch.tensor([20.,  20.,  55., 1.])
 # camera_center = torch.tensor([20.,  55.,  20., 1.])
@@ -882,18 +896,17 @@ camera_look_at = cube_center
 
 # Exact diagonal centering of cube
 # camera_center = torch.tensor([40., 40., 40., 1.])
-camera_center = torch.tensor([-20., -10., 40., 1.])
+# camera_center = torch.tensor([-20., -10., 40., 1.])
 focal_length = 2.
 
-camera_basis = basis_from_depth(camera_look_at, camera_center)
-camera = Camera(focal_length, camera_center, camera_basis)
+camera = Camera(focal_length, camera_center, camera_look_at)
 num_rays_x = 100
 num_rays_y = 100
 view_x1 = -1
 view_x2 = 1
 view_y1 = -1
 view_y2 = 1
-view_spec = [view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]
+# view_spec = torch.tensor(view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y)
 ray_length = 100
 num_ray_samples = 50
 ray_spec = torch.tensor([ray_length, num_ray_samples])
@@ -901,32 +914,35 @@ ray_spec = torch.tensor([ray_length, num_ray_samples])
 # camera_positions = [camera_center]
 print(camera_positions)
 # This generates training data
-# for camera_index, camera_position in enumerate(camera_positions):
-#     print(f"Generating training image for {camera_position}")
-#     camera_basis = basis_from_depth(cube_center, camera_position)
-#     camera = Camera(focal_length, camera_position, camera_basis)
-#     r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
-#                  ray_spec)
-#     red, green, blue = r.render(plt)
-#     image_tensor = torch.stack([red, green, blue])
-#     print(f"red shape={red.shape}")
-#     print(f"red max={torch.max(red)}, min={torch.min(red)}")
-#     print(f"green max={torch.max(green)}, min={torch.min(green)}")
-#     print(f"blue max={torch.max(blue)}, min={torch.min(blue)}")
+for camera_index, camera_position in enumerate(camera_positions[:2]):
+    print(f"Generating training image for {camera_position}")
+    surrounding_camera = Camera(focal_length, camera_position, camera_look_at)
+    print(f"Camera index={camera_index}")
+    r = Renderer(world, surrounding_camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
+                 ray_spec)
+    red, green, blue = r.render(plt, camera_index)
+    image_tensor = torch.stack([red, green, blue])
+    print(f"red shape={red.shape}")
+    print(f"red max={torch.max(red)}, min={torch.min(red)}")
+    print(f"green max={torch.max(green)}, min={torch.min(green)}")
+    print(f"blue max={torch.max(blue)}, min={torch.min(blue)}")
 # transforms.ToPILImage()(image_tensor).show()
 # save_image(image_tensor, f"./images/training/rotating_cube-{camera_index}.png")
 
-r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
-             ray_spec)
+# r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
+#              ray_spec)
+# r2 = Renderer(world, camera2, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
+#               ray_spec)
 
 # This renders the volumetric model and shows the rendered image. Useful for training
-red, green, blue = r.render(plt)
-image_tensor = torch.stack([red, green, blue])
-image = transforms.ToPILImage()(image_tensor)
-image.show()
+# red, green, blue = r.render(plt)
+# red2, green2, blue3 = r2.render(plt)
+# image_tensor = torch.stack([red, green, blue])
+# image = transforms.ToPILImage()(image_tensor)
+# image.show()
 plt.show()
-input()
-save_image(image_tensor, "./images/training/rotating_cube.png")
+# input()
+# save_image(image_tensor, "./images/training/rotating_cube.png")
 
 # This just loads training images and shows them
 # t = transforms.Compose([transforms.ToTensor()])
