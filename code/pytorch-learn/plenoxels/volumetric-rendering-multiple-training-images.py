@@ -921,20 +921,20 @@ ray_spec = torch.tensor([ray_length, num_ray_samples])
 # camera_positions = [camera_center]
 print(camera_positions)
 # This generates training data
-for camera_index, camera_position in enumerate(camera_positions):
-    print(f"Generating training image for {camera_position}")
-    surrounding_camera = Camera(focal_length, camera_position, camera_look_at)
-    print(f"Camera index={camera_index}")
-    r = Renderer(world, surrounding_camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
-                 ray_spec)
-    red, green, blue = r.render(plt, camera_index)
-    image_tensor = torch.stack([red, green, blue])
-    print(f"red shape={red.shape}")
-    print(f"red max={torch.max(red)}, min={torch.min(red)}")
-    print(f"green max={torch.max(green)}, min={torch.min(green)}")
-    print(f"blue max={torch.max(blue)}, min={torch.min(blue)}")
-    # transforms.ToPILImage()(image_tensor).show()
-    save_image(image_tensor, f"./images/training/rotating_cube-{camera_index}.png")
+# for camera_index, camera_position in enumerate(camera_positions):
+#     print(f"Generating training image for {camera_position}")
+#     surrounding_camera = Camera(focal_length, camera_position, camera_look_at)
+#     print(f"Camera index={camera_index}")
+#     r = Renderer(world, surrounding_camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
+#                  ray_spec)
+#     red, green, blue = r.render(plt, camera_index)
+#     image_tensor = torch.stack([red, green, blue])
+#     print(f"red shape={red.shape}")
+#     print(f"red max={torch.max(red)}, min={torch.min(red)}")
+#     print(f"green max={torch.max(green)}, min={torch.min(green)}")
+#     print(f"blue max={torch.max(blue)}, min={torch.min(blue)}")
+#     # transforms.ToPILImage()(image_tensor).show()
+#     save_image(image_tensor, f"./images/training/rotating_cube-{camera_index}.png")
 
 # r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
 #              ray_spec)
@@ -944,14 +944,17 @@ for camera_index, camera_position in enumerate(camera_positions):
 # image_tensor = torch.stack([red, green, blue])
 # image = transforms.ToPILImage()(image_tensor)
 # image.show()
-plt.show()
+# plt.show()
 # input()
 # save_image(image_tensor, "./images/training/rotating_cube.png")
 
 # This just loads training images and shows them
-# t = transforms.Compose([transforms.ToTensor()])
-# dataset = datasets.ImageFolder("./images", transform=t)
-# data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
+t = transforms.Compose([transforms.ToTensor()])
+dataset = datasets.ImageFolder("./images", transform=t)
+data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=False)
+for i in data_loader:
+    print(i[0].shape)
+    print(i[1])
 # images, labels = next(iter(data_loader))
 # image = images[0]
 # transforms.ToPILImage()(image).show()
