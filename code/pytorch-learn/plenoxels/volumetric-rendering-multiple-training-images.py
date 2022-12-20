@@ -10,8 +10,8 @@ from torchvision import datasets, transforms
 from torchviz import make_dot
 import matplotlib
 
-print(f"Backend={matplotlib.get_backend()}")
-matplotlib.use("WebAgg")
+# print(f"Backend={matplotlib.get_backend()}")
+# matplotlib.use("WebAgg")
 
 RED_CHANNEL = 0
 GREEN_CHANNEL = 1
@@ -137,6 +137,7 @@ def rgb_harmonics(rgb_harmonic_coefficients):
 class Voxel:
     NUM_INTERPOLATING_NEIGHBOURS = 8
     DEFAULT_OPACITY = 0.05
+    NUM_COLOUR_CHANNELS = 3
 
     @staticmethod
     def random_voxel(opacity=DEFAULT_OPACITY):
@@ -165,8 +166,15 @@ class Voxel:
     def uniform_harmonic_random_colour():
         random_harmonic_coefficient_set = lambda: ([random.random()] + [0.] * (VoxelGrid.PER_CHANNEL_DIMENSION - 1))
         return torch.tensor([
-                                0.2] + random_harmonic_coefficient_set() + random_harmonic_coefficient_set() + random_harmonic_coefficient_set(),
+                                0.005] + random_harmonic_coefficient_set() + random_harmonic_coefficient_set() + random_harmonic_coefficient_set(),
                             requires_grad=True)
+
+    @staticmethod
+    def transparent_random_coefficients_voxel():
+        return torch.cat([torch.tensor([0.005]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
+        # random_harmonic_coefficient_set = lambda: (
+        #         [random.random()] * VoxelGrid.PER_CHANNEL_DIMENSION * Voxel.NUM_COLOUR_CHANNELS)
+        # return torch.tensor([0.0005] + random_harmonic_coefficient_set(), requires_grad=True)
 
     @staticmethod
     def occupied_voxel():
@@ -240,7 +248,7 @@ class VoxelGrid:
 
     @staticmethod
     def build_random_world(x, y, z):
-        return VoxelGrid(x, y, z, Voxel.random_coloured_voxel)
+        return VoxelGrid(x, y, z, Voxel.transparent_random_coefficients_voxel)
 
     def at(self, x, y, z):
         if self.is_outside(x, y, z):
@@ -469,8 +477,9 @@ def channel_opacity_split(distance_density_color_tensors, viewing_angle):
 
 
 class Renderer:
-    # SIGMOID =nn.Sigmoid()
-    SIGMOID = lambda t: torch.clamp(t, min=0, max=1)
+    SIGMOID = nn.Sigmoid()
+
+    # SIGMOID = lambda t: torch.clamp(t, min=0, max=1)
 
     def __init__(self, world, camera, view_spec, ray_spec):
         self.world = world
@@ -590,7 +599,7 @@ class Renderer:
         return VoxelAccess(view_points, torch.stack(ray_sample_positions), voxel_pointers, all_voxels,
                            all_voxel_positions)
 
-    def render(self, plt, index):
+    def render(self, plt):
         global VOXELS_NOT_USED
         global MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE
         camera = self.camera
@@ -750,7 +759,6 @@ def camera_to_image_test(x, y, view_spec):
 
 
 def mse(rendered_channel, true_channel, view_spec):
-    # true_channel = torch.ones([2, 2]) * 10
     small_diffs = 0
     medium_diffs = 0
     large_diffs = 0
@@ -775,7 +783,7 @@ def mse(rendered_channel, true_channel, view_spec):
     return channel_total_error / len(rendered_channel)
 
 
-NUM_STOCHASTIC_RAYS = 2000
+NUM_STOCHASTIC_RAYS = 800
 
 
 class PlenoxelModel(nn.Module):
@@ -792,7 +800,7 @@ class PlenoxelModel(nn.Module):
         renderer = Renderer(world, camera, view_spec, ray_spec)
         # This draws stochastic rays and returns a set of samples with colours
         num_stochastic_rays = NUM_STOCHASTIC_RAYS
-        voxel_access = r.build_rays(stochastic_samples(num_stochastic_rays, view_spec))
+        voxel_access = renderer.build_rays(stochastic_samples(num_stochastic_rays, view_spec))
         return voxel_access
 
     def forward(self, input):
@@ -807,27 +815,29 @@ class PlenoxelModel(nn.Module):
         return r, g, b
 
 
-def training_loop(world, camera, view_spec, ray_spec, n=1):
+def training_loop(world, camera, view_spec, ray_spec, image_channels, n=1):
     losses = []
+    print(f"Image channels shape={image_channels.shape}")
     # This just loads training images and shows them
-    t = transforms.Compose([transforms.ToTensor()])
-    dataset = datasets.ImageFolder("./images", transform=t)
-    data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
-    images, labels = next(iter(data_loader))
-    training_image = images[0]
+    # t = transforms.Compose([transforms.ToTensor()])
+    # dataset = datasets.ImageFolder("./images", transform=t)
+    # data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
+    # images, labels = next(iter(data_loader))
+    # training_image = images[0]
+    # print(f"Shape = {training_image.shape}")
     print(f"{n} epochs")
-    print(f"Shape = {training_image.shape}")
+    print(f"Image shape ={image_channels.shape}")
 
     model = PlenoxelModel([camera, view_spec, ray_spec], world)
     for i in range(n):
         print(f"Epoch={i}")
-        optimizer = torch.optim.RMSprop(model.parameters(), lr=0.005, momentum=0.9)
+        optimizer = torch.optim.RMSprop(model.parameters(), lr=0.05, momentum=0.9)
         optimizer.zero_grad()
         r, g, b = model([camera, view_spec, ray_spec])
 
-        red_mse = mse(r, training_image[0], view_spec)
-        green_mse = mse(g, training_image[1], view_spec)
-        blue_mse = mse(b, training_image[2], view_spec)
+        red_mse = mse(r, image_channels[0], view_spec)
+        green_mse = mse(g, image_channels[1], view_spec)
+        blue_mse = mse(b, image_channels[2], view_spec)
         total_mse = red_mse + green_mse + blue_mse
         print(f"MSE={total_mse}")
         total_mse.backward()
@@ -869,8 +879,8 @@ proxy_world = VoxelGrid(2, 2, 2, Voxel.default_voxel)
 # empty_world.build_solid_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
 # world.build_random_hollow_cube()
 # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
-world.build_hollow_cube_with_randomly_coloured_sides(Voxel.random_coloured_voxel,
-                                                     torch.tensor([10, 10, 10, 20, 20, 20]))
+# world.build_hollow_cube_with_randomly_coloured_sides(Voxel.random_coloured_voxel,
+#                                                      torch.tensor([10, 10, 10, 20, 20, 20]))
 # world.build_random_hollow_cube2(Voxel.random_voxel, torch.tensor([15, 15, 15, 10, 10, 10]))
 cube_center = torch.tensor([20., 20., 20., 1.])
 radius = 35.
@@ -913,13 +923,13 @@ view_x1 = -1
 view_x2 = 1
 view_y1 = -1
 view_y2 = 1
-# view_spec = torch.tensor(view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y)
-ray_length = 70
+view_spec = torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y])
+ray_length = 100
 num_ray_samples = 50
 ray_spec = torch.tensor([ray_length, num_ray_samples])
 
 # camera_positions = [camera_center]
-print(camera_positions)
+# print(camera_positions)
 # This generates training data
 # for camera_index, camera_position in enumerate(camera_positions):
 #     print(f"Generating training image for {camera_position}")
@@ -936,31 +946,30 @@ print(camera_positions)
 #     # transforms.ToPILImage()(image_tensor).show()
 #     save_image(image_tensor, f"./images/training/rotating_cube-{camera_index}.png")
 
-# r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
-#              ray_spec)
+r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
+             ray_spec)
 
 # This renders the volumetric model and shows the rendered image. Useful for training
 # red, green, blue = r.render(plt)
 # image_tensor = torch.stack([red, green, blue])
 # image = transforms.ToPILImage()(image_tensor)
 # image.show()
-# plt.show()
 # input()
 # save_image(image_tensor, "./images/training/rotating_cube.png")
 
 # This just loads training images and shows them
-t = transforms.Compose([transforms.ToTensor()])
-dataset = datasets.ImageFolder("./images", transform=t)
-data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=False)
-for i in data_loader:
-    print(i[0].shape)
-    print(i[1])
+# t = transforms.Compose([transforms.ToTensor()])
+# dataset = datasets.ImageFolder("./images", transform=t)
+# data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=False)
+# for i in data_loader:
+#     print(i[0].shape)
+#     print(i[1])
 # images, labels = next(iter(data_loader))
 # image = images[0]
 # transforms.ToPILImage()(image).show()
 
 # This draws stochastic rays and returns a set of samples with colours
-num_stochastic_rays = 1000
+num_stochastic_rays = 800
 # image_data = samples_to_image(r, g, b, view_spec)
 # transforms.ToPILImage()(image_data).show()
 
@@ -990,32 +999,34 @@ num_stochastic_rays = 1000
 # red, green, blue = r.render(plt)
 # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
-# voxel_access, voxels, losses = training_loop(random_world, camera, view_spec, ray_spec, 3)
-# print("Optimisation complete!")
-# update_world(voxels, voxel_access, random_world)
-# red, green, blue = r.render(plt)
-# transforms.ToPILImage()(torch.stack([red, green, blue])).show()
-# print("Rendered final result")
+test_positions = torch.tensor([[-10.3109, 20.0000, 2.5000, 1.0000],
+                               [-10.3109, 20.0000, 37.5000, 1.0000],
+                               [4.8446, -6.2500, 2.5000, 1.0000],
+                               [4.8446, -6.2500, 37.5000, 1.0000],
+                               [4.8446, 46.2500, 2.5000, 1.0000],
+                               [4.8446, 46.2500, 37.5000, 1.0000],
+                               [20.0000, 20.0000, -15.0000, 1.0000],
+                               [20.0000, 20.0000, 55.0000, 1.0000],
+                               [35.1554, -6.2500, 2.5000, 1.0000],
+                               [35.1554, -6.2500, 37.5000, 1.0000],
+                               [35.1554, 46.2500, 2.5000, 1.0000],
+                               [35.1554, 46.2500, 37.5000, 1.0000],
+                               [50.3109, 20.0000, 2.5000, 1.0000],
+                               [50.3109, 20.0000, 37.5000, 1.0000]])
 
-# Calculates MSE against whole images
-# total_num_rays = num_rays_x * num_rays_y
-# red_error = (red - image[0]).pow(2).sum() / total_num_rays
-# green_error = (green - image[1]).pow(2).sum() / total_num_rays
-# blue_error = (blue - image[2]).pow(2).sum() / total_num_rays
-#
-# print(red_error)
-# print(green_error)
-# print(blue_error)
+to_tensor = transforms.Compose([transforms.ToTensor()])
+dataset = datasets.ImageFolder("./images", transform=to_tensor)
+data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=False)
 
-# x = np.array([[1, 2], [3, 4, 5], [6, 7, 8, 9]], dtype=object)
-# counter = 0
-# pointers = []
-# for i in x:
-#     pointers.append((counter, counter + len(i)))
-#     counter += len(i)
-#
-# print(pointers)
-# x = np.concatenate(x).ravel()
-# print(x)
-# print(pointers[2][0])
-# print(x[pointers[2][0]: pointers[2][1]])
+test_images = list(data_loader)[0][0]
+for index, position in enumerate(test_positions[:1]):
+    print(f"Training for camera position #{index}={position}")
+    test_camera = Camera(focal_length, position, camera_look_at)
+    voxel_access, voxels, losses = training_loop(random_world, camera, view_spec, ray_spec, test_images[index], 3)
+    print("Optimisation complete!")
+    update_world(voxels, voxel_access, random_world)
+
+red, green, blue = r.render(plt)
+# # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
+print("Rendered final result")
+plt.show()

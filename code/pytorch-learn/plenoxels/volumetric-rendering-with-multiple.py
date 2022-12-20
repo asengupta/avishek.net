@@ -20,6 +20,7 @@ VOXELS_NOT_USED = 0
 
 class Camera:
     def __init__(self, focal_length, center, basis):
+        self.center = center
         self.basis = basis
         self.focal_length = focal_length
         camera_center = center.detach().clone()
@@ -159,7 +160,8 @@ class Voxel:
     def uniform_harmonic_random_colour():
         random_harmonic_coefficient_set = lambda: ([random.random()] + [0.] * (VoxelGrid.PER_CHANNEL_DIMENSION - 1))
         return torch.tensor([
-                                random.random()] + random_harmonic_coefficient_set() + random_harmonic_coefficient_set() + random_harmonic_coefficient_set(), requires_grad=True)
+                                random.random()] + random_harmonic_coefficient_set() + random_harmonic_coefficient_set() + random_harmonic_coefficient_set(),
+                            requires_grad=True)
 
     @staticmethod
     def occupied_voxel():
@@ -455,7 +457,8 @@ def channel_opacity_split(distance_density_color_tensors, viewing_angle):
 
 
 class Renderer:
-    SIGMOID =nn.Sigmoid()
+    SIGMOID = nn.Sigmoid()
+
     # SIGMOID = lambda t: torch.clamp(t, min=0, max=1)
 
     def __init__(self, world, camera, view_spec, ray_spec):
@@ -524,10 +527,11 @@ class Renderer:
         return (red_channel, green_channel, blue_channel)
 
     def build_rays(self, ray_intersection_weights):
+        camera = self.camera
         camera_basis_x = camera.basis[0][:3]
         camera_basis_y = camera.basis[1][:3]
         camera_basis_z = camera.basis[2][:3]
-        camera_center_inhomogenous = camera_center[:3]
+        camera_center_inhomogenous = camera.center[:3]
         all_voxel_positions = []
         view_points = []
         voxel_pointers = []
@@ -580,11 +584,12 @@ class Renderer:
         red_image = []
         green_image = []
         blue_image = []
+        camera = self.camera
         camera_basis_x = camera.basis[0][:3]
         camera_basis_y = camera.basis[1][:3]
         camera_basis_z = camera.basis[2][:3]
         viewing_angle = camera.viewing_angle()
-        camera_center_inhomogenous = camera_center[:3]
+        camera_center_inhomogenous = camera.center[:3]
 
         plt.rcParams['axes.xmargin'] = 0
         plt.rcParams['axes.ymargin'] = 0
@@ -641,7 +646,7 @@ class Renderer:
                 ray_samples_with_distances = torch.cat([t1, torch.reshape(consecutive_sample_distances, (-1, 1))], 1)
                 # print(ray_samples_with_distances)
                 color_densities = self.world.density(ray_samples_with_distances, viewing_angle)
-                print(color_densities)
+                # print(color_densities)
 
                 # color_tensor = torch.clamp(color_densities, min=0, max=1)
                 color_tensor = Renderer.SIGMOID(color_densities)
@@ -785,16 +790,16 @@ class PlenoxelModel(nn.Module):
         return r, g, b
 
 
-def training_loop(world, camera, view_spec, ray_spec, n=1):
+def training_loop(world, camera, view_spec, ray_spec, image_channels, n=1):
     losses = []
     # This just loads training images and shows them
-    t = transforms.Compose([transforms.ToTensor()])
-    dataset = datasets.ImageFolder("./images", transform=t)
-    data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
-    images, labels = next(iter(data_loader))
-    training_image = images[0]
+    # t = transforms.Compose([transforms.ToTensor()])
+    # dataset = datasets.ImageFolder("./images", transform=t)
+    # data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
+    # images, labels = next(iter(data_loader))
+    # training_image = images[0]
     print(f"{n} epochs")
-    print(f"Shape = {training_image.shape}")
+    print(f"Shape = {image_channels.shape}")
 
     model = PlenoxelModel([camera, view_spec, ray_spec], world)
     for i in range(n):
@@ -803,9 +808,9 @@ def training_loop(world, camera, view_spec, ray_spec, n=1):
         optimizer.zero_grad()
         r, g, b = model([camera, view_spec, ray_spec])
 
-        red_mse = mse(r, training_image[0], view_spec)
-        green_mse = mse(g, training_image[1], view_spec)
-        blue_mse = mse(b, training_image[2], view_spec)
+        red_mse = mse(r, image_channels[0], view_spec)
+        green_mse = mse(g, image_channels[1], view_spec)
+        blue_mse = mse(b, image_channels[2], view_spec)
         total_mse = red_mse + green_mse + blue_mse
         print(f"MSE={total_mse}")
         total_mse.backward()
@@ -872,8 +877,7 @@ ray_length = 100
 num_ray_samples = 50
 ray_spec = torch.tensor([ray_length, num_ray_samples])
 
-r = Renderer(world, camera, torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]),
-             ray_spec)
+r = Renderer(world, camera, torch.tensor(view_spec), ray_spec)
 
 # This renders the volumetric model and shows the rendered image. Useful for training
 # red, green, blue = r.render(plt)
@@ -920,32 +924,42 @@ num_stochastic_rays = 1000
 # red, green, blue = r.render(plt)
 # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
-voxel_access, voxels, losses = training_loop(random_world, camera, view_spec, ray_spec, 3)
-print("Optimisation complete!")
-update_world(voxels, voxel_access, random_world)
+# voxel_access, voxels, losses = training_loop(random_world, camera, view_spec, ray_spec, 3)
+# print("Optimisation complete!")
+# update_world(voxels, voxel_access, random_world)
+# red, green, blue = r.render(plt)
+# transforms.ToPILImage()(torch.stack([red, green, blue])).show()
+# print("Rendered final result")
+
+test_positions = torch.tensor([[-10.3109, 20.0000, 2.5000, 1.0000],
+                               [-10.3109, 20.0000, 37.5000, 1.0000],
+                               [4.8446, -6.2500, 2.5000, 1.0000],
+                               [4.8446, -6.2500, 37.5000, 1.0000],
+                               [4.8446, 46.2500, 2.5000, 1.0000],
+                               [4.8446, 46.2500, 37.5000, 1.0000],
+                               [20.0000, 20.0000, -15.0000, 1.0000],
+                               [20.0000, 20.0000, 55.0000, 1.0000],
+                               [35.1554, -6.2500, 2.5000, 1.0000],
+                               [35.1554, -6.2500, 37.5000, 1.0000],
+                               [35.1554, 46.2500, 2.5000, 1.0000],
+                               [35.1554, 46.2500, 37.5000, 1.0000],
+                               [50.3109, 20.0000, 2.5000, 1.0000],
+                               [50.3109, 20.0000, 37.5000, 1.0000]])
+
+to_tensor = transforms.Compose([transforms.ToTensor()])
+dataset = datasets.ImageFolder("./images", transform=to_tensor)
+data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=False)
+
+test_images = list(data_loader)[0][0]
+for index, position in enumerate(test_positions[:1]):
+    print(f"Training for camera position #{index}={position}")
+    test_camera_basis = basis_from_depth(camera_look_at, position)
+    test_camera = Camera(focal_length, position, test_camera_basis)
+    voxel_access, voxels, losses = training_loop(world, test_camera, view_spec, ray_spec, test_images[index], 3)
+    print("Optimisation complete!")
+    update_world(voxels, voxel_access, world)
+
 red, green, blue = r.render(plt)
 transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 print("Rendered final result")
-
-# Calculates MSE against whole images
-# total_num_rays = num_rays_x * num_rays_y
-# red_error = (red - image[0]).pow(2).sum() / total_num_rays
-# green_error = (green - image[1]).pow(2).sum() / total_num_rays
-# blue_error = (blue - image[2]).pow(2).sum() / total_num_rays
-#
-# print(red_error)
-# print(green_error)
-# print(blue_error)
-
-# x = np.array([[1, 2], [3, 4, 5], [6, 7, 8, 9]], dtype=object)
-# counter = 0
-# pointers = []
-# for i in x:
-#     pointers.append((counter, counter + len(i)))
-#     counter += len(i)
-#
-# print(pointers)
-# x = np.concatenate(x).ravel()
-# print(x)
-# print(pointers[2][0])
-# print(x[pointers[2][0]: pointers[2][1]])
+plt.show()
