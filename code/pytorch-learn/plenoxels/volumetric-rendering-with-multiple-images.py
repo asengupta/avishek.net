@@ -790,7 +790,7 @@ class PlenoxelModel(nn.Module):
         return r, g, b
 
 
-def training_loop(world, camera, view_spec, ray_spec, image_channels, n=1):
+def training_loop(world, camera, view_spec, ray_spec, image_channels, n=1, learning_rate=0.001):
     losses = []
     # This just loads training images and shows them
     # t = transforms.Compose([transforms.ToTensor()])
@@ -804,7 +804,7 @@ def training_loop(world, camera, view_spec, ray_spec, image_channels, n=1):
     model = PlenoxelModel([camera, view_spec, ray_spec], world)
     for i in range(n):
         print(f"Epoch={i}")
-        optimizer = torch.optim.RMSprop(model.parameters(), lr=0.005, momentum=0.9)
+        optimizer = torch.optim.RMSprop(model.parameters(), lr=learning_rate, momentum=0.9)
         optimizer.zero_grad()
         r, g, b = model([camera, view_spec, ray_spec])
 
@@ -876,6 +876,7 @@ view_spec = [view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]
 ray_length = 100
 num_ray_samples = 50
 ray_spec = torch.tensor([ray_length, num_ray_samples])
+LEARNING_RATE = 0.005
 
 r = Renderer(world, camera, torch.tensor(view_spec), ray_spec)
 
@@ -951,13 +952,14 @@ dataset = datasets.ImageFolder("./images", transform=to_tensor)
 data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=False)
 
 test_images = list(data_loader)[0][0]
-for index, position in enumerate(test_positions[:1]):
-    print(f"Training for camera position #{index}={position}")
-    test_camera_basis = basis_from_depth(camera_look_at, position)
-    test_camera = Camera(focal_length, position, test_camera_basis)
-    voxel_access, voxels, losses = training_loop(world, test_camera, view_spec, ray_spec, test_images[index], 3)
-    print("Optimisation complete!")
-    update_world(voxels, voxel_access, world)
+for e in range(10):
+    for index, position in enumerate(test_positions):
+        print(f"Training for camera position #{index}={position}")
+        test_camera_basis = basis_from_depth(camera_look_at, position)
+        test_camera = Camera(focal_length, position, test_camera_basis)
+        voxel_access, voxels, losses = training_loop(world, test_camera, view_spec, ray_spec, test_images[index], 2, learning_rate=LEARNING_RATE)
+        print("Optimisation complete!")
+        update_world(voxels, voxel_access, world)
 
 red, green, blue = r.render(plt)
 transforms.ToPILImage()(torch.stack([red, green, blue])).show()
