@@ -148,7 +148,7 @@ class Voxel:
 
     @staticmethod
     def random_coloured_voxel(opacity=DEFAULT_OPACITY):
-        voxel = torch.cat([torch.tensor([0.0005]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
+        voxel = torch.cat([torch.tensor([0.05]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
         # voxel = Voxel.uniform_harmonic_random_colour()
         return voxel
 
@@ -229,15 +229,6 @@ class VoxelGrid:
     @staticmethod
     def build_random_world(x, y, z):
         return VoxelGrid(x, y, z, Voxel.random_coloured_voxel)
-
-    def build_from(world_tensor):
-        x, y, z = world_tensor.shape
-        new_world = VoxelGrid(x, y, z, Voxel.empty_voxel)
-        for i in range(x):
-            for j in range(y):
-                for k in range(z):
-                    new_world.set((i, j, k, 1), world_tensor[i, j, k])
-        return new_world
 
     def at(self, x, y, z):
         if self.is_outside(x, y, z):
@@ -481,7 +472,7 @@ class Renderer:
         self.num_view_samples_y = view_spec[5]
 
     def render_from_rays(self, voxel_access, plt):
-        camera = self.camera
+        # camera = self.camera
         viewing_angle = camera.viewing_angle()
         plt.rcParams['axes.xmargin'] = 0
         plt.rcParams['axes.ymargin'] = 0
@@ -872,7 +863,11 @@ camera_look_at = cube_center
 # Exact diagonal centering of cube
 # camera_center = torch.tensor([40., 40., 40., 1.])
 # camera_center = torch.tensor([-20., -10., 40., 1.])
-camera_center = torch.tensor([4.8446, -6.2500, 2.5000, 1.0000])
+camera_center = torch.tensor([-20., -10., 40., 1.])
+
+# Pathological case
+# camera_center = torch.tensor([-10.3109, 20.0000, 2.5000, 1.0000])
+
 focal_length = 3.
 
 camera_basis = basis_from_depth(camera_look_at, camera_center)
@@ -943,7 +938,6 @@ num_stochastic_rays = 1000
 # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 # print("Rendered final result")
 
-# Trains on multiple training images
 test_positions = torch.tensor([[-10.3109, 20.0000, 2.5000, 1.0000],
                                [-10.3109, 20.0000, 37.5000, 1.0000],
                                [4.8446, -6.2500, 2.5000, 1.0000],
@@ -964,7 +958,7 @@ dataset = datasets.ImageFolder("./images", transform=to_tensor)
 data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=False)
 
 test_images = list(data_loader)[0][0]
-for e in range(5):
+for e in range(1):
     for index, position in enumerate(test_positions[:1]):
         print(f"Training for camera position #{index}={position}")
         test_camera_basis = basis_from_depth(camera_look_at, position)
@@ -977,12 +971,3 @@ red, green, blue = r.render(plt)
 transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 print("Rendered final result")
 plt.show()
-
-# voxel_grid = torch.load("./optimised3.pt")
-# print(voxel_grid.shape)
-# reconstructed_world = VoxelGrid.build_from(voxel_grid)
-# r1 = Renderer(reconstructed_world, camera, torch.tensor(view_spec), ray_spec)
-# access = r1.build_rays(stochastic_samples(1000, view_spec))
-# r, g, b = r1.render_from_rays(access, plt)
-# # r1.render(plt)
-# plt.show()

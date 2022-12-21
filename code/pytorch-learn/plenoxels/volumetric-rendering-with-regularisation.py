@@ -148,7 +148,7 @@ class Voxel:
 
     @staticmethod
     def random_coloured_voxel(opacity=DEFAULT_OPACITY):
-        voxel = torch.cat([torch.tensor([0.0005]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
+        voxel = torch.cat([torch.tensor([random.random()]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
         # voxel = Voxel.uniform_harmonic_random_colour()
         return voxel
 
@@ -192,7 +192,8 @@ class Ray:
 
 
 class VoxelAccess:
-    def __init__(self, view_points, ray_sample_positions, voxel_pointers, all_voxels, all_voxel_positions):
+    def __init__(self, view_points, ray_sample_positions, voxel_pointers, all_voxels, all_voxel_positions, world):
+        self.world = world
         self.ray_sample_positions = ray_sample_positions
         self.view_points = view_points
         self.voxel_positions = all_voxel_positions
@@ -481,7 +482,6 @@ class Renderer:
         self.num_view_samples_y = view_spec[5]
 
     def render_from_rays(self, voxel_access, plt):
-        camera = self.camera
         viewing_angle = camera.viewing_angle()
         plt.rcParams['axes.xmargin'] = 0
         plt.rcParams['axes.ymargin'] = 0
@@ -521,8 +521,8 @@ class Renderer:
             color_tensor = Renderer.SIGMOID(color_densities)
             plt.plot(view_x, view_y, marker="o", color=color_tensor.detach().numpy())
 
-            if (view_x < self.x_1 or view_x > self.x_2
-                    or view_y < self.y_1 or view_y > self.y_2):
+            if (view_x < view_x1 or view_x > view_x2
+                    or view_y < view_y1 or view_y > view_y2):
                 print(f"Warning: bad generation: {view_x}, {view_y}")
 
             # print(color_tensor)
@@ -580,13 +580,13 @@ class Renderer:
             voxel_pointers.append((counter, counter + 8 * num_intersecting_voxels, num_intersecting_voxels))
             counter += 8 * num_intersecting_voxels
 
-            if (view_x < self.x_1 or view_x > self.x_2
-                    or view_y < self.y_1 or view_y > self.y_2):
+            if (view_x < view_x1 or view_x > view_x2
+                    or view_y < view_y1 or view_y > view_y2):
                 print(f"Warning: bad generation: {view_x}, {view_y}")
         print("Done!!")
 
         return VoxelAccess(view_points, torch.stack(ray_sample_positions), voxel_pointers, all_voxels,
-                           all_voxel_positions)
+                           torch.tensor(all_voxel_positions), self.world)
 
     def render(self, plt):
         global VOXELS_NOT_USED
@@ -742,6 +742,34 @@ def camera_to_image_test(x, y, view_spec):
     return int(x), int(y)
 
 
+def tv_for_voxel(voxel_accessor):
+    all_voxels = voxel_accessor.all_voxels
+    voxel_positions = voxel_accessor.voxel_positions
+    index = int(random.random() * len(all_voxels))
+    position = voxel_positions[index]
+    voxel = all_voxels[index]
+    x_plus_1 = position + torch.tensor([1., 0., 0.])
+    y_plus_1 = position + torch.tensor([0., 1., 0.])
+    z_plus_1 = position + torch.tensor([0., 0., 1.])
+    voxel_x1 = world.at(*x_plus_1)
+    voxel_y1 = world.at(*y_plus_1)
+    voxel_z1 = world.at(*z_plus_1)
+    delta_x = (voxel - voxel_x1).pow(2)
+    delta_y = (voxel - voxel_y1).pow(2)
+    delta_z = (voxel - voxel_z1).pow(2)
+
+    sqrt__sum = (delta_x + delta_y + delta_z).sqrt().sum()
+    if (math.isnan(sqrt__sum)):
+        print("[WARNING] NaN in TV regularisation term")
+        print(f"Sqrt sum={sqrt__sum}, Source voxel={voxel}, Positions are: {(x_plus_1, y_plus_1, z_plus_1)}, Voxels = {(voxel_x1, voxel_y1, voxel_z1)}, Deltas={(delta_x, delta_y, delta_z)}")
+    return sqrt__sum
+
+
+def tv_term(voxel_accessor):
+    num_voxels_to_include = int(0.1 * len(voxel_accessor.all_voxels))
+    return torch.stack(list(map(lambda i: tv_for_voxel(voxel_accessor), list(range(num_voxels_to_include))))).mean()
+
+
 def mse(rendered_channel, true_channel, view_spec):
     # true_channel = torch.ones([2, 2]) * 10
     small_diffs = 0
@@ -818,19 +846,20 @@ def training_loop(world, camera, view_spec, ray_spec, image_channels, n=1, learn
         optimizer.zero_grad()
         r, g, b = model([camera, view_spec, ray_spec])
 
-        red_mse = mse(r, image_channels[0], view_spec)
-        green_mse = mse(g, image_channels[1], view_spec)
-        blue_mse = mse(b, image_channels[2], view_spec)
-        total_mse = red_mse + green_mse + blue_mse
-        print(f"MSE={total_mse}")
-        total_mse.backward()
+        red_loss = mse(r, image_channels[0], view_spec)
+        green_loss = mse(g, image_channels[1], view_spec)
+        blue_loss = mse(b, image_channels[2], view_spec)
+        # total_loss = red_loss + green_loss + blue_loss + tv_term(model.voxel_access)
+        total_loss = red_loss + green_loss + blue_loss
+        print(f"Total Loss={total_loss}")
+        total_loss.backward()
         for param in model.parameters():
             print(f"Param after={param.grad.shape}")
         # make_dot(total_mse, params=dict(list(model.named_parameters()))).render("mse", format="png")
         # make_dot(r, params=dict(list(model.named_parameters()))).render("channel", format="png")
         optimizer.step()
         # after = torch.stack(list(model.parameters()))
-        losses.append(total_mse)
+        losses.append(total_loss)
 
     return model.voxel_access, model.voxels, losses
 
@@ -889,7 +918,7 @@ num_ray_samples = 50
 ray_spec = torch.tensor([ray_length, num_ray_samples])
 LEARNING_RATE = 0.005
 
-r = Renderer(world, camera, torch.tensor(view_spec), ray_spec)
+# r = Renderer(world, camera, torch.tensor(view_spec), ray_spec)
 
 # This renders the volumetric model and shows the rendered image. Useful for training
 # red, green, blue = r.render(plt)
@@ -964,12 +993,13 @@ dataset = datasets.ImageFolder("./images", transform=to_tensor)
 data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=False)
 
 test_images = list(data_loader)[0][0]
-for e in range(5):
-    for index, position in enumerate(test_positions[:1]):
+for e in range(2):
+    for index, position in enumerate(test_positions):
         print(f"Training for camera position #{index}={position}")
         test_camera_basis = basis_from_depth(camera_look_at, position)
         test_camera = Camera(focal_length, position, test_camera_basis)
-        voxel_access, voxels, losses = training_loop(world, test_camera, view_spec, ray_spec, test_images[index], 5, learning_rate=LEARNING_RATE)
+        voxel_access, voxels, losses = training_loop(world, test_camera, view_spec, ray_spec, test_images[index], 3,
+                                                     learning_rate=LEARNING_RATE)
         print("Optimisation complete!")
         update_world(voxels, voxel_access, world)
 
@@ -978,6 +1008,7 @@ transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 print("Rendered final result")
 plt.show()
 
+# This renders the 3D reconstruction
 # voxel_grid = torch.load("./optimised3.pt")
 # print(voxel_grid.shape)
 # reconstructed_world = VoxelGrid.build_from(voxel_grid)
