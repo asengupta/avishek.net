@@ -952,12 +952,12 @@ dataset = datasets.ImageFolder("./images", transform=to_tensor)
 data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=False)
 
 test_images = list(data_loader)[0][0]
-for e in range(10):
+for e in range(5):
     for index, position in enumerate(test_positions):
         print(f"Training for camera position #{index}={position}")
         test_camera_basis = basis_from_depth(camera_look_at, position)
         test_camera = Camera(focal_length, position, test_camera_basis)
-        voxel_access, voxels, losses = training_loop(world, test_camera, view_spec, ray_spec, test_images[index], 2, learning_rate=LEARNING_RATE)
+        voxel_access, voxels, losses = training_loop(world, test_camera, view_spec, ray_spec, test_images[index], 3, learning_rate=LEARNING_RATE)
         print("Optimisation complete!")
         update_world(voxels, voxel_access, world)
 
