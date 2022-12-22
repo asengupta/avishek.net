@@ -957,32 +957,56 @@ test_positions = torch.tensor([[-10.3109, 20.0000, 2.5000, 1.0000],
                                [50.3109, 20.0000, 2.5000, 1.0000],
                                [50.3109, 20.0000, 37.5000, 1.0000]])
 
-to_tensor = transforms.Compose([transforms.ToTensor()])
-dataset = datasets.ImageFolder("./images", transform=to_tensor)
-data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=False)
+# to_tensor = transforms.Compose([transforms.ToTensor()])
+# dataset = datasets.ImageFolder("./images", transform=to_tensor)
+# data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=False)
+#
+# test_images = list(data_loader)[0][0]
+# for e in range(5):
+#     for index, position in enumerate(test_positions2[:1]):
+#         print(f"Training for camera position #{index}={position}")
+#         test_camera_basis = basis_from_depth(camera_look_at, position)
+#         test_camera = Camera(focal_length, position, test_camera_basis)
+#         voxel_access, voxels, losses = training_loop(world, test_camera, view_spec, ray_spec, test_images[index], 5,
+#                                                      learning_rate=LEARNING_RATE)
+#         print("Optimisation complete!")
+#         update_world(voxels, voxel_access, world)
+#
+# red, green, blue = r.render(plt)
+# transforms.ToPILImage()(torch.stack([red, green, blue])).show()
+# print("Rendered final result")
+# plt.show()
 
-test_images = list(data_loader)[0][0]
-for e in range(5):
-    for index, position in enumerate(test_positions2[:1]):
-        print(f"Training for camera position #{index}={position}")
-        test_camera_basis = basis_from_depth(camera_look_at, position)
-        test_camera = Camera(focal_length, position, test_camera_basis)
-        voxel_access, voxels, losses = training_loop(world, test_camera, view_spec, ray_spec, test_images[index], 5,
-                                                     learning_rate=LEARNING_RATE)
-        print("Optimisation complete!")
-        update_world(voxels, voxel_access, world)
+# voxel_grid = torch.load("./optimised3.pt")
+# print(voxel_grid.shape)
+# reconstructed_world = VoxelGrid.build_from(voxel_grid)
+# r1 = Renderer(reconstructed_world, camera, torch.tensor(view_spec), ray_spec)
+# access = r1.build_rays(stochastic_samples(1000, view_spec))
+# r, g, b = r1.render_from_rays(access, plt)
+# # r1.render(plt)
+# plt.show()
 
-red, green, blue = r.render(plt)
-transforms.ToPILImage()(torch.stack([red, green, blue])).show()
-print("Rendered final result")
+radius = 35.
+camera_positions = []
+for phi in np.linspace(0, math.pi, 4):
+    for theta in np.linspace(0, 2 * math.pi, 5):
+        x = radius * math.sin(phi) * math.cos(theta)
+        y = radius * math.sin(phi) * math.sin(theta)
+        z = radius * math.cos(phi)
+        x = 0 if abs(x) < 0.0001 else x
+        y = 0 if abs(y) < 0.0001 else y
+        z = 0 if abs(z) < 0.0001 else z
+        camera_positions.append(torch.tensor([x, y, z, 0]))
+
+positions = (torch.stack(camera_positions).unique(dim=0)) + cube_center
+print(positions)
+
+for index, p in enumerate(positions):
+    b = basis_from_depth(camera_look_at, p)
+    c = Camera(focal_length, p, b)
+    r = Renderer(world, c, view_spec, ray_spec)
+    red, green, blue = r.render(plt)
+    save_image(torch.stack([red, green, blue]), f"./images/training/rotating-cube-{index:02}.png")
+
 plt.show()
-
-voxel_grid = torch.load("./optimised3.pt")
-print(voxel_grid.shape)
-reconstructed_world = VoxelGrid.build_from(voxel_grid)
-r1 = Renderer(reconstructed_world, camera, torch.tensor(view_spec), ray_spec)
-access = r1.build_rays(stochastic_samples(1000, view_spec))
-r, g, b = r1.render_from_rays(access, plt)
-# r1.render(plt)
-plt.show()
-
+print("Completed rendering images")
