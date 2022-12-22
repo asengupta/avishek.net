@@ -858,13 +858,13 @@ GRID_Z = 40
 
 random_world = VoxelGrid.build_random_world(GRID_X, GRID_Y, GRID_Z)
 empty_world = VoxelGrid.build_empty_world(GRID_X, GRID_Y, GRID_Z)
-world = empty_world
+world = random_world
 proxy_world = VoxelGrid(2, 2, 2, Voxel.default_voxel)
 # empty_world.build_solid_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
 # world.build_random_hollow_cube()
 # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
-world.build_hollow_cube_with_randomly_coloured_sides(Voxel.uniform_harmonic_random_colour,
-                                                     torch.tensor([10, 10, 10, 20, 20, 20]))
+# world.build_hollow_cube_with_randomly_coloured_sides(Voxel.uniform_harmonic_random_colour,
+#                                                      torch.tensor([10, 10, 10, 20, 20, 20]))
 # world.build_random_hollow_cube2(Voxel.random_voxel, torch.tensor([15, 15, 15, 10, 10, 10]))
 cube_center = torch.tensor([20., 20., 20., 1.])
 # camera_look_at = torch.tensor([0., 0., 0., 1])
@@ -888,7 +888,7 @@ view_spec = [view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]
 ray_length = 100
 num_ray_samples = 100
 ray_spec = torch.tensor([ray_length, num_ray_samples])
-LEARNING_RATE = 0.005
+LEARNING_RATE = 0.00025
 
 r = Renderer(world, camera, torch.tensor(view_spec), ray_spec)
 
@@ -962,8 +962,8 @@ dataset = datasets.ImageFolder("./images", transform=to_tensor)
 data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=False)
 
 test_images = list(data_loader)[0][0]
-for e in range(5):
-    for index, position in enumerate(test_positions2[:1]):
+for e in range(1):
+    for index, position in enumerate(test_positions[:1]):
         print(f"Training for camera position #{index}={position}")
         test_camera_basis = basis_from_depth(camera_look_at, position)
         test_camera = Camera(focal_length, position, test_camera_basis)
@@ -977,12 +977,11 @@ transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 print("Rendered final result")
 plt.show()
 
-voxel_grid = torch.load("./optimised3.pt")
-print(voxel_grid.shape)
-reconstructed_world = VoxelGrid.build_from(voxel_grid)
-r1 = Renderer(reconstructed_world, camera, torch.tensor(view_spec), ray_spec)
-access = r1.build_rays(stochastic_samples(1000, view_spec))
-r, g, b = r1.render_from_rays(access, plt)
-# r1.render(plt)
-plt.show()
-
+# voxel_grid = torch.load("./optimised3.pt")
+# print(voxel_grid.shape)
+# reconstructed_world = VoxelGrid.build_from(voxel_grid)
+# r1 = Renderer(reconstructed_world, camera, torch.tensor(view_spec), ray_spec)
+# access = r1.build_rays(stochastic_samples(1000, view_spec))
+# r, g, b = r1.render_from_rays(access, plt)
+# # r1.render(plt)
+# plt.show()
