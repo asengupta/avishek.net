@@ -20,12 +20,12 @@ VOXELS_NOT_USED = 0
 
 
 class Camera:
-    def __init__(self, focal_length, center, basis):
+    def __init__(self, focal_length, center, look_at):
         self.center = center
-        self.basis = basis
+        self.basis = basis_from_depth(look_at, center)
         self.focal_length = focal_length
         camera_center = center.detach().clone()
-        transposed_basis = torch.transpose(basis, 0, 1)
+        transposed_basis = torch.transpose(self.basis, 0, 1)
         camera_center[:3] = camera_center[
                             :3] * -1  # We don't want to multiply the homogenous coordinate component; it needs to remain 1
         camera_origin_translation = torch.eye(4, 4)
@@ -873,11 +873,11 @@ camera_look_at = cube_center
 # Exact diagonal centering of cube
 # camera_center = torch.tensor([40., 40., 40., 1.])
 # camera_center = torch.tensor([-20., -10., 40., 1.])
-camera_center = torch.tensor([4.8446, -6.2500, 2.5000, 1.0000])
+camera_center = torch.tensor([-10.3109, 20.0000, 2.5000, 1.0000])
 focal_length = 2.
 
 camera_basis = basis_from_depth(camera_look_at, camera_center)
-camera = Camera(focal_length, camera_center, camera_basis)
+camera = Camera(focal_length, camera_center, camera_look_at)
 num_rays_x = 50
 num_rays_y = 50
 view_x1 = -1
@@ -965,8 +965,7 @@ test_images = list(data_loader)[0][0]
 for e in range(1):
     for index, position in enumerate(test_positions[:1]):
         print(f"Training for camera position #{index}={position}")
-        test_camera_basis = basis_from_depth(camera_look_at, position)
-        test_camera = Camera(focal_length, position, test_camera_basis)
+        test_camera = Camera(focal_length, position, camera_look_at)
         voxel_access, voxels, losses = training_loop(world, test_camera, view_spec, ray_spec, test_images[index], 5,
                                                      learning_rate=LEARNING_RATE)
         print("Optimisation complete!")
