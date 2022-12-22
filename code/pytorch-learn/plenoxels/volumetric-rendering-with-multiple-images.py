@@ -944,6 +944,14 @@ num_stochastic_rays = 1000
 # print("Rendered final result")
 
 # Trains on multiple training images
+test_positions2 = torch.tensor([[-20., -10., 40., 1.]])
+test_positions0 = torch.tensor([[-14.6410, 20.0000, 0.0000, 1.0000],
+                                [2.6795, -10.0000, 0.0000, 1.0000],
+                                [2.6795, 50.0000, 0.0000, 1.0000],
+                                [20.0000, 20.0000, 60.0000, 1.0000],
+                                [37.3205, -10.0000, 0.0000, 1.0000],
+                                [37.3205, 50.0000, 0.0000, 1.0000],
+                                [54.6410, 20.0000, 0.0000, 1.0000]])
 test_positions = torch.tensor([[-10.3109, 20.0000, 2.5000, 1.0000],
                                [-10.3109, 20.0000, 37.5000, 1.0000],
                                [4.8446, -6.2500, 2.5000, 1.0000],
@@ -965,11 +973,12 @@ data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=False)
 
 test_images = list(data_loader)[0][0]
 for e in range(5):
-    for index, position in enumerate(test_positions[:1]):
+    for index, position in enumerate(test_positions2[:1]):
         print(f"Training for camera position #{index}={position}")
         test_camera_basis = basis_from_depth(camera_look_at, position)
         test_camera = Camera(focal_length, position, test_camera_basis)
-        voxel_access, voxels, losses = training_loop(world, test_camera, view_spec, ray_spec, test_images[index], 5, learning_rate=LEARNING_RATE)
+        voxel_access, voxels, losses = training_loop(world, test_camera, view_spec, ray_spec, test_images[index], 5,
+                                                     learning_rate=LEARNING_RATE)
         print("Optimisation complete!")
         update_world(voxels, voxel_access, world)
 
@@ -986,3 +995,18 @@ plt.show()
 # r, g, b = r1.render_from_rays(access, plt)
 # # r1.render(plt)
 # plt.show()
+
+# radius = 35.
+#
+# camera_positions = []
+# for phi in np.linspace(0, 2 * math.pi, 4):
+#     for theta in np.linspace(0, 2 * math.pi, 4):
+#         x = radius * math.sin(phi) * math.cos(theta)
+#         y = radius * math.sin(phi) * math.sin(theta)
+#         z = radius * math.cos(phi)
+#         camera_positions.append(torch.tensor([x, y, z]))
+#
+#
+# print((torch.stack(camera_positions) + cube_center[:-1]).unique(dim=0))
+# print(torch.tensor(camera_positions))
+# print((torch.tensor(camera_positions) + torch.tensor([20, 20, 20])).unique(dim=0))
