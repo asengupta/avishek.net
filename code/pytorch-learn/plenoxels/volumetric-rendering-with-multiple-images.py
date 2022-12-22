@@ -149,7 +149,7 @@ class Voxel:
 
     @staticmethod
     def random_coloured_voxel(opacity=DEFAULT_OPACITY):
-        voxel = torch.cat([torch.tensor([0.0005]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
+        voxel = torch.cat([torch.tensor([0.0002]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
         # voxel = Voxel.uniform_harmonic_random_colour()
         return voxel
 
@@ -161,7 +161,7 @@ class Voxel:
     def uniform_harmonic_random_colour():
         random_harmonic_coefficient_set = lambda: ([random.random()] + [0.] * (VoxelGrid.PER_CHANNEL_DIMENSION - 1))
         return torch.tensor([
-                                0.1] + random_harmonic_coefficient_set() + random_harmonic_coefficient_set() + random_harmonic_coefficient_set(),
+                                0.0001] + random_harmonic_coefficient_set() + random_harmonic_coefficient_set() + random_harmonic_coefficient_set(),
                             requires_grad=True)
 
     @staticmethod
@@ -172,6 +172,10 @@ class Voxel:
     @staticmethod
     def empty_voxel():
         return torch.zeros([VoxelGrid.VOXEL_DIMENSION], requires_grad=True)
+
+    @staticmethod
+    def like_voxel(prototype_voxel):
+        return lambda: prototype_voxel.clone()
 
 
 class Ray:
@@ -230,6 +234,9 @@ class VoxelGrid:
     @staticmethod
     def build_random_world(x, y, z):
         return VoxelGrid(x, y, z, Voxel.random_coloured_voxel)
+
+    def build_with_voxel(x, y, z, prototype_voxel):
+        return VoxelGrid(x, y, z, Voxel.like_voxel(prototype_voxel))
 
     def build_from(world_tensor):
         x, y, z = world_tensor.shape
@@ -813,9 +820,9 @@ def training_loop(world, camera, view_spec, ray_spec, image_channels, n=1, learn
     print(f"Shape = {image_channels.shape}")
 
     model = PlenoxelModel([camera, view_spec, ray_spec], world)
+    optimizer = torch.optim.RMSprop(model.parameters(), lr=learning_rate, momentum=0.9)
     for i in range(n):
         print(f"Epoch={i}")
-        optimizer = torch.optim.RMSprop(model.parameters(), lr=learning_rate, momentum=0.9)
         optimizer.zero_grad()
         r, g, b = model([camera, view_spec, ray_spec])
 
@@ -827,6 +834,7 @@ def training_loop(world, camera, view_spec, ray_spec, image_channels, n=1, learn
         total_mse.backward()
         for param in model.parameters():
             print(f"Param after={param.grad.shape}")
+            print(f"Param after={torch.max(param.grad)}")
         # make_dot(total_mse, params=dict(list(model.named_parameters()))).render("mse", format="png")
         # make_dot(r, params=dict(list(model.named_parameters()))).render("channel", format="png")
         optimizer.step()
@@ -857,6 +865,7 @@ GRID_Y = 40
 GRID_Z = 40
 
 random_world = VoxelGrid.build_random_world(GRID_X, GRID_Y, GRID_Z)
+mono_world = VoxelGrid.build_with_voxel(GRID_X, GRID_Y, GRID_Z, torch.cat([torch.tensor([0.0002, random.random() * 100.]), torch.zeros(VoxelGrid.VOXEL_DIMENSION - 2)]))
 empty_world = VoxelGrid.build_empty_world(GRID_X, GRID_Y, GRID_Z)
 world = random_world
 proxy_world = VoxelGrid(2, 2, 2, Voxel.default_voxel)
@@ -888,7 +897,7 @@ view_spec = [view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]
 ray_length = 100
 num_ray_samples = 100
 ray_spec = torch.tensor([ray_length, num_ray_samples])
-LEARNING_RATE = 0.00025
+LEARNING_RATE = 0.0001
 
 r = Renderer(world, camera, torch.tensor(view_spec), ray_spec)
 
@@ -963,10 +972,10 @@ data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=False)
 
 test_images = list(data_loader)[0][0]
 for e in range(1):
-    for index, position in enumerate(test_positions[:1]):
+    for index, position in enumerate(test_positions):
         print(f"Training for camera position #{index}={position}")
         test_camera = Camera(focal_length, position, camera_look_at)
-        voxel_access, voxels, losses = training_loop(world, test_camera, view_spec, ray_spec, test_images[index], 5,
+        voxel_access, voxels, losses = training_loop(world, test_camera, view_spec, ray_spec, test_images[index], 10,
                                                      learning_rate=LEARNING_RATE)
         print("Optimisation complete!")
         update_world(voxels, voxel_access, world)
