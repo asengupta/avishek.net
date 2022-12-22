@@ -467,9 +467,9 @@ def channel_opacity_split(distance_density_color_tensors, viewing_angle):
 
 
 class Renderer:
-    # SIGMOID = nn.Sigmoid()
+    SIGMOID = nn.Sigmoid()
 
-    SIGMOID = lambda t: torch.clamp(t, min=0, max=1)
+    # SIGMOID = lambda t: torch.clamp(t, min=0, max=1)
 
     def __init__(self, world, camera, view_spec, ray_spec):
         self.world = world
@@ -823,7 +823,7 @@ def training_loop(world, camera, view_spec, ray_spec, image_channels, n=1, learn
         green_mse = mse(g, image_channels[1], view_spec)
         blue_mse = mse(b, image_channels[2], view_spec)
         total_mse = red_mse + green_mse + blue_mse
-        print(f"MSE={total_mse}")
+        print(f"MSE={total_mse}, RGB MSE={(red_mse, green_mse, blue_mse)}")
         total_mse.backward()
         for param in model.parameters():
             print(f"Param after={param.grad.shape}")
