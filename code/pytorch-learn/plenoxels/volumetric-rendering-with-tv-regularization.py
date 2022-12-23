@@ -775,6 +775,32 @@ def mse(rendered_channel, true_channel, view_spec):
     # print(f"Large diffs = {large_diffs}")
     return channel_total_error / len(rendered_channel)
 
+def tv_for_voxel(voxel_accessor):
+    all_voxels = voxel_accessor.all_voxels
+    voxel_positions = voxel_accessor.voxel_positions
+    index = int(random.random() * len(all_voxels))
+    position = voxel_positions[index]
+    voxel = all_voxels[index]
+    x_plus_1 = position + torch.tensor([1., 0., 0.])
+    y_plus_1 = position + torch.tensor([0., 1., 0.])
+    z_plus_1 = position + torch.tensor([0., 0., 1.])
+    voxel_x1 = world.at(*x_plus_1)
+    voxel_y1 = world.at(*y_plus_1)
+    voxel_z1 = world.at(*z_plus_1)
+    delta_x = (voxel - voxel_x1).pow(2)
+    delta_y = (voxel - voxel_y1).pow(2)
+    delta_z = (voxel - voxel_z1).pow(2)
+
+    sqrt__sum = (delta_x + delta_y + delta_z).sqrt().sum()
+    if (math.isnan(sqrt__sum)):
+        print("[WARNING] NaN in TV regularisation term")
+        print(f"Sqrt sum={sqrt__sum}, Source voxel={voxel}, Positions are: {(x_plus_1, y_plus_1, z_plus_1)}, Voxels = {(voxel_x1, voxel_y1, voxel_z1)}, Deltas={(delta_x, delta_y, delta_z)}")
+    return sqrt__sum
+
+
+def tv_term(voxel_accessor):
+    num_voxels_to_include = int(0.1 * len(voxel_accessor.all_voxels))
+    return torch.stack(list(map(lambda i: tv_for_voxel(voxel_accessor), list(range(num_voxels_to_include))))).mean()
 
 NUM_STOCHASTIC_RAYS = 1000
 
@@ -830,6 +856,7 @@ def training_loop(world, camera, view_spec, ray_spec, image_channels, n=1, learn
         green_mse = mse(g, image_channels[1], view_spec)
         blue_mse = mse(b, image_channels[2], view_spec)
         total_mse = red_mse + green_mse + blue_mse
+        # total_loss = red_loss + green_loss + blue_loss + tv_term(model.voxel_access)
         print(f"MSE={total_mse}, RGB MSE={(red_mse, green_mse, blue_mse)}")
         total_mse.backward()
         for param in model.parameters():
