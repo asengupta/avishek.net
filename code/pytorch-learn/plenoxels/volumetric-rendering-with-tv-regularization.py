@@ -13,6 +13,7 @@ RED_CHANNEL = 0
 GREEN_CHANNEL = 1
 BLUE_CHANNEL = 2
 INHOMOGENEOUS_ZERO_VECTOR = torch.tensor([0., 0., 0.])
+REGULARISATION_FRACTION = 0.01
 
 MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE = []
 MASTER_VOXELS_STRUCTURE = []
@@ -227,6 +228,15 @@ class VoxelGrid:
                 for k in range(self.grid_z):
                     self.voxel_grid[i, j, k] = make_voxel()
 
+    def world_x(self):
+        return self.grid_x
+
+    def world_y(self):
+        return self.grid_y
+
+    def world_z(self):
+        return self.grid_z
+
     @staticmethod
     def build_empty_world(x, y, z):
         return VoxelGrid(x, y, z, Voxel.empty_voxel)
@@ -407,14 +417,14 @@ def neighbours(x, y, z, world):
     c110 = world.at(x1, y1, z0)
     c111 = world.at(x1, y1, z1)
 
-    return ([c000, c001, c010, c011, c100, c101, c110, c111], [(x0, y0, z0),
-                                                               (x0, y0, z1),
-                                                               (x0, y1, z0),
-                                                               (x0, y1, z1),
-                                                               (x1, y0, z0),
-                                                               (x1, y0, z1),
-                                                               (x1, y1, z0),
-                                                               (x1, y1, z1)])
+    return ([c000, c001, c010, c011, c100, c101, c110, c111], torch.tensor([[x0, y0, z0],
+                                                               [x0, y0, z1],
+                                                               [x0, y1, z0],
+                                                               [x0, y1, z1],
+                                                               [x1, y0, z0],
+                                                               [x1, y0, z1],
+                                                               [x1, y1, z0],
+                                                               [x1, y1, z1]]))
 
 
 def density_split(ray_sample_distances, ray, viewing_angle, world):
@@ -775,7 +785,7 @@ def mse(rendered_channel, true_channel, view_spec):
     # print(f"Large diffs = {large_diffs}")
     return channel_total_error / len(rendered_channel)
 
-def tv_for_voxel(voxel_accessor):
+def tv_for_voxel(voxel_accessor, world):
     all_voxels = voxel_accessor.all_voxels
     voxel_positions = voxel_accessor.voxel_positions
     index = int(random.random() * len(all_voxels))
@@ -787,20 +797,20 @@ def tv_for_voxel(voxel_accessor):
     voxel_x1 = world.at(*x_plus_1)
     voxel_y1 = world.at(*y_plus_1)
     voxel_z1 = world.at(*z_plus_1)
-    delta_x = (voxel - voxel_x1).pow(2)
-    delta_y = (voxel - voxel_y1).pow(2)
-    delta_z = (voxel - voxel_z1).pow(2)
+    delta_x = ((voxel - voxel_x1)/(256/world.world_x())).pow(2)
+    delta_y = ((voxel - voxel_y1)/(256/world.world_y())).pow(2)
+    delta_z = ((voxel - voxel_z1)/(256/world.world_z())).pow(2)
 
-    sqrt__sum = (delta_x + delta_y + delta_z).sqrt().sum()
+    sqrt__sum = (delta_x + delta_y + delta_z + 0.0001).sqrt().sum()
     if (math.isnan(sqrt__sum)):
         print("[WARNING] NaN in TV regularisation term")
         print(f"Sqrt sum={sqrt__sum}, Source voxel={voxel}, Positions are: {(x_plus_1, y_plus_1, z_plus_1)}, Voxels = {(voxel_x1, voxel_y1, voxel_z1)}, Deltas={(delta_x, delta_y, delta_z)}")
     return sqrt__sum
 
 
-def tv_term(voxel_accessor):
-    num_voxels_to_include = int(0.1 * len(voxel_accessor.all_voxels))
-    return torch.stack(list(map(lambda i: tv_for_voxel(voxel_accessor), list(range(num_voxels_to_include))))).mean()
+def tv_term(voxel_accessor, world):
+    num_voxels_to_include = int(REGULARISATION_FRACTION * len(voxel_accessor.all_voxels))
+    return torch.stack(list(map(lambda i: tv_for_voxel(voxel_accessor, world), list(range(num_voxels_to_include))))).mean()
 
 NUM_STOCHASTIC_RAYS = 1000
 
@@ -855,10 +865,11 @@ def training_loop(world, camera, view_spec, ray_spec, image_channels, n=1, learn
         red_mse = mse(r, image_channels[0], view_spec)
         green_mse = mse(g, image_channels[1], view_spec)
         blue_mse = mse(b, image_channels[2], view_spec)
-        total_mse = red_mse + green_mse + blue_mse
-        # total_loss = red_loss + green_loss + blue_loss + tv_term(model.voxel_access)
-        print(f"MSE={total_mse}, RGB MSE={(red_mse, green_mse, blue_mse)}")
-        total_mse.backward()
+        # total_loss = red_mse + green_mse + blue_mse
+        print(f"Regularising using {len(model.voxel_access.all_voxels) * REGULARISATION_FRACTION} voxels...")
+        total_loss = red_mse + green_mse + blue_mse + tv_term(model.voxel_access, world)
+        print(f"Loss={total_loss}, RGB MSE={(red_mse, green_mse, blue_mse)}")
+        total_loss.backward()
         for param in model.parameters():
             print(f"Param after={param.grad.shape}")
             print(f"Param after={torch.max(param.grad)}")
@@ -866,7 +877,7 @@ def training_loop(world, camera, view_spec, ray_spec, image_channels, n=1, learn
         # make_dot(r, params=dict(list(model.named_parameters()))).render("channel", format="png")
         optimizer.step()
         # after = torch.stack(list(model.parameters()))
-        losses.append(total_mse)
+        losses.append(total_loss)
 
     return model.voxel_access, model.voxels, losses
 
