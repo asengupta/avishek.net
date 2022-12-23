@@ -422,13 +422,13 @@ def neighbours(x, y, z, world):
     c111 = world.at(x1, y1, z1)
 
     return ([c000, c001, c010, c011, c100, c101, c110, c111], torch.tensor([[x0, y0, z0],
-                                                               [x0, y0, z1],
-                                                               [x0, y1, z0],
-                                                               [x0, y1, z1],
-                                                               [x1, y0, z0],
-                                                               [x1, y0, z1],
-                                                               [x1, y1, z0],
-                                                               [x1, y1, z1]]))
+                                                                            [x0, y0, z1],
+                                                                            [x0, y1, z0],
+                                                                            [x0, y1, z1],
+                                                                            [x1, y0, z0],
+                                                                            [x1, y0, z1],
+                                                                            [x1, y1, z0],
+                                                                            [x1, y1, z1]]))
 
 
 def density_split(ray_sample_distances, ray, viewing_angle, world):
@@ -502,6 +502,47 @@ class Renderer:
         self.num_view_samples_x = view_spec[4]
         self.num_view_samples_y = view_spec[5]
 
+    def render_from_ray(self, ray, viewing_angle):
+        ray_sample_positions = ray.ray_sample_positions
+        unique_ray_samples = ray_sample_positions
+        view_x, view_y = ray.view_point
+
+        if (len(unique_ray_samples) <= 1):
+            return torch.tensor([view_x, view_y, 0., 0., 0.])
+            # return [
+            #     torch.tensor([view_x, view_y, 0.]),
+            #     torch.tensor([view_x, view_y, 0.]),
+            #     torch.tensor([view_x, view_y, 0.])
+            # ]
+            # red_channel.append(torch.tensor([view_x, view_y, 0.]))
+            # green_channel.append(torch.tensor([view_x, view_y, 0.]))
+            # blue_channel.append(torch.tensor([view_x, view_y, 0.]))
+            # plt.plot(view_x, view_y, marker="o", color=[0, 0, 0])
+
+        t1 = unique_ray_samples[:-1]
+        t2 = unique_ray_samples[1:]
+        consecutive_sample_distances = (t1 - t2).pow(2).sum(1).sqrt()
+
+        # Make 1D tensor into 2D tensor
+        # List of tensors, last element of each tensor is distance to the next tensor
+        # ray_samples_with_distances = torch.cat([t1, torch.reshape(consecutive_sample_distances, (-1, 1))], 1)
+        ray_sample_distances = torch.reshape(consecutive_sample_distances, (-1, 1))
+        color_densities = density_split(ray_sample_distances, ray, viewing_angle, self.world)
+        color_tensor = Renderer.SIGMOID(color_densities)
+        # plt.plot(view_x, view_y, marker="o", color=color_tensor.detach().numpy())
+
+        if (view_x < self.x_1 or view_x > self.x_2
+                or view_y < self.y_1 or view_y > self.y_2):
+            print(f"Warning: bad generation: {view_x}, {view_y}")
+
+        # print(color_tensor)
+        return torch.cat([torch.tensor([view_x, view_y]), color_tensor])
+        # return [
+        #     torch.stack([view_x, view_y, color_tensor[RED_CHANNEL]]),
+        #     torch.stack([view_x, view_y, color_tensor[GREEN_CHANNEL]]),
+        #     torch.stack([view_x, view_y, color_tensor[BLUE_CHANNEL]])
+        # ]
+
     def render_from_rays(self, voxel_access, plt):
         camera = self.camera
         viewing_angle = camera.viewing_angle()
@@ -513,44 +554,19 @@ class Renderer:
         green_channel = []
         blue_channel = []
         non_rendered_rays = 0
-        for ray_index, view_point in enumerate(voxel_access.view_points):
-            ray = voxel_access.for_ray(ray_index)
-            ray_sample_positions = ray.ray_sample_positions
-            unique_ray_samples = ray_sample_positions
-            view_x, view_y = ray.view_point
-
-            if (len(unique_ray_samples) <= 1):
-                non_rendered_rays += 1
-                red_channel.append(torch.tensor([view_x, view_y, 0.]))
-                green_channel.append(torch.tensor([view_x, view_y, 0.]))
-                blue_channel.append(torch.tensor([view_x, view_y, 0.]))
-                plt.plot(view_x, view_y, marker="o", color=[0, 0, 0])
-                continue
-            t1 = unique_ray_samples[:-1]
-            t2 = unique_ray_samples[1:]
-            consecutive_sample_distances = (t1 - t2).pow(2).sum(1).sqrt()
-
-            # Make 1D tensor into 2D tensor
-            # List of tensors, last element of each tensor is distance to the next tensor
-            # ray_samples_with_distances = torch.cat([t1, torch.reshape(consecutive_sample_distances, (-1, 1))], 1)
-            ray_sample_distances = torch.reshape(consecutive_sample_distances, (-1, 1))
-            color_densities = density_split(ray_sample_distances, ray, viewing_angle, self.world)
-            color_tensor = Renderer.SIGMOID(color_densities)
-            plt.plot(view_x, view_y, marker="o", color=color_tensor.detach().numpy())
-
-            if (view_x < self.x_1 or view_x > self.x_2
-                    or view_y < self.y_1 or view_y > self.y_2):
-                print(f"Warning: bad generation: {view_x}, {view_y}")
-
-            # print(color_tensor)
-            red_channel.append(torch.stack([view_x, view_y, color_tensor[RED_CHANNEL]]))
-            green_channel.append(torch.stack([view_x, view_y, color_tensor[GREEN_CHANNEL]]))
-            blue_channel.append(torch.stack([view_x, view_y, color_tensor[BLUE_CHANNEL]]))
-
-        plt.show()
+        composite_colour_tensors = torch.stack(list(
+            map(lambda entry: self.render_from_ray(voxel_access.for_ray(entry[0]), viewing_angle),
+                enumerate(voxel_access.view_points))))
+        red_channel = composite_colour_tensors[:, [0, 1, 2]]
+        green_channel = composite_colour_tensors[:, [0, 1, 3]]
+        blue_channel = composite_colour_tensors[:, [0, 1, 4]]
+        # for ray_index, view_point in enumerate(voxel_access.view_points):
+        #     self.render_from_ray(voxel_access.for_ray(ray_index), viewing_angle)
+        #
+        # plt.show()
         print("Done!!")
-        red_channel, green_channel, blue_channel = torch.stack(red_channel), torch.stack(green_channel), torch.stack(
-            blue_channel)
+        # red_channel, green_channel, blue_channel = torch.stack(red_channel), torch.stack(green_channel), torch.stack(
+        #     blue_channel)
         return (red_channel, green_channel, blue_channel)
 
     def initialise_plt(self, plt):
@@ -788,6 +804,7 @@ def mse(rendered_channel, true_channel, view_spec):
     # print(f"Large diffs = {large_diffs}")
     return channel_total_error / len(rendered_channel)
 
+
 def tv_for_voxel(voxel_accessor, world):
     all_voxels = voxel_accessor.all_voxels
     voxel_positions = voxel_accessor.voxel_positions
@@ -800,20 +817,23 @@ def tv_for_voxel(voxel_accessor, world):
     voxel_x1 = world.at(*x_plus_1)
     voxel_y1 = world.at(*y_plus_1)
     voxel_z1 = world.at(*z_plus_1)
-    delta_x = ((voxel - voxel_x1)/(256/world.world_x())).pow(2)
-    delta_y = ((voxel - voxel_y1)/(256/world.world_y())).pow(2)
-    delta_z = ((voxel - voxel_z1)/(256/world.world_z())).pow(2)
+    delta_x = ((voxel - voxel_x1) / (256 / world.world_x())).pow(2)
+    delta_y = ((voxel - voxel_y1) / (256 / world.world_y())).pow(2)
+    delta_z = ((voxel - voxel_z1) / (256 / world.world_z())).pow(2)
 
     sqrt__sum = (delta_x + delta_y + delta_z + 0.0001).sqrt().sum()
     if (math.isnan(sqrt__sum)):
         print("[WARNING] NaN in TV regularisation term")
-        print(f"Sqrt sum={sqrt__sum}, Source voxel={voxel}, Positions are: {(x_plus_1, y_plus_1, z_plus_1)}, Voxels = {(voxel_x1, voxel_y1, voxel_z1)}, Deltas={(delta_x, delta_y, delta_z)}")
+        print(
+            f"Sqrt sum={sqrt__sum}, Source voxel={voxel}, Positions are: {(x_plus_1, y_plus_1, z_plus_1)}, Voxels = {(voxel_x1, voxel_y1, voxel_z1)}, Deltas={(delta_x, delta_y, delta_z)}")
     return sqrt__sum
 
 
 def tv_term(voxel_accessor, world):
     num_voxels_to_include = int(REGULARISATION_FRACTION * len(voxel_accessor.all_voxels))
-    return torch.stack(list(map(lambda i: tv_for_voxel(voxel_accessor, world), list(range(num_voxels_to_include))))).mean()
+    return torch.stack(
+        list(map(lambda i: tv_for_voxel(voxel_accessor, world), list(range(num_voxels_to_include))))).mean()
+
 
 NUM_STOCHASTIC_RAYS = 1000
 
@@ -975,6 +995,8 @@ r, g, b = renderer.render_from_rays(voxel_access, plt)
 end_render_rays = timer()
 print(f"Rendering rays took {end_render_rays - start_render_rays}")
 
+image_data = samples_to_image(r, g, b, view_spec)
+transforms.ToPILImage()(image_data).show()
 start_render_full = timer()
 renderer.render(plt)
 end_render_full = timer()
