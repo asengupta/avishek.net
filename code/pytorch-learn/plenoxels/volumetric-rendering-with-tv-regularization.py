@@ -15,6 +15,7 @@ BLUE_CHANNEL = 2
 INHOMOGENEOUS_ZERO_VECTOR = torch.tensor([0., 0., 0.])
 REGULARISATION_FRACTION = 0.01
 REGULARISATION_LAMBDA = 0.001
+LEARNING_RATE = 0.001
 
 MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE = []
 MASTER_VOXELS_STRUCTURE = []
@@ -937,7 +938,6 @@ view_spec = [view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]
 ray_length = 100
 num_ray_samples = 100
 ray_spec = torch.tensor([ray_length, num_ray_samples])
-LEARNING_RATE = 0.001
 
 r = Renderer(world, camera, torch.tensor(view_spec), ray_spec)
 
