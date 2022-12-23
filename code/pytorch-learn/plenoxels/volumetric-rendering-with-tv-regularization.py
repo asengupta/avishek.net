@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
+from timeit import default_timer as timer
 from torchvision.utils import save_image
 from torchvision import datasets, transforms
 from torchviz import make_dot
@@ -963,12 +964,25 @@ num_stochastic_rays = 1000
 # This draws stochastic rays and returns a set of samples with colours
 # However, it separates out the determining the intersecting voxels and the transmittance
 # calculations, so that it can be put through a Plenoxel model optimisation
+start_build_rays = timer()
 voxel_access = renderer.build_rays(fullscreen_samples(view_spec))
+end_build_rays = timer()
+print(f"Building rays took {end_build_rays - start_build_rays}")
 # voxel_access = r.build_rays(stochastic_samples(2000, view_spec))
+
+start_render_rays = timer()
 r, g, b = renderer.render_from_rays(voxel_access, plt)
+end_render_rays = timer()
+print(f"Rendering rays took {end_render_rays - start_render_rays}")
+
+start_render_full = timer()
 renderer.render(plt)
+end_render_full = timer()
+
 plt.show()
 print("Finished rendering!!")
+print(f"Rendering rays in full took {end_render_full - start_render_full}")
+
 # image_data = samples_to_image(r, g, b, view_spec)
 # transforms.ToPILImage()(image_data).show()
 # print(voxel_pointers)
