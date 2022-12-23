@@ -14,6 +14,7 @@ GREEN_CHANNEL = 1
 BLUE_CHANNEL = 2
 INHOMOGENEOUS_ZERO_VECTOR = torch.tensor([0., 0., 0.])
 REGULARISATION_FRACTION = 0.01
+REGULARISATION_LAMBDA = 0.001
 
 MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE = []
 MASTER_VOXELS_STRUCTURE = []
@@ -867,7 +868,7 @@ def training_loop(world, camera, view_spec, ray_spec, image_channels, n=1, learn
         blue_mse = mse(b, image_channels[2], view_spec)
         # total_loss = red_mse + green_mse + blue_mse
         print(f"Regularising using {len(model.voxel_access.all_voxels) * REGULARISATION_FRACTION} voxels...")
-        total_loss = red_mse + green_mse + blue_mse + tv_term(model.voxel_access, world)
+        total_loss = red_mse + green_mse + blue_mse + REGULARISATION_LAMBDA * tv_term(model.voxel_access, world)
         print(f"Loss={total_loss}, RGB MSE={(red_mse, green_mse, blue_mse)}")
         total_loss.backward()
         for param in model.parameters():
@@ -936,7 +937,7 @@ view_spec = [view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]
 ray_length = 100
 num_ray_samples = 100
 ray_spec = torch.tensor([ray_length, num_ray_samples])
-LEARNING_RATE = 0.0001
+LEARNING_RATE = 0.001
 
 r = Renderer(world, camera, torch.tensor(view_spec), ray_spec)
 
@@ -1014,7 +1015,7 @@ for e in range(1):
     for index, position in enumerate(test_positions):
         print(f"Training for camera position #{index}={position}")
         test_camera = Camera(focal_length, position, camera_look_at)
-        voxel_access, voxels, losses = training_loop(world, test_camera, view_spec, ray_spec, test_images[index], 10,
+        voxel_access, voxels, losses = training_loop(world, test_camera, view_spec, ray_spec, test_images[index], 3,
                                                      learning_rate=LEARNING_RATE)
         print("Optimisation complete!")
         update_world(voxels, voxel_access, world)
@@ -1025,22 +1026,22 @@ print("Rendered final result")
 plt.show()
 
 # Reconstructs the world from disk
-radius = 35.
-view_points = []
-voxel_grid = torch.load("./optimised-10.pt")
-print(voxel_grid.shape)
-reconstructed_world = VoxelGrid.build_from(voxel_grid)
-for i in np.linspace(0, 2 * math.pi, 20):
-    x = radius * math.cos(i)
-    y = radius * math.sin(i)
-    z = 40
-    view_points.append(torch.tensor([x, y, z, 0]) + cube_center)
-
-view_points = torch.stack(view_points)
-for index, view_point in enumerate(view_points):
-    c = Camera(focal_length, view_point, cube_center)
-    r1 = Renderer(reconstructed_world, c, torch.tensor(view_spec), ray_spec)
-    red, green, blue = r1.render(plt)
-    save_image(torch.stack([red, green, blue]), f"./random-images/frames/animated-cube-{index:02}.png")
-
-plt.show()
+# radius = 35.
+# view_points = []
+# voxel_grid = torch.load("./optimised-10.pt")
+# print(voxel_grid.shape)
+# reconstructed_world = VoxelGrid.build_from(voxel_grid)
+# for i in np.linspace(0, 2 * math.pi, 20):
+#     x = radius * math.cos(i)
+#     y = radius * math.sin(i)
+#     z = 40
+#     view_points.append(torch.tensor([x, y, z, 0]) + cube_center)
+#
+# view_points = torch.stack(view_points)
+# for index, view_point in enumerate(view_points):
+#     c = Camera(focal_length, view_point, cube_center)
+#     r1 = Renderer(reconstructed_world, c, torch.tensor(view_spec), ray_spec)
+#     red, green, blue = r1.render(plt)
+#     save_image(torch.stack([red, green, blue]), f"./random-images/frames/animated-cube-{index:02}.png")
+#
+# plt.show()
