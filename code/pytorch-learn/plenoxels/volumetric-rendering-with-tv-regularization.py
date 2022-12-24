@@ -943,7 +943,8 @@ def training_loop(model, optimizer, camera, view_spec, ray_spec, image_channels,
         blue_mse = mse(b, image_channels[2], view_spec)
         # total_loss = red_mse + green_mse + blue_mse
         print(f"Regularising using {len(model.voxel_access.all_voxels) * REGULARISATION_FRACTION} voxels...")
-        total_loss = red_mse + green_mse + blue_mse + REGULARISATION_LAMBDA * tv_term(model.voxel_access, model.parameter_world)
+        total_loss = red_mse + green_mse + blue_mse + REGULARISATION_LAMBDA * tv_term(model.voxel_access,
+                                                                                      model.parameter_world)
         print(f"Loss={total_loss}, RGB MSE={(red_mse, green_mse, blue_mse)}")
         total_loss.backward()
         print(f"Model parameters: {len(list(model.parameters()))}")
@@ -957,22 +958,6 @@ def training_loop(model, optimizer, camera, view_spec, ray_spec, image_channels,
         losses.append(total_loss)
 
     return losses
-
-
-def update_world(optimised_voxels, voxel_access, world):
-    voxel_access.all_voxels = optimised_voxels
-    for ray_index, view_point in enumerate(voxel_access.view_points):
-        ray = voxel_access.for_ray(ray_index)
-        for i in range(ray.num_samples):
-            sample_position, voxel_positions, voxels = ray.at(i)
-            for index, voxel_position in enumerate(voxel_positions):
-                x, y, z = voxel_position
-                voxel = voxels[index]
-                if (x < 0 or x > GRID_X - 1 or
-                        y < 0 or y > GRID_Y - 1 or
-                        z < 0 or z > GRID_Z - 1):
-                    continue
-                world.set((x, y, z, 1), voxel)
 
 
 def main():
@@ -1100,9 +1085,8 @@ def main():
             print(f"Training for camera position #{index}={position}")
             test_camera = Camera(focal_length, position, camera_look_at)
             losses = training_loop(model, optimizer, test_camera, view_spec, ray_spec,
-                                                         training_images[index], 5)
+                                   training_images[index], 5)
             print("Optimisation complete!")
-            # update_world(voxels, voxel_access, world)
 
     red, green, blue = renderer.render(plt)
     transforms.ToPILImage()(torch.stack([red, green, blue])).show()
