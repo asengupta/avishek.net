@@ -506,6 +506,9 @@ class Renderer:
     def dummy(self):
         return 1
 
+    def render_from_ray_from_angle(self, viewing_angle):
+        return lambda ray: self.render_from_ray(ray, viewing_angle)
+
     def render_from_ray(self, ray, viewing_angle):
         # print(f"Wall clock in render_from_ray() is {timer()}")
         ray_sample_positions = ray.ray_sample_positions
@@ -536,6 +539,23 @@ class Renderer:
         X, Y = 0, 1
         RED_CHANNEL, GREEN_CHANNEL, BLUE_CHANNEL = 2, 3, 4
         camera = self.camera
+        composite_colour_tensors = self.render_parallel(voxel_access, camera)
+        # composite_colour_tensors = self.render_serial(voxel_access, camera)
+        red_channel = composite_colour_tensors[:, [X, Y, RED_CHANNEL]]
+        green_channel = composite_colour_tensors[:, [X, Y, GREEN_CHANNEL]]
+        blue_channel = composite_colour_tensors[:, [X, Y, BLUE_CHANNEL]]
+        print("Done!!")
+        return (red_channel, green_channel, blue_channel)
+
+    def render_serial(self, voxel_access, camera):
+        viewing_angle = camera.viewing_angle()
+        num_view_points = len(voxel_access.view_points)
+        composite_colour_tensors = torch.stack(list(
+            map(lambda index: self.render_from_ray(voxel_access.for_ray(index), viewing_angle),
+                range(num_view_points))))
+        return composite_colour_tensors
+
+    def render_parallel(self, voxel_access, camera):
         viewing_angle = camera.viewing_angle()
         num_view_points = len(voxel_access.view_points)
         workers = os.cpu_count()
@@ -545,23 +565,15 @@ class Renderer:
         end_copy_rays = timer()
         print(f"Copying rays took {end_copy_rays - start_copy_rays}")
         print(f"Wall clock is {timer()}")
-
         start_render_rays = timer()
-        responses = p.map(lambda ray: self.render_from_ray(ray, viewing_angle), rays)
+        render_from_angle = self.render_from_ray_from_angle(viewing_angle)
+        responses = p.map(render_from_angle, rays)
         p.close()
         p.join()
         end_render_rays = timer()
         print(f"Actual rendering took {end_render_rays - start_render_rays}")
         composite_colour_tensors = torch.stack(list(responses))
-
-        # composite_colour_tensors = torch.stack(list(
-        #     map(lambda index: self.render_from_ray(voxel_access.for_ray(index), viewing_angle),
-        #         range(num_view_points))))
-        red_channel = composite_colour_tensors[:, [X, Y, RED_CHANNEL]]
-        green_channel = composite_colour_tensors[:, [X, Y, GREEN_CHANNEL]]
-        blue_channel = composite_colour_tensors[:, [X, Y, BLUE_CHANNEL]]
-        print("Done!!")
-        return (red_channel, green_channel, blue_channel)
+        return composite_colour_tensors
 
     def initialise_plt(self, plt):
         plt.rcParams['axes.xmargin'] = 0
