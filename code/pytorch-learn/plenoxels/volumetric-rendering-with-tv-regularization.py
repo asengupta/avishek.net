@@ -146,43 +146,36 @@ class Voxel:
     DEFAULT_OPACITY = 0.05
 
     @staticmethod
-    def random_voxel(opacity=DEFAULT_OPACITY):
-        voxel = torch.cat([torch.tensor([opacity]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1) / 1000])
-        # voxel = torch.cat([torch.tensor([0.5]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
-        voxel.requires_grad = True
-        return voxel
-
-    @staticmethod
-    def default_voxel():
-        voxel = torch.tensor(Voxel.uniform_harmonic(), requires_grad=True)
+    def default_voxel(requires_grad=True):
         # voxel = torch.cat([torch.tensor([0.25]), torch.ones(VoxelGrid.VOXEL_DIMENSION - 1)])
-        return voxel
+        return lambda: torch.tensor(Voxel.uniform_harmonic(), requires_grad=requires_grad)
 
     @staticmethod
-    def random_coloured_voxel(opacity=DEFAULT_OPACITY):
-        voxel = torch.cat([torch.tensor([0.0002]), torch.rand(VoxelGrid.VOXEL_DIMENSION - 1)])
-        # voxel = Voxel.uniform_harmonic_random_colour()
-        return voxel
+    def random_coloured_voxel(requires_grad=True):
+        return lambda: torch.tensor(np.concatenate(([0.0002], np.random.rand(VoxelGrid.VOXEL_DIMENSION - 1))),
+                                    requires_grad=requires_grad)
 
     @staticmethod
     def uniform_harmonic():
         return [1.] + ([1.] + [0.] * (VoxelGrid.PER_CHANNEL_DIMENSION - 1)) * 3
 
     @staticmethod
-    def uniform_harmonic_random_colour():
-        random_harmonic_coefficient_set = lambda: ([random.random()] + [0.] * (VoxelGrid.PER_CHANNEL_DIMENSION - 1))
-        return torch.tensor([
-                                0.1] + random_harmonic_coefficient_set() + random_harmonic_coefficient_set() + random_harmonic_coefficient_set(),
-                            requires_grad=True)
+    def random_harmonic_coefficient_set():
+        return ([random.random()] + [0.] * (VoxelGrid.PER_CHANNEL_DIMENSION - 1))
 
     @staticmethod
-    def occupied_voxel():
-        voxel = torch.tensor(Voxel.uniform_harmonic(), requires_grad=True)
-        return voxel
+    def uniform_harmonic_random_colour(requires_grad=True):
+        return lambda: torch.tensor([
+                                        0.1] + Voxel.random_harmonic_coefficient_set() + Voxel.random_harmonic_coefficient_set() + Voxel.random_harmonic_coefficient_set(),
+                                    requires_grad=requires_grad)
 
     @staticmethod
-    def empty_voxel():
-        return torch.zeros([VoxelGrid.VOXEL_DIMENSION], requires_grad=True)
+    def occupied_voxel(requires_grad=True):
+        return lambda: torch.tensor(Voxel.uniform_harmonic(), requires_grad=requires_grad)
+
+    @staticmethod
+    def empty_voxel(requires_grad=True):
+        return lambda: torch.zeros([VoxelGrid.VOXEL_DIMENSION], requires_grad=requires_grad)
 
     @staticmethod
     def like_voxel(prototype_voxel):
@@ -249,11 +242,11 @@ class VoxelGrid:
 
     @staticmethod
     def build_empty_world(x, y, z):
-        return VoxelGrid(x, y, z, Voxel.empty_voxel)
+        return VoxelGrid(x, y, z, Voxel.empty_voxel())
 
     @staticmethod
     def build_random_world(x, y, z):
-        return VoxelGrid(x, y, z, Voxel.random_coloured_voxel)
+        return VoxelGrid(x, y, z, Voxel.random_coloured_voxel())
 
     @staticmethod
     def build_with_voxel(x, y, z, prototype_voxel):
@@ -261,7 +254,7 @@ class VoxelGrid:
 
     def build_from(world_tensor):
         x, y, z = world_tensor.shape
-        new_world = VoxelGrid(x, y, z, Voxel.empty_voxel)
+        new_world = VoxelGrid(x, y, z, Voxel.empty_voxel())
         for i in range(x):
             for j in range(y):
                 for k in range(z):
@@ -270,7 +263,7 @@ class VoxelGrid:
 
     def at(self, x, y, z):
         if self.is_outside(x, y, z):
-            return Voxel.empty_voxel()
+            return Voxel.empty_voxel(requires_grad=False)()
         else:
             return self.voxel_grid[int(x), int(y), int(z)]
 
@@ -320,13 +313,10 @@ class VoxelGrid:
         for i in range(x, x + dx):
             for j in range(y, y + dy):
                 for k in range(z, z + dz):
-                    self.voxel_grid[i, j, k] = Voxel.occupied_voxel()
-
-    def build_random_hollow_cube(self):
-        self.build_hollow_cube(Voxel.random_voxel)
+                    self.voxel_grid[i, j, k] = Voxel.occupied_voxel()()
 
     def build_monochrome_hollow_cube(self, cube_spec):
-        self.build_hollow_cube2(Voxel.default_voxel, cube_spec)
+        self.build_hollow_cube2(Voxel.default_voxel(), cube_spec)
 
     def build_hollow_cube(self, make_voxel):
         self.build_hollow_cube2(make_voxel, torch.tensor([10, 10, 10, 20, 20, 20]))
@@ -546,8 +536,8 @@ class Renderer:
         X, Y = 0, 1
         RED_CHANNEL, GREEN_CHANNEL, BLUE_CHANNEL = 2, 3, 4
         camera = self.camera
-        composite_colour_tensors = self.render_parallel(voxel_access, camera)
-        # composite_colour_tensors = self.render_serial(voxel_access, camera)
+        # composite_colour_tensors = self.render_parallel(voxel_access, camera)
+        composite_colour_tensors = self.render_serial(voxel_access, camera)
         red_channel = composite_colour_tensors[:, [X, Y, RED_CHANNEL]]
         green_channel = composite_colour_tensors[:, [X, Y, GREEN_CHANNEL]]
         blue_channel = composite_colour_tensors[:, [X, Y, BLUE_CHANNEL]]
@@ -561,6 +551,7 @@ class Renderer:
             map(lambda index: self.render_from_ray(voxel_access.for_ray(index), viewing_angle),
                 range(num_view_points))))
         return composite_colour_tensors
+
     def render_from_angle(self, ray):
         return self.render_from_ray(ray, self.camera.viewing_angle())
 
@@ -936,13 +927,11 @@ def main():
         [torch.tensor([0.0002, random.random() * 100.]), torch.zeros(VoxelGrid.VOXEL_DIMENSION - 2)]))
     empty_world = VoxelGrid.build_empty_world(GRID_X, GRID_Y, GRID_Z)
     world = empty_world
-    proxy_world = VoxelGrid(2, 2, 2, Voxel.default_voxel)
+    proxy_world = VoxelGrid(2, 2, 2, Voxel.default_voxel())
     # empty_world.build_solid_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
-    # world.build_random_hollow_cube()
     # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
-    world.build_hollow_cube_with_randomly_coloured_sides(Voxel.uniform_harmonic_random_colour,
+    world.build_hollow_cube_with_randomly_coloured_sides(Voxel.uniform_harmonic_random_colour(requires_grad=True),
                                                          torch.tensor([10, 10, 10, 20, 20, 20]))
-    # world.build_random_hollow_cube2(Voxel.random_voxel, torch.tensor([15, 15, 15, 10, 10, 10]))
     cube_center = torch.tensor([20., 20., 20., 1.])
     # camera_look_at = torch.tensor([0., 0., 0., 1])
     camera_look_at = cube_center
@@ -953,7 +942,6 @@ def main():
     # camera_center = torch.tensor([-10.3109, 20.0000, 2.5000, 1.0000])
     focal_length = 2.
 
-    camera_basis = basis_from_depth(camera_look_at, camera_center)
     camera = Camera(focal_length, camera_center, camera_look_at)
     num_rays_x = 50
     num_rays_y = 50
