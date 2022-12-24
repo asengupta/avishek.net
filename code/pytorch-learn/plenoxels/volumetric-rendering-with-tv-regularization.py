@@ -6,7 +6,7 @@ from matplotlib import use as mpl_use
 import numpy as np
 import torch
 import torch.nn as nn
-import pathos as mp
+import pathos.multiprocessing as mp
 from timeit import default_timer as timer
 from torchvision.utils import save_image
 from torchvision import datasets, transforms
@@ -507,7 +507,7 @@ class Renderer:
         return 1
 
     def render_from_ray(self, ray, viewing_angle):
-        # return 1
+        # print(f"Wall clock in render_from_ray() is {timer()}")
         ray_sample_positions = ray.ray_sample_positions
         unique_ray_samples = ray_sample_positions
         view_x, view_y = ray.view_point
@@ -538,17 +538,25 @@ class Renderer:
         camera = self.camera
         viewing_angle = camera.viewing_angle()
         num_view_points = len(voxel_access.view_points)
-        # workers = os.cpu_count()
-        # p = mp.Pool(workers)
-        # rays = list(map(lambda i: voxel_access.for_ray(i), range(num_view_points)))
-        # responses = p.map(lambda ray: self.render_from_ray(ray, viewing_angle), rays)
-        # p.close()
-        # p.join()
-        # composite_colour_tensors = torch.stack(list(responses))
+        workers = os.cpu_count()
+        p = mp.Pool(workers)
+        start_copy_rays = timer()
+        rays = list(map(lambda i: voxel_access.for_ray(i), range(num_view_points)))
+        end_copy_rays = timer()
+        print(f"Copying rays took {end_copy_rays - start_copy_rays}")
+        print(f"Wall clock is {timer()}")
 
-        composite_colour_tensors = torch.stack(list(
-            map(lambda index: self.render_from_ray(voxel_access.for_ray(index), viewing_angle),
-                range(num_view_points))))
+        start_render_rays = timer()
+        responses = p.map(lambda ray: self.render_from_ray(ray, viewing_angle), rays)
+        p.close()
+        p.join()
+        end_render_rays = timer()
+        print(f"Actual rendering took {end_render_rays - start_render_rays}")
+        composite_colour_tensors = torch.stack(list(responses))
+
+        # composite_colour_tensors = torch.stack(list(
+        #     map(lambda index: self.render_from_ray(voxel_access.for_ray(index), viewing_angle),
+        #         range(num_view_points))))
         red_channel = composite_colour_tensors[:, [X, Y, RED_CHANNEL]]
         green_channel = composite_colour_tensors[:, [X, Y, GREEN_CHANNEL]]
         blue_channel = composite_colour_tensors[:, [X, Y, BLUE_CHANNEL]]
