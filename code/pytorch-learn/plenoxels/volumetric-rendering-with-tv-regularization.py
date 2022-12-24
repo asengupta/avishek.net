@@ -2,17 +2,18 @@ import functools
 import math
 import random
 import matplotlib.pyplot as plt
+from matplotlib import use as mpl_use
 import numpy as np
 import torch
 import torch.nn as nn
+import pathos as mp
 from timeit import default_timer as timer
 from torchvision.utils import save_image
 from torchvision import datasets, transforms
 from torchviz import make_dot
+import os
 
-RED_CHANNEL = 0
-GREEN_CHANNEL = 1
-BLUE_CHANNEL = 2
+print(f"Using backend {plt.get_backend()}")
 INHOMOGENEOUS_ZERO_VECTOR = torch.tensor([0., 0., 0.])
 REGULARISATION_FRACTION = 0.01
 REGULARISATION_LAMBDA = 0.001
@@ -502,34 +503,27 @@ class Renderer:
         self.num_view_samples_x = view_spec[4]
         self.num_view_samples_y = view_spec[5]
 
+    def dummy(self):
+        return 1
+
     def render_from_ray(self, ray, viewing_angle):
+        # return 1
         ray_sample_positions = ray.ray_sample_positions
         unique_ray_samples = ray_sample_positions
         view_x, view_y = ray.view_point
 
         if (len(unique_ray_samples) <= 1):
             return torch.tensor([view_x, view_y, 0., 0., 0.])
-            # return [
-            #     torch.tensor([view_x, view_y, 0.]),
-            #     torch.tensor([view_x, view_y, 0.]),
-            #     torch.tensor([view_x, view_y, 0.])
-            # ]
-            # red_channel.append(torch.tensor([view_x, view_y, 0.]))
-            # green_channel.append(torch.tensor([view_x, view_y, 0.]))
-            # blue_channel.append(torch.tensor([view_x, view_y, 0.]))
-            # plt.plot(view_x, view_y, marker="o", color=[0, 0, 0])
 
         t1 = unique_ray_samples[:-1]
         t2 = unique_ray_samples[1:]
         consecutive_sample_distances = (t1 - t2).pow(2).sum(1).sqrt()
 
         # Make 1D tensor into 2D tensor
-        # List of tensors, last element of each tensor is distance to the next tensor
-        # ray_samples_with_distances = torch.cat([t1, torch.reshape(consecutive_sample_distances, (-1, 1))], 1)
+        # List of tensors, each entry is distance from i-th sample to the next sample
         ray_sample_distances = torch.reshape(consecutive_sample_distances, (-1, 1))
         color_densities = density_split(ray_sample_distances, ray, viewing_angle, self.world)
         color_tensor = Renderer.SIGMOID(color_densities)
-        # plt.plot(view_x, view_y, marker="o", color=color_tensor.detach().numpy())
 
         if (view_x < self.x_1 or view_x > self.x_2
                 or view_y < self.y_1 or view_y > self.y_2):
@@ -537,36 +531,28 @@ class Renderer:
 
         # print(color_tensor)
         return torch.cat([torch.tensor([view_x, view_y]), color_tensor])
-        # return [
-        #     torch.stack([view_x, view_y, color_tensor[RED_CHANNEL]]),
-        #     torch.stack([view_x, view_y, color_tensor[GREEN_CHANNEL]]),
-        #     torch.stack([view_x, view_y, color_tensor[BLUE_CHANNEL]])
-        # ]
 
-    def render_from_rays(self, voxel_access, plt):
+    def render_from_rays(self, voxel_access):
+        X, Y = 0, 1
+        RED_CHANNEL, GREEN_CHANNEL, BLUE_CHANNEL = 2, 3, 4
         camera = self.camera
         viewing_angle = camera.viewing_angle()
+        num_view_points = len(voxel_access.view_points)
+        # workers = os.cpu_count()
+        # p = mp.Pool(workers)
+        # rays = list(map(lambda i: voxel_access.for_ray(i), range(num_view_points)))
+        # responses = p.map(lambda ray: self.render_from_ray(ray, viewing_angle), rays)
+        # p.close()
+        # p.join()
+        # composite_colour_tensors = torch.stack(list(responses))
 
-        self.initialise_plt(plt)
-
-        # Need to convert the range [Random(0,1), Random(0,1)] into bounds of [[x1, x2], [y1, y2]]
-        red_channel = []
-        green_channel = []
-        blue_channel = []
-        non_rendered_rays = 0
         composite_colour_tensors = torch.stack(list(
-            map(lambda entry: self.render_from_ray(voxel_access.for_ray(entry[0]), viewing_angle),
-                enumerate(voxel_access.view_points))))
-        red_channel = composite_colour_tensors[:, [0, 1, 2]]
-        green_channel = composite_colour_tensors[:, [0, 1, 3]]
-        blue_channel = composite_colour_tensors[:, [0, 1, 4]]
-        # for ray_index, view_point in enumerate(voxel_access.view_points):
-        #     self.render_from_ray(voxel_access.for_ray(ray_index), viewing_angle)
-        #
-        # plt.show()
+            map(lambda index: self.render_from_ray(voxel_access.for_ray(index), viewing_angle),
+                range(num_view_points))))
+        red_channel = composite_colour_tensors[:, [X, Y, RED_CHANNEL]]
+        green_channel = composite_colour_tensors[:, [X, Y, GREEN_CHANNEL]]
+        blue_channel = composite_colour_tensors[:, [X, Y, BLUE_CHANNEL]]
         print("Done!!")
-        # red_channel, green_channel, blue_channel = torch.stack(red_channel), torch.stack(green_channel), torch.stack(
-        #     blue_channel)
         return (red_channel, green_channel, blue_channel)
 
     def initialise_plt(self, plt):
@@ -634,6 +620,7 @@ class Renderer:
                            all_voxel_positions)
 
     def render(self, plt):
+        RED_CHANNEL, GREEN_CHANNEL, BLUE_CHANNEL = 0, 1, 2
         global VOXELS_NOT_USED
         global MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE
         red_image = []
@@ -758,16 +745,9 @@ def samples_to_image(red_samples, green_samples, blue_samples, view_spec):
     green_render_channel = torch.zeros([num_rays_y, num_rays_x])
     blue_render_channel = torch.zeros([num_rays_y, num_rays_x])
     for index, pixel in enumerate(red_samples):
-        print(
-            f"({view_y2 - pixel[1]}, {pixel[0] - view_x1}) -> ({int((view_y2 - pixel[1]) / step_y)}, {int((pixel[0] - view_x1) / step_x)}), {pixel[2]}")
-        # red_render_channel[int((view_y2 - pixel[1]) / step_y), int((pixel[0] - view_x1) / step_x)] = red_samples[index][
-        #     2]
-        # green_render_channel[int((view_y2 - pixel[1]) / step_y), int((pixel[0] - view_x1) / step_x)] = \
-        # green_samples[index][2]
-        # blue_render_channel[int((view_y2 - pixel[1]) / step_y), int((pixel[0] - view_x1) / step_x)] = \
-        # blue_samples[index][2]
+        # print(
+        #     f"({view_y2 - pixel[1]}, {pixel[0] - view_x1}) -> ({int((view_y2 - pixel[1]) / step_y)}, {int((pixel[0] - view_x1) / step_x)}), {pixel[2]}")
         x, y = camera_to_image(pixel[X], pixel[Y], view_spec)
-        print(f"({x},{y})")
         red_render_channel[y - 1, x - 1] = red_samples[index][INTENSITY]
         green_render_channel[y - 1, x - 1] = green_samples[index][INTENSITY]
         blue_render_channel[y - 1, x - 1] = blue_samples[index][INTENSITY]
@@ -863,7 +843,7 @@ class PlenoxelModel(nn.Module):
         # This draws stochastic rays and returns a set of samples with colours
         all_voxels = self.voxels
         self.voxel_access.all_voxels = all_voxels
-        r, g, b = renderer.render_from_rays(self.voxel_access, plt)
+        r, g, b = renderer.render_from_rays(self.voxel_access)
         return r, g, b
 
 
@@ -991,7 +971,7 @@ print(f"Building rays took {end_build_rays - start_build_rays}")
 # voxel_access = r.build_rays(stochastic_samples(2000, view_spec))
 
 start_render_rays = timer()
-r, g, b = renderer.render_from_rays(voxel_access, plt)
+r, g, b = renderer.render_from_rays(voxel_access)
 end_render_rays = timer()
 print(f"Rendering rays took {end_render_rays - start_render_rays}")
 
