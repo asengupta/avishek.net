@@ -575,7 +575,8 @@ class Renderer:
         composite_colour_tensors = torch.stack(list(responses))
         return composite_colour_tensors
 
-    def initialise_plt(self, plt):
+    @staticmethod
+    def initialise_plt(plt):
         plt.rcParams['axes.xmargin'] = 0
         plt.rcParams['axes.ymargin'] = 0
         figure = plt.figure(f"{random.random()}", frameon=False)
@@ -653,7 +654,7 @@ class Renderer:
         viewing_angle = camera.viewing_angle()
         camera_center_inhomogenous = camera.center[:3]
 
-        self.initialise_plt(plt)
+        Renderer.initialise_plt(plt)
         print(f"Camera basis={camera.basis}")
         view_screen_origin = camera_basis_z * camera.focal_length + camera_center_inhomogenous
         print(f"View screen origin={view_screen_origin}")
@@ -719,6 +720,16 @@ class Renderer:
         plt.show()
         print("Done!!")
         return (red_image_tensor, green_image_tensor, blue_image_tensor)
+
+    def plot_from_image(self, plt, image_data):
+        Renderer.initialise_plt(plt)
+        red_render_channel, green_render_channel, blue_render_channel = image_data.detach().numpy()
+        width, height = red_render_channel.shape
+        for i in range(width):
+            for j in range(height):
+                plt.plot(i, height - 1 - j, marker="o",
+                         color=[red_render_channel[j, i], green_render_channel[j, i], blue_render_channel[j, i]])
+        plt.show()
 
 
 def stochastic_samples(num_stochastic_samples, view_spec):
@@ -979,10 +990,10 @@ def main():
     # However, it separates out the determining the intersecting voxels and the transmittance
     # calculations, so that it can be put through a Plenoxel model optimisation
     start_build_rays = timer()
-    voxel_access = renderer.build_rays(fullscreen_samples(view_spec))
+    # voxel_access = renderer.build_rays(fullscreen_samples(view_spec))
+    voxel_access = renderer.build_rays(stochastic_samples(2000, view_spec))
     end_build_rays = timer()
     print(f"Building rays took {end_build_rays - start_build_rays}")
-    # voxel_access = r.build_rays(stochastic_samples(2000, view_spec))
 
     start_render_rays = timer()
     r, g, b = renderer.render_from_rays(voxel_access)
@@ -990,14 +1001,13 @@ def main():
     print(f"Rendering rays took {end_render_rays - start_render_rays}")
 
     image_data = samples_to_image(r, g, b, view_spec)
+    renderer.plot_from_image(plt, image_data)
     transforms.ToPILImage()(image_data).show()
     start_render_full = timer()
     renderer.render(plt)
     end_render_full = timer()
-
-    plt.show()
-    print("Finished rendering!!")
     print(f"Rendering rays in full took {end_render_full - start_render_full}")
+    print("Finished rendering!!")
 
     # image_data = samples_to_image(r, g, b, view_spec)
     # transforms.ToPILImage()(image_data).show()
