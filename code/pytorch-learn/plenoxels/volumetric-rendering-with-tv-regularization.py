@@ -7,6 +7,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import pathos.multiprocessing as mp
+import torch.multiprocessing as tmp
 from timeit import default_timer as timer
 from torchvision.utils import save_image
 from torchvision import datasets, transforms
@@ -14,6 +15,11 @@ from torchviz import make_dot
 import os
 
 print(f"Using backend {plt.get_backend()}")
+
+GRID_X = 40
+GRID_Y = 40
+GRID_Z = 40
+
 INHOMOGENEOUS_ZERO_VECTOR = torch.tensor([0., 0., 0.])
 REGULARISATION_FRACTION = 0.01
 REGULARISATION_LAMBDA = 0.001
@@ -458,6 +464,7 @@ def density_split(ray_sample_distances, ray, viewing_angle, world):
         c = c_0 * (1 - z_d) + c_1 * z_d
 
         collected_intensities.append(c)
+
     return channel_opacity_split(torch.cat([ray_sample_distances, torch.stack(collected_intensities)], 1),
                                  viewing_angle)
 
@@ -554,19 +561,22 @@ class Renderer:
             map(lambda index: self.render_from_ray(voxel_access.for_ray(index), viewing_angle),
                 range(num_view_points))))
         return composite_colour_tensors
+    def render_from_angle(self, ray):
+        return self.render_from_ray(ray, self.camera.viewing_angle())
 
     def render_parallel(self, voxel_access, camera):
         viewing_angle = camera.viewing_angle()
         num_view_points = len(voxel_access.view_points)
         workers = os.cpu_count()
-        p = mp.Pool(workers)
+        p = tmp.Pool(workers)
         start_copy_rays = timer()
         rays = list(map(lambda i: voxel_access.for_ray(i), range(num_view_points)))
         end_copy_rays = timer()
         print(f"Copying rays took {end_copy_rays - start_copy_rays}")
         print(f"Wall clock is {timer()}")
         start_render_rays = timer()
-        responses = p.map(lambda ray: self.render_from_ray(ray, viewing_angle), rays)
+        # responses = p.map(lambda ray: self.render_from_ray(ray, viewing_angle), rays)
+        responses = p.map(self.render_from_angle, rays)
         p.close()
         p.join()
         end_render_rays = timer()
@@ -920,166 +930,167 @@ def update_world(optimised_voxels, voxel_access, world):
                 world.set((x, y, z, 1), voxel)
 
 
-GRID_X = 40
-GRID_Y = 40
-GRID_Z = 40
+def main():
+    random_world = VoxelGrid.build_random_world(GRID_X, GRID_Y, GRID_Z)
+    mono_world = VoxelGrid.build_with_voxel(GRID_X, GRID_Y, GRID_Z, torch.cat(
+        [torch.tensor([0.0002, random.random() * 100.]), torch.zeros(VoxelGrid.VOXEL_DIMENSION - 2)]))
+    empty_world = VoxelGrid.build_empty_world(GRID_X, GRID_Y, GRID_Z)
+    world = empty_world
+    proxy_world = VoxelGrid(2, 2, 2, Voxel.default_voxel)
+    # empty_world.build_solid_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
+    # world.build_random_hollow_cube()
+    # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
+    world.build_hollow_cube_with_randomly_coloured_sides(Voxel.uniform_harmonic_random_colour,
+                                                         torch.tensor([10, 10, 10, 20, 20, 20]))
+    # world.build_random_hollow_cube2(Voxel.random_voxel, torch.tensor([15, 15, 15, 10, 10, 10]))
+    cube_center = torch.tensor([20., 20., 20., 1.])
+    # camera_look_at = torch.tensor([0., 0., 0., 1])
+    camera_look_at = cube_center
 
-random_world = VoxelGrid.build_random_world(GRID_X, GRID_Y, GRID_Z)
-mono_world = VoxelGrid.build_with_voxel(GRID_X, GRID_Y, GRID_Z, torch.cat(
-    [torch.tensor([0.0002, random.random() * 100.]), torch.zeros(VoxelGrid.VOXEL_DIMENSION - 2)]))
-empty_world = VoxelGrid.build_empty_world(GRID_X, GRID_Y, GRID_Z)
-world = empty_world
-proxy_world = VoxelGrid(2, 2, 2, Voxel.default_voxel)
-# empty_world.build_solid_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
-# world.build_random_hollow_cube()
-# world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
-world.build_hollow_cube_with_randomly_coloured_sides(Voxel.uniform_harmonic_random_colour,
-                                                     torch.tensor([10, 10, 10, 20, 20, 20]))
-# world.build_random_hollow_cube2(Voxel.random_voxel, torch.tensor([15, 15, 15, 10, 10, 10]))
-cube_center = torch.tensor([20., 20., 20., 1.])
-# camera_look_at = torch.tensor([0., 0., 0., 1])
-camera_look_at = cube_center
+    # Exact diagonal centering of cube
+    # camera_center = torch.tensor([40., 40., 40., 1.])
+    camera_center = torch.tensor([-20., -10., 40., 1.])
+    # camera_center = torch.tensor([-10.3109, 20.0000, 2.5000, 1.0000])
+    focal_length = 2.
 
-# Exact diagonal centering of cube
-# camera_center = torch.tensor([40., 40., 40., 1.])
-camera_center = torch.tensor([-20., -10., 40., 1.])
-# camera_center = torch.tensor([-10.3109, 20.0000, 2.5000, 1.0000])
-focal_length = 2.
+    camera_basis = basis_from_depth(camera_look_at, camera_center)
+    camera = Camera(focal_length, camera_center, camera_look_at)
+    num_rays_x = 50
+    num_rays_y = 50
+    view_x1 = -1
+    view_x2 = 1
+    view_y1 = -1
+    view_y2 = 1
+    view_spec = [view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]
+    ray_length = 100
+    num_ray_samples = 100
+    ray_spec = torch.tensor([ray_length, num_ray_samples])
 
-camera_basis = basis_from_depth(camera_look_at, camera_center)
-camera = Camera(focal_length, camera_center, camera_look_at)
-num_rays_x = 50
-num_rays_y = 50
-view_x1 = -1
-view_x2 = 1
-view_y1 = -1
-view_y2 = 1
-view_spec = [view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]
-ray_length = 100
-num_ray_samples = 100
-ray_spec = torch.tensor([ray_length, num_ray_samples])
+    renderer = Renderer(world, camera, torch.tensor(view_spec), ray_spec)
 
-renderer = Renderer(world, camera, torch.tensor(view_spec), ray_spec)
+    # This renders the volumetric model and shows the rendered image. Useful for training
+    # red, green, blue = r.render(plt)
+    # image_tensor = torch.stack([red, green, blue])
+    # image = transforms.ToPILImage()(image_tensor)
+    # image.show()
 
-# This renders the volumetric model and shows the rendered image. Useful for training
-# red, green, blue = r.render(plt)
-# image_tensor = torch.stack([red, green, blue])
-# image = transforms.ToPILImage()(image_tensor)
-# image.show()
+    # This just loads training images and shows them
+    # t = transforms.Compose([transforms.ToTensor()])
+    # dataset = datasets.ImageFolder("./images", transform=t)
+    # data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
+    # images, labels = next(iter(data_loader))
+    # image = images[0]
+    # transforms.ToPILImage()(image).show()
 
-# This just loads training images and shows them
-# t = transforms.Compose([transforms.ToTensor()])
-# dataset = datasets.ImageFolder("./images", transform=t)
-# data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
-# images, labels = next(iter(data_loader))
-# image = images[0]
-# transforms.ToPILImage()(image).show()
+    # This draws stochastic rays and returns a set of samples with colours
+    num_stochastic_rays = 1000
+    # image_data = samples_to_image(r, g, b, view_spec)
+    # transforms.ToPILImage()(image_data).show()
 
-# This draws stochastic rays and returns a set of samples with colours
-num_stochastic_rays = 1000
-# image_data = samples_to_image(r, g, b, view_spec)
-# transforms.ToPILImage()(image_data).show()
+    # This draws stochastic rays and returns a set of samples with colours
+    # However, it separates out the determining the intersecting voxels and the transmittance
+    # calculations, so that it can be put through a Plenoxel model optimisation
+    start_build_rays = timer()
+    voxel_access = renderer.build_rays(fullscreen_samples(view_spec))
+    end_build_rays = timer()
+    print(f"Building rays took {end_build_rays - start_build_rays}")
+    # voxel_access = r.build_rays(stochastic_samples(2000, view_spec))
 
-# This draws stochastic rays and returns a set of samples with colours
-# However, it separates out the determining the intersecting voxels and the transmittance
-# calculations, so that it can be put through a Plenoxel model optimisation
-start_build_rays = timer()
-voxel_access = renderer.build_rays(fullscreen_samples(view_spec))
-end_build_rays = timer()
-print(f"Building rays took {end_build_rays - start_build_rays}")
-# voxel_access = r.build_rays(stochastic_samples(2000, view_spec))
+    start_render_rays = timer()
+    r, g, b = renderer.render_from_rays(voxel_access)
+    end_render_rays = timer()
+    print(f"Rendering rays took {end_render_rays - start_render_rays}")
 
-start_render_rays = timer()
-r, g, b = renderer.render_from_rays(voxel_access)
-end_render_rays = timer()
-print(f"Rendering rays took {end_render_rays - start_render_rays}")
+    image_data = samples_to_image(r, g, b, view_spec)
+    transforms.ToPILImage()(image_data).show()
+    start_render_full = timer()
+    renderer.render(plt)
+    end_render_full = timer()
 
-image_data = samples_to_image(r, g, b, view_spec)
-transforms.ToPILImage()(image_data).show()
-start_render_full = timer()
-renderer.render(plt)
-end_render_full = timer()
+    plt.show()
+    print("Finished rendering!!")
+    print(f"Rendering rays in full took {end_render_full - start_render_full}")
 
-plt.show()
-print("Finished rendering!!")
-print(f"Rendering rays in full took {end_render_full - start_render_full}")
+    # image_data = samples_to_image(r, g, b, view_spec)
+    # transforms.ToPILImage()(image_data).show()
+    # print(voxel_pointers)
+    # print("Render complete")
 
-# image_data = samples_to_image(r, g, b, view_spec)
-# transforms.ToPILImage()(image_data).show()
-# print(voxel_pointers)
-# print("Render complete")
+    # print(f"No of total total ray samples benchmark={len(MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE)}")
+    # print(f"No of total total ray samples current={len(voxel_access.ray_sample_positions)}")
+    # print(f"Difference={(torch.tensor(MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE) - torch.tensor(voxel_access.ray_sample_positions)).pow(2).sum()}")
+    # print(f"Total voxels benchmark={len(MASTER_VOXELS_STRUCTURE)}")
+    # print(f"Total voxels current={len(voxel_access.all_voxels)}")
+    # print(f"Voxels not used={VOXELS_NOT_USED}")
 
-# print(f"No of total total ray samples benchmark={len(MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE)}")
-# print(f"No of total total ray samples current={len(voxel_access.ray_sample_positions)}")
-# print(f"Difference={(torch.tensor(MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE) - torch.tensor(voxel_access.ray_sample_positions)).pow(2).sum()}")
-# print(f"Total voxels benchmark={len(MASTER_VOXELS_STRUCTURE)}")
-# print(f"Total voxels current={len(voxel_access.all_voxels)}")
-# print(f"Voxels not used={VOXELS_NOT_USED}")
+    # red_mse = mse(r, image[0], view_spec, num_rays_x, num_rays_y)
+    # green_mse = mse(g, image[1], view_spec, num_rays_x, num_rays_y)
+    # blue_mse = mse(b, image[2], view_spec, num_rays_x, num_rays_y)
+    # print(f"{red_mse}, {green_mse}, {blue_mse}")
 
-# red_mse = mse(r, image[0], view_spec, num_rays_x, num_rays_y)
-# green_mse = mse(g, image[1], view_spec, num_rays_x, num_rays_y)
-# blue_mse = mse(b, image[2], view_spec, num_rays_x, num_rays_y)
-# print(f"{red_mse}, {green_mse}, {blue_mse}")
+    # red, green, blue = r.render(plt)
+    # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
 
-# red, green, blue = r.render(plt)
-# transforms.ToPILImage()(torch.stack([red, green, blue])).show()
+    # voxel_access, voxels, losses = training_loop(random_world, camera, view_spec, ray_spec, 3)
+    # print("Optimisation complete!")
+    # update_world(voxels, voxel_access, random_world)
+    # red, green, blue = r.render(plt)
+    # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
+    # print("Rendered final result")
 
-# voxel_access, voxels, losses = training_loop(random_world, camera, view_spec, ray_spec, 3)
-# print("Optimisation complete!")
-# update_world(voxels, voxel_access, random_world)
-# red, green, blue = r.render(plt)
-# transforms.ToPILImage()(torch.stack([red, green, blue])).show()
-# print("Rendered final result")
+    # Trains on multiple training images
+    # test_positions2 = torch.tensor([[-20., -10., 40., 1.]])
+    # test_positions = torch.tensor([[-10.3109, 20.0000, 2.5000, 1.0000],
+    #                                [-10.3109, 20.0000, 37.5000, 1.0000],
+    #                                [20.0000, -10.3109, 2.5000, 1.0000],
+    #                                [20.0000, -10.3109, 37.5000, 1.0000],
+    #                                [20.0000, 20.0000, -15.0000, 1.0000],
+    #                                [20.0000, 20.0000, 55.0000, 1.0000],
+    #                                [20.0000, 50.3109, 2.5000, 1.0000],
+    #                                [20.0000, 50.3109, 37.5000, 1.0000],
+    #                                [50.3109, 20.0000, 2.5000, 1.0000],
+    #                                [50.3109, 20.0000, 37.5000, 1.0000]])
+    #
+    # to_tensor = transforms.Compose([transforms.ToTensor()])
+    # dataset = datasets.ImageFolder("./images", transform=to_tensor)
+    # data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=False)
+    #
+    # test_images = list(data_loader)[0][0]
+    # for e in range(1):
+    #     for index, position in enumerate(test_positions):
+    #         print(f"Training for camera position #{index}={position}")
+    #         test_camera = Camera(focal_length, position, camera_look_at)
+    #         voxel_access, voxels, losses = training_loop(world, test_camera, view_spec, ray_spec, test_images[index], 3,
+    #                                                      learning_rate=LEARNING_RATE)
+    #         print("Optimisation complete!")
+    #         update_world(voxels, voxel_access, world)
+    #
+    # red, green, blue = r.render(plt)
+    # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
+    # print("Rendered final result")
+    # plt.show()
 
-# Trains on multiple training images
-# test_positions2 = torch.tensor([[-20., -10., 40., 1.]])
-# test_positions = torch.tensor([[-10.3109, 20.0000, 2.5000, 1.0000],
-#                                [-10.3109, 20.0000, 37.5000, 1.0000],
-#                                [20.0000, -10.3109, 2.5000, 1.0000],
-#                                [20.0000, -10.3109, 37.5000, 1.0000],
-#                                [20.0000, 20.0000, -15.0000, 1.0000],
-#                                [20.0000, 20.0000, 55.0000, 1.0000],
-#                                [20.0000, 50.3109, 2.5000, 1.0000],
-#                                [20.0000, 50.3109, 37.5000, 1.0000],
-#                                [50.3109, 20.0000, 2.5000, 1.0000],
-#                                [50.3109, 20.0000, 37.5000, 1.0000]])
-#
-# to_tensor = transforms.Compose([transforms.ToTensor()])
-# dataset = datasets.ImageFolder("./images", transform=to_tensor)
-# data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=False)
-#
-# test_images = list(data_loader)[0][0]
-# for e in range(1):
-#     for index, position in enumerate(test_positions):
-#         print(f"Training for camera position #{index}={position}")
-#         test_camera = Camera(focal_length, position, camera_look_at)
-#         voxel_access, voxels, losses = training_loop(world, test_camera, view_spec, ray_spec, test_images[index], 3,
-#                                                      learning_rate=LEARNING_RATE)
-#         print("Optimisation complete!")
-#         update_world(voxels, voxel_access, world)
-#
-# red, green, blue = r.render(plt)
-# transforms.ToPILImage()(torch.stack([red, green, blue])).show()
-# print("Rendered final result")
-# plt.show()
+    # Reconstructs the world from disk
+    # radius = 35.
+    # view_points = []
+    # voxel_grid = torch.load("./optimised-10.pt")
+    # print(voxel_grid.shape)
+    # reconstructed_world = VoxelGrid.build_from(voxel_grid)
+    # for i in np.linspace(0, 2 * math.pi, 20):
+    #     x = radius * math.cos(i)
+    #     y = radius * math.sin(i)
+    #     z = 40
+    #     view_points.append(torch.tensor([x, y, z, 0]) + cube_center)
+    #
+    # view_points = torch.stack(view_points)
+    # for index, view_point in enumerate(view_points):
+    #     c = Camera(focal_length, view_point, cube_center)
+    #     r1 = Renderer(reconstructed_world, c, torch.tensor(view_spec), ray_spec)
+    #     red, green, blue = r1.render(plt)
+    #     save_image(torch.stack([red, green, blue]), f"./random-images/frames/animated-cube-{index:02}.png")
+    #
+    # plt.show()
 
-# Reconstructs the world from disk
-# radius = 35.
-# view_points = []
-# voxel_grid = torch.load("./optimised-10.pt")
-# print(voxel_grid.shape)
-# reconstructed_world = VoxelGrid.build_from(voxel_grid)
-# for i in np.linspace(0, 2 * math.pi, 20):
-#     x = radius * math.cos(i)
-#     y = radius * math.sin(i)
-#     z = 40
-#     view_points.append(torch.tensor([x, y, z, 0]) + cube_center)
-#
-# view_points = torch.stack(view_points)
-# for index, view_point in enumerate(view_points):
-#     c = Camera(focal_length, view_point, cube_center)
-#     r1 = Renderer(reconstructed_world, c, torch.tensor(view_spec), ray_spec)
-#     red, green, blue = r1.render(plt)
-#     save_image(torch.stack([red, green, blue]), f"./random-images/frames/animated-cube-{index:02}.png")
-#
-# plt.show()
+
+if __name__ == '__main__':
+    main()
