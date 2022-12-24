@@ -879,9 +879,8 @@ def modify_grad(parameter_world, voxel_access):
         ray = voxel_access.for_ray(ray_index)
         for i in range(ray.num_samples):
             sample_position, voxel_positions, voxels = ray.at(i)
-            for index, voxel_position in enumerate(voxel_positions):
+            for voxel_position in voxel_positions:
                 x, y, z = voxel_position
-                voxel = voxels[index]
                 if (x < 0 or x > GRID_X - 1 or
                         y < 0 or y > GRID_Y - 1 or
                         z < 0 or z > GRID_Z - 1):
