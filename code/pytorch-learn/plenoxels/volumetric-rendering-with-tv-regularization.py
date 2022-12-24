@@ -952,14 +952,10 @@ def main():
     camera_center = torch.tensor([-20., -10., 40., 1.])
     # camera_center = torch.tensor([-10.3109, 20.0000, 2.5000, 1.0000])
     focal_length = 2.
-
     camera = Camera(focal_length, camera_center, camera_look_at)
-    num_rays_x = 50
-    num_rays_y = 50
-    view_x1 = -1
-    view_x2 = 1
-    view_y1 = -1
-    view_y2 = 1
+    num_rays_x, num_rays_y = 50, 50
+    view_x1, view_x2 = -1, 1
+    view_y1, view_y2 = -1, 1
     view_spec = [view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]
     ray_length = 100
     num_ray_samples = 100
