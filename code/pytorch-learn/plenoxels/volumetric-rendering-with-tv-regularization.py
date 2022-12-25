@@ -13,6 +13,7 @@ from torchvision.utils import save_image
 from torchvision import datasets, transforms
 from torchviz import make_dot
 import os
+from memory_profiler import profile
 
 print(f"Using backend {plt.get_backend()}")
 
@@ -915,6 +916,7 @@ class PlenoxelModel(nn.Module):
         voxel_access = renderer.build_rays(stochastic_samples(num_stochastic_rays, view_spec))
         return voxel_access
 
+    @profile
     def forward(self, input):
         camera, view_spec, ray_spec = input
         # world = VoxelGrid.from_tensor(self.parameter_voxels)
@@ -927,6 +929,7 @@ class PlenoxelModel(nn.Module):
         return r, g, b, renderer
 
 
+@profile
 def train_minibatch(model, optimizer, camera, view_spec, ray_spec, image_channels, batch_index, epoch_index):
     # This just loads training images and shows them
     # t = transforms.Compose([transforms.ToTensor()])
@@ -945,7 +948,7 @@ def train_minibatch(model, optimizer, camera, view_spec, ray_spec, image_channel
     green_mse = mse(g, image_channels[1], view_spec)
     blue_mse = mse(b, image_channels[2], view_spec)
     # total_loss = red_mse + green_mse + blue_mse
-    print(f"Regularising using {len(model.voxel_access.all_voxels) * REGULARISATION_FRACTION} voxels...")
+    print(f"Regularising using {int(len(model.voxel_access.all_voxels) * REGULARISATION_FRACTION)} voxels...")
     total_loss = red_mse + green_mse + blue_mse + REGULARISATION_LAMBDA * tv_term(model.voxel_access,
                                                                                   model.parameter_world)
     print(f"Loss={total_loss}, RGB MSE={(red_mse, green_mse, blue_mse)}")
@@ -959,7 +962,7 @@ def train_minibatch(model, optimizer, camera, view_spec, ray_spec, image_channel
     optimizer.step()
     # after = torch.stack(list(model.parameters()))
 
-    return total_loss
+    return total_loss.detach()
 
 
 def render_training_images(radius, focal_length, camera_look_at, world, view_spec, ray_spec, plt):
@@ -987,7 +990,6 @@ def render_training_images(radius, focal_length, camera_look_at, world, view_spe
 
     plt.show()
     print("Completed rendering images")
-
 
 def train(camera_look_at, focal_length, ray_spec, renderer, training_positions, view_spec, world, num_epochs):
     to_tensor = transforms.Compose([transforms.ToTensor()])
