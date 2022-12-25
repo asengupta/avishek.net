@@ -22,8 +22,14 @@ We continue looking at [Plenoxels: Radiance Fields without Neural Networks](http
 ### Conclusion
 We have come quite far in our implementation of the paper. We will progress to training using multiple training images in the sequel and (probably) add TV regularisation.
 
+### Debugging Out of Memory issues
+User [ptrblck](https://discuss.pytorch.org/u/ptrblck) says this:
+
+> "If you are seeing an increased memory usage of 10GB in each iteration, you are most likely storing the computation graph accidentally by e.g. appending the loss (without detaching it) to a ```list``` etc."
+
 ### References
 
 - [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131)
 - [Plenoxels Explained](https://deeprender.ai/blog/plenoxels-radiance-fields-without-neural-networks)
-- [How to use Pytorch as a general optimizer](https://towardsdatascience.com/how-to-use-pytorch-as-a-general-optimizer-a91cbf72a7fb)
+- [Memory Profiler](https://pypi.org/project/memory-profiler/)
+- [OOM PyTorch](https://discuss.pytorch.org/t/gpu-out-of-memory-after-i-call-the-backward-function/139280)
