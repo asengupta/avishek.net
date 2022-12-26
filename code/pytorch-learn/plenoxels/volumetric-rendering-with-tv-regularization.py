@@ -952,8 +952,11 @@ class PlenoxelModel(nn.Module):
 @profile
 def train_minibatch(model, optimizer, camera, view_spec, ray_spec, image_channels, batch_index, epoch_index):
     print(f"Shape = {image_channels.shape}")
-
     optimizer.zero_grad()
+
+    r, g, b, renderer = model([camera, view_spec, ray_spec])
+    image = samples_to_image(r, g, b, view_spec)
+    renderer.plot_from_image(image, plt, f"Epoch: {epoch_index} Image: {batch_index}")
 
     red_mse = mse(r, image_channels[0], view_spec)
     green_mse = mse(g, image_channels[1], view_spec)
@@ -970,13 +973,7 @@ def train_minibatch(model, optimizer, camera, view_spec, ray_spec, image_channel
     # make_dot(total_mse, params=dict(list(model.named_parameters()))).render("mse", format="png")
     # make_dot(r, params=dict(list(model.named_parameters()))).render("channel", format="png")
     optimizer.step()
-    detached_loss = total_loss.detach()
-
-    r, g, b, renderer = model([camera, view_spec, ray_spec])
-    image = samples_to_image(r, g, b, view_spec)
-    renderer.plot_from_image(image, plt, f"Epoch: {epoch_index} Image: {batch_index} Loss={detached_loss.item()}")
-
-    return detached_loss
+    return total_loss.detach()
 
 
 def render_training_images(camera_positions, focal_length, camera_look_at, world, view_spec, ray_spec, plt):
@@ -1031,7 +1028,7 @@ def reconstruct_flyby_from_world(world, camera_positions, focal_length, look_at,
     for index, view_point in enumerate(camera_positions):
         c = Camera(focal_length, view_point, look_at)
         r1 = Renderer(world, c, torch.tensor(view_spec), ray_spec)
-        red, green, blue = r1.render(plt, f"Frame {index}")
+        red, green, blue = r1.render(plt, text=f"Frame {index}")
         save_image(torch.stack([red, green, blue]), f"./random-images/frames/animated-cube-{index:02}.png")
     print("Finished constructing flyby!!")
 
