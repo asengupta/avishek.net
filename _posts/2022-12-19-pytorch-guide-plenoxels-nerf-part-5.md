@@ -20,12 +20,19 @@ We will show results of the reconstruction using our simple cube.
 
 **The code for this article can be found here: [Volumetric Rendering Code with TV Regularisation](https://github.com/asengupta/avishek.net/blob/master/code/pytorch-learn/plenoxels/volumetric-rendering-with-tv-regularization.py)**
 
+
+### Notes on the Reconstruction
+Initial values are important. Random values of the spherical harmonic coefficients were initially between 0 and 1. That gave the reconstruction below. From certain angles, the reconstruction does not look like a cube, or only partially like one.
+
 The pictures below compare the reconstruction with the actual ground truth.
 
 ![Crude Reconstruction of Cube](/assets/images/reconstruction-cube-scaled.gif)![Original Cube](/assets/images/training-cube-scaled.gif)
 
-### Notes on the Reconstruction
-From certain angles, the reconstruction does not look like a cube, or only partially like one. More epochs and training images are obviously needed. The paper mentions running 12800 batches before it converges sufficiently.
+Changing the initial random values to between -1 and 1, gives us the following:
+
+![Original Cube](/assets/images/training-cube-scaled.gif)
+
+More epochs and training images are obviously needed. The paper mentions running 12800 batches before it converges sufficiently.
 
 ### Constructing model parameters differently
 We simply set ```requires_grad=True``` for the voxels which should be considered for updates, and set it to ```False``` for the others. See [```modify_grad()```](https://github.com/asengupta/avishek.net/blob/master/code/pytorch-learn/plenoxels/volumetric-rendering-with-tv-regularization.py#L898) for how this done.

@@ -172,8 +172,9 @@ class Voxel:
 
     @staticmethod
     def random_coloured_voxel(requires_grad=True):
-        return lambda: torch.tensor(np.concatenate(([0.0002], np.random.rand(VoxelGrid.VOXEL_DIMENSION - 1))),
-                                    requires_grad=requires_grad)
+        return lambda: torch.tensor(
+            np.concatenate(([0.0002], 2 * (np.random.rand(VoxelGrid.VOXEL_DIMENSION - 1) - 0.5))),
+            requires_grad=requires_grad)
 
     @staticmethod
     def uniform_harmonic():
@@ -896,10 +897,15 @@ NUM_STOCHASTIC_RAYS = 1500
 
 
 def modify_grad(parameter_world, voxel_access):
+    pruned_voxels = 0
     for i in range(parameter_world.world_x()):
         for j in range(parameter_world.world_y()):
             for k in range(parameter_world.world_z()):
-                parameter_world.at(i, j, k).requires_grad = False
+                if (parameter_world.at(i, j, k)[0] <= 0.001):
+                    # parameter_world.at(i, j, k).data = torch.zeros(VoxelGrid.VOXEL_DIMENSION)
+                    pruned_voxels += 1
+                (parameter_world.at(i, j, k)).requires_grad = False
+    print(f"Pruned {pruned_voxels} voxels!!")
 
     for ray_index, view_point in enumerate(voxel_access.view_points):
         ray = voxel_access.for_ray(ray_index)
@@ -911,7 +917,7 @@ def modify_grad(parameter_world, voxel_access):
                         y < 0 or y > GRID_Y - 1 or
                         z < 0 or z > GRID_Z - 1):
                     continue
-                parameter_world.at(x, y, z).requires_grad = True
+                (parameter_world.at(x, y, z)).requires_grad = True
 
 
 class PlenoxelModel(nn.Module):
