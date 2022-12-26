@@ -954,9 +954,6 @@ def train_minibatch(model, optimizer, camera, view_spec, ray_spec, image_channel
     print(f"Shape = {image_channels.shape}")
 
     optimizer.zero_grad()
-    r, g, b, renderer = model([camera, view_spec, ray_spec])
-    image = samples_to_image(r, g, b, view_spec)
-    renderer.plot_from_image(image, plt, f"Epoch: {epoch_index} Image: {batch_index}")
 
     red_mse = mse(r, image_channels[0], view_spec)
     green_mse = mse(g, image_channels[1], view_spec)
@@ -973,8 +970,13 @@ def train_minibatch(model, optimizer, camera, view_spec, ray_spec, image_channel
     # make_dot(total_mse, params=dict(list(model.named_parameters()))).render("mse", format="png")
     # make_dot(r, params=dict(list(model.named_parameters()))).render("channel", format="png")
     optimizer.step()
+    detached_loss = total_loss.detach()
 
-    return total_loss.detach()
+    r, g, b, renderer = model([camera, view_spec, ray_spec])
+    image = samples_to_image(r, g, b, view_spec)
+    renderer.plot_from_image(image, plt, f"Epoch: {epoch_index} Image: {batch_index} Loss={detached_loss.item()}")
+
+    return detached_loss
 
 
 def render_training_images(camera_positions, focal_length, camera_look_at, world, view_spec, ray_spec, plt):
