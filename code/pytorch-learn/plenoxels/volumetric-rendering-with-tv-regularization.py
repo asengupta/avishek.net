@@ -1165,13 +1165,13 @@ def main():
     print(f"Epoch losses = {epoch_losses}")
     torch.save(reconstructed_world.voxel_grid, RECONSTRUCTED_WORLD_FILENAME)
     print(f"Saved world to {RECONSTRUCTED_WORLD_FILENAME}!")
-    camera_positions = generate_camera_angles(camera_radius, cube_center)
     reconstruct_flyby_from_file(RECONSTRUCTED_WORLD_FILENAME, training_positions, focal_length, camera_look_at,
                                 view_spec,
                                 ray_spec)
+    camera_positions = generate_camera_angles(camera_radius, cube_center)
     # reconstruct_flyby_from_world(empty_world, training_positions, focal_length, camera_look_at, view_spec,
     #                              ray_spec)
-    # print("Everything done!!")
+    print("Everything done!!")
 
 
 if __name__ == '__main__':
