@@ -917,12 +917,7 @@ def modify_grad(parameter_world, voxel_access):
 class PlenoxelModel(nn.Module):
     def __init__(self, world):
         super().__init__()
-
-        # self.parameter_voxels = nn.Parameter(torch.tensor(world.voxel_grid), requires_grad=True)
         self.parameter_world = VoxelGrid.as_parameter(world.voxel_grid, self)
-        # voxel_access = PlenoxelModel.run(self.parameter_world, [camera, view_spec, ray_spec])
-        # self.voxels = nn.Parameter(torch.stack(self.voxel_access.all_voxels))
-        # modify_grad(self.parameter_voxels, voxel_access, world)
 
     @staticmethod
     def run(world, input):
@@ -936,8 +931,7 @@ class PlenoxelModel(nn.Module):
     @profile
     def forward(self, input):
         camera, view_spec, ray_spec = input
-        # world = VoxelGrid.from_tensor(self.parameter_voxels)
-        # Use self.voxels as the weights, take camera as input
+        # Use self.parameter_world as the weights, take camera as input
         renderer = Renderer(self.parameter_world, camera, view_spec, ray_spec)
         num_stochastic_rays = NUM_STOCHASTIC_RAYS
         self.voxel_access = renderer.build_rays(stochastic_samples(num_stochastic_rays, view_spec))
@@ -948,12 +942,6 @@ class PlenoxelModel(nn.Module):
 
 @profile
 def train_minibatch(model, optimizer, camera, view_spec, ray_spec, image_channels, batch_index, epoch_index):
-    # This just loads training images and shows them
-    # t = transforms.Compose([transforms.ToTensor()])
-    # dataset = datasets.ImageFolder("./images", transform=t)
-    # data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
-    # images, labels = next(iter(data_loader))
-    # training_image = images[0]
     print(f"Shape = {image_channels.shape}")
 
     optimizer.zero_grad()
@@ -964,7 +952,6 @@ def train_minibatch(model, optimizer, camera, view_spec, ray_spec, image_channel
     red_mse = mse(r, image_channels[0], view_spec)
     green_mse = mse(g, image_channels[1], view_spec)
     blue_mse = mse(b, image_channels[2], view_spec)
-    # total_loss = red_mse + green_mse + blue_mse
     print(f"Regularising using {int(len(model.voxel_access.all_voxels) * REGULARISATION_FRACTION)} voxels...")
     total_loss = red_mse + green_mse + blue_mse + REGULARISATION_LAMBDA * tv_term(model.voxel_access,
                                                                                   model.parameter_world)
@@ -977,7 +964,6 @@ def train_minibatch(model, optimizer, camera, view_spec, ray_spec, image_channel
     # make_dot(total_mse, params=dict(list(model.named_parameters()))).render("mse", format="png")
     # make_dot(r, params=dict(list(model.named_parameters()))).render("channel", format="png")
     optimizer.step()
-    # after = torch.stack(list(model.parameters()))
 
     return total_loss.detach()
 
@@ -1053,11 +1039,8 @@ def main():
     # camera_look_at = torch.tensor([0., 0., 0., 1])
     camera_look_at = cube_center
 
-    # Exact diagonal centering of cube
-    # camera_center = torch.tensor([40., 40., 40., 1.])
     camera_center = torch.tensor([-20., -10., 40., 1.])
     camera_radius = 35.
-    # camera_center = torch.tensor([-10.3109, 20.0000, 2.5000, 1.0000])
     focal_length = 1.
     camera = Camera(focal_length, camera_center, camera_look_at)
     num_rays_x, num_rays_y = 50, 50
@@ -1085,7 +1068,7 @@ def main():
     # However, it separates out the determining the intersecting voxels and the transmittance
     # calculations, so that it can be put through a Plenoxel model optimisation
     # start_build_rays = timer()
-    # # voxel_access = renderer.build_rays(fullscreen_samples(view_spec))
+    # voxel_access = renderer.build_rays(fullscreen_samples(view_spec))
     # voxel_access = renderer.build_rays(stochastic_samples(2000, view_spec))
     # end_build_rays = timer()
     # print(f"Building rays took {end_build_rays - start_build_rays}")
@@ -1116,20 +1099,6 @@ def main():
     # print(f"Total voxels current={len(voxel_access.all_voxels)}")
     # print(f"Voxels not used={VOXELS_NOT_USED}")
 
-    # red_mse = mse(r, image[0], view_spec, num_rays_x, num_rays_y)
-    # green_mse = mse(g, image[1], view_spec, num_rays_x, num_rays_y)
-    # blue_mse = mse(b, image[2], view_spec, num_rays_x, num_rays_y)
-    # print(f"{red_mse}, {green_mse}, {blue_mse}")
-
-    # red, green, blue = r.render(plt)
-    # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
-
-    # voxel_access, voxels, losses = training_loop(random_world, camera, view_spec, ray_spec, 3)
-    # print("Optimisation complete!")
-    # update_world(voxels, voxel_access, random_world)
-    # red, green, blue = r.render(plt)
-    # transforms.ToPILImage()(torch.stack([red, green, blue])).show()
-    # print("Rendered final result")
 
     # Generates training images
     # camera_positions = generate_camera_angles(camera_radius, cube_center)
