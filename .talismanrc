@@ -9,3 +9,5 @@ fileignoreconfig:
   checksum: 1335b2b3d1825f3cb0aded3bd0cbe67b20378c58dc3d27dca3d99120c9b1c966
 - filename: code/notebooks/pytorch-tutorial.ipynb
   checksum: 499c785330d2f693102c34e121e3a11eeebb622cc4fd59801bc310d8bed6c62d
+- filename: _posts/2022-12-19-pytorch-guide-plenoxels-nerf-part-5.md
+  checksum: d546ba18bb723e8ed410d5b5c4f171f85c3b0bd00e5cf1e9c9bcddfdbce4a21a
