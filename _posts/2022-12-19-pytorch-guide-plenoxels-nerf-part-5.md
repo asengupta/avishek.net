@@ -18,7 +18,8 @@ We continue looking at [Plenoxels: Radiance Fields without Neural Networks](http
 
 **The code for this article can be found here: [Volumetric Rendering Code](https://github.com/asengupta/avishek.net/blob/master/code/pytorch-learn/plenoxels/volumetric-rendering-with-loss-interpolating.py)**
 
-![Crude Reconstruction of Cube](/assets/images/crude-reconstruction-cube.gif)
+![Crude Reconstruction of Cube](/assets/images/reconstruction-cube-scaled.gif)![Original Cube](/assets/images/training-cube-scaled.gif)
+
 ### Conclusion
 We have come quite far in our implementation of the paper. We will progress to training using multiple training images in the sequel and (probably) add TV regularisation.
 

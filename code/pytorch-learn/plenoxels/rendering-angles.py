@@ -8,11 +8,11 @@ import torch.nn as nn
 from torchvision import datasets, transforms
 from torchviz import make_dot
 
-radius = 10.
+radius = 35.
 cube_center = torch.tensor([20., 20., 20., 1.])
 
 camera_positions = []
-for phi in np.linspace(0, math.pi, 5):
+for phi in np.linspace(0, math.pi, 4):
     for theta in np.linspace(0, 2 * math.pi, 5):
         phi += math.pi/4
         theta += math.pi/4
@@ -25,6 +25,6 @@ for phi in np.linspace(0, math.pi, 5):
         camera_positions.append(torch.tensor([x, y, z, 0]))
 
 
-print((torch.stack(camera_positions).unique(dim=0)))
+print((torch.stack(camera_positions).unique(dim=0)) + cube_center)
 # print(torch.tensor(camera_positions))
 # print((torch.tensor(camera_positions) + cube_center).unique(dim=0))

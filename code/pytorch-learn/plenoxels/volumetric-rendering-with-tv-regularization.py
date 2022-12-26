@@ -110,6 +110,25 @@ def plot(style="bo"):
     return lambda p: plt.plot(p[0][0], p[1][0], style)
 
 
+def generate_camera_angles(radius, look_at):
+    camera_positions = []
+    for phi in np.linspace(0, math.pi, 4):
+        for theta in np.linspace(0, 2 * math.pi, 5):
+            phi += math.pi / 4
+            theta += math.pi / 4
+            x = radius * math.sin(phi) * math.cos(theta)
+            y = radius * math.sin(phi) * math.sin(theta)
+            z = radius * math.cos(phi)
+            x = 0 if abs(x) < 0.0001 else x
+            y = 0 if abs(y) < 0.0001 else y
+            z = 0 if abs(z) < 0.0001 else z
+            camera_positions.append(torch.tensor([x, y, z, 0]))
+
+    positions = (torch.stack(camera_positions).unique(dim=0)) + look_at
+    print(positions)
+    return positions
+
+
 HALF_SQRT_3_BY_PI = 0.5 * math.sqrt(3. / math.pi)
 HALF_SQRT_15_BY_PI = 0.5 * math.sqrt(15. / math.pi)
 QUARTER_SQRT_15_BY_PI = 0.25 * math.sqrt(15. / math.pi)
@@ -506,11 +525,12 @@ def channel_opacity_split(distance_density_color_tensors, viewing_angle):
     return color_densities
 
 
-class Renderer:
+class ClampingFunctions:
     SIGMOID = nn.Sigmoid()
+    CLAMP = lambda t: torch.clamp(t, min=0, max=1)
 
-    # SIGMOID = lambda t: torch.clamp(t, min=0, max=1)
 
+class Renderer:
     def __init__(self, world, camera, view_spec, ray_spec):
         self.world = world
         self.camera = camera
@@ -527,7 +547,7 @@ class Renderer:
     def render_from_ray_from_angle(self, viewing_angle):
         return lambda ray: self.render_from_ray(ray, viewing_angle)
 
-    def render_from_ray(self, ray, viewing_angle):
+    def render_from_ray(self, ray, viewing_angle, clamping_function=ClampingFunctions.SIGMOID):
         # print(f"Wall clock in render_from_ray() is {timer()}")
         ray_sample_positions = ray.ray_sample_positions
         unique_ray_samples = ray_sample_positions
@@ -544,7 +564,7 @@ class Renderer:
         # List of tensors, each entry is distance from i-th sample to the next sample
         ray_sample_distances = torch.reshape(consecutive_sample_distances, (-1, 1))
         color_densities = density_split(ray_sample_distances, ray, viewing_angle, self.world)
-        color_tensor = Renderer.SIGMOID(color_densities)
+        color_tensor = clamping_function(color_densities)
 
         if (view_x < self.x_1 or view_x > self.x_2
                 or view_y < self.y_1 or view_y > self.y_2):
@@ -661,7 +681,7 @@ class Renderer:
         return VoxelAccess(view_points, torch.stack(ray_sample_positions), voxel_pointers, all_voxels,
                            all_voxel_positions)
 
-    def render(self, plt):
+    def render(self, plt, clamping_function=ClampingFunctions.SIGMOID, text=None):
         RED_CHANNEL, GREEN_CHANNEL, BLUE_CHANNEL = 0, 1, 2
         global VOXELS_NOT_USED
         global MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE
@@ -725,7 +745,7 @@ class Renderer:
                 # print(color_densities)
 
                 # color_tensor = torch.clamp(color_densities, min=0, max=1)
-                color_tensor = Renderer.SIGMOID(color_densities)
+                color_tensor = clamping_function(color_densities)
                 plt.plot(i, j, marker="o", color=color_tensor.detach().numpy())
                 red_column.append(color_tensor[RED_CHANNEL])
                 green_column.append(color_tensor[GREEN_CHANNEL])
@@ -738,6 +758,9 @@ class Renderer:
         red_image_tensor = torch.flip(torch.stack(red_image).t(), [0])
         green_image_tensor = torch.flip(torch.stack(green_image).t(), [0])
         blue_image_tensor = torch.flip(torch.stack(blue_image).t(), [0])
+
+        if (text is not None):
+            plt.text(0.5, 0.5, text)
         plt.show()
         print("Done rendering in full!!")
         return (red_image_tensor, green_image_tensor, blue_image_tensor)
@@ -965,24 +988,8 @@ def train_minibatch(model, optimizer, camera, view_spec, ray_spec, image_channel
     return total_loss.detach()
 
 
-def render_training_images(radius, focal_length, camera_look_at, world, view_spec, ray_spec, plt):
-    camera_positions = []
-    for phi in np.linspace(0, math.pi, 4):
-        for theta in np.linspace(0, 2 * math.pi, 5):
-            phi += math.pi / 4
-            theta += math.pi / 4
-            x = radius * math.sin(phi) * math.cos(theta)
-            y = radius * math.sin(phi) * math.sin(theta)
-            z = radius * math.cos(phi)
-            x = 0 if abs(x) < 0.0001 else x
-            y = 0 if abs(y) < 0.0001 else y
-            z = 0 if abs(z) < 0.0001 else z
-            camera_positions.append(torch.tensor([x, y, z, 0]))
-
-    positions = (torch.stack(camera_positions).unique(dim=0)) + camera_look_at
-    print(positions)
-
-    for index, p in enumerate(positions):
+def render_training_images(camera_positions, focal_length, camera_look_at, world, view_spec, ray_spec, plt):
+    for index, p in enumerate(camera_positions):
         c = Camera(focal_length, p, camera_look_at)
         r = Renderer(world, c, view_spec, ray_spec)
         red, green, blue = r.render(plt)
@@ -990,6 +997,7 @@ def render_training_images(radius, focal_length, camera_look_at, world, view_spe
 
     plt.show()
     print("Completed rendering images")
+
 
 def train(camera_look_at, focal_length, ray_spec, renderer, training_positions, view_spec, world, num_epochs):
     to_tensor = transforms.Compose([transforms.ToTensor()])
@@ -1018,24 +1026,20 @@ def train(camera_look_at, focal_length, ray_spec, renderer, training_positions, 
 
 
 # Reconstructs the world from disk
-def reconstruct_flyby(filename, radius, focal_length, look_at, view_spec, ray_spec):
-    print("Constructing flyby...")
-    view_points = []
+def reconstruct_flyby_from_file(filename, camera_positions, focal_length, look_at, view_spec, ray_spec):
     voxel_grid = torch.load(filename)
     print(voxel_grid.shape)
     reconstructed_world = VoxelGrid.from_tensor(voxel_grid)
-    for i in np.linspace(0, 2 * math.pi, 20):
-        x = radius * math.cos(i)
-        y = radius * math.sin(i)
-        z = 40
-        view_points.append(torch.tensor([x, y, z, 0]) + look_at)
+    print("Constructing flyby...")
+    reconstruct_flyby_from_world(reconstructed_world, camera_positions, focal_length, look_at, view_spec, ray_spec)
 
-    view_points = torch.stack(view_points)
-    for index, view_point in enumerate(view_points):
+
+def reconstruct_flyby_from_world(world, camera_positions, focal_length, look_at, view_spec, ray_spec):
+    print("Constructing flyby...")
+    for index, view_point in enumerate(camera_positions):
         c = Camera(focal_length, view_point, look_at)
-        r1 = Renderer(reconstructed_world, c, torch.tensor(view_spec), ray_spec)
-        red, green, blue = r1.render(plt)
-        plt.text(0.5, 0.5, f"Frame {index}")
+        r1 = Renderer(world, c, torch.tensor(view_spec), ray_spec)
+        red, green, blue = r1.render(plt, f"Frame {index}")
         save_image(torch.stack([red, green, blue]), f"./random-images/frames/animated-cube-{index:02}.png")
     print("Finished constructing flyby!!")
 
@@ -1134,8 +1138,10 @@ def main():
     # print("Rendered final result")
 
     # Generates training images
-    # render_training_images(camera_radius, focal_length, cube_center, world, view_spec, ray_spec, plt)
+    # camera_positions = generate_camera_angles(camera_radius, cube_center)
+    # render_training_images(camera_positions, focal_length, cube_center, world, view_spec, ray_spec, plt, camera_radius)
 
+    RECONSTRUCTED_WORLD_FILENAME = "reconstructed.pt"
     # Trains on multiple training images
     test_positions = torch.tensor([[-20., -10., 40., 1.]])
     training_positions = torch.tensor([[-4.7487, 44.7487, 20.0000, 1.0000],
@@ -1157,11 +1163,15 @@ def main():
     reconstructed_world, epoch_losses = train(camera_look_at, focal_length, ray_spec, renderer, training_positions,
                                               view_spec, world, num_epochs)
     print(f"Epoch losses = {epoch_losses}")
-    RECONSTRUCTED_WORLD_FILENAME = "reconstructed.pt"
     torch.save(reconstructed_world.voxel_grid, RECONSTRUCTED_WORLD_FILENAME)
     print(f"Saved world to {RECONSTRUCTED_WORLD_FILENAME}!")
-    reconstruct_flyby(RECONSTRUCTED_WORLD_FILENAME, camera_radius, focal_length, camera_look_at, view_spec, ray_spec)
-    print("Everything done!!")
+    camera_positions = generate_camera_angles(camera_radius, cube_center)
+    reconstruct_flyby_from_file(RECONSTRUCTED_WORLD_FILENAME, training_positions, focal_length, camera_look_at,
+                                view_spec,
+                                ray_spec)
+    # reconstruct_flyby_from_world(empty_world, training_positions, focal_length, camera_look_at, view_spec,
+    #                              ray_spec)
+    # print("Everything done!!")
 
 
 if __name__ == '__main__':
