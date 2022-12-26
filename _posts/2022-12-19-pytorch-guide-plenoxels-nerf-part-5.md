@@ -16,7 +16,7 @@ This is part of a series of posts breaking down the paper [Plenoxels: Radiance F
 
 We continue looking at [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131). We have built our volumetric renderer, trained it on a single training image; it is now time to extend the idea to multiple training images obtained by cameras around the model. We will also add TV regularisation to the loss calculations in this post.
 
-**The code for this article can be found here: [Volumetric Rendering Code](https://github.com/asengupta/avishek.net/blob/master/code/pytorch-learn/plenoxels/volumetric-rendering-with-loss-interpolating.py)**
+**The code for this article can be found here: [Volumetric Rendering Code](https://github.com/asengupta/avishek.net/blob/master/code/pytorch-learn/plenoxels/volumetric-rendering-with-tv-regularization.py)**
 
 ![Crude Reconstruction of Cube](/assets/images/reconstruction-cube-scaled.gif)![Original Cube](/assets/images/training-cube-scaled.gif)
 

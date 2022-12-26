@@ -541,9 +541,6 @@ class Renderer:
         self.num_view_samples_x = view_spec[4]
         self.num_view_samples_y = view_spec[5]
 
-    def dummy(self):
-        return 1
-
     def render_from_ray_from_angle(self, viewing_angle):
         return lambda ray: self.render_from_ray(ray, viewing_angle)
 
@@ -670,8 +667,8 @@ class Renderer:
             ray_sample_positions += ray_sample_positions_per_ray
 
             view_points.append((view_x, view_y))
-            voxel_pointers.append((counter, counter + 8 * num_intersecting_voxels, num_intersecting_voxels))
-            counter += 8 * num_intersecting_voxels
+            voxel_pointers.append((counter, counter + Voxel.NUM_INTERPOLATING_NEIGHBOURS * num_intersecting_voxels, num_intersecting_voxels))
+            counter += Voxel.NUM_INTERPOLATING_NEIGHBOURS * num_intersecting_voxels
 
             if (view_x < self.x_1 or view_x > self.x_2
                     or view_y < self.y_1 or view_y > self.y_2):
