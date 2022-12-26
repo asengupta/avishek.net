@@ -667,7 +667,8 @@ class Renderer:
             ray_sample_positions += ray_sample_positions_per_ray
 
             view_points.append((view_x, view_y))
-            voxel_pointers.append((counter, counter + Voxel.NUM_INTERPOLATING_NEIGHBOURS * num_intersecting_voxels, num_intersecting_voxels))
+            voxel_pointers.append((counter, counter + Voxel.NUM_INTERPOLATING_NEIGHBOURS * num_intersecting_voxels,
+                                   num_intersecting_voxels))
             counter += Voxel.NUM_INTERPOLATING_NEIGHBOURS * num_intersecting_voxels
 
             if (view_x < self.x_1 or view_x > self.x_2
@@ -833,10 +834,6 @@ def samples_to_image(red_samples, green_samples, blue_samples, view_spec):
         blue_render_channel[y - 1, x - 1] = blue_samples[index][INTENSITY]
     image_data = torch.stack([red_render_channel, green_render_channel, blue_render_channel])
     return image_data
-
-
-def camera_to_image_test(x, y, view_spec):
-    return int(x), int(y)
 
 
 def mse(rendered_channel, true_channel, view_spec):
