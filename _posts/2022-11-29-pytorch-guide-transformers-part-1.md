@@ -8,7 +8,7 @@ draft: false
 
 It may seem strange that I'm jumping from implementing a simple neural network into **Transformers**. I will return to building up the foundations of neural networks soon enough: for the moment, let's build a **Transformer** using PyTorch.
 
-The original paper is [Attention is All You Need](https://arxiv.org/abs/1706.03762). However, there are several excellent guides to understanding the original Transformers architecture; I will use [The Illustrated Transformer](https://jalammar.github.io/illustrated-transformer/) by Jay Alammar to guide this implementation. Many of the diagrams of the Transformer internals are gratefully borrowed from this site.
+The original paper is [Attention is All You Need](https://arxiv.org/abs/1706.03762). However, there are several excellent guides to understanding the original Transformers architecture; I will use [The Illustrated Transformer](https://jalammar.github.io/illustrated-transformer/) by Jay Alammar to guide this implementation; many of the diagrams of the Transformer internals are gratefully borrowed from his site.
 
 As is obligatory, we reproduce the original Transformer architecture before diving into the depths of its implementation.
 
