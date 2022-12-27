@@ -1112,7 +1112,7 @@ def main():
     # camera_positions = generate_camera_angles(camera_radius, cube_center)
     # render_training_images(camera_positions, focal_length, cube_center, world, view_spec, ray_spec, plt, camera_radius)
 
-    RECONSTRUCTED_WORLD_FILENAME = "reconstructed.pt"
+    RECONSTRUCTED_WORLD_FILENAME = "output/reconstructed.pt"
     # Trains on multiple training images
     test_positions = torch.tensor([[-20., -10., 40., 1.]])
     training_positions = torch.tensor([[-4.7487, 44.7487, 20.0000, 1.0000],

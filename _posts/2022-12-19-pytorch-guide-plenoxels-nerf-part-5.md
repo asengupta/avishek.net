@@ -24,11 +24,11 @@ We will show results of the reconstruction using our simple cube.
 ### Notes on the Reconstruction
 Initial values are important. Random values of the spherical harmonic coefficients were initially between 0 and 1. That gave the reconstruction below. From certain angles, the reconstruction does not look like a cube, or only partially like one.
 
-The pictures below compare the reconstruction with the actual ground truth.
+The pictures below compare the reconstruction with the actual ground truth, when the initial values are skewed to be only positive.
 
 ![Crude Reconstruction of Cube](/assets/images/reconstruction-cube-scaled.gif)![Original Cube](/assets/images/training-cube-scaled.gif)
 
-Changing the initial random values to between -1 and 1, gives us the following:
+Changing the initial random values to between -1 and 1, gives us the following, much improved reconstructions:
 
 ![Cube Reconstruction using good initial values](/assets/images/cube-reconstruction-good-initial-scaled.gif)![Original Cube](/assets/images/training-cube-scaled.gif)
 
