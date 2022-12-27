@@ -133,21 +133,29 @@ More epochs and training images are obviously needed. The paper mentions running
 
 ### Parallelising Volumetric Calculations using PyTorch
 
-We could have either used [Pathos](https://pypi.org/project/pathos/) or PyTorch's multiprocessing library. Unfortunately, **PyTorch cannot perform distributed gradient propagation** (there is an experimental feature for it, but we haven't tried it), so we ended up using Pathos. It will probably more effective if the volumetric calculations are more intensive; currently, the distributed version takes longer than the serial version.
+One of the issues faced with the current code is that it is very slow. A single training image, which includes calculation of the intersecting voxels, loss calculations, and the single optimisation step, takes about 42 seconds. The paper implements a CUDA-based volumetric renderer, and this is an interesting project we might consider tackling at some point from scratch. We could have either used [Pathos](https://pypi.org/project/pathos/) or PyTorch's multiprocessing library. Unfortunately, **PyTorch cannot perform distributed gradient propagation** (there is an experimental feature for it, but we haven't tried it), so we ended up using Pathos. It will probably more effective if the volumetric calculations are more intensive; currently, the distributed version takes longer than the serial version.
 
 Look at [```render_parallel()```](https://github.com/asengupta/avishek.net/blob/509acb6dda55c96dca7f4f8bc2da9d88b16c2f3f/code/pytorch-learn/plenoxels/volumetric-rendering-with-tv-regularization.py#L596) to see how Pathos is used.
 
 ### Debugging Out of Memory issues
-[Memory Profiler](https://pypi.org/project/memory-profiler/) makes it very easy to track incremental per-line memory allocation.
+One of the issues we faced was accidentally retaining the entire computational graph after each loss calculation. Appending losses to an array as-is, retains a reference to the graph, which can continue holding more than 1 GB of memory, causing the OS to terminate the Python process somewhere in the 3rd epoch.
 
-User [ptrblck](https://discuss.pytorch.org/u/ptrblck) says this:
+[Memory Profiler](https://pypi.org/project/memory-profiler/) makes it very easy to track incremental per-line memory allocation, and track down such issues.
+
+Here is an example screenshot of the library output running:
+
+![memory-profiler output](/assets/images/memory-profiler-snapshot.png)
+
+Furthermore, user [ptrblck](https://discuss.pytorch.org/u/ptrblck) says this:
 
 > "If you are seeing an increased memory usage of 10GB in each iteration, you are most likely storing the computation graph accidentally by e.g. appending the loss (without detaching it) to a ```list``` etc."
 
-The moral is: do not store losses as-is: detach them to get the raw numbers, otherwise they will get stored with the entire computational graph.
-
 ### Conclusion
-We have incorporated Total Variance regularisation in our implementation of the paper, and implemented a proper training schedule using multiple training images. The reconstructions are crude, but they demonstrate how the spherical harmonics can be learned and varied from different angles.
+We have incorporated **Total Variance regularisation** in our implementation of the paper, and implemented a proper training schedule using multiple training images. The reconstructions are crude, but they demonstrate how the spherical harmonics can be learned and varied from different angles. There are a few more details that we will need to address in a sequel, specifically:
+
+- **Voxel pruning:** This will probably require us to modify our core data structure to be a little more efficient, because it will involve storing all the transmittances of the entire training set per epoch, and then zeroing out candidate voxels.
+- **Encouraging voxel sparsity:** Adding more regularisation terms will encourage sparsity of voxels. In the paper, the Cauchy loss is incorporated to speed up computations.
+- **Coarse-to-fine resolution scaling:** This will be needed to better resolve the fine structure of our training scenes. At this point, we are working with a very coarse low resolution of $$40 \times 40 \times 40$$. We can get higher resolutions than this, but this will need more work, and more computations.
 
 ### References
 
