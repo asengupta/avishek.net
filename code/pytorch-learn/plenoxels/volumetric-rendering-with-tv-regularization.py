@@ -25,11 +25,13 @@ INHOMOGENEOUS_ZERO_VECTOR = torch.tensor([0., 0., 0.])
 REGULARISATION_FRACTION = 0.01
 REGULARISATION_LAMBDA = 0.001
 LEARNING_RATE = 0.001
+NUM_STOCHASTIC_RAYS = 1500
 
 MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE = []
 MASTER_VOXELS_STRUCTURE = []
 VOXELS_NOT_USED = 0
 OUTPUT_FOLDER = "./output"
+
 
 class Camera:
     def __init__(self, focal_length, center, look_at):
@@ -104,10 +106,6 @@ def unit_vector(camera_basis_vector):
         pow(camera_basis_vector[0], 2) +
         pow(camera_basis_vector[1], 2) +
         pow(camera_basis_vector[2], 2))
-
-
-def plot(style="bo"):
-    return lambda p: plt.plot(p[0][0], p[1][0], style)
 
 
 def generate_camera_angles(radius, look_at):
@@ -893,9 +891,6 @@ def tv_term(voxel_accessor, world):
         list(map(lambda i: tv_for_voxel(voxel_accessor, world), list(range(num_voxels_to_include))))).mean()
 
 
-NUM_STOCHASTIC_RAYS = 1500
-
-
 def modify_grad(parameter_world, voxel_access):
     pruned_voxels = 0
     for i in range(parameter_world.world_x()):
@@ -1001,7 +996,7 @@ def train(world, camera_look_at, focal_length, view_spec, ray_spec, training_pos
             print(f"Before Training for camera position #{batch}={position}")
             test_camera = Camera(focal_length, position, camera_look_at)
             minibatch_loss, renderer, image = train_minibatch(model, optimizer, test_camera, view_spec, ray_spec,
-                                             training_images[batch], batch, epoch)
+                                                              training_images[batch], batch, epoch)
             batch_losses.append(minibatch_loss)
             print(f"After Training for camera position #{batch}={position}")
             renderer.plot_from_image(image, plt, f"Epoch: {epoch} Image: {batch}")
