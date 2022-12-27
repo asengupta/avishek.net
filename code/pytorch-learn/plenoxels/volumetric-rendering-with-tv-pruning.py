@@ -540,10 +540,7 @@ class Renderer:
         self.num_view_samples_x = view_spec[4]
         self.num_view_samples_y = view_spec[5]
 
-    def render_from_ray_from_angle(self, viewing_angle):
-        return lambda ray: self.render_from_ray(ray, viewing_angle)
-
-    def render_from_ray(self, ray, viewing_angle, clamping_function=ClampingFunctions.SIGMOID):
+    def render_from_ray(self, ray, viewing_angle, clamping_function):
         # print(f"Wall clock in render_from_ray() is {timer()}")
         ray_sample_positions = ray.ray_sample_positions
         unique_ray_samples = ray_sample_positions
@@ -569,28 +566,28 @@ class Renderer:
         # print(color_tensor)
         return torch.cat([torch.tensor([view_x, view_y]), color_tensor])
 
-    def render_from_rays(self, voxel_access):
+    def render_from_rays(self, voxel_access, clamping_function=ClampingFunctions.SIGMOID):
         X, Y = 0, 1
         RED_CHANNEL, GREEN_CHANNEL, BLUE_CHANNEL = 2, 3, 4
         camera = self.camera
         # composite_colour_tensors = self.render_parallel(voxel_access, camera)
-        composite_colour_tensors = self.render_serial(voxel_access, camera)
+        composite_colour_tensors = self.render_serial(voxel_access, camera, clamping_function)
         red_channel = composite_colour_tensors[:, [X, Y, RED_CHANNEL]]
         green_channel = composite_colour_tensors[:, [X, Y, GREEN_CHANNEL]]
         blue_channel = composite_colour_tensors[:, [X, Y, BLUE_CHANNEL]]
         print("Done volumetric calculations from rays!!")
         return (red_channel, green_channel, blue_channel)
 
-    def render_serial(self, voxel_access, camera):
+    def render_serial(self, voxel_access, camera, clamping_function):
         viewing_angle = camera.viewing_angle()
         num_view_points = len(voxel_access.view_points)
         composite_colour_tensors = torch.stack(list(
-            map(lambda index: self.render_from_ray(voxel_access.for_ray(index), viewing_angle),
+            map(lambda index: self.render_from_ray(voxel_access.for_ray(index), viewing_angle, clamping_function),
                 range(num_view_points))))
         return composite_colour_tensors
 
     def render_from_angle(self, ray):
-        return self.render_from_ray(ray, self.camera.viewing_angle())
+        return self.render_from_ray(ray, self.camera.viewing_angle(), clamping_function=ClampingFunctions.SIGMOID)
 
     def render_parallel(self, voxel_access, camera):
         viewing_angle = camera.viewing_angle()
