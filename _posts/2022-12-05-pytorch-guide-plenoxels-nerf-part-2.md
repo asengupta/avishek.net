@@ -2,7 +2,7 @@
 title: "Plenoxels and Neural Radiance Fields using PyTorch: Part 2"
 author: avishek
 usemathjax: true
-tags: ["Machine Learning", "PyTorch", "Programming", "Deep Learning", "Neural Radiance Fields", "Machine Vision"]
+tags: ["Machine Learning", "PyTorch", "Programming", "Neural Radiance Fields", "Machine Vision"]
 draft: false
 ---
 
