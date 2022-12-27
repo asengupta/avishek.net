@@ -29,7 +29,7 @@ LEARNING_RATE = 0.001
 MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE = []
 MASTER_VOXELS_STRUCTURE = []
 VOXELS_NOT_USED = 0
-
+OUTPUT_FOLDER = "./output"
 
 class Camera:
     def __init__(self, focal_length, center, look_at):
@@ -956,7 +956,6 @@ def train_minibatch(model, optimizer, camera, view_spec, ray_spec, image_channel
 
     r, g, b, renderer = model([camera, view_spec, ray_spec])
     image = samples_to_image(r, g, b, view_spec)
-    renderer.plot_from_image(image, plt, f"Epoch: {epoch_index} Image: {batch_index}")
 
     red_mse = mse(r, image_channels[0], view_spec)
     green_mse = mse(g, image_channels[1], view_spec)
@@ -973,7 +972,7 @@ def train_minibatch(model, optimizer, camera, view_spec, ray_spec, image_channel
     # make_dot(total_mse, params=dict(list(model.named_parameters()))).render("mse", format="png")
     # make_dot(r, params=dict(list(model.named_parameters()))).render("channel", format="png")
     optimizer.step()
-    return total_loss.detach()
+    return total_loss.detach(), renderer, image
 
 
 def render_training_images(camera_positions, focal_length, camera_look_at, world, view_spec, ray_spec, plt):
@@ -1001,11 +1000,14 @@ def train(world, camera_look_at, focal_length, view_spec, ray_spec, training_pos
         for batch, position in enumerate(training_positions):
             print(f"Before Training for camera position #{batch}={position}")
             test_camera = Camera(focal_length, position, camera_look_at)
-            minibatch_loss = train_minibatch(model, optimizer, test_camera, view_spec, ray_spec,
+            minibatch_loss, renderer, image = train_minibatch(model, optimizer, test_camera, view_spec, ray_spec,
                                              training_images[batch], batch, epoch)
             batch_losses.append(minibatch_loss)
             print(f"After Training for camera position #{batch}={position}")
-        epoch_losses.append(batch_losses)
+            renderer.plot_from_image(image, plt, f"Epoch: {epoch} Image: {batch}")
+            save_image(image, f"{OUTPUT_FOLDER}/reconstruction/reconstruction-{epoch:02}-{batch:02}.png")
+
+    epoch_losses.append(batch_losses)
     final_renderer = Renderer(model.world(), final_camera, view_spec, ray_spec)
     red, green, blue = final_renderer.render(plt)
     transforms.ToPILImage()(torch.stack([red, green, blue])).show()
@@ -1029,7 +1031,7 @@ def reconstruct_flyby_from_world(world, camera_positions, focal_length, look_at,
         c = Camera(focal_length, view_point, look_at)
         r1 = Renderer(world, c, torch.tensor(view_spec), ray_spec)
         red, green, blue = r1.render(plt, text=f"Frame {index}")
-        save_image(torch.stack([red, green, blue]), f"./random-images/frames/animated-cube-{index:02}.png")
+        save_image(torch.stack([red, green, blue]), f"{OUTPUT_FOLDER}/frames/animated-cube-{index:02}.png")
     print("Finished constructing flyby!!")
 
 
@@ -1112,7 +1114,7 @@ def main():
     # camera_positions = generate_camera_angles(camera_radius, cube_center)
     # render_training_images(camera_positions, focal_length, cube_center, world, view_spec, ray_spec, plt, camera_radius)
 
-    RECONSTRUCTED_WORLD_FILENAME = "output/reconstructed.pt"
+    RECONSTRUCTED_WORLD_FILENAME = f"{OUTPUT_FOLDER}/reconstructed.pt"
     # Trains on multiple training images
     test_positions = torch.tensor([[-20., -10., 40., 1.]])
     training_positions = torch.tensor([[-4.7487, 44.7487, 20.0000, 1.0000],
