@@ -937,7 +937,7 @@ class PlenoxelModel(nn.Module):
     def world(self):
         return self.parameter_world
 
-    @profile
+    # @profile
     def forward(self, input):
         camera, view_spec, ray_spec = input
         # Use self.parameter_world as the weights, take camera as input
@@ -949,7 +949,7 @@ class PlenoxelModel(nn.Module):
         return r, g, b, renderer
 
 
-@profile
+# @profile
 def train_minibatch(model, optimizer, camera, view_spec, ray_spec, image_channels, batch_index, epoch_index):
     print(f"Shape = {image_channels.shape}")
     optimizer.zero_grad()
