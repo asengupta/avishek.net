@@ -53,7 +53,7 @@ Consider a Cauchy sequence $$(x_n) \in c_0$$. Then, $$\forall \epsilon>0, \exist
 This implies that:
 
 $$
-\supd(x_j^m, x_j^n)<\epsilon \\
+\sup d(x_j^m, x_j^n)<\epsilon \\
 d(x_j^m, x_j^n)<\epsilon
 $$
 
