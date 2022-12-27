@@ -160,8 +160,11 @@ def rgb_harmonics(rgb_harmonic_coefficients):
 
 
 class Voxel:
-    NUM_INTERPOLATING_NEIGHBOURS = 8
+    NUM_INTERPOLATING_VOXEL_NEIGHBOURS = 8
     DEFAULT_OPACITY = 0.05
+    VOXEL_PRUNING_OPACITY_THRESHOLD = 0.01
+    NUM_VOXEL_NEIGHBOURS = 9 * 3 - 1
+    VOXEL_PRUNING_NEIGHBOUR_OPACITY_THRESHOLDS = torch.full([NUM_VOXEL_NEIGHBOURS], VOXEL_PRUNING_OPACITY_THRESHOLD)
 
     @staticmethod
     def default_voxel(requires_grad=True):
@@ -212,8 +215,8 @@ class Ray:
             print(f"WARNING: num_samples = {num_samples}, sample_positions = {ray_sample_positions}")
 
     def at(self, index):
-        start = index * Voxel.NUM_INTERPOLATING_NEIGHBOURS
-        end = start + Voxel.NUM_INTERPOLATING_NEIGHBOURS
+        start = index * Voxel.NUM_INTERPOLATING_VOXEL_NEIGHBOURS
+        end = start + Voxel.NUM_INTERPOLATING_VOXEL_NEIGHBOURS
         return self.ray_sample_positions[index], \
                self.voxel_positions[start: end], \
                self.voxels[start: end]
@@ -321,6 +324,27 @@ class VoxelGrid:
 
     def is_outside(self, x, y, z):
         return not self.is_inside(x, y, z)
+
+    def neighbour_opacities(self, x, y, z):
+        opacities = []
+        for i in range(x - 1, x + 2):
+            for j in range(y - 1, y + 2):
+                for k in range(z - 1, z + 2):
+                    if x == i and y == j and z == k:
+                        continue
+                    opacities.append(self.at(i, j, k)[0])
+        # print(f"Opacities are {torch.stack(opacities)}")
+        return torch.stack(opacities)
+
+    def prune(self, voxel_position):
+        voxel = self.at(*voxel_position)
+        if (voxel[0] > Voxel.VOXEL_PRUNING_OPACITY_THRESHOLD):
+            return False
+        if (self.neighbour_opacities(*voxel_position).less_equal(
+                Voxel.VOXEL_PRUNING_NEIGHBOUR_OPACITY_THRESHOLDS).all()):
+            voxel.requires_grad = False
+            voxel.mul_(0)
+            return True
 
     def channel_opacity(self, position_distance_density_color_tensors, viewing_angle):
         number_of_samples = len(position_distance_density_color_tensors)
@@ -663,9 +687,10 @@ class Renderer:
             ray_sample_positions += ray_sample_positions_per_ray
 
             view_points.append((view_x, view_y))
-            voxel_pointers.append((counter, counter + Voxel.NUM_INTERPOLATING_NEIGHBOURS * num_intersecting_voxels,
-                                   num_intersecting_voxels))
-            counter += Voxel.NUM_INTERPOLATING_NEIGHBOURS * num_intersecting_voxels
+            voxel_pointers.append(
+                (counter, counter + Voxel.NUM_INTERPOLATING_VOXEL_NEIGHBOURS * num_intersecting_voxels,
+                 num_intersecting_voxels))
+            counter += Voxel.NUM_INTERPOLATING_VOXEL_NEIGHBOURS * num_intersecting_voxels
 
             if (view_x < self.x_1 or view_x > self.x_2
                     or view_y < self.y_1 or view_y > self.y_2):
@@ -889,15 +914,10 @@ def tv_term(voxel_accessor, world):
 
 
 def modify_grad(parameter_world, voxel_access):
-    pruned_voxels = 0
     for i in range(parameter_world.world_x()):
         for j in range(parameter_world.world_y()):
             for k in range(parameter_world.world_z()):
-                if (parameter_world.at(i, j, k)[0] <= 0.001):
-                    # parameter_world.at(i, j, k).data = torch.zeros(VoxelGrid.VOXEL_DIMENSION)
-                    pruned_voxels += 1
                 (parameter_world.at(i, j, k)).requires_grad = False
-    print(f"Pruned {pruned_voxels} voxels!!")
 
     for ray_index, view_point in enumerate(voxel_access.view_points):
         ray = voxel_access.for_ray(ray_index)
@@ -935,10 +955,10 @@ class PlenoxelModel(nn.Module):
         # Use self.parameter_world as the weights, take camera as input
         renderer = Renderer(self.parameter_world, camera, view_spec, ray_spec)
         num_stochastic_rays = NUM_STOCHASTIC_RAYS
-        self.voxel_access = renderer.build_rays(stochastic_samples(num_stochastic_rays, view_spec))
-        r, g, b = renderer.render_from_rays(self.voxel_access)
-        modify_grad(self.parameter_world, self.voxel_access)
-        return r, g, b, renderer
+        voxel_access = renderer.build_rays(stochastic_samples(num_stochastic_rays, view_spec))
+        r, g, b = renderer.render_from_rays(voxel_access)
+        modify_grad(self.parameter_world, voxel_access)
+        return r, g, b, renderer, voxel_access
 
 
 # @profile
@@ -946,14 +966,14 @@ def train_minibatch(model, optimizer, camera, view_spec, ray_spec, image_channel
     print(f"Shape = {image_channels.shape}")
     optimizer.zero_grad()
 
-    r, g, b, renderer = model([camera, view_spec, ray_spec])
+    r, g, b, renderer, voxel_access = model([camera, view_spec, ray_spec])
     image = samples_to_image(r, g, b, view_spec)
 
     red_mse = mse(r, image_channels[0], view_spec)
     green_mse = mse(g, image_channels[1], view_spec)
     blue_mse = mse(b, image_channels[2], view_spec)
-    print(f"Regularising using {int(len(model.voxel_access.all_voxels) * REGULARISATION_FRACTION)} voxels...")
-    total_loss = red_mse + green_mse + blue_mse + REGULARISATION_LAMBDA * tv_term(model.voxel_access,
+    print(f"Regularising using {int(len(voxel_access.all_voxels) * REGULARISATION_FRACTION)} voxels...")
+    total_loss = red_mse + green_mse + blue_mse + REGULARISATION_LAMBDA * tv_term(voxel_access,
                                                                                   model.parameter_world)
     print(f"Loss={total_loss}, RGB MSE={(red_mse, green_mse, blue_mse)}")
     total_loss.backward()
@@ -964,7 +984,7 @@ def train_minibatch(model, optimizer, camera, view_spec, ray_spec, image_channel
     # make_dot(total_mse, params=dict(list(model.named_parameters()))).render("mse", format="png")
     # make_dot(r, params=dict(list(model.named_parameters()))).render("channel", format="png")
     optimizer.step()
-    return total_loss.detach(), renderer, image
+    return total_loss.detach(), renderer, image, voxel_access
 
 
 def render_training_images(camera_positions, focal_length, camera_look_at, world, view_spec, ray_spec, plt):
@@ -978,6 +998,18 @@ def render_training_images(camera_positions, focal_length, camera_look_at, world
     print("Completed rendering images")
 
 
+def prune_voxels(world, voxel_accessors):
+    num_pruned_voxels = 0
+    for voxel_accessor in voxel_accessors:
+        num_view_points = len(voxel_accessor.view_points)
+        for ray_index in range(num_view_points):
+            ray = voxel_accessor.for_ray(ray_index)
+            for voxel_position in ray.voxel_positions:
+                if world.prune(voxel_position):
+                    num_pruned_voxels += 1
+    return num_pruned_voxels
+
+
 def train(world, camera_look_at, focal_length, view_spec, ray_spec, training_positions, final_camera, num_epochs):
     to_tensor = transforms.Compose([transforms.ToTensor()])
     dataset = datasets.ImageFolder("./images", transform=to_tensor)
@@ -986,20 +1018,26 @@ def train(world, camera_look_at, focal_length, view_spec, ray_spec, training_pos
     model = PlenoxelModel(world)
     optimizer = torch.optim.RMSprop(model.parameters(), lr=LEARNING_RATE, momentum=0.9)
     epoch_losses = []
+    voxel_accessors = []
     for epoch in range(num_epochs):
         batch_losses = []
         print(f"In epoch {epoch}")
         for batch, position in enumerate(training_positions):
             print(f"Before Training for camera position #{batch}={position}")
             test_camera = Camera(focal_length, position, camera_look_at)
-            minibatch_loss, renderer, image = train_minibatch(model, optimizer, test_camera, view_spec, ray_spec,
-                                                              training_images[batch], batch, epoch)
+            minibatch_loss, renderer, image, voxel_access = train_minibatch(model, optimizer, test_camera, view_spec,
+                                                                            ray_spec,
+                                                                            training_images[batch], batch, epoch)
             batch_losses.append(minibatch_loss)
+            voxel_accessors.append(voxel_access)
             print(f"After Training for camera position #{batch}={position}")
             renderer.plot_from_image(image, plt, f"Epoch: {epoch} Image: {batch}")
             save_image(image, f"{OUTPUT_FOLDER}/reconstruction/reconstruction-{epoch:02}-{batch:02}.png")
 
-    epoch_losses.append(batch_losses)
+        epoch_losses.append(batch_losses)
+
+    num_pruned_voxels = prune_voxels(model.parameter_world, voxel_accessors)
+    print(f"Pruned {num_pruned_voxels} voxels!!")
     final_renderer = Renderer(model.world(), final_camera, view_spec, ray_spec)
     red, green, blue = final_renderer.render(plt)
     transforms.ToPILImage()(torch.stack([red, green, blue])).show()
@@ -1124,7 +1162,7 @@ def main():
                                        [43.9054, 43.9054, 10.9413, 1.0000],
                                        [44.7487, -4.7487, 20.0000, 1.0000]])
 
-    num_epochs = 20
+    num_epochs = 7
     reconstructed_world, epoch_losses = train(world, camera_look_at, focal_length, view_spec, ray_spec,
                                               training_positions, camera, num_epochs)
     print(f"Epoch losses = {epoch_losses}")
