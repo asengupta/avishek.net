@@ -22,7 +22,7 @@ We start off with an explanation of Total Variance Denoising.
 
 ### Total Variation Denoising
 
-#### One-Dimensional Signal
+#### 1. One-Dimensional Signal
 Assume we have a **one-dimensional constant signal** $$Y(t)$$ filled with noise. Since this noise varies from sample to sample, there is always going to be (with a high probability) a difference between consecutive samples of this noisy signal. Our task is to rederive the original constant signal from this noisy signal. We need to minimise the gradient across all samples. In this case, the gradient between two consecutive samples is simply the magnitude of their differences. Thus, define this gradient between $$Y(t+1)$$ and $$Y(t)$$ as:
 
 $$\delta(t+1) = |Y(t+1) - Y(t)|$$
@@ -54,13 +54,16 @@ $$
 Thus, we want to minimise the cost function above as well. Putting $$\eqref{eq:total-variation-1d}$$ and $$\eqref{eq:mse-1d}$$ together, we get:
 
 $$
-\Delta(X,Y) = {\Delta}_{MSE}(X,Y) + \lambda {\Delta}_{MSE}(Y) \\
+\begin{equation}
+\Delta(X,Y) = {\Delta}_{MSE}(X,Y) + \lambda {\Delta}_{TV}(Y) \\
+\label{eq:full-cost-with-tv}
+\end{equation}
 \Delta(X,Y) = \frac{1}{T}\displaystyle\sum_0^T {\bigg[Y(t) - X(t)\bigg]}^2 + \lambda \sum_{t=0}^{T-1} \bigg\lvert Y(t+1) - Y(t) \bigg\rvert
 $$
 
 where $$\lambda$$ is the **regularisation parameter**, and controls the amount of denoising.
 
-#### Two-Dimensional Signal
+#### 2. Two-Dimensional Signal
 
 Moving to the two-dimensional case, we can extend Total Variation measure to be very similar to mean squared error:
 
@@ -71,28 +74,26 @@ $$
 \end{equation}
 $$
 
-![Total Variation for One-Dimensional Signal](/assets/images/total-variation-denoising-2d.png)
+![Total Variation for Two-Dimensional Signal](/assets/images/total-variation-denoising-2d.png)
 
-The overall cost function remains to be:
+The overall cost function remains to be $$\Delta(X,Y) = {\Delta}_{MSE}(X,Y) + \lambda {\Delta}_{MSE}(Y)$$.
 
-$$\Delta(X,Y) = {\Delta}_{MSE}(X,Y) + \lambda {\Delta}_{MSE}(Y)$$.
-
-#### Application to Plenoxels
+#### 3. Application to Plenoxels
 We are now ready to apply TV denoising to our problem. As it turns out, we use the exact same cost function with the following ideas:
 
 - The cost function is extended to three dimensions similar to how we framed the problem in two dimensions.
 - The cost function is applied independently to each of our 28 dimensions (1 opacity, 27 spherical harmonic coefficients)
 
-The TV regularisation term then is:
+Assume the voxels are in the set $$V$$, the TV regularisation term then is:
 
 $$
-{\Delta}_{TV} = \sum_{i,j \in V, d \in D} \sqrt{ {\bigg[Y_d(i+1, j, k) - Y_d(i, j, k)\bigg]}^2 + {\bigg[Y_d(i, j+1, k) - Y_d(i, j, k)\bigg]}^2 + {\bigg[Y_d(i, j, k+1) - Y_d(i, j, k)\bigg]}^2 }
+{\Delta}_{TV} = \frac{1}{|V|}\sum_{i,j \in V, d \in D} \sqrt{ {\bigg[Y_d(i+1, j, k) - Y_d(i, j, k)\bigg]}^2 + {\bigg[Y_d(i, j+1, k) - Y_d(i, j, k)\bigg]}^2 + {\bigg[Y_d(i, j, k+1) - Y_d(i, j, k)\bigg]}^2 }
 $$
 
 which is simply written in the paper as:
 
 $$
-{\Delta}_{TV} = \sum_{i,j \in V, d \in D} \sqrt{ \delta_i^2 + \delta_j^2 + \delta_k^2 }
+{\Delta}_{TV} = \frac{1}{|V|}\sum_{i,j \in V, d \in D} \sqrt{ \delta_i^2 + \delta_j^2 + \delta_k^2 }
 $$
 
 where
@@ -103,9 +104,16 @@ $$
 \delta_k = \bigg\lvert Y_d(i, j, k+1) - Y_d(i, j, k) \bigg\rvert
 $$
 
+![Total Variation for Three-Dimensional Signal](/assets/images/total-variation-denoising-3d.png)
+
+The final cost function in the paper is then exactly the same as we described above in $$\eqref{eq:full-cost-with-tv}$$:
+
+$$\Delta(X,Y) = {\Delta}_{MSE}(X,Y) + \lambda {\Delta}_{MSE}(Y)$$
+
+where, $$X$$ is our training image.
+
 ### Constructing model parameters differently
-So far, we have been recreating a new```PlenoxelModel``` instance for every training cycle. The reason is that the parameters to optimise vary per cycle, depending upon which stochastic sample of rays we select
-We simply set ```requires_grad=True``` for the voxels which should be considered for updates, and set it to ```False``` for the others. See [```modify_grad()```](https://github.com/asengupta/avishek.net/blob/master/code/pytorch-learn/plenoxels/volumetric-rendering-with-tv-regularization.py#L898) for how this done.
+We now modify the code to handle multiple training images. So far, we have been recreating a new ```PlenoxelModel``` instance for every training cycle. The reason is that the parameters to optimise vary per cycle, depending upon which stochastic sample of rays we select. The recommended way to vary parameters in a model is to mark a subset of the parameters we want to freeze, as ```requires_grad=False```, and this is what we do. All the voxels in the world are considered as parameters by default. For each training scene, we decide which voxels intersect with our viewing rays, and mark those as requiring gradient propagation. We simply set ```requires_grad=True``` for the voxels which should be considered for updates, and set it to ```False``` for the others. See [```modify_grad()```](https://github.com/asengupta/avishek.net/blob/master/code/pytorch-learn/plenoxels/volumetric-rendering-with-tv-regularization.py#L898) for how this done.
 
 ### Notes on the Reconstruction
 Initial values are important. Random values of the spherical harmonic coefficients were initially between 0 and 1. That gave the reconstruction below. From certain angles, the reconstruction does not look like a cube, or only partially like one.
