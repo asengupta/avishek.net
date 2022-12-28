@@ -429,75 +429,65 @@ class VoxelGrid:
         for i, j, k in self.voxels(face6):
             self.voxel_grid[i, j, k] = voxel_6
 
-    def density(self, ray_samples_with_distances, viewing_angle):
+    def density(self, ray_samples_with_positions_distances, viewing_angle):
         global MASTER_VOXELS_STRUCTURE
         collected_intensities = []
-        for ray_sample in ray_samples_with_distances:
-            voxel_x, voxel_y, voxel_z = self.to_voxel_coordinates((ray_sample[:3]))
-            x = ray_sample[0]
-            y = ray_sample[1]
-            z = ray_sample[2]
-            x_0, x_1 = voxel_x, voxel_x + 1
-            y_0, y_1 = voxel_y, voxel_y + 1
-            z_0, z_1 = voxel_z, voxel_z + 1
-            x_d = (x - x_0) / (x_1 - x_0)
-            y_d = (y - y_0) / (y_1 - y_0)
-            z_d = (z - z_0) / (z_1 - z_0)
-            c_000 = self.at(x_0, y_0, z_0)
-            c_001 = self.at(x_0, y_0, z_1)
-            c_010 = self.at(x_0, y_1, z_0)
-            c_011 = self.at(x_0, y_1, z_1)
-            c_100 = self.at(x_1, y_0, z_0)
-            c_101 = self.at(x_1, y_0, z_1)
-            c_110 = self.at(x_1, y_1, z_0)
-            c_111 = self.at(x_1, y_1, z_1)
-            c_00 = c_000 * (1 - x_d) + c_100 * x_d
-            c_01 = c_001 * (1 - x_d) + c_101 * x_d
-            c_10 = c_010 * (1 - x_d) + c_110 * x_d
-            c_11 = c_011 * (1 - x_d) + c_111 * x_d
-
-            c_0 = c_00 * (1 - y_d) + c_10 * y_d
-            c_1 = c_01 * (1 - y_d) + c_11 * y_d
-
-            c = c_0 * (1 - z_d) + c_1 * z_d
-            MASTER_VOXELS_STRUCTURE += [c_000, c_001, c_010, c_011, c_100, c_101, c_110, c_111]
-
-            collected_intensities.append(c)
-        return self.channel_opacity(torch.cat([ray_samples_with_distances, torch.stack(collected_intensities)], 1),
+        for ray_sample in ray_samples_with_positions_distances:
+            ray_sample_world_position = ray_sample[:3]
+            collected_intensities.append(
+                self.intensities(ray_sample_world_position, self.interpolating_neighbours(ray_sample_world_position)))
+        return self.channel_opacity(torch.cat([ray_samples_with_positions_distances, torch.stack(collected_intensities)], 1),
                                     viewing_angle)
 
     def density_split(self, ray_sample_distances, ray, viewing_angle):
         collected_intensities = []
         for index, distance in enumerate(ray_sample_distances):
-            ray_sample_position, voxel_positions, voxels = ray.at(index)
+            ray_sample_world_position, voxel_positions, voxels = ray.at(index)
             if len(voxels) == 0:
                 return torch.tensor([0., 0., 0.])
-            c_000, c_001, c_010, c_011, c_100, c_101, c_110, c_111 = voxels
-            x, y, z = ray_sample_position
-
-            voxel_x, voxel_y, voxel_z = self.to_voxel_coordinates(ray_sample_position)
-            x_0, x_1 = voxel_x, voxel_x + 1
-            y_0, y_1 = voxel_y, voxel_y + 1
-            z_0, z_1 = voxel_z, voxel_z + 1
-
-            x_d = (x - x_0) / (x_1 - x_0)
-            y_d = (y - y_0) / (y_1 - y_0)
-            z_d = (z - z_0) / (z_1 - z_0)
-
-            c_00 = c_000 * (1 - x_d) + c_100 * x_d
-            c_01 = c_001 * (1 - x_d) + c_101 * x_d
-            c_10 = c_010 * (1 - x_d) + c_110 * x_d
-            c_11 = c_011 * (1 - x_d) + c_111 * x_d
-
-            c_0 = c_00 * (1 - y_d) + c_10 * y_d
-            c_1 = c_01 * (1 - y_d) + c_11 * y_d
-
-            c = c_0 * (1 - z_d) + c_1 * z_d
-
-            collected_intensities.append(c)
+            collected_intensities.append(self.intensities(ray_sample_world_position, voxels))
 
         return channel_opacity_split(torch.cat([ray_sample_distances, torch.stack(collected_intensities)], 1),
                                      viewing_angle)
+
+    def interpolating_neighbours(self, ray_sample_world_coords):
+        x_0, x_1, y_0, y_1, z_0, z_1, _1, _2, _3 = self.interpolating_neighbour_endpoints(ray_sample_world_coords)
+        c_000 = self.at(x_0, y_0, z_0)
+        c_001 = self.at(x_0, y_0, z_1)
+        c_010 = self.at(x_0, y_1, z_0)
+        c_011 = self.at(x_0, y_1, z_1)
+        c_100 = self.at(x_1, y_0, z_0)
+        c_101 = self.at(x_1, y_0, z_1)
+        c_110 = self.at(x_1, y_1, z_0)
+        c_111 = self.at(x_1, y_1, z_1)
+
+        return (c_000, c_001, c_010, c_011, c_100, c_101, c_110, c_111)
+
+    def interpolating_neighbour_endpoints(self, ray_sample_world_coords):
+        x, y, z = ray_sample_world_coords
+        voxel_x, voxel_y, voxel_z = self.to_voxel_coordinates(ray_sample_world_coords)
+        x_0, x_1 = voxel_x, voxel_x + 1
+        y_0, y_1 = voxel_y, voxel_y + 1
+        z_0, z_1 = voxel_z, voxel_z + 1
+        x_d = (x - x_0) / (x_1 - x_0)
+        y_d = (y - y_0) / (y_1 - y_0)
+        z_d = (z - z_0) / (z_1 - z_0)
+        return x_0, x_1, y_0, y_1, z_0, z_1, x_d, y_d, z_d
+
+    def intensities(self, ray_sample_world_position, interpolating_neighbours):
+        global MASTER_VOXELS_STRUCTURE
+        _, _, _, _, _, _, x_d, y_d, z_d = self.interpolating_neighbour_endpoints(ray_sample_world_position)
+        c_000, c_001, c_010, c_011, c_100, c_101, c_110, c_111 = interpolating_neighbours
+
+        c_00 = c_000 * (1 - x_d) + c_100 * x_d
+        c_01 = c_001 * (1 - x_d) + c_101 * x_d
+        c_10 = c_010 * (1 - x_d) + c_110 * x_d
+        c_11 = c_011 * (1 - x_d) + c_111 * x_d
+        c_0 = c_00 * (1 - y_d) + c_10 * y_d
+        c_1 = c_01 * (1 - y_d) + c_11 * y_d
+        c = c_0 * (1 - z_d) + c_1 * z_d
+        MASTER_VOXELS_STRUCTURE += [c_000, c_001, c_010, c_011, c_100, c_101, c_110, c_111]
+        return c
 
 
 def neighbours(x, y, z, world):
