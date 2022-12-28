@@ -178,22 +178,21 @@ class Voxel:
             requires_grad=requires_grad)
 
     @staticmethod
-    def uniform_harmonic():
-        return [1.] + ([1.] + [0.] * (VoxelGrid.PER_CHANNEL_DIMENSION - 1)) * 3
+    def uniform_harmonic(density=1.):
+        return [density] + ([1.] + [0.] * (VoxelGrid.PER_CHANNEL_DIMENSION - 1)) * 3
 
     @staticmethod
     def random_harmonic_coefficient_set():
         return ([random.random()] + [0.] * (VoxelGrid.PER_CHANNEL_DIMENSION - 1))
 
     @staticmethod
-    def uniform_harmonic_random_colour(requires_grad=True):
-        return lambda: torch.tensor([
-                                        0.1] + Voxel.random_harmonic_coefficient_set() + Voxel.random_harmonic_coefficient_set() + Voxel.random_harmonic_coefficient_set(),
+    def uniform_harmonic_random_colour(density = 0.1, requires_grad=True):
+        return lambda: torch.tensor([density] + Voxel.random_harmonic_coefficient_set() + Voxel.random_harmonic_coefficient_set() + Voxel.random_harmonic_coefficient_set(),
                                     requires_grad=requires_grad)
 
     @staticmethod
-    def occupied_voxel(requires_grad=True):
-        return lambda: torch.tensor(Voxel.uniform_harmonic(), requires_grad=requires_grad)
+    def occupied_voxel(density=1., requires_grad=True):
+        return lambda: torch.tensor(Voxel.uniform_harmonic(density), requires_grad=requires_grad)
 
     @staticmethod
     def empty_voxel(requires_grad=True):
@@ -239,12 +238,24 @@ class VoxelAccess:
                    self.all_voxels[start:end])
 
 
+def cube_faces(cube_spec):
+    x, y, z, dx, dy, dz = cube_spec
+    face1 = (x, y, z, dx + 1, dy + 1, 1)
+    face2 = (x, y, z + dz, dx + 1, dy + 1, 1)
+    face3 = (x, y, z, 1, dy + 1, dz + 1)
+    face4 = (x + dx, y, z, 1, dy + 1, dz + 1)
+    face5 = (x, y, z, dx + 1, 1, dz + 1)
+    face6 = (x, y + dy, z, dx + 1, 1, dz + 1)
+    return face1, face2, face3, face4, face5, face6
+
+
 class VoxelGrid:
     VOXEL_DIMENSION = 28
     PER_CHANNEL_DIMENSION = 9
 
-    def __init__(self, world_tensor):
+    def __init__(self, world_tensor, scale=(1., 1., 1.)):
         self.grid_x, self.grid_y, self.grid_z = world_tensor.shape
+        self.scale = scale
         self.voxel_grid = world_tensor
 
     def world_x(self):
@@ -307,14 +318,19 @@ class VoxelGrid:
         if self.is_outside(x, y, z):
             return Voxel.empty_voxel(requires_grad=False)()
         else:
-            return self.voxel_grid[int(x), int(y), int(z)]
+            voxel_x, voxel_y, voxel_z = self.to_voxel_coordinates((x, y, z))
+            return self.voxel_grid[voxel_x, voxel_y, voxel_z]
+
+    def to_voxel_coordinates(self, world_coordinates):
+        return np.divide(world_coordinates, self.scale).astype(int)
 
     def set(self, position, voxel):
         x, y, z, _ = position
         if self.is_outside(x, y, z):
             return
         else:
-            self.voxel_grid[int(x), int(y), int(z)] = voxel
+            voxel_x, voxel_y, voxel_z = self.to_voxel_coordinates((x, y, z))
+            self.voxel_grid[voxel_x, voxel_y, voxel_z] = voxel
 
     def is_inside(self, x, y, z):
         if (0 <= x < self.grid_x and
@@ -371,12 +387,23 @@ class VoxelGrid:
 
         return color_densities
 
+    def to_voxel_cube_spec(self, world_cube_spec):
+        x1, y1, z1, dx, dy, dz = world_cube_spec
+        x2, y2, z2 = x1 + dx, y1 + dy, z1 + dz
+        return self.to_voxel_coordinates([x1, y1, z1]), self.to_voxel_coordinates([x2, y2, z2])
+
+    def voxels(self, cube_spec):
+        from_voxel, to_voxel = self.to_voxel_cube_spec(cube_spec)
+        voxel_x1, voxel_y1, voxel_z1 = from_voxel
+        voxel_x2, voxel_y2, voxel_z2 = to_voxel
+        for i in range(voxel_x1, voxel_x2):
+            for j in range(voxel_y1, voxel_y2):
+                for k in range(voxel_z1, voxel_z2):
+                    yield i, j, k
+
     def build_solid_cube(self, cube_spec):
-        x, y, z, dx, dy, dz = cube_spec
-        for i in range(x, x + dx):
-            for j in range(y, y + dy):
-                for k in range(z, z + dz):
-                    self.voxel_grid[i, j, k] = Voxel.occupied_voxel()()
+        for i, j, k in self.voxels(cube_spec):
+            self.voxel_grid[i, j, k] = Voxel.occupied_voxel(0.05)()
 
     def build_monochrome_hollow_cube(self, cube_spec):
         self.build_hollow_cube2(Voxel.default_voxel(), cube_spec)
@@ -407,26 +434,46 @@ class VoxelGrid:
                 self.voxel_grid[j, y + dy, i] = make_voxel()
 
     def build_hollow_cube_with_randomly_coloured_sides(self, make_voxel, cube_spec):
-        x, y, z, dx, dy, dz = cube_spec
         voxel_1, voxel_2, voxel_3, voxel_4, voxel_5, voxel_6 = make_voxel(), make_voxel(), make_voxel(), make_voxel(), make_voxel(), make_voxel()
-        for i in range(x, x + dx + 1):
-            for j in range(y, y + dy + 1):
-                self.voxel_grid[i, j, z] = voxel_1
-        for i in range(x, x + dx + 1):
-            for j in range(y, y + dy + 1):
-                self.voxel_grid[i, j, z + dz] = voxel_2
-        for i in range(y, y + dy + 1):
-            for j in range(z, z + dz + 1):
-                self.voxel_grid[x, i, j] = voxel_3
-        for i in range(y, y + dy + 1):
-            for j in range(z, z + dz + 1):
-                self.voxel_grid[x + dx, i, j] = voxel_4
-        for i in range(z, z + dz + 1):
-            for j in range(x, x + dx + 1):
-                self.voxel_grid[j, y, i] = voxel_5
-        for i in range(z, z + dz + 1):
-            for j in range(x, x + dx + 1):
-                self.voxel_grid[j, y + dy, i] = voxel_6
+        face1, face2, face3, face4, face5, face6 = cube_faces(cube_spec)
+
+        for i, j, k in self.voxels(face1):
+            self.voxel_grid[i, j, k] = voxel_1
+        for i, j, k in self.voxels(face2):
+            self.voxel_grid[i, j, k] = voxel_2
+        for i, j, k in self.voxels(face3):
+            self.voxel_grid[i, j, k] = voxel_3
+        for i, j, k in self.voxels(face4):
+            self.voxel_grid[i, j, k] = voxel_4
+        for i, j, k in self.voxels(face5):
+            self.voxel_grid[i, j, k] = voxel_5
+        for i, j, k in self.voxels(face6):
+            self.voxel_grid[i, j, k] = voxel_6
+
+        # face_2 = (x, y, z + dz, dx + 1, dy + 1, 1)
+        # face_3 = (x, y, z, 1, dy + 1, dz + 1)
+        # face_4 = (x + dx, y, z, 1, dy + 1, dz + 1)
+        # face_5 = (x, y, z, dx + 1, 1, dz + 1)
+        # face_6 = (x, y + dy, z, dx + 1, 1, dz + 1)
+        # voxel_1, voxel_2, voxel_3, voxel_4, voxel_5, voxel_6 = make_voxel(), make_voxel(), make_voxel(), make_voxel(), make_voxel(), make_voxel()
+        # for i in range(x, x + dx + 1):
+        #     for j in range(y, y + dy + 1):
+        #         self.voxel_grid[i, j, z] = voxel_1
+        # for i in range(x, x + dx + 1):
+        #     for j in range(y, y + dy + 1):
+        #         self.voxel_grid[i, j, z + dz] = voxel_2
+        # for i in range(y, y + dy + 1):
+        #     for j in range(z, z + dz + 1):
+        #         self.voxel_grid[x, i, j] = voxel_3
+        # for i in range(y, y + dy + 1):
+        #     for j in range(z, z + dz + 1):
+        #         self.voxel_grid[x + dx, i, j] = voxel_4
+        # for i in range(z, z + dz + 1):
+        #     for j in range(x, x + dx + 1):
+        #         self.voxel_grid[j, y, i] = voxel_5
+        # for i in range(z, z + dz + 1):
+        #     for j in range(x, x + dx + 1):
+        #         self.voxel_grid[j, y + dy, i] = voxel_6
 
     def density(self, ray_samples_with_distances, viewing_angle):
         global MASTER_VOXELS_STRUCTURE
@@ -1074,7 +1121,7 @@ def main():
     empty_world = VoxelGrid.build_empty_world(GRID_X, GRID_Y, GRID_Z)
     empty_world.build_hollow_cube_with_randomly_coloured_sides(Voxel.uniform_harmonic_random_colour(requires_grad=True),
                                                                torch.tensor([10, 10, 10, 20, 20, 20]))
-    world = random_world
+    world = empty_world
     proxy_world = VoxelGrid.new(2, 2, 2, Voxel.default_voxel())
     # empty_world.build_solid_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
     # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
@@ -1083,8 +1130,9 @@ def main():
     camera_look_at = cube_center
 
     camera_center = torch.tensor([-20., -10., 40., 1.])
+    # camera_center = torch.tensor([-20., -10., -30., 1.])
     camera_radius = 35.
-    focal_length = 1.
+    focal_length = 2.
     camera = Camera(focal_length, camera_center, camera_look_at)
     num_rays_x, num_rays_y = 50, 50
     view_x1, view_x2 = -1, 1
@@ -1146,6 +1194,7 @@ def main():
     # camera_positions = generate_camera_angles(camera_radius, cube_center)
     # render_training_images(camera_positions, focal_length, cube_center, world, view_spec, ray_spec, plt, camera_radius)
 
+    renderer.render(plt, clamping_function=ClampingFunctions.CLAMP)
     RECONSTRUCTED_WORLD_FILENAME = f"{OUTPUT_FOLDER}/reconstructed.pt"
     # Trains on multiple training images
     test_positions = torch.tensor([[-20., -10., 40., 1.]])
@@ -1165,14 +1214,14 @@ def main():
                                        [44.7487, -4.7487, 20.0000, 1.0000]])
 
     num_epochs = 7
-    reconstructed_world, epoch_losses = train(world, camera_look_at, focal_length, view_spec, ray_spec,
-                                              training_positions, camera, num_epochs)
-    print(f"Epoch losses = {epoch_losses}")
-    torch.save(reconstructed_world.voxel_grid, RECONSTRUCTED_WORLD_FILENAME)
-    print(f"Saved world to {RECONSTRUCTED_WORLD_FILENAME}!")
-    reconstruct_flyby_from_file(RECONSTRUCTED_WORLD_FILENAME, training_positions, focal_length, camera_look_at,
-                                view_spec,
-                                ray_spec)
+    # reconstructed_world, epoch_losses = train(world, camera_look_at, focal_length, view_spec, ray_spec,
+    #                                           training_positions, camera, num_epochs)
+    # print(f"Epoch losses = {epoch_losses}")
+    # torch.save(reconstructed_world.voxel_grid, RECONSTRUCTED_WORLD_FILENAME)
+    # print(f"Saved world to {RECONSTRUCTED_WORLD_FILENAME}!")
+    # reconstruct_flyby_from_file(RECONSTRUCTED_WORLD_FILENAME, training_positions, focal_length, camera_look_at,
+    #                             view_spec,
+    #                             ray_spec)
     # camera_positions = generate_camera_angles(camera_radius, cube_center)
     # reconstruct_flyby_from_world(empty_world, training_positions, focal_length, camera_look_at, view_spec,
     #                              ray_spec)
