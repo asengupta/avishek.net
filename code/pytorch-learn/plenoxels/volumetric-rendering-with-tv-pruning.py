@@ -36,6 +36,7 @@ OUTPUT_FOLDER = "./output"
 class Camera:
     def __init__(self, focal_length, center, look_at):
         self.center = center
+        self.look_at = look_at
         self.basis = basis_from_depth(look_at, center)
         self.focal_length = focal_length
         camera_center = center.detach().clone()
@@ -402,7 +403,6 @@ class VoxelGrid:
         from_voxel, to_voxel = self.to_voxel_cube_spec(cube_spec)
         voxel_x1, voxel_y1, voxel_z1 = from_voxel
         voxel_x2, voxel_y2, voxel_z2 = to_voxel
-        # print((voxel_x1, voxel_x2))
         for i in torch.arange(voxel_x1, voxel_x2):
             for j in torch.arange(voxel_y1, voxel_y2):
                 for k in torch.arange(voxel_z1, voxel_z2):
@@ -1044,20 +1044,18 @@ def main():
     mono_world = VoxelGrid.build_with_voxel(GRID_X, GRID_Y, GRID_Z, torch.cat(
         [torch.tensor([0.0002, random.random() * 100.]), torch.zeros(VoxelGrid.VOXEL_DIMENSION - 2)]))
     empty_world = VoxelGrid.build_empty_world(GRID_X, GRID_Y, GRID_Z)
-    # empty_world.build_hollow_cube_with_randomly_coloured_sides(Voxel.uniform_harmonic_random_colour(requires_grad=True),
-    #                                                            torch.tensor([10, 10, 10, 20, 20, 20]))
-    world = empty_world
-    proxy_world = VoxelGrid.new(2, 2, 2, Voxel.default_voxel())
+    empty_world.build_hollow_cube_with_randomly_coloured_sides(Voxel.uniform_harmonic_random_colour(requires_grad=True),
+                                                               torch.tensor([10, 10, 10, 20, 20, 20]))
+    world = random_world
     # empty_world.build_solid_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
-    world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
+    # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
     cube_center = torch.tensor([20., 20., 20., 1.])
     # camera_look_at = torch.tensor([0., 0., 0., 1])
     camera_look_at = cube_center
 
-    camera_center = torch.tensor([-20., -10., 40., 1.])
-    # camera_center = torch.tensor([-20., -10., -30., 1.])
+    camera_center = torch.tensor([-20., -10., -30., 1.])
     camera_radius = 35.
-    focal_length = 2.
+    focal_length = 1.
     camera = Camera(focal_length, camera_center, camera_look_at)
     num_rays_x, num_rays_y = 50, 50
     view_x1, view_x2 = -1, 1
@@ -1068,56 +1066,18 @@ def main():
     ray_spec = torch.tensor([ray_length, num_ray_samples])
 
     renderer = Renderer(world, camera, torch.tensor(view_spec), ray_spec)
-
-    # This renders the volumetric model and shows the rendered image. Useful for training
-    # red, green, blue = r.render(plt)
-    # image_tensor = torch.stack([red, green, blue])
-    # image = transforms.ToPILImage()(image_tensor)
-    # image.show()
-
-    # This draws stochastic rays and returns a set of samples with colours
-    num_stochastic_rays = 1000
-    # image_data = samples_to_image(r, g, b, view_spec)
-    # transforms.ToPILImage()(image_data).show()
-
-    # This draws stochastic rays and returns a set of samples with colours
-    # However, it separates out the determining the intersecting voxels and the transmittance
-    # calculations, so that it can be put through a Plenoxel model optimisation
-    start_build_rays = timer()
-    voxel_access = renderer.build_rays(fullscreen_samples(view_spec))
-    # voxel_access = renderer.build_rays(stochastic_samples(2000, view_spec))
-    end_build_rays = timer()
-    print(f"Building rays took {end_build_rays - start_build_rays}")
-
-    start_render_rays = timer()
-    r, g, b = renderer.render_from_rays(voxel_access, clamping_function=ClampingFunctions.CLAMP)
-    end_render_rays = timer()
-    print(f"Rendering rays took {end_render_rays - start_render_rays}")
-
-    image_data = samples_to_image(r, g, b, view_spec)
-    renderer.plot_from_image(image_data, plt)
-    transforms.ToPILImage()(image_data).show()
-    start_render_full = timer()
-    renderer.render(plt, clamping_function=ClampingFunctions.CLAMP)
-    end_render_full = timer()
-    print(f"Rendering rays in full took {end_render_full - start_render_full}")
-    print("Finished rendering!!")
-
-    # image_data = samples_to_image(r, g, b, view_spec)
-    # transforms.ToPILImage()(image_data).show()
-    # print(voxel_pointers)
-    # print("Render complete")
-
-    # print(f"No of total total ray samples benchmark={len(MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE)}")
-    # print(f"No of total total ray samples current={len(voxel_access.ray_sample_positions)}")
-    # print(f"Difference={(torch.tensor(MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE) - torch.tensor(voxel_access.ray_sample_positions)).pow(2).sum()}")
-    # print(f"Total voxels benchmark={len(MASTER_VOXELS_STRUCTURE)}")
-    # print(f"Total voxels current={len(voxel_access.all_voxels)}")
-    # print(f"Voxels not used={VOXELS_NOT_USED}")
+    # test_rendering(renderer, view_spec)
 
     # Generates training images
     # camera_positions = generate_camera_angles(camera_radius, cube_center)
     # render_training_images(camera_positions, focal_length, cube_center, world, view_spec, ray_spec, plt, camera_radius)
+
+    run_training(world, camera, view_spec, ray_spec, camera_radius)
+
+
+def run_training(world, camera, view_spec, ray_spec, camera_radius):
+    focal_length = camera.focal_length
+    camera_look_at = camera.look_at
 
     RECONSTRUCTED_WORLD_FILENAME = f"{OUTPUT_FOLDER}/reconstructed.pt"
     # Trains on multiple training images
@@ -1136,20 +1096,42 @@ def main():
                                        [37.5000, 37.5000, 44.7487, 1.0000],
                                        [43.9054, 43.9054, 10.9413, 1.0000],
                                        [44.7487, -4.7487, 20.0000, 1.0000]])
-
     num_epochs = 7
-    # reconstructed_world, epoch_losses = train(world, camera_look_at, focal_length, view_spec, ray_spec,
-    #                                           training_positions, camera, num_epochs)
-    # print(f"Epoch losses = {epoch_losses}")
-    # torch.save(reconstructed_world.voxel_grid, RECONSTRUCTED_WORLD_FILENAME)
-    # print(f"Saved world to {RECONSTRUCTED_WORLD_FILENAME}!")
-    # reconstruct_flyby_from_file(RECONSTRUCTED_WORLD_FILENAME, training_positions, focal_length, camera_look_at,
-    #                             view_spec,
-    #                             ray_spec)
-    # camera_positions = generate_camera_angles(camera_radius, cube_center)
-    # reconstruct_flyby_from_world(empty_world, training_positions, focal_length, camera_look_at, view_spec,
-    #                              ray_spec)
+    reconstructed_world, epoch_losses = train(world, camera_look_at, focal_length, view_spec, ray_spec,
+                                              training_positions, camera, num_epochs)
+    print(f"Epoch losses = {epoch_losses}")
+    torch.save(reconstructed_world.voxel_grid, RECONSTRUCTED_WORLD_FILENAME)
+    print(f"Saved world to {RECONSTRUCTED_WORLD_FILENAME}!")
+    reconstruct_flyby_from_file(RECONSTRUCTED_WORLD_FILENAME, training_positions, focal_length, camera_look_at,
+                                view_spec,
+                                ray_spec)
+    camera_positions = generate_camera_angles(camera_radius, camera_look_at)
+    reconstruct_flyby_from_world(world, training_positions, focal_length, camera_look_at, view_spec,
+                                 ray_spec)
     print("Everything done!!")
+
+
+def test_rendering(renderer, view_spec):
+    # This draws stochastic rays and returns a set of samples with colours
+    # However, it separates out the determining the intersecting voxels and the transmittance
+    # calculations, so that it can be put through a Plenoxel model optimisation
+    start_build_rays = timer()
+    voxel_access = renderer.build_rays(fullscreen_samples(view_spec))
+    # voxel_access = renderer.build_rays(stochastic_samples(2000, view_spec))
+    end_build_rays = timer()
+    print(f"Building rays took {end_build_rays - start_build_rays}")
+    start_render_rays = timer()
+    r, g, b = renderer.render_from_rays(voxel_access, clamping_function=ClampingFunctions.CLAMP)
+    end_render_rays = timer()
+    print(f"Rendering rays took {end_render_rays - start_render_rays}")
+    image_data = samples_to_image(r, g, b, view_spec)
+    renderer.plot_from_image(image_data, plt)
+    transforms.ToPILImage()(image_data).show()
+    start_render_full = timer()
+    renderer.render(plt, clamping_function=ClampingFunctions.CLAMP)
+    end_render_full = timer()
+    print(f"Rendering rays in full took {end_render_full - start_render_full}")
+    print("Finished rendering!!")
 
 
 if __name__ == '__main__':
