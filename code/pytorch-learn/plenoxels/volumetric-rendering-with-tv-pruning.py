@@ -1022,15 +1022,15 @@ def render_training_images(camera_positions, focal_length, camera_look_at, world
 
 
 def prune_voxels(world, voxel_accessors):
-    num_pruned_voxels = 0
+    pruned_voxels = []
     for voxel_accessor in voxel_accessors:
         num_view_points = len(voxel_accessor.view_points)
         for ray_index in range(num_view_points):
             ray = voxel_accessor.for_ray(ray_index)
             for voxel_position in ray.voxel_positions:
                 if world.prune(voxel_position):
-                    num_pruned_voxels += 1
-    return num_pruned_voxels
+                    pruned_voxels.append(voxel_position)
+    return pruned_voxels
 
 
 def train(world, camera_look_at, focal_length, view_spec, ray_spec, training_positions, final_camera, num_epochs):
@@ -1060,11 +1060,8 @@ def train(world, camera_look_at, focal_length, view_spec, ray_spec, training_pos
 
         epoch_losses.append(batch_losses)
 
-    num_pruned_voxels = prune_voxels(model.parameter_world, voxel_accessors)
-    print(f"Pruned {num_pruned_voxels} voxels!!")
-
-    higher_res_world = model.parameter_world.scale_up()
-
+    pruned_voxels = prune_voxels(model.parameter_world, voxel_accessors)
+    print(f"Pruned {len(pruned_voxels)} voxels!!")
     final_renderer = Renderer(model.world(), final_camera, view_spec, ray_spec)
     red, green, blue = final_renderer.render(plt)
     transforms.ToPILImage()(torch.stack([red, green, blue])).show()
@@ -1110,7 +1107,7 @@ def main():
     camera_radius = 35.
     focal_length = 2.
     camera = Camera(focal_length, camera_center, camera_look_at)
-    num_rays_x, num_rays_y = 150, 150
+    num_rays_x, num_rays_y = 50, 50
     view_x1, view_x2 = -1, 1
     view_y1, view_y2 = -1, 1
     view_spec = [view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]
