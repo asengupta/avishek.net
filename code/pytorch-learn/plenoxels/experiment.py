@@ -11,17 +11,21 @@ distance_density_color_tensors = torch.tensor([
     [5., 5.]
 ])
 
-transmittances = torch.tensor(list(map(lambda i: functools.reduce(
+colors = torch.tensor([0.5] * 5)
+transmittances = list(map(lambda i: functools.reduce(
     lambda acc, j: acc + distance_density_color_tensors[j, 1] * distance_density_color_tensors[j, 0],
-    range(0, i), 0.), range(1, number_of_samples + 1))))
+    range(0, i), 0.), range(1, number_of_samples + 1)))
+transmittances = torch.exp(- torch.stack(transmittances))
 
-print(torch.exp(-transmittances))
+print(transmittances)
 # print(distance_density_color_tensors[:, 0] * distance_density_color_tensors[:, 1])
 
 sigma_density = distance_density_color_tensors[:, 0] * distance_density_color_tensors[:, 1]
-result = torch.tensor(list(
+summing_matrix = torch.tensor(list(
     functools.reduce(lambda acc, n: acc + [[1.] * n + [0.] * (number_of_samples - n)], range(1, number_of_samples + 1),
                      [])))
 # print(result.t())
-new_transmittances = torch.matmul(sigma_density, result.t())
+new_transmittances = torch.matmul(sigma_density, summing_matrix.t())
 print(torch.exp(-new_transmittances))
+
+new_transmittances * (1 -torch.exp(sigma_density)) * colors

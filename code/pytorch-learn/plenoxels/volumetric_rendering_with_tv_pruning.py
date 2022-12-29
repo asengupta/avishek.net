@@ -436,6 +436,38 @@ class VoxelGrid:
 
         return color_densities
 
+    def channel_opacity2(self, distance_density_color_tensors, viewing_angle):
+        number_of_samples = len(distance_density_color_tensors)
+        sigma_density = distance_density_color_tensors[:, 0] * distance_density_color_tensors[:, 1]
+        summing_matrix = torch.tensor(list(
+            functools.reduce(lambda acc, n: acc + [[1.] * n + [0.] * (number_of_samples - n)], range(1, number_of_samples + 1),
+                             [])))
+        # print(result.t())
+        transmittances = torch.matmul(sigma_density, summing_matrix.t())
+        transmittances = torch.exp(-transmittances)
+        # print(f"Transmittances={transmittances}")
+        color_densities = torch.zeros([3])
+
+        r_channel, g_channel, b_channel = [], [], []
+        for index, distance_density_color_tensor in enumerate(distance_density_color_tensors):
+            red_harmonic, green_harmonic, blue_harmonic = rgb_harmonics(
+                distance_density_color_tensor[2:])
+            r = red_harmonic(viewing_angle[0], viewing_angle[1])
+            g = green_harmonic(viewing_angle[0], viewing_angle[1])
+            b = blue_harmonic(viewing_angle[0], viewing_angle[1])
+            r_channel.append(r)
+            g_channel.append(g)
+            b_channel.append(b)
+
+        r_channel, g_channel, b_channel = torch.stack(r_channel), torch.stack(g_channel), torch.stack(b_channel)
+        base_transmittance_factors = transmittances * (1 - torch.exp(- sigma_density))
+        red = (base_transmittance_factors * r_channel).sum()
+        green = (base_transmittance_factors * g_channel).sum()
+        blue = (base_transmittance_factors * b_channel).sum()
+
+        color_densities = torch.stack([red, green, blue])
+        return color_densities
+
     def to_voxel_cube_spec(self, world_cube_spec):
         x1, y1, z1, dx, dy, dz = world_cube_spec
         x2, y2, z2 = x1 + dx, y1 + dy, z1 + dz
@@ -485,7 +517,7 @@ class VoxelGrid:
             ray_sample_world_position = ray_sample[:3]
             collected_intensities.append(
                 self.intensities(ray_sample_world_position, self.interpolating_neighbours(ray_sample_world_position)))
-        return self.channel_opacity(
+        return self.channel_opacity2(
             torch.cat([ray_samples_with_positions_distances[:, 3:], torch.stack(collected_intensities)], 1),
             viewing_angle)
 
@@ -497,7 +529,7 @@ class VoxelGrid:
                 return black_rgb()
             collected_intensities.append(self.intensities(ray_sample_world_position, voxels))
 
-        return self.channel_opacity(torch.cat([ray_sample_distances, torch.stack(collected_intensities)], 1),
+        return self.channel_opacity2(torch.cat([ray_sample_distances, torch.stack(collected_intensities)], 1),
                                     viewing_angle)
 
     def interpolating_neighbours(self, ray_sample_world_position):
@@ -1101,7 +1133,7 @@ def main():
     mono_world = VoxelGrid.build_with_voxel(GRID_X, GRID_Y, GRID_Z, torch.cat(
         [torch.tensor([0.0002, random.random() * 100.]), torch.zeros(VoxelGrid.VOXEL_DIMENSION - 2)]))
     empty_world = VoxelGrid.build_empty_world(GRID_X, GRID_Y, GRID_Z)
-    empty_world.build_hollow_cube_with_randomly_coloured_sides(Voxel.uniform_harmonic_random_colour(density=2, requires_grad=True),
+    empty_world.build_hollow_cube_with_randomly_coloured_sides(Voxel.uniform_harmonic_random_colour(density=0.4, requires_grad=True),
                                                                torch.tensor([10, 10, 10, 20, 20, 20]))
     world = empty_world
     # empty_world.build_solid_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
@@ -1110,7 +1142,7 @@ def main():
     # camera_look_at = torch.tensor([0., 0., 0., 1])
     camera_look_at = cube_center
 
-    camera_center = torch.tensor([-20., -10., 37., 1.])
+    camera_center = torch.tensor([-20., -10., 45., 1.])
     # camera_center = torch.tensor([-4.7487, 44.7487, 20.0000, 1.0000])
     camera_radius = 35.
     focal_length = 2.
