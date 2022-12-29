@@ -191,7 +191,7 @@ class Voxel:
         return ([random.random()] + [0.] * (VoxelGrid.PER_CHANNEL_DIMENSION - 1))
 
     @staticmethod
-    def uniform_harmonic_random_colour(density=0.1, requires_grad=True):
+    def uniform_harmonic_random_colour(density=0.04, requires_grad=True):
         return lambda: torch.tensor([
                                         density] + Voxel.random_harmonic_coefficient_set() + Voxel.random_harmonic_coefficient_set() + Voxel.random_harmonic_coefficient_set(),
                                     requires_grad=requires_grad)
@@ -218,6 +218,9 @@ class Ray:
         self.voxel_positions = voxel_positions
         if num_samples != len(ray_sample_positions):
             print(f"WARNING: num_samples = {num_samples}, sample_positions = {ray_sample_positions}")
+        opacities = torch.stack(voxels)[:, 0]
+        # print(f"Max density={opacities.max()}")
+        # print(f"Min density={opacities.min()}")
 
     def at(self, index):
         start = index * Voxel.NUM_INTERPOLATING_VOXEL_NEIGHBOURS
@@ -261,9 +264,13 @@ class VoxelGrid:
     DEFAULT_SCALE = torch.tensor([1., 1., 1.])
 
     def __init__(self, world_tensor, scale=DEFAULT_SCALE):
-        self.grid_x, self.grid_y, self.grid_z = world_tensor.shape
         self.scale = scale
+        self.grid_x, self.grid_y, self.grid_z = torch.tensor(world_tensor.shape) * self.scale
+        self.voxel_grid_x, self.voxel_grid_y, self.voxel_grid_z = world_tensor.shape
         self.voxel_grid = world_tensor
+
+    def dimensions(self):
+        return torch.tensor([self.grid_x, self.grid_y, self.grid_z]).int()
 
     def world_x(self):
         return self.grid_x
@@ -275,21 +282,21 @@ class VoxelGrid:
         return self.grid_z
 
     @staticmethod
-    def build_empty_world(x, y, z):
-        return VoxelGrid.new(x, y, z, Voxel.empty_voxel())
+    def build_empty_world(x, y, z, scale=DEFAULT_SCALE):
+        return VoxelGrid.new(x, y, z, Voxel.empty_voxel(), scale)
 
     @staticmethod
-    def build_random_world(x, y, z):
-        return VoxelGrid.new(x, y, z, Voxel.random_coloured_voxel())
+    def build_random_world(x, y, z, scale=DEFAULT_SCALE):
+        return VoxelGrid.new(x, y, z, Voxel.random_coloured_voxel(), scale)
 
     @staticmethod
-    def build_with_voxel(x, y, z, prototype_voxel):
-        return VoxelGrid.new(x, y, z, Voxel.like_voxel(prototype_voxel))
+    def build_with_voxel(x, y, z, prototype_voxel, scale=DEFAULT_SCALE):
+        return VoxelGrid.new(x, y, z, Voxel.like_voxel(prototype_voxel), scale)
 
     @staticmethod
-    def copy_from(world_tensor):
+    def copy_from(world_tensor, scale=DEFAULT_SCALE):
         x, y, z = world_tensor.shape
-        new_world = VoxelGrid.build_empty_world(x, y, z)
+        new_world = VoxelGrid.build_empty_world(x, y, z, scale)
         for i in range(x):
             for j in range(y):
                 for k in range(z):
@@ -313,13 +320,14 @@ class VoxelGrid:
         return new_world
 
     @classmethod
-    def new(cls, x, y, z, make_voxel):
+    def new(cls, x, y, z, make_voxel, scale=DEFAULT_SCALE):
+        print((x, y, z))
         voxel_grid = np.ndarray((x, y, z), dtype=list)
         for i in range(x):
             for j in range(y):
                 for k in range(y):
                     voxel_grid[i, j, k] = make_voxel()
-        return cls(voxel_grid)
+        return cls(voxel_grid, scale)
 
     def at(self, x, y, z):
         if self.is_outside(x, y, z):
@@ -327,6 +335,20 @@ class VoxelGrid:
         else:
             voxel_x, voxel_y, voxel_z = self.to_voxel_coordinates(torch.tensor([x, y, z]))
             return self.voxel_grid[voxel_x, voxel_y, voxel_z]
+
+    def scale_up(self):
+        new_dimensions = self.dimensions() * 2
+        new_scale = self.scale / 2
+        x_scale, y_scale, z_scale = new_scale
+        print(f"New dimensions={new_dimensions}")
+        scaled_up_world = VoxelGrid.build_empty_world(new_dimensions[0], new_dimensions[1], new_dimensions[2],
+                                                      scale=new_scale)
+        for i, j, k in self.voxels(torch.tensor([0, 0, 0, self.grid_x, self.grid_y, self.grid_z])):
+            x2 = (i * 2 + 1 / x_scale).int()
+            y2 = (j * 2 + 1 / y_scale).int()
+            z2 = (k * 2 + 1 / z_scale).int()
+            scaled_up_world.voxel_grid[i * 2: x2, j * 2: y2, k * 2: z2].fill(self.voxel_grid[i, j, k])
+        return scaled_up_world
 
     def to_voxel_coordinates(self, world_coordinates):
         return torch.divide(world_coordinates, self.scale).int()
@@ -371,6 +393,19 @@ class VoxelGrid:
 
     def channel_opacity(self, distance_density_color_tensors, viewing_angle):
         number_of_samples = len(distance_density_color_tensors)
+        # print(distance_density_color_tensors.shape)
+        txs = []
+        for i in range(1, number_of_samples + 1):
+            tx = 0
+            for j in range(0, i):
+                try:
+                    tx += math.exp(
+                        - distance_density_color_tensors[j, 1] * distance_density_color_tensors[j, 0])
+                except:
+                    print({(distance_density_color_tensors[j, 1], distance_density_color_tensors[j, 0])})
+                    exit(1)
+            txs.append(tx)
+
         transmittances = list(map(lambda i: functools.reduce(
             lambda acc, j: acc + math.exp(
                 - distance_density_color_tensors[j, 1] * distance_density_color_tensors[j, 0]),
@@ -454,16 +489,16 @@ class VoxelGrid:
         return self.channel_opacity(torch.cat([ray_sample_distances, torch.stack(collected_intensities)], 1),
                                     viewing_angle)
 
-    def interpolating_neighbours(self, ray_sample_world_coords):
-        x_0, x_1, y_0, y_1, z_0, z_1, _1, _2, _3 = self.interpolating_neighbour_endpoints(ray_sample_world_coords)
-        c_000 = self.at(x_0, y_0, z_0)
-        c_001 = self.at(x_0, y_0, z_1)
-        c_010 = self.at(x_0, y_1, z_0)
-        c_011 = self.at(x_0, y_1, z_1)
-        c_100 = self.at(x_1, y_0, z_0)
-        c_101 = self.at(x_1, y_0, z_1)
-        c_110 = self.at(x_1, y_1, z_0)
-        c_111 = self.at(x_1, y_1, z_1)
+    def interpolating_neighbours(self, ray_sample_world_position):
+        x_0, x_1, y_0, y_1, z_0, z_1, _1, _2, _3 = self.interpolating_neighbour_endpoints(ray_sample_world_position)
+        c_000 = self.voxel_by_position(x_0, y_0, z_0)
+        c_001 = self.voxel_by_position(x_0, y_0, z_1)
+        c_010 = self.voxel_by_position(x_0, y_1, z_0)
+        c_011 = self.voxel_by_position(x_0, y_1, z_1)
+        c_100 = self.voxel_by_position(x_1, y_0, z_0)
+        c_101 = self.voxel_by_position(x_1, y_0, z_1)
+        c_110 = self.voxel_by_position(x_1, y_1, z_0)
+        c_111 = self.voxel_by_position(x_1, y_1, z_1)
 
         return (c_000, c_001, c_010, c_011, c_100, c_101, c_110, c_111)
 
@@ -473,9 +508,9 @@ class VoxelGrid:
         x_0, x_1 = voxel_x, voxel_x + 1
         y_0, y_1 = voxel_y, voxel_y + 1
         z_0, z_1 = voxel_z, voxel_z + 1
-        x_d = (x - x_0) / (x_1 - x_0)
-        y_d = (y - y_0) / (y_1 - y_0)
-        z_d = (z - z_0) / (z_1 - z_0)
+        x_d = (x / self.scale[0] - x_0) / (x_1 - x_0)
+        y_d = (y / self.scale[1] - y_0) / (y_1 - y_0)
+        z_d = (z / self.scale[2] - z_0) / (z_1 - z_0)
         return x_0, x_1, y_0, y_1, z_0, z_1, x_d, y_d, z_d
 
     def intensities(self, ray_sample_world_position, interpolating_neighbours):
@@ -491,33 +526,47 @@ class VoxelGrid:
         c_1 = c_01 * (1 - y_d) + c_11 * y_d
         c = c_0 * (1 - z_d) + c_1 * z_d
         MASTER_VOXELS_STRUCTURE += [c_000, c_001, c_010, c_011, c_100, c_101, c_110, c_111]
+        if (c[0].abs() > 900):
+            print(f"WARNING: Bad neighbouring tensor at {(ray_sample_world_position)}")
+            print(f"WARNING: {(x_d, y_d, z_d)}")
+            print(interpolating_neighbours)
         return c
 
+    def neighbours(self, x, y, z):
+        x_0, x_1, y_0, y_1, z_0, z_1, _1, _2, _3 = self.interpolating_neighbour_endpoints(torch.tensor([x, y, z]))
+        # print(f"Ray={(x,y,z)}")
+        c_000 = self.voxel_by_position(x_0, y_0, z_0)
+        c_001 = self.voxel_by_position(x_0, y_0, z_1)
+        c_010 = self.voxel_by_position(x_0, y_1, z_0)
+        c_011 = self.voxel_by_position(x_0, y_1, z_1)
+        c_100 = self.voxel_by_position(x_1, y_0, z_0)
+        c_101 = self.voxel_by_position(x_1, y_0, z_1)
+        c_110 = self.voxel_by_position(x_1, y_1, z_0)
+        c_111 = self.voxel_by_position(x_1, y_1, z_1)
+        # c000 = self.at(x_0, y_0, z_0)
+        # c001 = self.at(x_0, y_0, z_1)
+        # c010 = self.at(x_0, y_1, z_0)
+        # c011 = self.at(x_0, y_1, z_1)
+        # c100 = self.at(x_1, y_0, z_0)
+        # c101 = self.at(x_1, y_0, z_1)
+        # c110 = self.at(x_1, y_1, z_0)
+        # c111 = self.at(x_1, y_1, z_1)
 
-def neighbours(x, y, z, world):
-    x0 = int(x)
-    y0 = int(y)
-    z0 = int(z)
-    x1 = x0 + 1
-    y1 = y0 + 1
-    z1 = z0 + 1
-    c000 = world.at(x0, y0, z0)
-    c001 = world.at(x0, y0, z1)
-    c010 = world.at(x0, y1, z0)
-    c011 = world.at(x0, y1, z1)
-    c100 = world.at(x1, y0, z0)
-    c101 = world.at(x1, y0, z1)
-    c110 = world.at(x1, y1, z0)
-    c111 = world.at(x1, y1, z1)
+        return ([c_000, c_001, c_010, c_011, c_100, c_101, c_110, c_111], torch.tensor([[x_0, y_0, z_0],
+                                                                                        [x_0, y_0, z_1],
+                                                                                        [x_0, y_1, z_0],
+                                                                                        [x_0, y_1, z_1],
+                                                                                        [x_1, y_0, z_0],
+                                                                                        [x_1, y_0, z_1],
+                                                                                        [x_1, y_1, z_0],
+                                                                                        [x_1, y_1, z_1]]))
 
-    return ([c000, c001, c010, c011, c100, c101, c110, c111], torch.tensor([[x0, y0, z0],
-                                                                            [x0, y0, z1],
-                                                                            [x0, y1, z0],
-                                                                            [x0, y1, z1],
-                                                                            [x1, y0, z0],
-                                                                            [x1, y0, z1],
-                                                                            [x1, y1, z0],
-                                                                            [x1, y1, z1]]))
+    def voxel_by_position(self, voxel_x, voxel_y, voxel_z):
+        if (voxel_x < 0 or voxel_x >= self.voxel_grid_x or
+                voxel_y < 0 or voxel_y >= self.voxel_grid_y or
+                voxel_z < 0 or voxel_z >= self.voxel_grid_z):
+            return torch.zeros(VoxelGrid.VOXEL_DIMENSION)
+        return self.voxel_grid[voxel_x, voxel_y, voxel_z]
 
 
 class ClampingFunctions:
@@ -647,7 +696,7 @@ class Renderer:
                 if (self.world.is_outside(ray_x, ray_y, ray_z)):
                     continue
                 # We are in the box
-                interpolating_voxels, interpolating_voxel_positions = neighbours(ray_x, ray_y, ray_z, self.world)
+                interpolating_voxels, interpolating_voxel_positions = self.world.neighbours(ray_x, ray_y, ray_z)
                 num_intersecting_voxels += 1
                 all_voxels_per_ray += interpolating_voxels
                 all_voxel_positions_per_ray += interpolating_voxel_positions
@@ -989,6 +1038,7 @@ def train(world, camera_look_at, focal_length, view_spec, ray_spec, training_pos
     dataset = datasets.ImageFolder("./images", transform=to_tensor)
     data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=False)
     training_images = list(data_loader)[0][0]
+
     model = PlenoxelModel(world)
     optimizer = torch.optim.RMSprop(model.parameters(), lr=LEARNING_RATE, momentum=0.9)
     epoch_losses = []
@@ -1012,12 +1062,15 @@ def train(world, camera_look_at, focal_length, view_spec, ray_spec, training_pos
 
     num_pruned_voxels = prune_voxels(model.parameter_world, voxel_accessors)
     print(f"Pruned {num_pruned_voxels} voxels!!")
+
+    higher_res_world = model.parameter_world.scale_up()
+
     final_renderer = Renderer(model.world(), final_camera, view_spec, ray_spec)
     red, green, blue = final_renderer.render(plt)
     transforms.ToPILImage()(torch.stack([red, green, blue])).show()
     print("Rendered final result")
     plt.show()
-    return world, epoch_losses
+    return model.parameter_world, epoch_losses
 
 
 # Reconstructs the world from disk
@@ -1046,18 +1099,18 @@ def main():
     empty_world = VoxelGrid.build_empty_world(GRID_X, GRID_Y, GRID_Z)
     empty_world.build_hollow_cube_with_randomly_coloured_sides(Voxel.uniform_harmonic_random_colour(requires_grad=True),
                                                                torch.tensor([10, 10, 10, 20, 20, 20]))
-    world = random_world
+    world = empty_world
     # empty_world.build_solid_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
     # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
     cube_center = torch.tensor([20., 20., 20., 1.])
     # camera_look_at = torch.tensor([0., 0., 0., 1])
     camera_look_at = cube_center
 
-    camera_center = torch.tensor([-20., -10., -30., 1.])
+    camera_center = torch.tensor([-20., -10., 25., 1.])
     camera_radius = 35.
-    focal_length = 1.
+    focal_length = 2.
     camera = Camera(focal_length, camera_center, camera_look_at)
-    num_rays_x, num_rays_y = 50, 50
+    num_rays_x, num_rays_y = 150, 150
     view_x1, view_x2 = -1, 1
     view_y1, view_y2 = -1, 1
     view_spec = [view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]
@@ -1072,7 +1125,12 @@ def main():
     # camera_positions = generate_camera_angles(camera_radius, cube_center)
     # render_training_images(camera_positions, focal_length, cube_center, world, view_spec, ray_spec, plt, camera_radius)
 
-    run_training(world, camera, view_spec, ray_spec, camera_radius)
+    # run_training(world, camera, view_spec, ray_spec, camera_radius)
+    # test_rendering(renderer, view_spec)
+    upscaled_world = world.scale_up()
+    print(upscaled_world.voxel_grid.shape)
+    renderer2 = Renderer(upscaled_world, camera, torch.tensor(view_spec), ray_spec)
+    test_rendering(renderer2, view_spec)
 
 
 def run_training(world, camera, view_spec, ray_spec, camera_radius):
