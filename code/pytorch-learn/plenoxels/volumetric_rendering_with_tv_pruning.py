@@ -276,8 +276,8 @@ class VoxelGrid:
         self.voxel_grid_x, self.voxel_grid_y, self.voxel_grid_z = world_tensor.shape
         self.voxel_grid = world_tensor
 
-    def dimensions(self):
-        return torch.tensor([self.grid_x, self.grid_y, self.grid_z]).int()
+    def voxel_dimensions(self):
+        return torch.tensor([self.voxel_grid_x, self.voxel_grid_y, self.voxel_grid_z]).int()
 
     def world_x(self):
         return self.grid_x
@@ -307,7 +307,7 @@ class VoxelGrid:
         for i in range(x):
             for j in range(y):
                 for k in range(z):
-                    new_world.set((i, j, k, 1), world_tensor[i, j, k])
+                    new_world.set((i, j, k), world_tensor[i, j, k])
         return new_world
 
     @classmethod
@@ -317,22 +317,22 @@ class VoxelGrid:
     @classmethod
     def as_parameter(cls, world, model):
         world_tensor = world.voxel_grid
-        x, y, z = world_tensor.shape
-        new_world = VoxelGrid.build_empty_world(x, y, z)
-        for i,j,k,v in world.all_voxels():
+        voxel_x, voxel_y, voxel_z = world.voxel_dimensions()
+        new_world = VoxelGrid.build_empty_world(voxel_x, voxel_y, voxel_z, scale=world.scale)
+        for i, j, k, v in world.all_voxels():
             parameter = nn.Parameter(v)
             if Voxel.is_pruned(v):
                 Voxel.prune(parameter)
-            new_world.set((i, j, k, 1), parameter)
+            new_world.set((i, j, k), parameter)
             model.register_parameter(f"{(i, j, k)}", parameter)
         return new_world
 
     @classmethod
-    def new(cls, x, y, z, make_voxel, scale=DEFAULT_SCALE):
-        voxel_grid = np.ndarray((x, y, z), dtype=list)
-        for i in range(x):
-            for j in range(y):
-                for k in range(y):
+    def new(cls, voxel_x, voxel_y, voxel_z, make_voxel, scale=DEFAULT_SCALE):
+        voxel_grid = np.ndarray((voxel_x, voxel_y, voxel_z), dtype=list)
+        for i in range(voxel_x):
+            for j in range(voxel_y):
+                for k in range(voxel_y):
                     voxel_grid[i, j, k] = make_voxel()
         return cls(voxel_grid, scale)
 
@@ -344,7 +344,7 @@ class VoxelGrid:
             return self.voxel_grid[voxel_x, voxel_y, voxel_z]
 
     def scale_up(self):
-        new_dimensions = self.dimensions() * 2
+        new_dimensions = self.voxel_dimensions() * 2
         new_scale = self.scale / 2
         x_scale, y_scale, z_scale = new_scale
         print(f"New dimensions={new_dimensions}")
@@ -364,22 +364,29 @@ class VoxelGrid:
     def to_voxel_coordinates(self, world_coordinates):
         return torch.divide(world_coordinates, self.scale).int()
 
-    def set(self, position, voxel):
-        x, y, z, _ = position
-        if self.is_outside(x, y, z):
+    def set(self, voxel_position, voxel):
+        voxel_x, voxel_y, voxel_z = voxel_position
+        if self.is_outside_grid(voxel_x, voxel_y, voxel_z):
+            print(f"[WARNING]: set() attempted to set a value at {(voxel_position)} outside grid")
             return
         else:
-            voxel_x, voxel_y, voxel_z = self.to_voxel_coordinates(torch.tensor([x, y, z]))
             self.voxel_grid[voxel_x, voxel_y, voxel_z] = voxel
 
-    def is_inside(self, x, y, z):
-        if (0 <= x < self.grid_x and
-                0 <= y < self.grid_y and
-                0 <= z < self.grid_z):
-            return True
+    def is_inside_grid(self, voxel_x, voxel_y, voxel_z):
+        return (0 <= voxel_x < self.voxel_grid_x and
+                0 <= voxel_y < self.voxel_grid_y and
+                0 <= voxel_z < self.voxel_grid_z)
 
-    def is_outside(self, x, y, z):
-        return not self.is_inside(x, y, z)
+    def is_outside_grid(self, voxel_x, voxel_y, voxel_z):
+        return not self.is_inside_grid(voxel_x, voxel_y, voxel_z)
+
+    def is_inside(self, world_x, world_y, world_z):
+        return (0 <= world_x < self.grid_x and
+                0 <= world_y < self.grid_y and
+                0 <= world_z < self.grid_z)
+
+    def is_outside(self, world_x, world_y, world_z):
+        return not self.is_inside(world_x, world_y, world_z)
 
     def neighbour_opacities(self, x, y, z):
         opacities = []
@@ -445,8 +452,8 @@ class VoxelGrid:
         return self.to_voxel_coordinates(torch.stack([x1, y1, z1])), self.to_voxel_coordinates(
             torch.stack([x2, y2, z2]))
 
-    def voxels(self, cube_spec):
-        from_voxel, to_voxel = self.to_voxel_cube_spec(cube_spec)
+    def voxels(self, world_cube_spec):
+        from_voxel, to_voxel = self.to_voxel_cube_spec(world_cube_spec)
         voxel_x1, voxel_y1, voxel_z1 = from_voxel
         voxel_x2, voxel_y2, voxel_z2 = to_voxel
         for i in torch.arange(voxel_x1, voxel_x2):
@@ -1110,14 +1117,15 @@ def main():
     empty_world = VoxelGrid.build_empty_world(GRID_X, GRID_Y, GRID_Z)
     empty_world.build_hollow_cube_with_randomly_coloured_sides(Voxel.uniform_harmonic_random_colour(requires_grad=True),
                                                                torch.tensor([10, 10, 10, 20, 20, 20]))
-    world = random_world
+    world = empty_world
     # empty_world.build_solid_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
     # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
     cube_center = torch.tensor([20., 20., 20., 1.])
     # camera_look_at = torch.tensor([0., 0., 0., 1])
     camera_look_at = cube_center
 
-    camera_center = torch.tensor([-20., -10., 25., 1.])
+    # camera_center = torch.tensor([-20., -10., 25., 1.])
+    camera_center = torch.tensor([-4.7487, 44.7487, 20.0000, 1.0000])
     camera_radius = 35.
     focal_length = 1.
     camera = Camera(focal_length, camera_center, camera_look_at)
@@ -1137,15 +1145,17 @@ def main():
     # render_training_images(camera_positions, focal_length, cube_center, world, view_spec, ray_spec, plt, camera_radius)
 
     # upscaled_world = world.scale_up()
-    run_training(world, camera, view_spec, ray_spec, camera_radius)
+    # run_training(world, camera, view_spec, ray_spec, camera_radius)
     # test_rendering(renderer, view_spec)
     test_upscale_rendering(world, camera, view_spec, ray_spec)
 
 
 def test_upscale_rendering(world, camera, view_spec, ray_spec):
     upscaled_world = world.scale_up()
-    renderer2 = Renderer(upscaled_world, camera, torch.tensor(view_spec), ray_spec)
+    model = PlenoxelModel(upscaled_world)
+    renderer2 = Renderer(model.parameter_world, camera, torch.tensor(view_spec), ray_spec)
     test_rendering(renderer2, view_spec)
+
 
 def run_training(world, camera, view_spec, ray_spec, camera_radius):
     focal_length = camera.focal_length
@@ -1193,14 +1203,14 @@ def test_rendering(renderer, view_spec):
     end_build_rays = timer()
     print(f"Building rays took {end_build_rays - start_build_rays}")
     start_render_rays = timer()
-    r, g, b = renderer.render_from_rays(voxel_access, clamping_function=ClampingFunctions.CLAMP)
+    r, g, b = renderer.render_from_rays(voxel_access, clamping_function=ClampingFunctions.SIGMOID)
     end_render_rays = timer()
     print(f"Rendering rays took {end_render_rays - start_render_rays}")
     image_data = samples_to_image(r, g, b, view_spec)
     renderer.plot_from_image(image_data, plt)
     transforms.ToPILImage()(image_data).show()
     start_render_full = timer()
-    renderer.render(plt, clamping_function=ClampingFunctions.CLAMP)
+    renderer.render(plt, clamping_function=ClampingFunctions.SIGMOID)
     end_render_full = timer()
     print(f"Rendering rays in full took {end_render_full - start_render_full}")
     print("Finished rendering!!")
