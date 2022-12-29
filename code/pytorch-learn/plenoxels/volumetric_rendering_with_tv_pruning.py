@@ -210,6 +210,8 @@ class Voxel:
 
     @staticmethod
     def prune(voxel_tensor):
+        voxel_tensor.requires_grad = False
+        voxel_tensor.fill_(0.)
         voxel_tensor.pruned = True
 
     @staticmethod
@@ -226,9 +228,6 @@ class Ray:
         self.voxel_positions = voxel_positions
         if num_samples != len(ray_sample_positions):
             print(f"WARNING: num_samples = {num_samples}, sample_positions = {ray_sample_positions}")
-        opacities = torch.stack(voxels)[:, 0]
-        # print(f"Max density={opacities.max()}")
-        # print(f"Min density={opacities.min()}")
 
     def at(self, index):
         start = index * Voxel.NUM_INTERPOLATING_VOXEL_NEIGHBOURS
@@ -316,15 +315,16 @@ class VoxelGrid:
         return cls(world_tensor)
 
     @classmethod
-    def as_parameter(cls, world_tensor, model):
+    def as_parameter(cls, world, model):
+        world_tensor = world.voxel_grid
         x, y, z = world_tensor.shape
         new_world = VoxelGrid.build_empty_world(x, y, z)
-        for i in range(x):
-            for j in range(y):
-                for k in range(z):
-                    parameter = nn.Parameter(world_tensor[i, j, k])
-                    new_world.set((i, j, k, 1), parameter)
-                    model.register_parameter(f"{(i, j, k)}", parameter)
+        for i,j,k,v in world.all_voxels():
+            parameter = nn.Parameter(v)
+            if Voxel.is_pruned(v):
+                Voxel.prune(parameter)
+            new_world.set((i, j, k, 1), parameter)
+            model.register_parameter(f"{(i, j, k)}", parameter)
         return new_world
 
     @classmethod
@@ -352,7 +352,7 @@ class VoxelGrid:
         scaled_up_world = VoxelGrid.build_empty_world(new_dimensions[0], new_dimensions[1], new_dimensions[2],
                                                       scale=new_scale)
         for i, j, k, original_voxel in self.voxels(torch.tensor([0, 0, 0, self.grid_x, self.grid_y, self.grid_z])):
-            print(Voxel.is_pruned(original_voxel.pruned))
+            print(Voxel.is_pruned(original_voxel))
             x2 = (i * 2 + 1 / x_scale).int()
             y2 = (j * 2 + 1 / y_scale).int()
             z2 = (k * 2 + 1 / z_scale).int()
@@ -972,7 +972,7 @@ def modify_grad(parameter_world, voxel_access):
 class PlenoxelModel(nn.Module):
     def __init__(self, world):
         super().__init__()
-        self.parameter_world = VoxelGrid.as_parameter(world.voxel_grid, self)
+        self.parameter_world = VoxelGrid.as_parameter(world, self)
 
     @staticmethod
     def run(world, input):
@@ -1214,5 +1214,5 @@ def test_rendering(renderer, view_spec):
     print("Finished rendering!!")
 
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()
