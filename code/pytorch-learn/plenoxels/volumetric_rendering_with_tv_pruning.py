@@ -388,19 +388,19 @@ class VoxelGrid:
     def is_outside(self, world_x, world_y, world_z):
         return not self.is_inside(world_x, world_y, world_z)
 
-    def neighbour_opacities(self, x, y, z):
+    def neighbour_opacities(self, voxel_x, voxel_y, voxel_z):
         opacities = []
-        for i in range(x - 1, x + 2):
-            for j in range(y - 1, y + 2):
-                for k in range(z - 1, z + 2):
-                    if x == i and y == j and z == k:
+        for i in range(voxel_x - 1, voxel_x + 2):
+            for j in range(voxel_y - 1, voxel_y + 2):
+                for k in range(voxel_z - 1, voxel_z + 2):
+                    if voxel_x == i and voxel_y == j and voxel_z == k:
                         continue
-                    opacities.append(self.at(i, j, k)[0])
+                    opacities.append(self.voxel_by_position(i, j, k)[0])
         # print(f"Opacities are {torch.stack(opacities)}")
         return torch.stack(opacities)
 
     def prune(self, voxel_position):
-        voxel = self.at(*voxel_position)
+        voxel = self.voxel_by_position(*voxel_position)
         if (voxel[0] > Voxel.VOXEL_PRUNING_OPACITY_THRESHOLD):
             return False
         if (self.neighbour_opacities(*voxel_position).less_equal(
@@ -524,6 +524,7 @@ class VoxelGrid:
         return (c_000, c_001, c_010, c_011, c_100, c_101, c_110, c_111)
 
     def interpolating_neighbour_endpoints(self, ray_sample_world_coords):
+        # print(f"Scale is {self.scale}")
         x, y, z = ray_sample_world_coords
         voxel_x, voxel_y, voxel_z = self.to_voxel_coordinates(ray_sample_world_coords)
         x_0, x_1 = voxel_x, voxel_x + 1
@@ -553,8 +554,9 @@ class VoxelGrid:
             print(interpolating_neighbours)
         return c
 
-    def neighbours(self, x, y, z):
-        x_0, x_1, y_0, y_1, z_0, z_1, _1, _2, _3 = self.interpolating_neighbour_endpoints(torch.tensor([x, y, z]))
+    def neighbours(self, world_x, world_y, world_z):
+        x_0, x_1, y_0, y_1, z_0, z_1, _1, _2, _3 = self.interpolating_neighbour_endpoints(
+            torch.tensor([world_x, world_y, world_z]))
         c_000 = self.voxel_by_position(x_0, y_0, z_0)
         c_001 = self.voxel_by_position(x_0, y_0, z_1)
         c_010 = self.voxel_by_position(x_0, y_1, z_0)
@@ -563,14 +565,6 @@ class VoxelGrid:
         c_101 = self.voxel_by_position(x_1, y_0, z_1)
         c_110 = self.voxel_by_position(x_1, y_1, z_0)
         c_111 = self.voxel_by_position(x_1, y_1, z_1)
-        # c000 = self.at(x_0, y_0, z_0)
-        # c001 = self.at(x_0, y_0, z_1)
-        # c010 = self.at(x_0, y_1, z_0)
-        # c011 = self.at(x_0, y_1, z_1)
-        # c100 = self.at(x_1, y_0, z_0)
-        # c101 = self.at(x_1, y_0, z_1)
-        # c110 = self.at(x_1, y_1, z_0)
-        # c111 = self.at(x_1, y_1, z_1)
 
         return ([c_000, c_001, c_010, c_011, c_100, c_101, c_110, c_111], torch.tensor([[x_0, y_0, z_0],
                                                                                         [x_0, y_0, z_1],
@@ -956,6 +950,7 @@ def tv_term(voxel_accessor, world):
 
 
 def modify_grad(parameter_world, voxel_access):
+    vx, vy, vz = parameter_world.voxel_dimensions()
     for i, j, k, v in parameter_world.all_voxels():
         v.requires_grad = False
 
@@ -965,9 +960,9 @@ def modify_grad(parameter_world, voxel_access):
             sample_position, voxel_positions, voxels = ray.at(i)
             for voxel_position in voxel_positions:
                 x, y, z = voxel_position
-                if (x < 0 or x > GRID_X - 1 or
-                        y < 0 or y > GRID_Y - 1 or
-                        z < 0 or z > GRID_Z - 1):
+                if (x < 0 or x > vx - 1 or
+                        y < 0 or y > vy - 1 or
+                        z < 0 or z > vz - 1):
                     continue
                 candidate_voxel = parameter_world.voxel_by_position(x, y, z)
                 if (Voxel.is_pruned(candidate_voxel)):
@@ -1117,7 +1112,7 @@ def main():
     empty_world = VoxelGrid.build_empty_world(GRID_X, GRID_Y, GRID_Z)
     empty_world.build_hollow_cube_with_randomly_coloured_sides(Voxel.uniform_harmonic_random_colour(requires_grad=True),
                                                                torch.tensor([10, 10, 10, 20, 20, 20]))
-    world = empty_world
+    world = random_world
     # empty_world.build_solid_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
     # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
     cube_center = torch.tensor([20., 20., 20., 1.])
@@ -1144,10 +1139,10 @@ def main():
     # camera_positions = generate_camera_angles(camera_radius, cube_center)
     # render_training_images(camera_positions, focal_length, cube_center, world, view_spec, ray_spec, plt, camera_radius)
 
-    # upscaled_world = world.scale_up()
-    # run_training(world, camera, view_spec, ray_spec, camera_radius)
+    upscaled_world = world.scale_up()
+    run_training(upscaled_world, camera, view_spec, ray_spec, camera_radius)
     # test_rendering(renderer, view_spec)
-    test_upscale_rendering(world, camera, view_spec, ray_spec)
+    # test_upscale_rendering(world, camera, view_spec, ray_spec)
 
 
 def test_upscale_rendering(world, camera, view_spec, ray_spec):
