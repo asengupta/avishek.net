@@ -1,14 +1,11 @@
-import importlib
+import unittest
 
 import torch
 
-import volumetric_rendering_with_tv_pruning as Plenoxels
-
-import unittest
-from volumetric_rendering_with_tv_pruning import VoxelGrid
-from volumetric_rendering_with_tv_pruning import Voxel
 from volumetric_rendering_with_tv_pruning import PlenoxelModel
+from volumetric_rendering_with_tv_pruning import Voxel
 from volumetric_rendering_with_tv_pruning import VoxelAccess
+from volumetric_rendering_with_tv_pruning import VoxelGrid
 from volumetric_rendering_with_tv_pruning import modify_grad
 
 
@@ -97,8 +94,7 @@ class PlenoxelTest(unittest.TestCase):
         modify_grad(world, access)
 
         for p in model.parameters():
-            self.assertFalse(p.requires_grad)
-            self.assertTrue(Voxel.is_pruned(p))
+            self.check_pruned(p)
 
     def check_pruned(self, voxel):
         self.assertTrue(torch.equal(PlenoxelTest.ALL_ZEROES, voxel))

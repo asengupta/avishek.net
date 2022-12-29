@@ -329,7 +329,6 @@ class VoxelGrid:
 
     @classmethod
     def new(cls, x, y, z, make_voxel, scale=DEFAULT_SCALE):
-        print((x, y, z))
         voxel_grid = np.ndarray((x, y, z), dtype=list)
         for i in range(x):
             for j in range(y):
@@ -352,7 +351,6 @@ class VoxelGrid:
         scaled_up_world = VoxelGrid.build_empty_world(new_dimensions[0], new_dimensions[1], new_dimensions[2],
                                                       scale=new_scale)
         for i, j, k, original_voxel in self.voxels(torch.tensor([0, 0, 0, self.grid_x, self.grid_y, self.grid_z])):
-            print(Voxel.is_pruned(original_voxel))
             x2 = (i * 2 + 1 / x_scale).int()
             y2 = (j * 2 + 1 / y_scale).int()
             z2 = (k * 2 + 1 / z_scale).int()
@@ -925,9 +923,10 @@ def tv_for_voxel(voxel_accessor, world):
     index = int(random.random() * len(all_voxels))
     position = voxel_positions[index]
     voxel = all_voxels[index]
-    x_plus_1 = position + torch.tensor([1., 0., 0.])
-    y_plus_1 = position + torch.tensor([0., 1., 0.])
-    z_plus_1 = position + torch.tensor([0., 0., 1.])
+    x_plus_1 = position + torch.tensor([1, 0, 0])
+    y_plus_1 = position + torch.tensor([0, 1, 0])
+    z_plus_1 = position + torch.tensor([0, 0, 1])
+    # print(f"Position is {position}, TV coords are: {(x_plus_1, y_plus_1, z_plus_1)}")
     voxel_x1 = world.voxel_by_position(*x_plus_1)
     voxel_y1 = world.voxel_by_position(*y_plus_1)
     voxel_z1 = world.voxel_by_position(*z_plus_1)
@@ -1111,7 +1110,7 @@ def main():
     empty_world = VoxelGrid.build_empty_world(GRID_X, GRID_Y, GRID_Z)
     empty_world.build_hollow_cube_with_randomly_coloured_sides(Voxel.uniform_harmonic_random_colour(requires_grad=True),
                                                                torch.tensor([10, 10, 10, 20, 20, 20]))
-    world = empty_world
+    world = random_world
     # empty_world.build_solid_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
     # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
     cube_center = torch.tensor([20., 20., 20., 1.])
@@ -1120,7 +1119,7 @@ def main():
 
     camera_center = torch.tensor([-20., -10., 25., 1.])
     camera_radius = 35.
-    focal_length = 2.
+    focal_length = 1.
     camera = Camera(focal_length, camera_center, camera_look_at)
     num_rays_x, num_rays_y = 50, 50
     view_x1, view_x2 = -1, 1
@@ -1137,23 +1136,16 @@ def main():
     # camera_positions = generate_camera_angles(camera_radius, cube_center)
     # render_training_images(camera_positions, focal_length, cube_center, world, view_spec, ray_spec, plt, camera_radius)
 
-    # run_training(world, camera, view_spec, ray_spec, camera_radius)
+    # upscaled_world = world.scale_up()
+    run_training(world, camera, view_spec, ray_spec, camera_radius)
     # test_rendering(renderer, view_spec)
-    world = VoxelGrid.build_random_world(1, 1, 1)
-    Voxel.prune(world.voxel_by_position(0, 0, 0))
-    upscaled_world = world.scale_up()
-    # print(upscaled_world.voxel_grid)
-    print(upscaled_world.voxel_by_position(0, 0, 0).pruned)
-    print(upscaled_world.voxel_by_position(0, 0, 1).pruned)
-    print(upscaled_world.voxel_by_position(0, 1, 0).pruned)
-    print(upscaled_world.voxel_by_position(0, 1, 1).pruned)
-    print(upscaled_world.voxel_by_position(1, 0, 0).pruned)
-    print(upscaled_world.voxel_by_position(1, 0, 1).pruned)
-    print(upscaled_world.voxel_by_position(1, 1, 0).pruned)
-    print(upscaled_world.voxel_by_position(1, 1, 1).pruned)
-    # renderer2 = Renderer(upscaled_world, camera, torch.tensor(view_spec), ray_spec)
-    # test_rendering(renderer2, view_spec)
+    test_upscale_rendering(world, camera, view_spec, ray_spec)
 
+
+def test_upscale_rendering(world, camera, view_spec, ray_spec):
+    upscaled_world = world.scale_up()
+    renderer2 = Renderer(upscaled_world, camera, torch.tensor(view_spec), ray_spec)
+    test_rendering(renderer2, view_spec)
 
 def run_training(world, camera, view_spec, ray_spec, camera_radius):
     focal_length = camera.focal_length
@@ -1214,5 +1206,5 @@ def test_rendering(renderer, view_spec):
     print("Finished rendering!!")
 
 
-# if __name__ == '__main__':
-#     main()
+if __name__ == '__main__':
+    main()
