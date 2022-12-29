@@ -208,6 +208,14 @@ class Voxel:
     def like_voxel(prototype_voxel):
         return lambda: prototype_voxel.clone()
 
+    @staticmethod
+    def prune(voxel_tensor):
+        voxel_tensor.pruned = True
+
+    @staticmethod
+    def is_pruned(voxel_tensor):
+        return voxel_tensor.pruned if hasattr(voxel_tensor, "pruned") else False
+
 
 class Ray:
     def __init__(self, num_samples, view_point, ray_sample_positions, voxel_positions, voxels):
@@ -329,11 +337,11 @@ class VoxelGrid:
                     voxel_grid[i, j, k] = make_voxel()
         return cls(voxel_grid, scale)
 
-    def at(self, x, y, z):
-        if self.is_outside(x, y, z):
+    def at(self, world_x, world_y, world_z):
+        if self.is_outside(world_x, world_y, world_z):
             return Voxel.empty_voxel(requires_grad=False)()
         else:
-            voxel_x, voxel_y, voxel_z = self.to_voxel_coordinates(torch.tensor([x, y, z]))
+            voxel_x, voxel_y, voxel_z = self.to_voxel_coordinates(torch.tensor([world_x, world_y, world_z]))
             return self.voxel_grid[voxel_x, voxel_y, voxel_z]
 
     def scale_up(self):
@@ -343,11 +351,16 @@ class VoxelGrid:
         print(f"New dimensions={new_dimensions}")
         scaled_up_world = VoxelGrid.build_empty_world(new_dimensions[0], new_dimensions[1], new_dimensions[2],
                                                       scale=new_scale)
-        for i, j, k in self.voxels(torch.tensor([0, 0, 0, self.grid_x, self.grid_y, self.grid_z])):
+        for i, j, k, original_voxel in self.voxels(torch.tensor([0, 0, 0, self.grid_x, self.grid_y, self.grid_z])):
+            print(Voxel.is_pruned(original_voxel.pruned))
             x2 = (i * 2 + 1 / x_scale).int()
             y2 = (j * 2 + 1 / y_scale).int()
             z2 = (k * 2 + 1 / z_scale).int()
-            scaled_up_world.voxel_grid[i * 2: x2, j * 2: y2, k * 2: z2].fill(self.voxel_grid[i, j, k])
+            scaled_up_world.voxel_grid[i * 2: x2, j * 2: y2, k * 2: z2].fill(original_voxel.detach().clone())
+            if hasattr(original_voxel, "pruned"):
+                for x, y, z, v in scaled_up_world.voxels(
+                        torch.tensor([i * 2, j * 2, k * 2, 1 / x_scale, 1 / y_scale, 1 / z_scale])):
+                    Voxel.prune(v)
         return scaled_up_world
 
     def to_voxel_coordinates(self, world_coordinates):
@@ -389,11 +402,11 @@ class VoxelGrid:
                 Voxel.VOXEL_PRUNING_NEIGHBOUR_OPACITY_THRESHOLDS).all()):
             voxel.requires_grad = False
             voxel.mul_(0)
+            Voxel.prune(voxel)
             return True
 
     def channel_opacity(self, distance_density_color_tensors, viewing_angle):
         number_of_samples = len(distance_density_color_tensors)
-        # print(distance_density_color_tensors.shape)
         txs = []
         for i in range(1, number_of_samples + 1):
             tx = 0
@@ -441,10 +454,13 @@ class VoxelGrid:
         for i in torch.arange(voxel_x1, voxel_x2):
             for j in torch.arange(voxel_y1, voxel_y2):
                 for k in torch.arange(voxel_z1, voxel_z2):
-                    yield int(i), int(j), int(k)
+                    yield int(i), int(j), int(k), self.voxel_by_position(int(i), int(j), int(k))
+
+    def all_voxels(self):
+        return self.voxels(torch.tensor([0., 0., 0., self.grid_x, self.grid_y, self.grid_z]))
 
     def build_solid_cube(self, cube_spec):
-        for i, j, k in self.voxels(cube_spec):
+        for i, j, k, _ in self.voxels(cube_spec):
             self.voxel_grid[i, j, k] = Voxel.occupied_voxel(0.05)()
 
     def build_monochrome_hollow_cube(self, cube_spec):
@@ -454,17 +470,17 @@ class VoxelGrid:
         voxel_1, voxel_2, voxel_3, voxel_4, voxel_5, voxel_6 = make_voxel(), make_voxel(), make_voxel(), make_voxel(), make_voxel(), make_voxel()
         face1, face2, face3, face4, face5, face6 = cube_faces(cube_spec)
 
-        for i, j, k in self.voxels(face1):
+        for i, j, k, _ in self.voxels(face1):
             self.voxel_grid[i, j, k] = voxel_1
-        for i, j, k in self.voxels(face2):
+        for i, j, k, _ in self.voxels(face2):
             self.voxel_grid[i, j, k] = voxel_2
-        for i, j, k in self.voxels(face3):
+        for i, j, k, _ in self.voxels(face3):
             self.voxel_grid[i, j, k] = voxel_3
-        for i, j, k in self.voxels(face4):
+        for i, j, k, _ in self.voxels(face4):
             self.voxel_grid[i, j, k] = voxel_4
-        for i, j, k in self.voxels(face5):
+        for i, j, k, _ in self.voxels(face5):
             self.voxel_grid[i, j, k] = voxel_5
-        for i, j, k in self.voxels(face6):
+        for i, j, k, _ in self.voxels(face6):
             self.voxel_grid[i, j, k] = voxel_6
 
     def density(self, ray_samples_with_positions_distances, viewing_angle):
@@ -534,7 +550,6 @@ class VoxelGrid:
 
     def neighbours(self, x, y, z):
         x_0, x_1, y_0, y_1, z_0, z_1, _1, _2, _3 = self.interpolating_neighbour_endpoints(torch.tensor([x, y, z]))
-        # print(f"Ray={(x,y,z)}")
         c_000 = self.voxel_by_position(x_0, y_0, z_0)
         c_001 = self.voxel_by_position(x_0, y_0, z_1)
         c_010 = self.voxel_by_position(x_0, y_1, z_0)
@@ -913,9 +928,9 @@ def tv_for_voxel(voxel_accessor, world):
     x_plus_1 = position + torch.tensor([1., 0., 0.])
     y_plus_1 = position + torch.tensor([0., 1., 0.])
     z_plus_1 = position + torch.tensor([0., 0., 1.])
-    voxel_x1 = world.at(*x_plus_1)
-    voxel_y1 = world.at(*y_plus_1)
-    voxel_z1 = world.at(*z_plus_1)
+    voxel_x1 = world.voxel_by_position(*x_plus_1)
+    voxel_y1 = world.voxel_by_position(*y_plus_1)
+    voxel_z1 = world.voxel_by_position(*z_plus_1)
     delta_x = ((voxel - voxel_x1) / (256 / world.world_x())).pow(2)
     delta_y = ((voxel - voxel_y1) / (256 / world.world_y())).pow(2)
     delta_z = ((voxel - voxel_z1) / (256 / world.world_z())).pow(2)
@@ -935,10 +950,8 @@ def tv_term(voxel_accessor, world):
 
 
 def modify_grad(parameter_world, voxel_access):
-    for i in range(parameter_world.world_x()):
-        for j in range(parameter_world.world_y()):
-            for k in range(parameter_world.world_z()):
-                (parameter_world.at(i, j, k)).requires_grad = False
+    for i, j, k, v in parameter_world.all_voxels():
+        v.requires_grad = False
 
     for ray_index, view_point in enumerate(voxel_access.view_points):
         ray = voxel_access.for_ray(ray_index)
@@ -950,9 +963,10 @@ def modify_grad(parameter_world, voxel_access):
                         y < 0 or y > GRID_Y - 1 or
                         z < 0 or z > GRID_Z - 1):
                     continue
-                # You do not need to check for pruned voxels because pruning only occurs at the end
-                # of an epoch and not in the middle
-                (parameter_world.at(x, y, z)).requires_grad = True
+                candidate_voxel = parameter_world.voxel_by_position(x, y, z)
+                if (Voxel.is_pruned(candidate_voxel)):
+                    continue
+                candidate_voxel.requires_grad = True
 
 
 class PlenoxelModel(nn.Module):
@@ -1061,6 +1075,7 @@ def train(world, camera_look_at, focal_length, view_spec, ray_spec, training_pos
         epoch_losses.append(batch_losses)
 
     pruned_voxels = prune_voxels(model.parameter_world, voxel_accessors)
+    model.parameter_world.prune(pruned_voxels)
     print(f"Pruned {len(pruned_voxels)} voxels!!")
     final_renderer = Renderer(model.world(), final_camera, view_spec, ray_spec)
     red, green, blue = final_renderer.render(plt)
@@ -1124,10 +1139,20 @@ def main():
 
     # run_training(world, camera, view_spec, ray_spec, camera_radius)
     # test_rendering(renderer, view_spec)
+    world = VoxelGrid.build_random_world(1, 1, 1)
+    Voxel.prune(world.voxel_by_position(0, 0, 0))
     upscaled_world = world.scale_up()
-    print(upscaled_world.voxel_grid.shape)
-    renderer2 = Renderer(upscaled_world, camera, torch.tensor(view_spec), ray_spec)
-    test_rendering(renderer2, view_spec)
+    # print(upscaled_world.voxel_grid)
+    print(upscaled_world.voxel_by_position(0, 0, 0).pruned)
+    print(upscaled_world.voxel_by_position(0, 0, 1).pruned)
+    print(upscaled_world.voxel_by_position(0, 1, 0).pruned)
+    print(upscaled_world.voxel_by_position(0, 1, 1).pruned)
+    print(upscaled_world.voxel_by_position(1, 0, 0).pruned)
+    print(upscaled_world.voxel_by_position(1, 0, 1).pruned)
+    print(upscaled_world.voxel_by_position(1, 1, 0).pruned)
+    print(upscaled_world.voxel_by_position(1, 1, 1).pruned)
+    # renderer2 = Renderer(upscaled_world, camera, torch.tensor(view_spec), ray_spec)
+    # test_rendering(renderer2, view_spec)
 
 
 def run_training(world, camera, view_spec, ray_spec, camera_radius):
