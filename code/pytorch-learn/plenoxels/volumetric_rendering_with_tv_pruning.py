@@ -413,32 +413,29 @@ class VoxelGrid:
 
     def channel_opacity(self, distance_density_color_tensors, viewing_angle):
         number_of_samples = len(distance_density_color_tensors)
-        sigma_density = distance_density_color_tensors[:, 0] * distance_density_color_tensors[:, 1]
+        density_distance_products = distance_density_color_tensors[:, 0] * distance_density_color_tensors[:, 1]
         summing_matrix = torch.tensor(list(
             functools.reduce(lambda acc, n: acc + [[1.] * n + [0.] * (number_of_samples - n)], range(1, number_of_samples + 1),
                              [])))
-        # print(result.t())
-        transmittances = torch.matmul(sigma_density, summing_matrix.t())
+        transmittances = torch.matmul(density_distance_products, summing_matrix.t())
         transmittances = torch.exp(-transmittances)
-        # print(f"Transmittances={transmittances}")
-        color_densities = torch.zeros([3])
 
-        r_channel, g_channel, b_channel = [], [], []
+        red_channel, green_channel, blue_channel = [], [], []
         for index, distance_density_color_tensor in enumerate(distance_density_color_tensors):
             red_harmonic, green_harmonic, blue_harmonic = rgb_harmonics(
                 distance_density_color_tensor[2:])
             r = red_harmonic(viewing_angle[0], viewing_angle[1])
             g = green_harmonic(viewing_angle[0], viewing_angle[1])
             b = blue_harmonic(viewing_angle[0], viewing_angle[1])
-            r_channel.append(r)
-            g_channel.append(g)
-            b_channel.append(b)
+            red_channel.append(r)
+            green_channel.append(g)
+            blue_channel.append(b)
 
-        r_channel, g_channel, b_channel = torch.stack(r_channel), torch.stack(g_channel), torch.stack(b_channel)
-        base_transmittance_factors = transmittances * (1 - torch.exp(- sigma_density))
-        red = (base_transmittance_factors * r_channel).sum()
-        green = (base_transmittance_factors * g_channel).sum()
-        blue = (base_transmittance_factors * b_channel).sum()
+        red_channel, green_channel, blue_channel = torch.stack(red_channel), torch.stack(green_channel), torch.stack(blue_channel)
+        base_transmittance_factors = transmittances * (1 - torch.exp(- density_distance_products))
+        red = (base_transmittance_factors * red_channel).sum()
+        green = (base_transmittance_factors * green_channel).sum()
+        blue = (base_transmittance_factors * blue_channel).sum()
 
         color_densities = torch.stack([red, green, blue])
         return color_densities
@@ -1131,7 +1128,7 @@ def main():
     ray_spec = torch.tensor([ray_length, num_ray_samples])
 
     renderer = Renderer(world, camera, torch.tensor(view_spec), ray_spec)
-    test_rendering(renderer, view_spec)
+    # test_rendering(renderer, view_spec)
 
     # Generates training images
     # camera_positions = generate_camera_angles(camera_radius, cube_center)
@@ -1140,14 +1137,15 @@ def main():
     # upscaled_world = world.scale_up()
     # run_training(upscaled_world, camera, view_spec, ray_spec, camera_radius)
     # test_rendering(renderer, view_spec)
-    # test_upscale_rendering(world, camera, view_spec, ray_spec)
+    test_upscale_rendering(world, renderer, camera, view_spec, ray_spec)
 
 
-def test_upscale_rendering(world, camera, view_spec, ray_spec):
+def test_upscale_rendering(world, original_renderer, camera, view_spec, ray_spec):
     upscaled_world = world.scale_up()
     model = PlenoxelModel(upscaled_world)
-    renderer2 = Renderer(model.parameter_world, camera, torch.tensor(view_spec), ray_spec)
-    test_rendering(renderer2, view_spec)
+    upscale_renderer = Renderer(model.parameter_world, camera, torch.tensor(view_spec), ray_spec)
+    test_rendering(upscale_renderer, view_spec)
+    test_rendering(original_renderer, view_spec)
 
 
 def run_training(world, camera, view_spec, ray_spec, camera_radius):
