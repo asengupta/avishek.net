@@ -24,8 +24,9 @@ GRID_Z = 40
 INHOMOGENEOUS_ZERO_VECTOR = torch.tensor([0., 0., 0.])
 REGULARISATION_FRACTION = 0.01
 REGULARISATION_LAMBDA = 0.001
-LEARNING_RATE = 0.001
+LEARNING_RATE = 0.00005
 NUM_STOCHASTIC_RAYS = 1500
+ARBITRARY_SCALE = 10
 
 MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE = []
 MASTER_VOXELS_STRUCTURE = []
@@ -184,7 +185,7 @@ class Voxel:
 
     @staticmethod
     def uniform_harmonic(density=1.):
-        return [density] + ([0.04] + [0.] * (VoxelGrid.PER_CHANNEL_DIMENSION - 1)) * 3
+        return [density] + ([0.5] + [0.] * (VoxelGrid.PER_CHANNEL_DIMENSION - 1)) * 3
 
     @staticmethod
     def random_harmonic_coefficient_set():
@@ -412,22 +413,11 @@ class VoxelGrid:
 
     def channel_opacity(self, distance_density_color_tensors, viewing_angle):
         number_of_samples = len(distance_density_color_tensors)
-        txs = []
-        for i in range(1, number_of_samples + 1):
-            tx = 0
-            for j in range(0, i):
-                try:
-                    tx += math.exp(
-                        - distance_density_color_tensors[j, 1] * distance_density_color_tensors[j, 0])
-                except:
-                    print({(distance_density_color_tensors[j, 1], distance_density_color_tensors[j, 0])})
-                    exit(1)
-            txs.append(tx)
-
         transmittances = list(map(lambda i: functools.reduce(
-            lambda acc, j: acc + math.exp(
-                - distance_density_color_tensors[j, 1] * distance_density_color_tensors[j, 0]),
+            lambda acc, j: acc + distance_density_color_tensors[j, 1] * distance_density_color_tensors[j, 0],
             range(0, i), 0.), range(1, number_of_samples + 1)))
+        transmittances = torch.exp(- torch.stack(transmittances))
+        # print(f"Transmittances={transmittances}")
         color_densities = torch.zeros([3])
         for index, transmittance in enumerate(transmittances):
             if (distance_density_color_tensors[index, 1] == 0.):
@@ -466,7 +456,7 @@ class VoxelGrid:
 
     def build_solid_cube(self, cube_spec):
         for i, j, k, _ in self.voxels(cube_spec):
-            self.voxel_grid[i, j, k] = Voxel.occupied_voxel(0.05)()
+            self.voxel_grid[i, j, k] = Voxel.occupied_voxel(0.2)()
 
     def build_monochrome_hollow_cube(self, cube_spec):
         self.build_hollow_cube_with_randomly_coloured_sides(Voxel.default_voxel(), cube_spec)
@@ -616,7 +606,7 @@ class Renderer:
         # List of tensors, each entry is distance from i-th sample to the next sample
         ray_sample_distances = torch.reshape(consecutive_sample_distances, (-1, 1))
         color_densities = self.world.density_split(ray_sample_distances, ray, viewing_angle)
-        color_tensor = clamping_function(color_densities)
+        color_tensor = clamping_function(color_densities * ARBITRARY_SCALE)
 
         if (view_x < self.x_1 or view_x > self.x_2
                 or view_y < self.y_1 or view_y > self.y_2):
@@ -796,10 +786,10 @@ class Renderer:
                 ray_samples_with_distances = torch.cat([t1, torch.reshape(consecutive_sample_distances, (-1, 1))], 1)
                 # print(ray_samples_with_distances)
                 color_densities = self.world.density(ray_samples_with_distances, viewing_angle)
-                # print(color_densities)
 
                 # color_tensor = torch.clamp(color_densities, min=0, max=1)
-                color_tensor = clamping_function(color_densities)
+                color_tensor = clamping_function(color_densities * ARBITRARY_SCALE)
+                # print(color_tensor)
                 plt.plot(i, j, marker="o", color=color_tensor.detach().numpy())
                 red_column.append(color_tensor[RED_CHANNEL])
                 green_column.append(color_tensor[GREEN_CHANNEL])
@@ -919,6 +909,7 @@ def mse(rendered_channel, true_channel, view_spec):
 
 
 def tv_for_voxel(voxel_accessor, world):
+    voxel_max_x, voxel_max_y, voxel_max_z = world.voxel_dimensions()
     all_voxels = voxel_accessor.all_voxels
     voxel_positions = voxel_accessor.voxel_positions
     index = int(random.random() * len(all_voxels))
@@ -931,9 +922,9 @@ def tv_for_voxel(voxel_accessor, world):
     voxel_x1 = world.voxel_by_position(*x_plus_1)
     voxel_y1 = world.voxel_by_position(*y_plus_1)
     voxel_z1 = world.voxel_by_position(*z_plus_1)
-    delta_x = ((voxel - voxel_x1) / (256 / world.world_x())).pow(2)
-    delta_y = ((voxel - voxel_y1) / (256 / world.world_y())).pow(2)
-    delta_z = ((voxel - voxel_z1) / (256 / world.world_z())).pow(2)
+    delta_x = ((voxel - voxel_x1) / (256 / voxel_max_x)).pow(2)
+    delta_y = ((voxel - voxel_y1) / (256 / voxel_max_y)).pow(2)
+    delta_z = ((voxel - voxel_z1) / (256 / voxel_max_z)).pow(2)
 
     sqrt__sum = (delta_x + delta_y + delta_z + 0.0001).sqrt().sum()
     if (math.isnan(sqrt__sum)):
@@ -1110,19 +1101,19 @@ def main():
     mono_world = VoxelGrid.build_with_voxel(GRID_X, GRID_Y, GRID_Z, torch.cat(
         [torch.tensor([0.0002, random.random() * 100.]), torch.zeros(VoxelGrid.VOXEL_DIMENSION - 2)]))
     empty_world = VoxelGrid.build_empty_world(GRID_X, GRID_Y, GRID_Z)
-    empty_world.build_hollow_cube_with_randomly_coloured_sides(Voxel.uniform_harmonic_random_colour(requires_grad=True),
+    empty_world.build_hollow_cube_with_randomly_coloured_sides(Voxel.uniform_harmonic_random_colour(density=2, requires_grad=True),
                                                                torch.tensor([10, 10, 10, 20, 20, 20]))
-    world = random_world
+    world = empty_world
     # empty_world.build_solid_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
     # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
     cube_center = torch.tensor([20., 20., 20., 1.])
     # camera_look_at = torch.tensor([0., 0., 0., 1])
     camera_look_at = cube_center
 
-    # camera_center = torch.tensor([-20., -10., 25., 1.])
-    camera_center = torch.tensor([-4.7487, 44.7487, 20.0000, 1.0000])
+    camera_center = torch.tensor([-20., -10., 37., 1.])
+    # camera_center = torch.tensor([-4.7487, 44.7487, 20.0000, 1.0000])
     camera_radius = 35.
-    focal_length = 1.
+    focal_length = 2.
     camera = Camera(focal_length, camera_center, camera_look_at)
     num_rays_x, num_rays_y = 50, 50
     view_x1, view_x2 = -1, 1
@@ -1133,14 +1124,14 @@ def main():
     ray_spec = torch.tensor([ray_length, num_ray_samples])
 
     renderer = Renderer(world, camera, torch.tensor(view_spec), ray_spec)
-    # test_rendering(renderer, view_spec)
+    test_rendering(renderer, view_spec)
 
     # Generates training images
     # camera_positions = generate_camera_angles(camera_radius, cube_center)
     # render_training_images(camera_positions, focal_length, cube_center, world, view_spec, ray_spec, plt, camera_radius)
 
-    upscaled_world = world.scale_up()
-    run_training(upscaled_world, camera, view_spec, ray_spec, camera_radius)
+    # upscaled_world = world.scale_up()
+    # run_training(upscaled_world, camera, view_spec, ray_spec, camera_radius)
     # test_rendering(renderer, view_spec)
     # test_upscale_rendering(world, camera, view_spec, ray_spec)
 
@@ -1198,14 +1189,14 @@ def test_rendering(renderer, view_spec):
     end_build_rays = timer()
     print(f"Building rays took {end_build_rays - start_build_rays}")
     start_render_rays = timer()
-    r, g, b = renderer.render_from_rays(voxel_access, clamping_function=ClampingFunctions.SIGMOID)
+    r, g, b = renderer.render_from_rays(voxel_access, clamping_function=ClampingFunctions.CLAMP)
     end_render_rays = timer()
     print(f"Rendering rays took {end_render_rays - start_render_rays}")
     image_data = samples_to_image(r, g, b, view_spec)
     renderer.plot_from_image(image_data, plt)
     transforms.ToPILImage()(image_data).show()
     start_render_full = timer()
-    renderer.render(plt, clamping_function=ClampingFunctions.SIGMOID)
+    renderer.render(plt, clamping_function=ClampingFunctions.CLAMP)
     end_render_full = timer()
     print(f"Rendering rays in full took {end_render_full - start_render_full}")
     print("Finished rendering!!")
