@@ -413,31 +413,6 @@ class VoxelGrid:
 
     def channel_opacity(self, distance_density_color_tensors, viewing_angle):
         number_of_samples = len(distance_density_color_tensors)
-        transmittances = list(map(lambda i: functools.reduce(
-            lambda acc, j: acc + distance_density_color_tensors[j, 1] * distance_density_color_tensors[j, 0],
-            range(0, i), 0.), range(1, number_of_samples + 1)))
-        transmittances = torch.exp(- torch.stack(transmittances))
-        # print(f"Transmittances={transmittances}")
-        color_densities = torch.zeros([3])
-        for index, transmittance in enumerate(transmittances):
-            if (distance_density_color_tensors[index, 1] == 0.):
-                continue
-            # density += (transmittance - transmittances[index + 1]) * position_distance_density_color_vectors[index, 5]
-            red_harmonic, green_harmonic, blue_harmonic = rgb_harmonics(
-                distance_density_color_tensors[index, 2:])
-            r = red_harmonic(viewing_angle[0], viewing_angle[1])
-            g = green_harmonic(viewing_angle[0], viewing_angle[1])
-            b = blue_harmonic(viewing_angle[0], viewing_angle[1])
-            base_transmittance = transmittance * (1. - torch.exp(
-                - distance_density_color_tensors[index, 1] * distance_density_color_tensors[index, 0]))
-
-            # Stacking instead of cat-ing to preserve gradient
-            color_densities += torch.stack([base_transmittance * r, base_transmittance * g, base_transmittance * b])
-
-        return color_densities
-
-    def channel_opacity2(self, distance_density_color_tensors, viewing_angle):
-        number_of_samples = len(distance_density_color_tensors)
         sigma_density = distance_density_color_tensors[:, 0] * distance_density_color_tensors[:, 1]
         summing_matrix = torch.tensor(list(
             functools.reduce(lambda acc, n: acc + [[1.] * n + [0.] * (number_of_samples - n)], range(1, number_of_samples + 1),
@@ -517,7 +492,7 @@ class VoxelGrid:
             ray_sample_world_position = ray_sample[:3]
             collected_intensities.append(
                 self.intensities(ray_sample_world_position, self.interpolating_neighbours(ray_sample_world_position)))
-        return self.channel_opacity2(
+        return self.channel_opacity(
             torch.cat([ray_samples_with_positions_distances[:, 3:], torch.stack(collected_intensities)], 1),
             viewing_angle)
 
@@ -529,7 +504,7 @@ class VoxelGrid:
                 return black_rgb()
             collected_intensities.append(self.intensities(ray_sample_world_position, voxels))
 
-        return self.channel_opacity2(torch.cat([ray_sample_distances, torch.stack(collected_intensities)], 1),
+        return self.channel_opacity(torch.cat([ray_sample_distances, torch.stack(collected_intensities)], 1),
                                     viewing_angle)
 
     def interpolating_neighbours(self, ray_sample_world_position):
