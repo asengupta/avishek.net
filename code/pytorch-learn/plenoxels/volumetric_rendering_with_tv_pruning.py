@@ -174,7 +174,6 @@ class Voxel:
 
     @staticmethod
     def default_voxel(requires_grad=True):
-        # voxel = torch.cat([torch.tensor([0.25]), torch.ones(VoxelGrid.VOXEL_DIMENSION - 1)])
         return lambda: torch.tensor(Voxel.uniform_harmonic(), requires_grad=requires_grad)
 
     @staticmethod
@@ -250,7 +249,8 @@ class VoxelAccess:
         ptr = self.voxel_pointers[ray_index]
         start, end, num_samples = ptr
         return Ray(num_samples, self.view_points[ray_index],
-                   self.ray_sample_positions[int(start / 8): int(end / 8)],
+                   self.ray_sample_positions[int(start / Voxel.NUM_INTERPOLATING_VOXEL_NEIGHBOURS): int(
+                       end / Voxel.NUM_INTERPOLATING_VOXEL_NEIGHBOURS)],
                    self.voxel_positions[start:end],
                    self.all_voxels[start:end])
 
@@ -302,14 +302,8 @@ class VoxelGrid:
         return VoxelGrid.new(x, y, z, Voxel.like_voxel(prototype_voxel), scale)
 
     @staticmethod
-    def copy_from(world_tensor, scale=DEFAULT_SCALE):
-        x, y, z = world_tensor.shape
-        new_world = VoxelGrid.build_empty_world(x, y, z, scale)
-        for i in range(x):
-            for j in range(y):
-                for k in range(z):
-                    new_world.set((i, j, k), world_tensor[i, j, k])
-        return new_world
+    def copy_from(world, scale=DEFAULT_SCALE):
+        return VoxelGrid(world.voxel_grid.copy(), scale=world.scale)
 
     @classmethod
     def from_tensor(cls, world_tensor):
@@ -934,12 +928,12 @@ def tv_for_voxel(voxel_accessor, world):
     delta_y = ((voxel - voxel_y1) / (256 / voxel_max_y)).pow(2)
     delta_z = ((voxel - voxel_z1) / (256 / voxel_max_z)).pow(2)
 
-    sqrt__sum = (delta_x + delta_y + delta_z + 0.0001).sqrt().sum()
-    if (math.isnan(sqrt__sum)):
+    tv_regularisation_term = (delta_x + delta_y + delta_z + 0.0001).sqrt().sum()
+    if (math.isnan(tv_regularisation_term)):
         print("[WARNING] NaN in TV regularisation term")
         print(
-            f"Sqrt sum={sqrt__sum}, Source voxel={voxel}, Positions are: {(x_plus_1, y_plus_1, z_plus_1)}, Voxels = {(voxel_x1, voxel_y1, voxel_z1)}, Deltas={(delta_x, delta_y, delta_z)}")
-    return sqrt__sum
+            f"Sqrt sum={tv_regularisation_term}, Source voxel={voxel}, Positions are: {(x_plus_1, y_plus_1, z_plus_1)}, Voxels = {(voxel_x1, voxel_y1, voxel_z1)}, Deltas={(delta_x, delta_y, delta_z)}")
+    return tv_regularisation_term
 
 
 def tv_term(voxel_accessor, world):
@@ -953,7 +947,7 @@ def modify_grad(parameter_world, voxel_access):
     for i, j, k, v in parameter_world.all_voxels():
         v.requires_grad = False
 
-    activated_parameters = 0
+    activated_parameters = []
     for ray_index, view_point in enumerate(voxel_access.view_points):
         ray = voxel_access.for_ray(ray_index)
         for i in range(ray.num_samples):
@@ -968,9 +962,13 @@ def modify_grad(parameter_world, voxel_access):
                 if (Voxel.is_pruned(candidate_voxel)):
                     continue
                 candidate_voxel.requires_grad = True
-                activated_parameters += 1
+                activated_parameters.append(torch.tensor([x, y, z]))
 
-    print(f"Activated {activated_parameters} parameters...")
+    if activated_parameters:
+        print(f"Activated {len(torch.stack(activated_parameters).unique(dim=0))} parameters...")
+    else:
+        print(f"[WARNING] No parameters were activated!!")
+
 
 class PlenoxelModel(nn.Module):
     def __init__(self, world):
@@ -1191,9 +1189,9 @@ def run_training(world, camera, view_spec, ray_spec, camera_radius):
     reconstruct_flyby_from_file(RECONSTRUCTED_WORLD_FILENAME, training_positions, focal_length, camera_look_at,
                                 view_spec,
                                 ray_spec)
-    camera_positions = generate_camera_angles(camera_radius, camera_look_at)
-    reconstruct_flyby_from_world(world, training_positions, focal_length, camera_look_at, view_spec,
-                                 ray_spec)
+    # camera_positions = generate_camera_angles(camera_radius, camera_look_at)
+    # reconstruct_flyby_from_world(world, training_positions, focal_length, camera_look_at, view_spec,
+    #                              ray_spec)
     print("Everything done!!")
 
 
@@ -1220,5 +1218,5 @@ def test_rendering(renderer, view_spec):
     print("Finished rendering!!")
 
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()

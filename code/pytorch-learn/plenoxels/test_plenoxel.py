@@ -96,6 +96,13 @@ class PlenoxelTest(unittest.TestCase):
         for p in model.parameters():
             self.check_pruned(p)
 
+    def test_can_copy_from_another_world(self):
+        original_world = VoxelGrid.build_random_world(5, 5, 5)
+        new_world = VoxelGrid.copy_from(original_world)
+        self.assertTrue(original_world.scale.equal(new_world.scale))
+        for i, j, k, v in new_world.all_voxels():
+            self.assertTrue(v.equal(original_world.voxel_by_position(i, j, k)))
+
     def check_pruned(self, voxel):
         self.assertTrue(torch.equal(PlenoxelTest.ALL_ZEROES, voxel))
         self.assertFalse(voxel.requires_grad)
