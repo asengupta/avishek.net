@@ -24,7 +24,7 @@ GRID_Z = 40
 INHOMOGENEOUS_ZERO_VECTOR = torch.tensor([0., 0., 0.])
 REGULARISATION_FRACTION = 0.01
 REGULARISATION_LAMBDA = 0.001
-LEARNING_RATE = 0.005
+LEARNING_RATE = 0.01
 NUM_STOCHASTIC_RAYS = 1500
 ARBITRARY_SCALE = 5
 
@@ -953,6 +953,7 @@ def modify_grad(parameter_world, voxel_access):
     for i, j, k, v in parameter_world.all_voxels():
         v.requires_grad = False
 
+    activated_parameters = 0
     for ray_index, view_point in enumerate(voxel_access.view_points):
         ray = voxel_access.for_ray(ray_index)
         for i in range(ray.num_samples):
@@ -967,7 +968,9 @@ def modify_grad(parameter_world, voxel_access):
                 if (Voxel.is_pruned(candidate_voxel)):
                     continue
                 candidate_voxel.requires_grad = True
+                activated_parameters += 1
 
+    print(f"Activated {activated_parameters} parameters...")
 
 class PlenoxelModel(nn.Module):
     def __init__(self, world):
@@ -1015,8 +1018,13 @@ def train_minibatch(model, optimizer, camera, view_spec, ray_spec, image_channel
     print(f"Loss={total_loss}, RGB MSE={(red_mse, green_mse, blue_mse)}")
     total_loss.backward()
     print(f"Model parameters: {len(list(model.parameters()))}")
+    num_activated_parameters = 0
     for param in model.parameters():
-        print(f"Param grad after={param.grad}")
+        if (param.grad is None):
+            continue
+        num_activated_parameters += 1
+        # print(f"Param grad after={param.grad}")
+    print(f"Activated parameters tally with non-null gradient={num_activated_parameters}")
     #     print(f"Gradients={torch.max(param.grad)}")
     # make_dot(total_mse, params=dict(list(model.named_parameters()))).render("mse", format="png")
     # make_dot(r, params=dict(list(model.named_parameters()))).render("channel", format="png")
@@ -1060,7 +1068,7 @@ def train(world, camera_look_at, focal_length, view_spec, ray_spec, training_pos
     for epoch in range(num_epochs):
         batch_losses = []
         print(f"In epoch {epoch}")
-        for batch, position in enumerate(training_positions):
+        for batch, position in enumerate(training_positions[:1]):
             print(f"Before Training for camera position #{batch}={position}")
             test_camera = Camera(focal_length, position, camera_look_at)
             minibatch_loss, renderer, image, voxel_access = train_minibatch(model, optimizer, test_camera, view_spec,
@@ -1122,7 +1130,7 @@ def main():
     camera_center = torch.tensor([-20., -10., 45., 1.])
     # camera_center = torch.tensor([-4.7487, 44.7487, 20.0000, 1.0000])
     camera_radius = 35.
-    focal_length = 2.
+    focal_length = 1.
     camera = Camera(focal_length, camera_center, camera_look_at)
     num_rays_x, num_rays_y = 50, 50
     view_x1, view_x2 = -1, 1
@@ -1174,7 +1182,7 @@ def run_training(world, camera, view_spec, ray_spec, camera_radius):
                                        [37.5000, 37.5000, 44.7487, 1.0000],
                                        [43.9054, 43.9054, 10.9413, 1.0000],
                                        [44.7487, -4.7487, 20.0000, 1.0000]])
-    num_epochs = 7
+    num_epochs = 15
     reconstructed_world, epoch_losses = train(world, camera_look_at, focal_length, view_spec, ray_spec,
                                               training_positions, camera, num_epochs)
     print(f"Epoch losses = {epoch_losses}")
