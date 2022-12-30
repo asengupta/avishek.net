@@ -168,7 +168,7 @@ def black_rgb():
 class Voxel:
     NUM_INTERPOLATING_VOXEL_NEIGHBOURS = 8
     DEFAULT_OPACITY = 0.05
-    VOXEL_PRUNING_OPACITY_THRESHOLD = 0.01
+    VOXEL_PRUNING_OPACITY_THRESHOLD = 0.2
     NUM_VOXEL_NEIGHBOURS = 9 * 3 - 1
     VOXEL_PRUNING_NEIGHBOUR_OPACITY_THRESHOLDS = torch.full([NUM_VOXEL_NEIGHBOURS], VOXEL_PRUNING_OPACITY_THRESHOLD)
 
@@ -398,7 +398,9 @@ class VoxelGrid:
         voxel = self.voxel_by_position(*voxel_position)
         if (voxel[0] > Voxel.VOXEL_PRUNING_OPACITY_THRESHOLD):
             return False
-        if (self.neighbour_opacities(*voxel_position).less_equal(
+        surrounding_opacities = self.neighbour_opacities(*voxel_position)
+        print(f"Scanning neighbours...{surrounding_opacities}")
+        if (surrounding_opacities.less_equal(
                 Voxel.VOXEL_PRUNING_NEIGHBOUR_OPACITY_THRESHOLDS).all()):
             voxel.requires_grad = False
             voxel.mul_(0)
@@ -1053,6 +1055,15 @@ def prune_voxels(world, voxel_accessors):
     return pruned_voxels
 
 
+def prune_voxels2(world):
+    pruned_voxels = []
+    for i, j, k, v in world.all_voxels():
+        voxel_position = torch.tensor([i, j, k])
+        if world.prune(voxel_position):
+            pruned_voxels.append(voxel_position)
+    return pruned_voxels
+
+
 def train(world, camera_look_at, focal_length, view_spec, ray_spec, training_positions, final_camera, num_epochs):
     to_tensor = transforms.Compose([transforms.ToTensor()])
     dataset = datasets.ImageFolder("./images", transform=to_tensor)
@@ -1093,6 +1104,7 @@ def train(world, camera_look_at, focal_length, view_spec, ray_spec, training_pos
 
 # Reconstructs the world from disk
 def reconstruct_flyby_from_file(filename, camera_positions, focal_length, look_at, view_spec, ray_spec):
+    print(f"Camera position: {camera_positions}")
     voxel_grid = torch.load(filename)
     print(voxel_grid.shape)
     reconstructed_world = VoxelGrid.from_tensor(voxel_grid)
@@ -1110,45 +1122,17 @@ def reconstruct_flyby_from_world(world, camera_positions, focal_length, look_at,
     print("Finished constructing flyby!!")
 
 
-def main():
-    random_world = VoxelGrid.build_random_world(GRID_X, GRID_Y, GRID_Z)
-    mono_world = VoxelGrid.build_with_voxel(GRID_X, GRID_Y, GRID_Z, torch.cat(
-        [torch.tensor([0.0002, random.random() * 100.]), torch.zeros(VoxelGrid.VOXEL_DIMENSION - 2)]))
-    empty_world = VoxelGrid.build_empty_world(GRID_X, GRID_Y, GRID_Z)
-    empty_world.build_hollow_cube_with_randomly_coloured_sides(
-        Voxel.uniform_harmonic_random_colour(density=0.4, requires_grad=True),
-        torch.tensor([10, 10, 10, 20, 20, 20]))
-    world = random_world
-    # empty_world.build_solid_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
-    # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
-    cube_center = torch.tensor([20., 20., 20., 1.])
-    # camera_look_at = torch.tensor([0., 0., 0., 1])
-    camera_look_at = cube_center
-
-    camera_center = torch.tensor([-20., -10., 45., 1.])
-    # camera_center = torch.tensor([-4.7487, 44.7487, 20.0000, 1.0000])
-    camera_radius = 35.
-    focal_length = 1.
-    camera = Camera(focal_length, camera_center, camera_look_at)
-    num_rays_x, num_rays_y = 50, 50
-    view_x1, view_x2 = -1, 1
-    view_y1, view_y2 = -1, 1
-    view_spec = [view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]
-    ray_length = 100
-    num_ray_samples = 100
-    ray_spec = torch.tensor([ray_length, num_ray_samples])
-
-    renderer = Renderer(world, camera, torch.tensor(view_spec), ray_spec)
-    # test_rendering(renderer, view_spec)
-
-    # Generates training images
-    # camera_positions = generate_camera_angles(camera_radius, cube_center)
-    # render_training_images(camera_positions, focal_length, cube_center, world, view_spec, ray_spec, plt, camera_radius)
-
-    # upscaled_world = world.scale_up()
-    run_training(world, camera, view_spec, ray_spec, camera_radius)
-    # test_rendering(renderer, view_spec)
-    # test_upscale_rendering(world, renderer, camera, view_spec, ray_spec)
+def model_stats(filename, plt):
+    model_tensor = torch.load(filename)
+    world = VoxelGrid(model_tensor)
+    all_opacities = []
+    for i, j, k, v in world.all_voxels():
+        all_opacities.append(v[0].detach())
+    plt.figure()
+    plt.hist(all_opacities, bins=50)
+    pruned_voxels = prune_voxels2(world)
+    print(f"Pruned voxels = {len(pruned_voxels)}")
+    plt.show()
 
 
 def test_upscale_rendering(world, original_renderer, camera, view_spec, ray_spec):
@@ -1190,8 +1174,7 @@ def run_training(world, camera, view_spec, ray_spec, camera_radius):
                                 view_spec,
                                 ray_spec)
     # camera_positions = generate_camera_angles(camera_radius, camera_look_at)
-    # reconstruct_flyby_from_world(world, training_positions, focal_length, camera_look_at, view_spec,
-    #                              ray_spec)
+
     print("Everything done!!")
 
 
@@ -1216,6 +1199,68 @@ def test_rendering(renderer, view_spec):
     end_render_full = timer()
     print(f"Rendering rays in full took {end_render_full - start_render_full}")
     print("Finished rendering!!")
+
+
+def main():
+    random_world = VoxelGrid.build_random_world(GRID_X, GRID_Y, GRID_Z)
+    mono_world = VoxelGrid.build_with_voxel(GRID_X, GRID_Y, GRID_Z, torch.cat(
+        [torch.tensor([0.0002, random.random() * 100.]), torch.zeros(VoxelGrid.VOXEL_DIMENSION - 2)]))
+    empty_world = VoxelGrid.build_empty_world(GRID_X, GRID_Y, GRID_Z)
+    empty_world.build_hollow_cube_with_randomly_coloured_sides(
+        Voxel.uniform_harmonic_random_colour(density=0.4, requires_grad=True),
+        torch.tensor([10, 10, 10, 20, 20, 20]))
+    world = random_world
+    # empty_world.build_solid_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
+    # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
+    cube_center = torch.tensor([20., 20., 20., 1.])
+    # camera_look_at = torch.tensor([0., 0., 0., 1])
+    camera_look_at = cube_center
+
+    camera_center = torch.tensor([-20., -10., 45., 1.])
+    # camera_center = torch.tensor([-4.7487, 44.7487, 20.0000, 1.0000])
+    camera_radius = 35.
+    focal_length = 1.
+    camera = Camera(focal_length, camera_center, camera_look_at)
+    num_rays_x, num_rays_y = 50, 50
+    view_x1, view_x2 = -1, 1
+    view_y1, view_y2 = -1, 1
+    view_spec = [view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]
+    ray_length = 100
+    num_ray_samples = 100
+    ray_spec = torch.tensor([ray_length, num_ray_samples])
+
+    renderer = Renderer(world, camera, torch.tensor(view_spec), ray_spec)
+    # test_rendering(renderer, view_spec)
+
+    # Generates training images
+    # camera_positions = generate_camera_angles(camera_radius, cube_center)
+    # render_training_images(camera_positions, focal_length, cube_center, world, view_spec, ray_spec, plt, camera_radius)
+
+    # upscaled_world = world.scale_up()
+    # run_training(world, camera, view_spec, ray_spec, camera_radius)
+    # test_rendering(renderer, view_spec)
+    # test_upscale_rendering(world, renderer, camera, view_spec, ray_spec)
+    angles = []
+    starting_point = torch.tensor([-4.7487, 44.7487, 20.0000, 1.0000])
+    centered = starting_point - camera_look_at
+    angle = math.pi + math.atan(centered[1] / centered[0])
+    print(f"Angle={angle}")
+    one_degree = math.pi / 180
+    print(f"X={camera_radius * math.cos(angle)}")
+    print(f"Y={camera_radius * math.sin(angle)}")
+    position_for_angle = lambda degrees: torch.tensor([camera_radius * math.cos(angle + one_degree * degrees),
+                                                       camera_radius * math.sin(angle + one_degree * degrees), 0.,
+                                                       0.]) + camera_look_at
+    angles = list(map(lambda x: position_for_angle(x), range(-10, 10)))
+    print(f"Camera angles = {angles}")
+    reconstruct_flyby_from_world(empty_world, angles, focal_length,
+                                 camera_look_at, view_spec, ray_spec)
+    # model_stats(f"{OUTPUT_FOLDER}/reconstructed-before-rendering-fix.pt", plt)
+    # v = torch.load(f"{OUTPUT_FOLDER}/reconstructed-after-rendering-fix.pt")
+    # w = VoxelGrid(v)
+    # camera2 = Camera(focal_length, torch.tensor([-4.7487, 44.7487, 20.0000, 1.0000]), camera_look_at)
+    # r = Renderer(w, camera2, view_spec, ray_spec)
+    # r.render(plt)
 
 
 if __name__ == '__main__':
