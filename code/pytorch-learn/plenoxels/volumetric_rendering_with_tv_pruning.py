@@ -1237,30 +1237,9 @@ def main():
     # render_training_images(camera_positions, focal_length, cube_center, world, view_spec, ray_spec, plt, camera_radius)
 
     # upscaled_world = world.scale_up()
-    # run_training(world, camera, view_spec, ray_spec, camera_radius)
+    run_training(world, camera, view_spec, ray_spec, camera_radius)
     # test_rendering(renderer, view_spec)
     # test_upscale_rendering(world, renderer, camera, view_spec, ray_spec)
-    angles = []
-    starting_point = torch.tensor([-4.7487, 44.7487, 20.0000, 1.0000])
-    centered = starting_point - camera_look_at
-    angle = math.pi + math.atan(centered[1] / centered[0])
-    print(f"Angle={angle}")
-    one_degree = math.pi / 180
-    print(f"X={camera_radius * math.cos(angle)}")
-    print(f"Y={camera_radius * math.sin(angle)}")
-    position_for_angle = lambda degrees: torch.tensor([camera_radius * math.cos(angle + one_degree * degrees),
-                                                       camera_radius * math.sin(angle + one_degree * degrees), 0.,
-                                                       0.]) + camera_look_at
-    angles = list(map(lambda x: position_for_angle(x), range(-10, 10)))
-    print(f"Camera angles = {angles}")
-    reconstruct_flyby_from_world(empty_world, angles, focal_length,
-                                 camera_look_at, view_spec, ray_spec)
-    # model_stats(f"{OUTPUT_FOLDER}/reconstructed-before-rendering-fix.pt", plt)
-    # v = torch.load(f"{OUTPUT_FOLDER}/reconstructed-after-rendering-fix.pt")
-    # w = VoxelGrid(v)
-    # camera2 = Camera(focal_length, torch.tensor([-4.7487, 44.7487, 20.0000, 1.0000]), camera_look_at)
-    # r = Renderer(w, camera2, view_spec, ray_spec)
-    # r.render(plt)
 
 
 if __name__ == '__main__':
