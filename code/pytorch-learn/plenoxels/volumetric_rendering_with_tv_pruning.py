@@ -306,8 +306,8 @@ class VoxelGrid:
         return VoxelGrid(world.voxel_grid.copy(), scale=world.scale)
 
     @classmethod
-    def from_tensor(cls, world_tensor):
-        return cls(world_tensor)
+    def from_tensor(cls, world_tensor, scale=DEFAULT_SCALE):
+        return cls(world_tensor, scale)
 
     @classmethod
     def as_parameter(cls, world, model):
@@ -1218,5 +1218,5 @@ def test_rendering(renderer, view_spec):
     print("Finished rendering!!")
 
 
-# if __name__ == '__main__':
-#     main()
+if __name__ == '__main__':
+    main()
