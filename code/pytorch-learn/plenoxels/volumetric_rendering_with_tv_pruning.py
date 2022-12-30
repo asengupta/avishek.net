@@ -1068,7 +1068,7 @@ def train(world, camera_look_at, focal_length, view_spec, ray_spec, training_pos
     for epoch in range(num_epochs):
         batch_losses = []
         print(f"In epoch {epoch}")
-        for batch, position in enumerate(training_positions[:1]):
+        for batch, position in enumerate(training_positions):
             print(f"Before Training for camera position #{batch}={position}")
             test_camera = Camera(focal_length, position, camera_look_at)
             minibatch_loss, renderer, image, voxel_access = train_minibatch(model, optimizer, test_camera, view_spec,
