@@ -24,9 +24,9 @@ GRID_Z = 40
 INHOMOGENEOUS_ZERO_VECTOR = torch.tensor([0., 0., 0.])
 REGULARISATION_FRACTION = 0.01
 REGULARISATION_LAMBDA = 0.001
-LEARNING_RATE = 0.00005
+LEARNING_RATE = 0.005
 NUM_STOCHASTIC_RAYS = 1500
-ARBITRARY_SCALE = 10
+ARBITRARY_SCALE = 5
 
 MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE = []
 MASTER_VOXELS_STRUCTURE = []
@@ -180,7 +180,7 @@ class Voxel:
     @staticmethod
     def random_coloured_voxel(requires_grad=True):
         return lambda: torch.tensor(
-            np.concatenate(([0.0002], 2 * (np.random.rand(VoxelGrid.VOXEL_DIMENSION - 1) - 0.5))),
+            np.concatenate(([random.random() * 2], 5 * (np.random.rand(VoxelGrid.VOXEL_DIMENSION - 1) - 0.5))),
             requires_grad=requires_grad)
 
     @staticmethod
@@ -415,9 +415,11 @@ class VoxelGrid:
         number_of_samples = len(distance_density_color_tensors)
         density_distance_products = distance_density_color_tensors[:, 0] * distance_density_color_tensors[:, 1]
         summing_matrix = torch.tensor(list(
-            functools.reduce(lambda acc, n: acc + [[1.] * n + [0.] * (number_of_samples - n)], range(1, number_of_samples + 1),
+            functools.reduce(lambda acc, n: acc + [[1.] * n + [0.] * (number_of_samples - n)],
+                             range(1, number_of_samples + 1),
                              [])))
-        transmittances = torch.matmul(density_distance_products, summing_matrix.t())
+        # print(f"Sigma-D={density_distance_products.type()}, summing matrix = {summing_matrix.t().type()}")
+        transmittances = torch.matmul(density_distance_products.double(), summing_matrix.t().double())
         transmittances = torch.exp(-transmittances)
 
         red_channel, green_channel, blue_channel = [], [], []
@@ -431,7 +433,8 @@ class VoxelGrid:
             green_channel.append(g)
             blue_channel.append(b)
 
-        red_channel, green_channel, blue_channel = torch.stack(red_channel), torch.stack(green_channel), torch.stack(blue_channel)
+        red_channel, green_channel, blue_channel = torch.stack(red_channel), torch.stack(green_channel), torch.stack(
+            blue_channel)
         base_transmittance_factors = transmittances * (1 - torch.exp(- density_distance_products))
         red = (base_transmittance_factors * red_channel).sum()
         green = (base_transmittance_factors * green_channel).sum()
@@ -580,6 +583,7 @@ class VoxelGrid:
 class ClampingFunctions:
     SIGMOID = nn.Sigmoid()
     CLAMP = lambda t: torch.clamp(t, min=0, max=1)
+    DEFAULT = CLAMP
 
 
 class Renderer:
@@ -619,7 +623,7 @@ class Renderer:
         # print(color_tensor)
         return torch.cat([torch.tensor([view_x, view_y]), color_tensor])
 
-    def render_from_rays(self, voxel_access, clamping_function=ClampingFunctions.SIGMOID):
+    def render_from_rays(self, voxel_access, clamping_function=ClampingFunctions.DEFAULT):
         X, Y = 0, 1
         RED_CHANNEL, GREEN_CHANNEL, BLUE_CHANNEL = 2, 3, 4
         camera = self.camera
@@ -640,7 +644,7 @@ class Renderer:
         return composite_colour_tensors
 
     def render_from_angle(self, ray):
-        return self.render_from_ray(ray, self.camera.viewing_angle(), clamping_function=ClampingFunctions.SIGMOID)
+        return self.render_from_ray(ray, self.camera.viewing_angle(), clamping_function=ClampingFunctions.DEFAULT)
 
     def render_parallel(self, voxel_access, camera):
         viewing_angle = camera.viewing_angle()
@@ -729,7 +733,7 @@ class Renderer:
         return VoxelAccess(view_points, torch.stack(ray_sample_positions), voxel_pointers, all_voxels,
                            all_voxel_positions)
 
-    def render(self, plt, clamping_function=ClampingFunctions.SIGMOID, text=None):
+    def render(self, plt, clamping_function=ClampingFunctions.DEFAULT, text=None):
         RED_CHANNEL, GREEN_CHANNEL, BLUE_CHANNEL = 0, 1, 2
         global VOXELS_NOT_USED
         global MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE
@@ -1011,8 +1015,8 @@ def train_minibatch(model, optimizer, camera, view_spec, ray_spec, image_channel
     print(f"Loss={total_loss}, RGB MSE={(red_mse, green_mse, blue_mse)}")
     total_loss.backward()
     print(f"Model parameters: {len(list(model.parameters()))}")
-    # for param in model.parameters():
-    #     print(f"Param after={param.grad.shape}")
+    for param in model.parameters():
+        print(f"Param grad after={param.grad}")
     #     print(f"Gradients={torch.max(param.grad)}")
     # make_dot(total_mse, params=dict(list(model.named_parameters()))).render("mse", format="png")
     # make_dot(r, params=dict(list(model.named_parameters()))).render("channel", format="png")
@@ -1070,9 +1074,9 @@ def train(world, camera_look_at, focal_length, view_spec, ray_spec, training_pos
 
         epoch_losses.append(batch_losses)
 
-    pruned_voxels = prune_voxels(model.parameter_world, voxel_accessors)
-    model.parameter_world.prune(pruned_voxels)
-    print(f"Pruned {len(pruned_voxels)} voxels!!")
+    # pruned_voxels = prune_voxels(model.parameter_world, voxel_accessors)
+    # model.parameter_world.prune(pruned_voxels)
+    # print(f"Pruned {len(pruned_voxels)} voxels!!")
     final_renderer = Renderer(model.world(), final_camera, view_spec, ray_spec)
     red, green, blue = final_renderer.render(plt)
     transforms.ToPILImage()(torch.stack([red, green, blue])).show()
@@ -1105,9 +1109,10 @@ def main():
     mono_world = VoxelGrid.build_with_voxel(GRID_X, GRID_Y, GRID_Z, torch.cat(
         [torch.tensor([0.0002, random.random() * 100.]), torch.zeros(VoxelGrid.VOXEL_DIMENSION - 2)]))
     empty_world = VoxelGrid.build_empty_world(GRID_X, GRID_Y, GRID_Z)
-    empty_world.build_hollow_cube_with_randomly_coloured_sides(Voxel.uniform_harmonic_random_colour(density=0.4, requires_grad=True),
-                                                               torch.tensor([10, 10, 10, 20, 20, 20]))
-    world = empty_world
+    empty_world.build_hollow_cube_with_randomly_coloured_sides(
+        Voxel.uniform_harmonic_random_colour(density=0.4, requires_grad=True),
+        torch.tensor([10, 10, 10, 20, 20, 20]))
+    world = random_world
     # empty_world.build_solid_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
     # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
     cube_center = torch.tensor([20., 20., 20., 1.])
@@ -1135,9 +1140,9 @@ def main():
     # render_training_images(camera_positions, focal_length, cube_center, world, view_spec, ray_spec, plt, camera_radius)
 
     # upscaled_world = world.scale_up()
-    # run_training(upscaled_world, camera, view_spec, ray_spec, camera_radius)
+    run_training(world, camera, view_spec, ray_spec, camera_radius)
     # test_rendering(renderer, view_spec)
-    test_upscale_rendering(world, renderer, camera, view_spec, ray_spec)
+    # test_upscale_rendering(world, renderer, camera, view_spec, ray_spec)
 
 
 def test_upscale_rendering(world, original_renderer, camera, view_spec, ray_spec):
