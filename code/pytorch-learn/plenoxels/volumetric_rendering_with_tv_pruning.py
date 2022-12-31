@@ -1066,8 +1066,8 @@ def prune_voxels2(world):
 
 def train(world, camera_look_at, focal_length, view_spec, ray_spec, training_positions, final_camera, num_epochs):
     to_tensor = transforms.Compose([transforms.ToTensor()])
-    CUBE_TRAINING_FOLDER = "./images/training/cube"
-    TABLE_TRAINING_FOLDER = "./images/training/table/small-png"
+    CUBE_TRAINING_FOLDER = "./images/cube"
+    TABLE_TRAINING_FOLDER = "./images/table/small-png"
     dataset = datasets.ImageFolder(TABLE_TRAINING_FOLDER, transform=to_tensor)
     data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=False)
     training_images = list(data_loader)[0][0]
