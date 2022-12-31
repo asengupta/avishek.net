@@ -15,6 +15,111 @@ from torchviz import make_dot
 import os
 from memory_profiler import profile
 
+
+def white_rgb():
+    return torch.tensor([1., 1., 1.])
+
+
+def black_rgb():
+    return torch.tensor([0., 0., 0.])
+
+
+class Empty:
+    EMPTY_RGB = white_rgb
+    ALL_EMPTY = torch.ones
+
+def cube_training_positions():
+    return torch.tensor([[-4.7487, 44.7487, 20.0000, 1.0000],
+                         [-3.9054, -3.9054, 29.0587, 1.0000],
+                         [-1.4330, 41.4330, 2.5000, 1.0000],
+                         [-1.4330, 41.4330, 37.5000, 1.0000],
+                         [2.5000, 2.5000, -4.7487, 1.0000],
+                         [7.6256, 32.3744, -10.3109, 1.0000],
+                         [13.5946, 13.5946, 53.8074, 1.0000],
+                         [20.0000, 20.0000, -15.0000, 1.0000],
+                         [20.0000, 20.0000, 55.0000, 1.0000],
+                         [26.4054, 26.4054, -13.8074, 1.0000],
+                         [32.3744, 7.6256, -10.3109, 1.0000],
+                         [37.5000, 37.5000, 44.7487, 1.0000],
+                         [43.9054, 43.9054, 10.9413, 1.0000],
+                         [44.7487, -4.7487, 20.0000, 1.0000]])
+
+
+def table_training_positions():
+    return torch.tensor([[-30.0000, 20.0000, 43.0000, 1.0000],
+                         [-29.9511, 22.2117, 43.0000, 1.0000],
+                         [-29.8043, 24.4190, 43.0000, 1.0000],
+                         [-29.5601, 26.6177, 43.0000, 1.0000],
+                         [-29.2189, 28.8034, 43.0000, 1.0000],
+                         [-28.7813, 30.9719, 43.0000, 1.0000],
+                         [-28.2482, 33.1189, 43.0000, 1.0000],
+                         [-27.6207, 35.2403, 43.0000, 1.0000],
+                         [-26.9000, 37.3318, 43.0000, 1.0000],
+                         [-26.0874, 39.3894, 43.0000, 1.0000],
+                         [-25.1847, 41.4090, 43.0000, 1.0000],
+                         [-24.1935, 43.3867, 43.0000, 1.0000],
+                         [-23.1157, 45.3186, 43.0000, 1.0000],
+                         [-21.9536, 47.2010, 43.0000, 1.0000],
+                         [-20.7093, 49.0301, 43.0000, 1.0000],
+                         [-19.3854, 50.8024, 43.0000, 1.0000],
+                         [-17.9844, 52.5144, 43.0000, 1.0000],
+                         [-16.5090, 54.1628, 43.0000, 1.0000],
+                         [-14.9621, 55.7443, 43.0000, 1.0000],
+                         [-13.3468, 57.2558, 43.0000, 1.0000],
+                         [-11.6662, 58.6943, 43.0000, 1.0000],
+                         [-9.9236, 60.0572, 43.0000, 1.0000],
+                         [-8.1225, 61.3416, 43.0000, 1.0000],
+                         [-6.2663, 62.5451, 43.0000, 1.0000],
+                         [-4.3586, 63.6653, 43.0000, 1.0000],
+                         [-2.4033, 64.7000, 43.0000, 1.0000],
+                         [-0.4042, 65.6472, 43.0000, 1.0000],
+                         [1.6349, 66.5051, 43.0000, 1.0000],
+                         [3.7100, 67.2719, 43.0000, 1.0000],
+                         [5.8169, 67.9462, 43.0000, 1.0000],
+                         [7.9516, 68.5267, 43.0000, 1.0000],
+                         [10.1099, 69.0121, 43.0000, 1.0000],
+                         [12.2876, 69.4016, 43.0000, 1.0000],
+                         [14.4803, 69.6944, 43.0000, 1.0000],
+                         [16.6839, 69.8899, 43.0000, 1.0000],
+                         [18.8939, 69.9878, 43.0000, 1.0000],
+                         [21.1061, 69.9878, 43.0000, 1.0000],
+                         [23.3161, 69.8899, 43.0000, 1.0000],
+                         [25.5197, 69.6944, 43.0000, 1.0000],
+                         [27.7124, 69.4016, 43.0000, 1.0000],
+                         [29.8901, 69.0121, 43.0000, 1.0000],
+                         [32.0484, 68.5267, 43.0000, 1.0000],
+                         [34.1831, 67.9462, 43.0000, 1.0000],
+                         [36.2900, 67.2719, 43.0000, 1.0000],
+                         [38.3651, 66.5051, 43.0000, 1.0000],
+                         [40.4042, 65.6472, 43.0000, 1.0000],
+                         [42.4033, 64.7000, 43.0000, 1.0000],
+                         [44.3586, 63.6653, 43.0000, 1.0000],
+                         [46.2663, 62.5451, 43.0000, 1.0000],
+                         [48.1225, 61.3416, 43.0000, 1.0000],
+                         [49.9236, 60.0572, 43.0000, 1.0000],
+                         [51.6662, 58.6943, 43.0000, 1.0000],
+                         [53.3468, 57.2558, 43.0000, 1.0000],
+                         [54.9621, 55.7443, 43.0000, 1.0000],
+                         [56.5090, 54.1628, 43.0000, 1.0000],
+                         [57.9844, 52.5144, 43.0000, 1.0000],
+                         [59.3854, 50.8024, 43.0000, 1.0000],
+                         [60.7093, 49.0301, 43.0000, 1.0000],
+                         [61.9536, 47.2010, 43.0000, 1.0000],
+                         [63.1157, 45.3186, 43.0000, 1.0000],
+                         [64.1935, 43.3867, 43.0000, 1.0000],
+                         [65.1847, 41.4090, 43.0000, 1.0000],
+                         [66.0874, 39.3894, 43.0000, 1.0000],
+                         [66.9000, 37.3318, 43.0000, 1.0000],
+                         [67.6207, 35.2403, 43.0000, 1.0000],
+                         [68.2482, 33.1189, 43.0000, 1.0000],
+                         [68.7813, 30.9719, 43.0000, 1.0000],
+                         [69.2189, 28.8034, 43.0000, 1.0000],
+                         [69.5601, 26.6177, 43.0000, 1.0000],
+                         [69.8043, 24.4190, 43.0000, 1.0000],
+                         [69.9511, 22.2117, 43.0000, 1.0000],
+                         [70.0000, 20.0000, 43.0000, 1.0000]])
+
+
 print(f"Using backend {plt.get_backend()}")
 
 GRID_X = 40
@@ -159,10 +264,6 @@ def rgb_harmonics(rgb_harmonic_coefficients):
     green_harmonic = harmonic(*rgb_harmonic_coefficients[9:18])
     blue_harmonic = harmonic(*rgb_harmonic_coefficients[18:])
     return (red_harmonic, green_harmonic, blue_harmonic)
-
-
-def black_rgb():
-    return torch.tensor([0., 0., 0.])
 
 
 class Voxel:
@@ -497,7 +598,7 @@ class VoxelGrid:
         for index, distance in enumerate(ray_sample_distances):
             ray_sample_world_position, voxel_positions, voxels = ray.at(index)
             if len(voxels) == 0:
-                return black_rgb()
+                return Empty.EMPTY_RGB()
             collected_intensities.append(self.intensities(ray_sample_world_position, voxels))
 
         return self.channel_opacity(torch.cat([ray_sample_distances, torch.stack(collected_intensities)], 1),
@@ -775,7 +876,7 @@ class Renderer:
                     red_column.append(torch.tensor(0))
                     green_column.append(torch.tensor(0))
                     blue_column.append(torch.tensor(0))
-                    plt.plot(i, j, marker="o", color=[0, 0, 0])
+                    plt.plot(i, j, marker="o", color=Empty.EMPTY_RGB())
                     # print("Too few")
                     continue
 
@@ -869,12 +970,12 @@ def camera_to_image(x, y, view_spec):
     return (image_x, image_y)
 
 
-def samples_to_image(red_samples, green_samples, blue_samples, view_spec):
+def samples_to_image(red_samples, green_samples, blue_samples, view_spec, generate_background_pixel=torch.zeros):
     X, Y, INTENSITY = 0, 1, 2
     view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y = view_spec
-    red_render_channel = torch.zeros([num_rays_y, num_rays_x])
-    green_render_channel = torch.zeros([num_rays_y, num_rays_x])
-    blue_render_channel = torch.zeros([num_rays_y, num_rays_x])
+    red_render_channel = generate_background_pixel([num_rays_y, num_rays_x])
+    green_render_channel = generate_background_pixel([num_rays_y, num_rays_x])
+    blue_render_channel = generate_background_pixel([num_rays_y, num_rays_x])
     for index, pixel in enumerate(red_samples):
         # print(
         #     f"({view_y2 - pixel[1]}, {pixel[0] - view_x1}) -> ({int((view_y2 - pixel[1]) / step_y)}, {int((pixel[0] - view_x1) / step_x)}), {pixel[2]}")
@@ -1007,7 +1108,7 @@ def train_minibatch(model, optimizer, camera, view_spec, ray_spec, image_channel
     optimizer.zero_grad()
 
     r, g, b, renderer, voxel_access = model([camera, view_spec, ray_spec])
-    image = samples_to_image(r, g, b, view_spec)
+    image = samples_to_image(r, g, b, view_spec, generate_background_pixel=Empty.ALL_EMPTY)
 
     red_mse = mse(r, image_channels[0], view_spec)
     green_mse = mse(g, image_channels[1], view_spec)
@@ -1069,11 +1170,11 @@ def train(world, camera_look_at, focal_length, view_spec, ray_spec, training_pos
     CUBE_TRAINING_FOLDER = "./images/cube"
     TABLE_TRAINING_FOLDER = "./images/table/small-png"
     dataset = datasets.ImageFolder(TABLE_TRAINING_FOLDER, transform=to_tensor)
-    data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=False)
+    data_loader = torch.utils.data.DataLoader(dataset, batch_size=100, shuffle=False)
     training_images = list(data_loader)[0][0]
 
-    print(f"{training_images.shape[0]} images, {training_images.shape[1]} channels per image, resolution is {training_images.shape[2:]}")
-    exit(1)
+    print(
+        f"{training_images.shape[0]} images, {training_images.shape[1]} channels per image, resolution is {training_images.shape[2:]}")
 
     model = PlenoxelModel(world)
     optimizer = torch.optim.RMSprop(model.parameters(), lr=LEARNING_RATE, momentum=0.9)
@@ -1155,21 +1256,9 @@ def run_training(world, camera, view_spec, ray_spec, camera_radius):
     RECONSTRUCTED_WORLD_FILENAME = f"{OUTPUT_FOLDER}/reconstructed.pt"
     # Trains on multiple training images
     test_positions = torch.tensor([[-20., -10., 40., 1.]])
-    training_positions = torch.tensor([[-4.7487, 44.7487, 20.0000, 1.0000],
-                                       [-3.9054, -3.9054, 29.0587, 1.0000],
-                                       [-1.4330, 41.4330, 2.5000, 1.0000],
-                                       [-1.4330, 41.4330, 37.5000, 1.0000],
-                                       [2.5000, 2.5000, -4.7487, 1.0000],
-                                       [7.6256, 32.3744, -10.3109, 1.0000],
-                                       [13.5946, 13.5946, 53.8074, 1.0000],
-                                       [20.0000, 20.0000, -15.0000, 1.0000],
-                                       [20.0000, 20.0000, 55.0000, 1.0000],
-                                       [26.4054, 26.4054, -13.8074, 1.0000],
-                                       [32.3744, 7.6256, -10.3109, 1.0000],
-                                       [37.5000, 37.5000, 44.7487, 1.0000],
-                                       [43.9054, 43.9054, 10.9413, 1.0000],
-                                       [44.7487, -4.7487, 20.0000, 1.0000]])
-    num_epochs = 15
+    # training_positions = cube_training_positions()
+    training_positions = table_training_positions()
+    num_epochs = 10
     reconstructed_world, epoch_losses = train(world, camera_look_at, focal_length, view_spec, ray_spec,
                                               training_positions, camera, num_epochs)
     print(f"Epoch losses = {epoch_losses}")
@@ -1196,7 +1285,7 @@ def test_rendering(renderer, view_spec):
     r, g, b = renderer.render_from_rays(voxel_access, clamping_function=ClampingFunctions.CLAMP)
     end_render_rays = timer()
     print(f"Rendering rays took {end_render_rays - start_render_rays}")
-    image_data = samples_to_image(r, g, b, view_spec)
+    image_data = samples_to_image(r, g, b, view_spec, generate_background_pixel=Empty.ALL_EMPTY)
     renderer.plot_from_image(image_data, plt)
     transforms.ToPILImage()(image_data).show()
     start_render_full = timer()
@@ -1218,17 +1307,19 @@ def main():
     # empty_world.build_solid_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
     # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
     cube_center = torch.tensor([20., 20., 20., 1.])
+    table_center = torch.tensor([20., 20., 35., 1.])
     # camera_look_at = torch.tensor([0., 0., 0., 1])
-    camera_look_at = cube_center
+    # camera_look_at = cube_center
+    camera_look_at = table_center
 
     camera_center = torch.tensor([-20., -10., 45., 1.])
     # camera_center = torch.tensor([-4.7487, 44.7487, 20.0000, 1.0000])
     camera_radius = 35.
-    focal_length = 1.
+    focal_length = 1.5
     camera = Camera(focal_length, camera_center, camera_look_at)
     num_rays_x, num_rays_y = 50, 50
     view_x1, view_x2 = -1, 1
-    view_y1, view_y2 = -1, 1
+    view_y1, view_y2 = -1.5, 0.5
     view_spec = [view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]
     ray_length = 100
     num_ray_samples = 100

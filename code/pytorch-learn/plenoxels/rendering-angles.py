@@ -25,6 +25,20 @@ for phi in np.linspace(0, math.pi, 4):
         camera_positions.append(torch.tensor([x, y, z, 0]))
 
 
-print((torch.stack(camera_positions).unique(dim=0)) + cube_center)
+# print((torch.stack(camera_positions).unique(dim=0)) + cube_center)
 # print(torch.tensor(camera_positions))
 # print((torch.tensor(camera_positions) + cube_center).unique(dim=0))
+
+radius = 50
+cube_center = torch.tensor([20., 20., 35., 1.])
+camera_positions = []
+for phi in np.linspace(0, math.pi, 72):
+    x = radius * math.cos(phi)
+    y = radius * math.sin(phi)
+    z = 8
+    x = 0 if abs(x) < 0.0001 else x
+    y = 0 if abs(y) < 0.0001 else y
+    z = 0 if abs(z) < 0.0001 else z
+    camera_positions.append(torch.tensor([x, y, z, 0]))
+
+print((torch.stack(camera_positions).unique(dim=0)) + cube_center)
