@@ -1066,9 +1066,14 @@ def prune_voxels2(world):
 
 def train(world, camera_look_at, focal_length, view_spec, ray_spec, training_positions, final_camera, num_epochs):
     to_tensor = transforms.Compose([transforms.ToTensor()])
-    dataset = datasets.ImageFolder("./images/cube/training", transform=to_tensor)
+    CUBE_TRAINING_FOLDER = "./images/training/cube"
+    TABLE_TRAINING_FOLDER = "./images/training/table/small-png"
+    dataset = datasets.ImageFolder(TABLE_TRAINING_FOLDER, transform=to_tensor)
     data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=False)
     training_images = list(data_loader)[0][0]
+
+    print(f"{training_images.shape[0]} images, {training_images.shape[1]} channels per image, resolution is {training_images.shape[2:]}")
+    exit(1)
 
     model = PlenoxelModel(world)
     optimizer = torch.optim.RMSprop(model.parameters(), lr=LEARNING_RATE, momentum=0.9)
