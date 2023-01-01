@@ -132,7 +132,8 @@ GRID_Z = 40
 
 INHOMOGENEOUS_ZERO_VECTOR = torch.tensor([0., 0., 0.])
 REGULARISATION_FRACTION = 0.01
-REGULARISATION_LAMBDA = 0.001
+TV_REGULARISATION_LAMBDA = 0.001
+CAUCHY_REGULARISATION_LAMBDA = 0.0001
 LEARNING_RATE = 0.01
 NUM_STOCHASTIC_RAYS = 1500
 ARBITRARY_SCALE = 1
@@ -913,7 +914,7 @@ class Renderer:
         blue_image_tensor = torch.flip(torch.stack(blue_image).t(), [0])
 
         if (text is not None):
-            plt.text(0.5, 0.5, text)
+            plt.text(0.5, 0.5, text, fontsize=14, backgroundcolor="white", alpha=0.5, color="black")
         plt.show()
         print("Done rendering in full!!")
         return (red_image_tensor, green_image_tensor, blue_image_tensor)
@@ -927,7 +928,7 @@ class Renderer:
                 plt.plot(i, height - 1 - j, marker="o",
                          color=[red_render_channel[j, i], green_render_channel[j, i], blue_render_channel[j, i]])
         if (text is not None):
-            plt.text(0.5, 0.5, text, fontsize=14)
+            plt.text(0.5, 0.5, text, fontsize=14, backgroundcolor="white", alpha=0.5, color="black")
         plt.show()
 
 
@@ -1107,6 +1108,11 @@ class PlenoxelModel(nn.Module):
         return r, g, b, renderer, voxel_access
 
 
+def cauchy_term(voxel_access, world):
+    all_unique_voxels = torch.stack(voxel_access.all_voxels)
+    return torch.log(1 + 2 * all_unique_voxels[:, 0].pow(2)).sum()
+
+
 @profile
 def train_minibatch(model, optimizer, camera, view_spec, ray_spec, image_channels, batch_index, epoch_index):
     print(f"Shape = {image_channels.shape}")
@@ -1119,8 +1125,9 @@ def train_minibatch(model, optimizer, camera, view_spec, ray_spec, image_channel
     green_mse = mse(g, image_channels[1], view_spec)
     blue_mse = mse(b, image_channels[2], view_spec)
     print(f"Regularising using {int(len(voxel_access.all_voxels) * REGULARISATION_FRACTION)} voxels...")
-    total_loss = red_mse + green_mse + blue_mse + REGULARISATION_LAMBDA * tv_term(voxel_access,
-                                                                                  model.parameter_world)
+    total_loss = red_mse + green_mse + blue_mse + \
+                 TV_REGULARISATION_LAMBDA * tv_term(voxel_access, model.parameter_world) + \
+                 CAUCHY_REGULARISATION_LAMBDA * cauchy_term(voxel_access, model.parameter_world)
     print(f"Loss={total_loss}, RGB MSE={(red_mse, green_mse, blue_mse)}")
     total_loss.backward()
     print(f"Model parameters: {len(list(model.parameters()))}")
@@ -1143,7 +1150,7 @@ def render_training_images(camera_positions, focal_length, camera_look_at, world
         c = Camera(focal_length, p, camera_look_at)
         r = Renderer(world, c, view_spec, ray_spec)
         red, green, blue = r.render(plt)
-        save_image(torch.stack([red, green, blue]), f"./images/training/rotating-cube-{index:02}.png")
+        save_image(torch.stack([red, green, blue]), f"./images/cube/training/rotating-cube-{index:02}.png")
 
     plt.show()
     print("Completed rendering images")
@@ -1263,7 +1270,7 @@ def run_training(world, camera, view_spec, ray_spec, camera_radius):
     test_positions = torch.tensor([[-20., -10., 40., 1.]])
     # training_positions = cube_training_positions()
     training_positions = table_training_positions()
-    num_epochs = 10
+    num_epochs = 5
     reconstructed_world, epoch_losses = train(world, camera_look_at, focal_length, view_spec, ray_spec,
                                               training_positions, camera, num_epochs)
     print(f"Epoch losses = {epoch_losses}")
