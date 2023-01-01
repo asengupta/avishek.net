@@ -31,7 +31,7 @@ for phi in np.linspace(0, math.pi, 4):
 radius = 50
 cube_center = torch.tensor([20., 20., 35., 1.])
 camera_positions = []
-for phi in np.linspace(2 * math.pi, 0, 72):
+for phi in np.linspace(0, 2 * math.pi, 72):
     x = radius * math.cos(phi)
     y = radius * math.sin(phi)
     z = 8

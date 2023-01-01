@@ -25,6 +25,9 @@ def black_rgb():
 
 
 class Empty:
+    # EMPTY_RGB = black_rgb
+    # ALL_EMPTY = torch.zeros
+
     EMPTY_RGB = white_rgb
     ALL_EMPTY = torch.ones
 
@@ -48,76 +51,76 @@ def cube_training_positions():
 
 def table_training_positions():
     return torch.tensor([[70.0000, 20.0000, 43.0000, 1.0000],
-                         [69.8043, 15.5810, 43.0000, 1.0000],
-                         [69.2189, 11.1966, 43.0000, 1.0000],
-                         [68.2482, 6.8811, 43.0000, 1.0000],
-                         [66.9000, 2.6682, 43.0000, 1.0000],
-                         [65.1847, -1.4090, 43.0000, 1.0000],
-                         [63.1157, -5.3186, 43.0000, 1.0000],
-                         [60.7093, -9.0301, 43.0000, 1.0000],
-                         [57.9844, -12.5144, 43.0000, 1.0000],
-                         [54.9621, -15.7443, 43.0000, 1.0000],
-                         [51.6662, -18.6943, 43.0000, 1.0000],
-                         [48.1225, -21.3416, 43.0000, 1.0000],
-                         [44.3586, -23.6653, 43.0000, 1.0000],
-                         [40.4042, -25.6472, 43.0000, 1.0000],
-                         [36.2900, -27.2719, 43.0000, 1.0000],
-                         [32.0484, -28.5267, 43.0000, 1.0000],
-                         [27.7124, -29.4016, 43.0000, 1.0000],
-                         [23.3161, -29.8899, 43.0000, 1.0000],
-                         [18.8939, -29.9878, 43.0000, 1.0000],
-                         [14.4803, -29.6944, 43.0000, 1.0000],
-                         [10.1099, -29.0121, 43.0000, 1.0000],
-                         [5.8169, -27.9462, 43.0000, 1.0000],
-                         [1.6349, -26.5051, 43.0000, 1.0000],
-                         [-2.4033, -24.7000, 43.0000, 1.0000],
-                         [-6.2663, -22.5451, 43.0000, 1.0000],
-                         [-9.9236, -20.0572, 43.0000, 1.0000],
-                         [-13.3468, -17.2558, 43.0000, 1.0000],
-                         [-16.5090, -14.1628, 43.0000, 1.0000],
-                         [-19.3854, -10.8024, 43.0000, 1.0000],
-                         [-21.9536, -7.2010, 43.0000, 1.0000],
-                         [-24.1935, -3.3867, 43.0000, 1.0000],
-                         [-26.0874, 0.6106, 43.0000, 1.0000],
-                         [-27.6207, 4.7597, 43.0000, 1.0000],
-                         [-28.7813, 9.0281, 43.0000, 1.0000],
-                         [-29.5601, 13.3823, 43.0000, 1.0000],
-                         [-29.9511, 17.7883, 43.0000, 1.0000],
-                         [-29.9511, 22.2117, 43.0000, 1.0000],
-                         [-29.5601, 26.6177, 43.0000, 1.0000],
-                         [-28.7813, 30.9719, 43.0000, 1.0000],
-                         [-27.6207, 35.2403, 43.0000, 1.0000],
-                         [-26.0874, 39.3894, 43.0000, 1.0000],
-                         [-24.1935, 43.3867, 43.0000, 1.0000],
-                         [-21.9536, 47.2010, 43.0000, 1.0000],
-                         [-19.3854, 50.8024, 43.0000, 1.0000],
-                         [-16.5090, 54.1628, 43.0000, 1.0000],
-                         [-13.3468, 57.2558, 43.0000, 1.0000],
-                         [-9.9236, 60.0572, 43.0000, 1.0000],
-                         [-6.2663, 62.5451, 43.0000, 1.0000],
-                         [-2.4033, 64.7000, 43.0000, 1.0000],
-                         [1.6349, 66.5051, 43.0000, 1.0000],
-                         [5.8169, 67.9462, 43.0000, 1.0000],
-                         [10.1099, 69.0121, 43.0000, 1.0000],
-                         [14.4803, 69.6944, 43.0000, 1.0000],
-                         [18.8939, 69.9878, 43.0000, 1.0000],
-                         [23.3161, 69.8899, 43.0000, 1.0000],
-                         [27.7124, 69.4016, 43.0000, 1.0000],
-                         [32.0484, 68.5267, 43.0000, 1.0000],
-                         [36.2900, 67.2719, 43.0000, 1.0000],
-                         [40.4042, 65.6472, 43.0000, 1.0000],
-                         [44.3586, 63.6653, 43.0000, 1.0000],
-                         [48.1225, 61.3416, 43.0000, 1.0000],
-                         [51.6662, 58.6943, 43.0000, 1.0000],
-                         [54.9621, 55.7443, 43.0000, 1.0000],
-                         [57.9844, 52.5144, 43.0000, 1.0000],
-                         [60.7093, 49.0301, 43.0000, 1.0000],
-                         [63.1157, 45.3186, 43.0000, 1.0000],
-                         [65.1847, 41.4090, 43.0000, 1.0000],
-                         [66.9000, 37.3318, 43.0000, 1.0000],
-                         [68.2482, 33.1189, 43.0000, 1.0000],
-                         [69.2189, 28.8034, 43.0000, 1.0000],
                          [69.8043, 24.4190, 43.0000, 1.0000],
+                         [69.2189, 28.8034, 43.0000, 1.0000],
+                         [68.2482, 33.1189, 43.0000, 1.0000],
+                         [66.9000, 37.3318, 43.0000, 1.0000],
+                         [65.1847, 41.4090, 43.0000, 1.0000],
+                         [63.1157, 45.3186, 43.0000, 1.0000],
+                         [60.7093, 49.0301, 43.0000, 1.0000],
+                         [57.9844, 52.5144, 43.0000, 1.0000],
+                         [54.9621, 55.7443, 43.0000, 1.0000],
+                         [51.6662, 58.6943, 43.0000, 1.0000],
+                         [48.1225, 61.3416, 43.0000, 1.0000],
+                         [44.3586, 63.6653, 43.0000, 1.0000],
+                         [40.4042, 65.6472, 43.0000, 1.0000],
+                         [36.2900, 67.2719, 43.0000, 1.0000],
+                         [32.0484, 68.5267, 43.0000, 1.0000],
+                         [27.7124, 69.4016, 43.0000, 1.0000],
+                         [23.3161, 69.8899, 43.0000, 1.0000],
+                         [18.8939, 69.9878, 43.0000, 1.0000],
+                         [14.4803, 69.6944, 43.0000, 1.0000],
+                         [10.1099, 69.0121, 43.0000, 1.0000],
+                         [5.8169, 67.9462, 43.0000, 1.0000],
+                         [1.6349, 66.5051, 43.0000, 1.0000],
+                         [-2.4033, 64.7000, 43.0000, 1.0000],
+                         [-6.2663, 62.5451, 43.0000, 1.0000],
+                         [-9.9236, 60.0572, 43.0000, 1.0000],
+                         [-13.3468, 57.2558, 43.0000, 1.0000],
+                         [-16.5090, 54.1628, 43.0000, 1.0000],
+                         [-19.3854, 50.8024, 43.0000, 1.0000],
+                         [-21.9536, 47.2010, 43.0000, 1.0000],
+                         [-24.1935, 43.3867, 43.0000, 1.0000],
+                         [-26.0874, 39.3894, 43.0000, 1.0000],
+                         [-27.6207, 35.2403, 43.0000, 1.0000],
+                         [-28.7813, 30.9719, 43.0000, 1.0000],
+                         [-29.5601, 26.6177, 43.0000, 1.0000],
+                         [-29.9511, 22.2117, 43.0000, 1.0000],
+                         [-29.9511, 17.7883, 43.0000, 1.0000],
+                         [-29.5601, 13.3823, 43.0000, 1.0000],
+                         [-28.7813, 9.0281, 43.0000, 1.0000],
+                         [-27.6207, 4.7597, 43.0000, 1.0000],
+                         [-26.0874, 0.6106, 43.0000, 1.0000],
+                         [-24.1935, -3.3867, 43.0000, 1.0000],
+                         [-21.9536, -7.2010, 43.0000, 1.0000],
+                         [-19.3854, -10.8024, 43.0000, 1.0000],
+                         [-16.5090, -14.1628, 43.0000, 1.0000],
+                         [-13.3468, -17.2558, 43.0000, 1.0000],
+                         [-9.9236, -20.0572, 43.0000, 1.0000],
+                         [-6.2663, -22.5451, 43.0000, 1.0000],
+                         [-2.4033, -24.7000, 43.0000, 1.0000],
+                         [1.6349, -26.5051, 43.0000, 1.0000],
+                         [5.8169, -27.9462, 43.0000, 1.0000],
+                         [10.1099, -29.0121, 43.0000, 1.0000],
+                         [14.4803, -29.6944, 43.0000, 1.0000],
+                         [18.8939, -29.9878, 43.0000, 1.0000],
+                         [23.3161, -29.8899, 43.0000, 1.0000],
+                         [27.7124, -29.4016, 43.0000, 1.0000],
+                         [32.0484, -28.5267, 43.0000, 1.0000],
+                         [36.2900, -27.2719, 43.0000, 1.0000],
+                         [40.4042, -25.6472, 43.0000, 1.0000],
+                         [44.3586, -23.6653, 43.0000, 1.0000],
+                         [48.1225, -21.3416, 43.0000, 1.0000],
+                         [51.6662, -18.6943, 43.0000, 1.0000],
+                         [54.9621, -15.7443, 43.0000, 1.0000],
+                         [57.9844, -12.5144, 43.0000, 1.0000],
+                         [60.7093, -9.0301, 43.0000, 1.0000],
+                         [63.1157, -5.3186, 43.0000, 1.0000],
+                         [65.1847, -1.4090, 43.0000, 1.0000],
+                         [66.9000, 2.6682, 43.0000, 1.0000],
+                         [68.2482, 6.8811, 43.0000, 1.0000],
+                         [69.2189, 11.1966, 43.0000, 1.0000],
+                         [69.8043, 15.5810, 43.0000, 1.0000],
                          [70.0000, 20.0000, 43.0000, 1.0000]])
 
 
@@ -130,9 +133,9 @@ GRID_Z = 40
 INHOMOGENEOUS_ZERO_VECTOR = torch.tensor([0., 0., 0.])
 REGULARISATION_FRACTION = 0.01
 REGULARISATION_LAMBDA = 0.0001
-LEARNING_RATE = 0.001
+LEARNING_RATE = 0.01
 NUM_STOCHASTIC_RAYS = 1500
-ARBITRARY_SCALE = 5
+ARBITRARY_SCALE = 10
 
 MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE = []
 MASTER_VOXELS_STRUCTURE = []
@@ -281,7 +284,7 @@ class Voxel:
     @staticmethod
     def random_coloured_voxel(requires_grad=True):
         return lambda: torch.tensor(
-            np.concatenate(([0.7], (np.random.rand(VoxelGrid.VOXEL_DIMENSION - 1) - 0.5))),
+            np.concatenate(([random.random() * 2], (np.random.rand(VoxelGrid.VOXEL_DIMENSION - 1) - 0.5) * 3)),
             requires_grad=requires_grad)
 
     @staticmethod
@@ -769,9 +772,9 @@ class Renderer:
         plt.rcParams['axes.xmargin'] = 0
         plt.rcParams['axes.ymargin'] = 0
         figure = plt.figure(f"{random.random()}", frameon=False)
-        plt.rcParams['axes.facecolor'] = 'black'
+        # plt.rcParams['axes.facecolor'] = 'black'
         plt.axis("equal")
-        plt.style.use("dark_background")
+        # plt.style.use("dark_background")
         ax = plt.gca()
         ax.set_aspect('equal', adjustable='box')
         plt.axis("off")
@@ -800,7 +803,7 @@ class Renderer:
             all_voxels_per_ray = []
             all_voxel_positions_per_ray = []
             ray_sample_positions_per_ray = []
-            for k in np.linspace(0, self.ray_length, self.num_ray_samples):
+            for k in np.linspace(0, self.ray_length, int(self.num_ray_samples)):
                 ray_endpoint = camera_center_inhomogenous + unit_ray * k
                 ray_x, ray_y, ray_z = ray_endpoint
                 if (self.world.is_outside(ray_x, ray_y, ray_z)):
@@ -849,17 +852,17 @@ class Renderer:
         print(f"Camera basis={camera.basis}")
         view_screen_origin = camera_basis_z * camera.focal_length + camera_center_inhomogenous
         print(f"View screen origin={view_screen_origin}")
-        for i in np.linspace(self.x_1, self.x_2, self.num_view_samples_x):
+        for i in np.linspace(self.x_1, self.x_2, int(self.num_view_samples_x)):
             red_column = []
             green_column = []
             blue_column = []
-            for j in np.linspace(self.y_1, self.y_2, self.num_view_samples_y):
+            for j in np.linspace(self.y_1, self.y_2, int(self.num_view_samples_y)):
                 ray_screen_intersection = camera_basis_x * i + camera_basis_y * j + view_screen_origin
                 unit_ray = unit_vector(ray_screen_intersection - camera_center_inhomogenous)
                 # print(f"Camera basis is {camera.basis}, Camera center is {camera_center_inhomogenous}, intersection is {ray_screen_intersection}, Unit ray is [{unit_ray}]")
                 ray_samples = []
                 # To remove artifacts, set ray step samples to be higher, like 200
-                for k in np.linspace(0, self.ray_length, self.num_ray_samples):
+                for k in np.linspace(0, self.ray_length, int(self.num_ray_samples)):
                     ray_endpoint = camera_center_inhomogenous + unit_ray * k
                     ray_x, ray_y, ray_z = ray_endpoint
                     if (self.world.is_outside(ray_x, ray_y, ray_z)):
@@ -877,7 +880,7 @@ class Renderer:
                     red_column.append(torch.tensor(0))
                     green_column.append(torch.tensor(0))
                     blue_column.append(torch.tensor(0))
-                    plt.plot(i, j, marker="o", color=Empty.EMPTY_RGB())
+                    plt.plot(i, j, marker="o", color=Empty.EMPTY_RGB().detach().numpy())
                     # print("Too few")
                     continue
 
@@ -948,8 +951,8 @@ def fullscreen_samples(view_spec):
     num_view_samples_y = view_spec[5]
 
     ray_intersection_weights = []
-    for i in np.linspace(x_1, x_2, num_view_samples_x):
-        for j in np.linspace(y_1, y_2, num_view_samples_y):
+    for i in np.linspace(x_1, x_2, int(num_view_samples_x)):
+        for j in np.linspace(y_1, y_2, int(num_view_samples_y)):
             ray_intersection_weights.append(torch.tensor([i, j]))
     return ray_intersection_weights
 
@@ -974,6 +977,7 @@ def camera_to_image(x, y, view_spec):
 def samples_to_image(red_samples, green_samples, blue_samples, view_spec, generate_background_pixel=torch.zeros):
     X, Y, INTENSITY = 0, 1, 2
     view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y = view_spec
+    num_rays_x, num_rays_y = int(num_rays_x), int(num_rays_y)
     red_render_channel = generate_background_pixel([num_rays_y, num_rays_x])
     green_render_channel = generate_background_pixel([num_rays_y, num_rays_x])
     blue_render_channel = generate_background_pixel([num_rays_y, num_rays_x])
@@ -1191,7 +1195,7 @@ def train(world, camera_look_at, focal_length, view_spec, ray_spec, training_pos
                                                                             ray_spec,
                                                                             training_images[batch], batch, epoch)
             batch_losses.append(minibatch_loss)
-            voxel_accessors.append(voxel_access)
+            # voxel_accessors.append(voxel_access)
             print(f"After Training for camera position #{batch}={position}")
             renderer.plot_from_image(image, plt, f"Epoch: {epoch} Image: {batch}")
             save_image(image, f"{OUTPUT_FOLDER}/reconstruction/reconstruction-{epoch:02}-{batch:02}.png")
@@ -1223,7 +1227,7 @@ def reconstruct_flyby_from_world(world, camera_positions, focal_length, look_at,
     print("Constructing flyby...")
     for index, view_point in enumerate(camera_positions):
         c = Camera(focal_length, view_point, look_at)
-        r1 = Renderer(world, c, torch.tensor(view_spec), ray_spec)
+        r1 = Renderer(world, c, view_spec, ray_spec)
         red, green, blue = r1.render(plt, text=f"Frame {index}")
         save_image(torch.stack([red, green, blue]), f"{OUTPUT_FOLDER}/frames/animated-cube-{index:02}.png")
     print("Finished constructing flyby!!")
@@ -1245,7 +1249,7 @@ def model_stats(filename, plt):
 def test_upscale_rendering(world, original_renderer, camera, view_spec, ray_spec):
     upscaled_world = world.scale_up()
     model = PlenoxelModel(upscaled_world)
-    upscale_renderer = Renderer(model.parameter_world, camera, torch.tensor(view_spec), ray_spec)
+    upscale_renderer = Renderer(model.parameter_world, camera, view_spec, ray_spec)
     test_rendering(upscale_renderer, view_spec)
     test_rendering(original_renderer, view_spec)
 
@@ -1304,7 +1308,7 @@ def main():
     empty_world.build_hollow_cube_with_randomly_coloured_sides(
         Voxel.uniform_harmonic_random_colour(density=0.4, requires_grad=True),
         torch.tensor([10, 10, 10, 20, 20, 20]))
-    world = random_world
+    world = empty_world
     # empty_world.build_solid_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
     # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
     cube_center = torch.tensor([20., 20., 20., 1.])
@@ -1321,12 +1325,12 @@ def main():
     num_rays_x, num_rays_y = 50, 50
     view_x1, view_x2 = -1, 1
     view_y1, view_y2 = -1.5, 0.5
-    view_spec = [view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y]
+    view_spec = torch.tensor([view_x1, view_x2, view_y1, view_y2, num_rays_x, num_rays_y])
     ray_length = 100
     num_ray_samples = 100
     ray_spec = torch.tensor([ray_length, num_ray_samples])
 
-    renderer = Renderer(world, camera, torch.tensor(view_spec), ray_spec)
+    renderer = Renderer(world, camera, view_spec, ray_spec)
     # test_rendering(renderer, view_spec)
 
     # Generates training images
