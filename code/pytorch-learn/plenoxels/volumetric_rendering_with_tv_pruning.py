@@ -132,10 +132,10 @@ GRID_Z = 40
 
 INHOMOGENEOUS_ZERO_VECTOR = torch.tensor([0., 0., 0.])
 REGULARISATION_FRACTION = 0.01
-REGULARISATION_LAMBDA = 0.0001
+REGULARISATION_LAMBDA = 0.001
 LEARNING_RATE = 0.01
 NUM_STOCHASTIC_RAYS = 1500
-ARBITRARY_SCALE = 10
+ARBITRARY_SCALE = 1
 
 MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE = []
 MASTER_VOXELS_STRUCTURE = []
@@ -284,7 +284,7 @@ class Voxel:
     @staticmethod
     def random_coloured_voxel(requires_grad=True):
         return lambda: torch.tensor(
-            np.concatenate(([random.random() * 2], (np.random.rand(VoxelGrid.VOXEL_DIMENSION - 1) - 0.5) * 3)),
+            np.concatenate(([0.7], (np.random.rand(VoxelGrid.VOXEL_DIMENSION - 1) - 0.5))),
             requires_grad=requires_grad)
 
     @staticmethod
@@ -1308,7 +1308,7 @@ def main():
     empty_world.build_hollow_cube_with_randomly_coloured_sides(
         Voxel.uniform_harmonic_random_colour(density=0.4, requires_grad=True),
         torch.tensor([10, 10, 10, 20, 20, 20]))
-    world = empty_world
+    world = random_world
     # empty_world.build_solid_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
     # world.build_monochrome_hollow_cube(torch.tensor([10, 10, 10, 20, 20, 20]))
     cube_center = torch.tensor([20., 20., 20., 1.])
