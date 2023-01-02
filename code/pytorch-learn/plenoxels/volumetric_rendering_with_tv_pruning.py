@@ -142,7 +142,7 @@ log.info(f"Using backend {plt.get_backend()}")
 
 GRID_X = 40
 GRID_Y = 40
-GRID_Z = 40
+GRID_Z = 50
 
 INHOMOGENEOUS_ZERO_VECTOR = torch.tensor([0., 0., 0.])
 REGULARISATION_FRACTION = 0.01
