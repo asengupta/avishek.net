@@ -23,13 +23,21 @@ We continue looking at [Plenoxels: Radiance Fields without Neural Networks](http
 
 **The code for this article can be found here: [Volumetric Rendering Code with TV Regularisation](https://github.com/asengupta/avishek.net/blob/master/code/pytorch-learn/plenoxels/volumetric-rendering-with-tv-regularization.py)**
 
+**Reconstruction without Cauchy Regularisation**
 ![Cube Reconstruction using correct volumetric rendering formula without Cauchy Loss](/assets/images/cube-reconstruction-correct-rendering-large.gif)![Original Cube](/assets/images/training-cube-scaled.gif)
 
+**Reconstruction with Cauchy Regularisation**
 ![Cube Reconstruction using correct volumetric rendering formula with Cauchy Loss](/assets/images/out-cube-cauchy-large.gif)![Original Cube](/assets/images/training-cube-scaled.gif)
+
+**Training Sequence for a single view of a real world dataset**
+![Table Reconstruction - Single View - 15 Epochs](/assets/images/out-table-single-large.gif)
+
+The ABO Dataset is made available under the [**Creative Commons Attribution-NonCommercial 4.0 International Public License (CC BY-NC 4.0)**](https://creativecommons.org/licenses/by-nc/4.0/).
 
 ### Conclusion
 
 ### References
 
+- [Amazon Berkeley Objects Dataset](https://amazon-berkeley-objects.s3.amazonaws.com/index.html)
 - [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131)
 - [Plenoxels Explained](https://deeprender.ai/blog/plenoxels-radiance-fields-without-neural-networks)
