@@ -23,7 +23,10 @@ We continue looking at [Plenoxels: Radiance Fields without Neural Networks](http
 
 **The code for this article can be found here: [Volumetric Rendering Code with TV Regularisation](https://github.com/asengupta/avishek.net/blob/master/code/pytorch-learn/plenoxels/volumetric-rendering-with-tv-regularization.py)**
 
-![Cube Reconstruction using correct volumetric rendering formula](/assets/images/cube-reconstruction-correct-rendering-large.gif)![Original Cube](/assets/images/training-cube-scaled.gif)
+![Cube Reconstruction using correct volumetric rendering formula without Cauchy Loss](/assets/images/cube-reconstruction-correct-rendering-large.gif)![Original Cube](/assets/images/training-cube-scaled.gif)
+
+![Cube Reconstruction using correct volumetric rendering formula with Cauchy Loss](/assets/images/out-cube-cauchy-large.gif)![Original Cube](/assets/images/training-cube-scaled.gif)
+
 ### Conclusion
 
 ### References
