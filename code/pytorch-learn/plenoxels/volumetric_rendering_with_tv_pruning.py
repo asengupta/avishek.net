@@ -25,11 +25,11 @@ def black_rgb():
 
 
 class Empty:
-    EMPTY_RGB = black_rgb
-    ALL_EMPTY = torch.zeros
+    # EMPTY_RGB = black_rgb
+    # ALL_EMPTY = torch.zeros
 
-    # EMPTY_RGB = white_rgb
-    # ALL_EMPTY = torch.ones
+    EMPTY_RGB = white_rgb
+    ALL_EMPTY = torch.ones
 
 
 def cube_training_positions():
@@ -126,9 +126,9 @@ def table_training_positions():
 
 print(f"Using backend {plt.get_backend()}")
 
-GRID_X = 40
+GRID_X = 70
 GRID_Y = 40
-GRID_Z = 40
+GRID_Z = 70
 
 INHOMOGENEOUS_ZERO_VECTOR = torch.tensor([0., 0., 0.])
 REGULARISATION_FRACTION = 0.01
@@ -430,10 +430,11 @@ class VoxelGrid:
 
     @classmethod
     def new(cls, voxel_x, voxel_y, voxel_z, make_voxel, scale=DEFAULT_SCALE):
+        print(f"Initialising world with dimensions ({voxel_x, voxel_y, voxel_z})")
         voxel_grid = np.ndarray((voxel_x, voxel_y, voxel_z), dtype=list)
         for i in range(voxel_x):
             for j in range(voxel_y):
-                for k in range(voxel_y):
+                for k in range(voxel_z):
                     voxel_grid[i, j, k] = make_voxel()
         return cls(voxel_grid, scale)
 
@@ -451,13 +452,14 @@ class VoxelGrid:
         print(f"New dimensions={new_dimensions}")
         scaled_up_world = VoxelGrid.build_empty_world(new_dimensions[0], new_dimensions[1], new_dimensions[2],
                                                       scale=new_scale)
-        for i, j, k, original_voxel in self.voxels(torch.tensor([0, 0, 0, self.grid_x, self.grid_y, self.grid_z])):
+        for i, j, k, original_voxel in self.voxels_in_world(
+                torch.tensor([0, 0, 0, self.grid_x, self.grid_y, self.grid_z])):
             x2 = (i * 2 + 1 / x_scale).int()
             y2 = (j * 2 + 1 / y_scale).int()
             z2 = (k * 2 + 1 / z_scale).int()
             scaled_up_world.voxel_grid[i * 2: x2, j * 2: y2, k * 2: z2].fill(original_voxel.detach().clone())
             if hasattr(original_voxel, "pruned"):
-                for x, y, z, v in scaled_up_world.voxels(
+                for x, y, z, v in scaled_up_world.voxels_in_world(
                         torch.tensor([i * 2, j * 2, k * 2, 1 / x_scale, 1 / y_scale, 1 / z_scale])):
                     Voxel.prune(v)
         return scaled_up_world
@@ -551,8 +553,11 @@ class VoxelGrid:
         return self.to_voxel_coordinates(torch.stack([x1, y1, z1])), self.to_voxel_coordinates(
             torch.stack([x2, y2, z2]))
 
-    def voxels(self, world_cube_spec):
-        from_voxel, to_voxel = self.to_voxel_cube_spec(world_cube_spec)
+    def voxels_in_world(self, world_cube_spec):
+        return self.__voxels(self.to_voxel_cube_spec(world_cube_spec))
+
+    def __voxels(self, from_to_voxel_positions):
+        from_voxel, to_voxel = from_to_voxel_positions
         voxel_x1, voxel_y1, voxel_z1 = from_voxel
         voxel_x2, voxel_y2, voxel_z2 = to_voxel
         for i in torch.arange(voxel_x1, voxel_x2):
@@ -561,10 +566,10 @@ class VoxelGrid:
                     yield int(i), int(j), int(k), self.voxel_by_position(int(i), int(j), int(k))
 
     def all_voxels(self):
-        return self.voxels(torch.tensor([0., 0., 0., self.grid_x, self.grid_y, self.grid_z]))
+        return self.__voxels(torch.tensor([[0., 0., 0.], [self.voxel_grid_x, self.voxel_grid_y, self.voxel_grid_z]]))
 
     def build_solid_cube(self, cube_spec):
-        for i, j, k, _ in self.voxels(cube_spec):
+        for i, j, k, _ in self.voxels_in_world(cube_spec):
             self.voxel_grid[i, j, k] = Voxel.occupied_voxel(0.2)()
 
     def build_monochrome_hollow_cube(self, cube_spec):
@@ -574,17 +579,17 @@ class VoxelGrid:
         voxel_1, voxel_2, voxel_3, voxel_4, voxel_5, voxel_6 = make_voxel(), make_voxel(), make_voxel(), make_voxel(), make_voxel(), make_voxel()
         face1, face2, face3, face4, face5, face6 = cube_faces(cube_spec)
 
-        for i, j, k, _ in self.voxels(face1):
+        for i, j, k, _ in self.voxels_in_world(face1):
             self.voxel_grid[i, j, k] = voxel_1
-        for i, j, k, _ in self.voxels(face2):
+        for i, j, k, _ in self.voxels_in_world(face2):
             self.voxel_grid[i, j, k] = voxel_2
-        for i, j, k, _ in self.voxels(face3):
+        for i, j, k, _ in self.voxels_in_world(face3):
             self.voxel_grid[i, j, k] = voxel_3
-        for i, j, k, _ in self.voxels(face4):
+        for i, j, k, _ in self.voxels_in_world(face4):
             self.voxel_grid[i, j, k] = voxel_4
-        for i, j, k, _ in self.voxels(face5):
+        for i, j, k, _ in self.voxels_in_world(face5):
             self.voxel_grid[i, j, k] = voxel_5
-        for i, j, k, _ in self.voxels(face6):
+        for i, j, k, _ in self.voxels_in_world(face6):
             self.voxel_grid[i, j, k] = voxel_6
 
     def density(self, ray_samples_with_positions_distances, viewing_angle):
@@ -679,6 +684,12 @@ class VoxelGrid:
                 voxel_y < 0 or voxel_y >= self.voxel_grid_y or
                 voxel_z < 0 or voxel_z >= self.voxel_grid_z):
             return torch.zeros(VoxelGrid.VOXEL_DIMENSION)
+        # if (z_ is None):
+        #     print(f"[WARNING] {(voxel_x, voxel_y, voxel_z)} is empty in world")
+        #     exit(1)
+        # if (len(z_) != VoxelGrid.VOXEL_DIMENSION):
+        #     print("[WARNING] Voxel not Initialised!!!")
+        #     exit(1)
         return self.voxel_grid[voxel_x, voxel_y, voxel_z]
 
 
@@ -955,6 +966,8 @@ def fullscreen_samples(view_spec):
     for i in np.linspace(x_1, x_2, int(num_view_samples_x)):
         for j in np.linspace(y_1, y_2, int(num_view_samples_y)):
             ray_intersection_weights.append(torch.tensor([i, j]))
+
+    print(f"Number of weights={len(ray_intersection_weights)}")
     return ray_intersection_weights
 
 
@@ -1091,6 +1104,7 @@ class PlenoxelModel(nn.Module):
         # This draws stochastic rays and returns a set of samples with colours
         num_stochastic_rays = NUM_STOCHASTIC_RAYS
         voxel_access = renderer.build_rays(stochastic_samples(num_stochastic_rays, view_spec))
+        # voxel_access = renderer.build_rays(fullscreen_samples(view_spec))
         return voxel_access
 
     def world(self):
@@ -1102,7 +1116,8 @@ class PlenoxelModel(nn.Module):
         # Use self.parameter_world as the weights, take camera as input
         renderer = Renderer(self.parameter_world, camera, view_spec, ray_spec)
         num_stochastic_rays = NUM_STOCHASTIC_RAYS
-        voxel_access = renderer.build_rays(stochastic_samples(num_stochastic_rays, view_spec))
+        # voxel_access = renderer.build_rays(stochastic_samples(num_stochastic_rays, view_spec))
+        voxel_access = renderer.build_rays(fullscreen_samples(view_spec))
         r, g, b = renderer.render_from_rays(voxel_access)
         modify_grad(self.parameter_world, voxel_access)
         return r, g, b, renderer, voxel_access
@@ -1124,7 +1139,8 @@ def train_minibatch(model, optimizer, camera, view_spec, ray_spec, image_channel
     red_mse = mse(r, image_channels[0], view_spec)
     green_mse = mse(g, image_channels[1], view_spec)
     blue_mse = mse(b, image_channels[2], view_spec)
-    print(f"Regularising using {int(len(voxel_access.all_voxels) * REGULARISATION_FRACTION)} voxels...")
+    print(f"TV Regularising using {int(len(voxel_access.all_voxels) * REGULARISATION_FRACTION)} voxels...")
+    print(f"Cauchy Regularising using {len(voxel_access.all_voxels)} voxels...")
     total_loss = red_mse + green_mse + blue_mse + \
                  TV_REGULARISATION_LAMBDA * tv_term(voxel_access, model.parameter_world) + \
                  CAUCHY_REGULARISATION_LAMBDA * cauchy_term(voxel_access, model.parameter_world)
@@ -1180,8 +1196,8 @@ def prune_voxels2(world):
 def train(world, camera_look_at, focal_length, view_spec, ray_spec, training_positions, final_camera, num_epochs):
     to_tensor = transforms.Compose([transforms.ToTensor()])
     CUBE_TRAINING_FOLDER = "./images/cube"
-    # TABLE_TRAINING_FOLDER = "./images/table/small-png"
-    dataset = datasets.ImageFolder(CUBE_TRAINING_FOLDER, transform=to_tensor)
+    TABLE_TRAINING_FOLDER = "./images/table/small-png"
+    dataset = datasets.ImageFolder(TABLE_TRAINING_FOLDER, transform=to_tensor)
     data_loader = torch.utils.data.DataLoader(dataset, batch_size=100, shuffle=False)
     training_images = list(data_loader)[0][0]
 
@@ -1195,7 +1211,7 @@ def train(world, camera_look_at, focal_length, view_spec, ray_spec, training_pos
     for epoch in range(num_epochs):
         batch_losses = []
         print(f"In epoch {epoch}")
-        for batch, position in enumerate(training_positions):
+        for batch, position in enumerate(training_positions[:1]):
             print(f"Before Training for camera position #{batch}={position}")
             test_camera = Camera(focal_length, position, camera_look_at)
             minibatch_loss, renderer, image, voxel_access = train_minibatch(model, optimizer, test_camera, view_spec,
@@ -1207,7 +1223,7 @@ def train(world, camera_look_at, focal_length, view_spec, ray_spec, training_pos
             renderer.plot_from_image(image, plt, f"Epoch: {epoch} Image: {batch}")
             save_image(image, f"{OUTPUT_FOLDER}/reconstruction/reconstruction-{epoch:02}-{batch:02}.png")
 
-        torch.save(model.parameter_world, f"{OUTPUT_FOLDER}/models/table-{epoch}.pt")
+        # torch.save(model.parameter_world, f"{OUTPUT_FOLDER}/models/table-{epoch}.pt")
         epoch_losses.append(batch_losses)
 
     # pruned_voxels = prune_voxels(model.parameter_world, voxel_accessors)
@@ -1269,9 +1285,9 @@ def run_training(world, camera, view_spec, ray_spec):
     RECONSTRUCTED_WORLD_FILENAME = f"{OUTPUT_FOLDER}/reconstructed.pt"
     # Trains on multiple training images
     test_positions = torch.tensor([[-20., -10., 40., 1.]])
-    training_positions = cube_training_positions()
-    # training_positions = table_training_positions()
-    num_epochs = 15
+    # training_positions = cube_training_positions()
+    training_positions = table_training_positions()
+    num_epochs = 40
     reconstructed_world, epoch_losses = train(world, camera_look_at, focal_length, view_spec, ray_spec,
                                               training_positions, camera, num_epochs)
     print(f"Epoch losses = {epoch_losses}")
