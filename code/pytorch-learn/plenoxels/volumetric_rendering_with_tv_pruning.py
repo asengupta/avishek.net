@@ -1207,6 +1207,7 @@ def train(world, camera_look_at, focal_length, view_spec, ray_spec, training_pos
             renderer.plot_from_image(image, plt, f"Epoch: {epoch} Image: {batch}")
             save_image(image, f"{OUTPUT_FOLDER}/reconstruction/reconstruction-{epoch:02}-{batch:02}.png")
 
+        torch.save(model.parameter_world, f"{OUTPUT_FOLDER}/models/table-{epoch}.pt")
         epoch_losses.append(batch_losses)
 
     # pruned_voxels = prune_voxels(model.parameter_world, voxel_accessors)
