@@ -24,7 +24,7 @@ We continue looking at [Plenoxels: Radiance Fields without Neural Networks](http
 **The code for this article can be found here: [Volumetric Rendering Code with TV Regularisation](https://github.com/asengupta/avishek.net/blob/master/code/pytorch-learn/plenoxels/volumetric-rendering-with-tv-regularization.py)**
 
 **Applying to a real world dataset**
-For our field testing we pick a model from the Amazon Berkeley Objects dataset. The ABO Dataset is made available under the [**Creative Commons Attribution-NonCommercial 4.0 International Public License (CC BY-NC 4.0)**](https://creativecommons.org/licenses/by-nc/4.0/), and is available [here](https://amazon-berkeley-objects.s3.amazonaws.com/index.html).
+For our field-testing we pick a model from the Amazon Berkeley Objects dataset. The ABO Dataset is made available under the [**Creative Commons Attribution-NonCommercial 4.0 International Public License (CC BY-NC 4.0)**](https://creativecommons.org/licenses/by-nc/4.0/), and is available [here](https://amazon-berkeley-objects.s3.amazonaws.com/index.html).
 
 We have picked 72 views of a full $$360 \degree$$ fly-around of the object, and run it through our code.
 
