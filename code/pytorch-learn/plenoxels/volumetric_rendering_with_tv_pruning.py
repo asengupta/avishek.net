@@ -25,11 +25,11 @@ def black_rgb():
 
 
 class Empty:
-    # EMPTY_RGB = black_rgb
-    # ALL_EMPTY = torch.zeros
+    EMPTY_RGB = black_rgb
+    ALL_EMPTY = torch.zeros
 
-    EMPTY_RGB = white_rgb
-    ALL_EMPTY = torch.ones
+    # EMPTY_RGB = white_rgb
+    # ALL_EMPTY = torch.ones
 
 
 def cube_training_positions():
@@ -134,9 +134,9 @@ INHOMOGENEOUS_ZERO_VECTOR = torch.tensor([0., 0., 0.])
 REGULARISATION_FRACTION = 0.01
 TV_REGULARISATION_LAMBDA = 0.001
 CAUCHY_REGULARISATION_LAMBDA = 0.0001
-LEARNING_RATE = 0.01
+LEARNING_RATE = 0.001
 NUM_STOCHASTIC_RAYS = 1500
-ARBITRARY_SCALE = 1
+ARBITRARY_SCALE = 5
 
 MASTER_RAY_SAMPLE_POSITIONS_STRUCTURE = []
 MASTER_VOXELS_STRUCTURE = []
@@ -773,9 +773,9 @@ class Renderer:
         plt.rcParams['axes.xmargin'] = 0
         plt.rcParams['axes.ymargin'] = 0
         figure = plt.figure(f"{random.random()}", frameon=False)
-        # plt.rcParams['axes.facecolor'] = 'black'
+        plt.rcParams['axes.facecolor'] = 'black'
         plt.axis("equal")
-        # plt.style.use("dark_background")
+        plt.style.use("dark_background")
         ax = plt.gca()
         ax.set_aspect('equal', adjustable='box')
         plt.axis("off")
@@ -1180,8 +1180,8 @@ def prune_voxels2(world):
 def train(world, camera_look_at, focal_length, view_spec, ray_spec, training_positions, final_camera, num_epochs):
     to_tensor = transforms.Compose([transforms.ToTensor()])
     CUBE_TRAINING_FOLDER = "./images/cube"
-    TABLE_TRAINING_FOLDER = "./images/table/small-png"
-    dataset = datasets.ImageFolder(TABLE_TRAINING_FOLDER, transform=to_tensor)
+    # TABLE_TRAINING_FOLDER = "./images/table/small-png"
+    dataset = datasets.ImageFolder(CUBE_TRAINING_FOLDER, transform=to_tensor)
     data_loader = torch.utils.data.DataLoader(dataset, batch_size=100, shuffle=False)
     training_images = list(data_loader)[0][0]
 
@@ -1261,16 +1261,16 @@ def test_upscale_rendering(world, original_renderer, camera, view_spec, ray_spec
     test_rendering(original_renderer, view_spec)
 
 
-def run_training(world, camera, view_spec, ray_spec, camera_radius):
+def run_training(world, camera, view_spec, ray_spec):
     focal_length = camera.focal_length
     camera_look_at = camera.look_at
 
     RECONSTRUCTED_WORLD_FILENAME = f"{OUTPUT_FOLDER}/reconstructed.pt"
     # Trains on multiple training images
     test_positions = torch.tensor([[-20., -10., 40., 1.]])
-    # training_positions = cube_training_positions()
-    training_positions = table_training_positions()
-    num_epochs = 5
+    training_positions = cube_training_positions()
+    # training_positions = table_training_positions()
+    num_epochs = 15
     reconstructed_world, epoch_losses = train(world, camera_look_at, focal_length, view_spec, ray_spec,
                                               training_positions, camera, num_epochs)
     print(f"Epoch losses = {epoch_losses}")
@@ -1345,7 +1345,7 @@ def main():
     # render_training_images(camera_positions, focal_length, cube_center, world, view_spec, ray_spec, plt, camera_radius)
 
     # upscaled_world = world.scale_up()
-    run_training(world, camera, view_spec, ray_spec, camera_radius)
+    run_training(world, camera, view_spec, ray_spec)
     # test_rendering(renderer, view_spec)
     # test_upscale_rendering(world, renderer, camera, view_spec, ray_spec)
 
