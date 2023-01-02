@@ -14,7 +14,20 @@ from torchvision import datasets, transforms
 from torchviz import make_dot
 import os
 from memory_profiler import profile
-import logging as log
+
+
+# import logging as log
+
+
+class Log:
+    def info(self, msg):
+        print(msg)
+
+    def warning(self, msg):
+        print(msg)
+
+
+log = Log()
 
 
 def white_rgb():
@@ -127,15 +140,15 @@ def table_training_positions():
 
 log.info(f"Using backend {plt.get_backend()}")
 
-GRID_X = 70
+GRID_X = 40
 GRID_Y = 40
-GRID_Z = 70
+GRID_Z = 40
 
 INHOMOGENEOUS_ZERO_VECTOR = torch.tensor([0., 0., 0.])
 REGULARISATION_FRACTION = 0.01
 TV_REGULARISATION_LAMBDA = 0.001
-CAUCHY_REGULARISATION_LAMBDA = 0.0001
-LEARNING_RATE = 0.001
+CAUCHY_REGULARISATION_LAMBDA = 0.001
+LEARNING_RATE = 0.0005
 NUM_STOCHASTIC_RAYS = 1500
 ARBITRARY_SCALE = 5
 
@@ -1098,16 +1111,6 @@ class PlenoxelModel(nn.Module):
         super().__init__()
         self.parameter_world = VoxelGrid.as_parameter(world, self)
 
-    @staticmethod
-    def run(world, input):
-        camera, view_spec, ray_spec = input
-        renderer = Renderer(world, camera, view_spec, ray_spec)
-        # This draws stochastic rays and returns a set of samples with colours
-        num_stochastic_rays = NUM_STOCHASTIC_RAYS
-        voxel_access = renderer.build_rays(stochastic_samples(num_stochastic_rays, view_spec))
-        # voxel_access = renderer.build_rays(fullscreen_samples(view_spec))
-        return voxel_access
-
     def world(self):
         return self.parameter_world
 
@@ -1117,8 +1120,8 @@ class PlenoxelModel(nn.Module):
         # Use self.parameter_world as the weights, take camera as input
         renderer = Renderer(self.parameter_world, camera, view_spec, ray_spec)
         num_stochastic_rays = NUM_STOCHASTIC_RAYS
-        voxel_access = renderer.build_rays(stochastic_samples(num_stochastic_rays, view_spec))
-        # voxel_access = renderer.build_rays(fullscreen_samples(view_spec))
+        # voxel_access = renderer.build_rays(stochastic_samples(num_stochastic_rays, view_spec))
+        voxel_access = renderer.build_rays(fullscreen_samples(view_spec))
         r, g, b = renderer.render_from_rays(voxel_access)
         modify_grad(self.parameter_world, voxel_access)
         return r, g, b, renderer, voxel_access
@@ -1345,7 +1348,7 @@ def main():
     camera_center = torch.tensor([-20., -10., 45., 1.])
     # camera_center = torch.tensor([-4.7487, 44.7487, 20.0000, 1.0000])
     camera_radius = 35.
-    focal_length = 1.5
+    focal_length = 2
     camera = Camera(focal_length, camera_center, camera_look_at)
     num_rays_x, num_rays_y = 50, 50
     view_x1, view_x2 = -1, 1
