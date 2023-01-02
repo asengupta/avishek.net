@@ -23,16 +23,34 @@ We continue looking at [Plenoxels: Radiance Fields without Neural Networks](http
 
 **The code for this article can be found here: [Volumetric Rendering Code with TV Regularisation](https://github.com/asengupta/avishek.net/blob/master/code/pytorch-learn/plenoxels/volumetric-rendering-with-tv-regularization.py)**
 
+**Applying to a real world dataset**
+For our field testing we pick a model from the Amazon Berkeley Objects dataset. The ABO Dataset is made available under the [**Creative Commons Attribution-NonCommercial 4.0 International Public License (CC BY-NC 4.0)**](https://creativecommons.org/licenses/by-nc/4.0/), and is available [here](https://amazon-berkeley-objects.s3.amazonaws.com/index.html).
+
+We have picked 72 views of a full $$360 \degree$$ fly-around of the object, and run it through our code.
+
+### Notes on the Code
+- **Fixing a Transmittance calculation bug:**
+- **Refactoring volumetric rendering to use matrices instead of loops:**
+- **Configuring empty voxels to be light or dark:**
+- **Adding the ```pruned``` attribute:**
+
+
+![Table Reconstruction - Single View - 15 Epochs](/assets/images/out-table-single-large.gif)
+
+![Ground Truth](/assets/images/plenoxels-table-training-single.png)
+![Rough Reconstruction](/assets/images/plenoxels-table-reconstruction-single.png)
+
+
+### Cauchy Regularisation
+
+The Cauchy Loss Function is introduced in the paper [Robust subspace clustering by Cauchy loss function](https://arxiv.org/abs/1904.12274).
+
 **Reconstruction without Cauchy Regularisation**
 ![Cube Reconstruction using correct volumetric rendering formula without Cauchy Loss](/assets/images/cube-reconstruction-correct-rendering-large.gif)![Original Cube](/assets/images/training-cube-scaled.gif)
 
 **Reconstruction with Cauchy Regularisation**
 ![Cube Reconstruction using correct volumetric rendering formula with Cauchy Loss](/assets/images/out-cube-cauchy-large.gif)![Original Cube](/assets/images/training-cube-scaled.gif)
 
-**Training Sequence for a single view of a real world dataset**
-![Table Reconstruction - Single View - 15 Epochs](/assets/images/out-table-single-large.gif)
-
-The ABO Dataset is made available under the [**Creative Commons Attribution-NonCommercial 4.0 International Public License (CC BY-NC 4.0)**](https://creativecommons.org/licenses/by-nc/4.0/).
 
 ### Conclusion
 
@@ -41,3 +59,4 @@ The ABO Dataset is made available under the [**Creative Commons Attribution-NonC
 - [Amazon Berkeley Objects Dataset](https://amazon-berkeley-objects.s3.amazonaws.com/index.html)
 - [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131)
 - [Plenoxels Explained](https://deeprender.ai/blog/plenoxels-radiance-fields-without-neural-networks)
+- [Robust subspace clustering by Cauchy loss function](https://arxiv.org/abs/1904.12274)

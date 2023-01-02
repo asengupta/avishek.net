@@ -1,5 +1,8 @@
 heading: Code
 projects:
+  - name: Plenoxels
+    description: An implementation of Plenoxels in PyTorch, for 3D reconstruction using Neural Radiance Fields
+    link: https://github.com/asengupta/plenoxels-pytorch
   - name: Basis-Processing
     description: A graphing library written in Ruby built on top of Ruby-Processing
     link: https://github.com/asengupta/Basis
