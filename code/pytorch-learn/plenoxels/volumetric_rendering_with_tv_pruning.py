@@ -16,6 +16,7 @@ import os
 from memory_profiler import profile
 import logging as log
 
+
 def white_rgb():
     return torch.tensor([1., 1., 1.])
 
@@ -445,6 +446,7 @@ class VoxelGrid:
             voxel_x, voxel_y, voxel_z = self.to_voxel_coordinates(torch.tensor([world_x, world_y, world_z]))
             return self.voxel_grid[voxel_x, voxel_y, voxel_z]
 
+    # TODO: Remember to test scale_up() again
     def scale_up(self):
         new_dimensions = self.voxel_dimensions() * 2
         new_scale = self.scale / 2
@@ -459,7 +461,7 @@ class VoxelGrid:
             z2 = (k * 2 + 1 / z_scale).int()
             scaled_up_world.voxel_grid[i * 2: x2, j * 2: y2, k * 2: z2].fill(original_voxel.detach().clone())
             if hasattr(original_voxel, "pruned"):
-                for x, y, z, v in scaled_up_world.voxels_in_world(
+                for x, y, z, v in scaled_up_world.voxel_by_position(
                         torch.tensor([i * 2, j * 2, k * 2, 1 / x_scale, 1 / y_scale, 1 / z_scale])):
                     Voxel.prune(v)
         return scaled_up_world
@@ -555,6 +557,11 @@ class VoxelGrid:
 
     def voxels_in_world(self, world_cube_spec):
         return self.__voxels(self.to_voxel_cube_spec(world_cube_spec))
+
+    def voxels_by_position(self, voxel_cube_spec):
+        x1, y1, z1, dx, dy, dz = voxel_cube_spec
+        x2, y2, z2 = x1 + dx, y1 + dy, z1 + dz
+        return self.__voxels([[x1, y1, z2], [x2, y2, z2]])
 
     def __voxels(self, from_to_voxel_positions):
         from_voxel, to_voxel = from_to_voxel_positions
