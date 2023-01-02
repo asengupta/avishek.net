@@ -14,7 +14,7 @@ from torchvision import datasets, transforms
 from torchviz import make_dot
 import os
 from memory_profiler import profile
-
+import logging as log
 
 def white_rgb():
     return torch.tensor([1., 1., 1.])
@@ -124,7 +124,7 @@ def table_training_positions():
                          [70.0000, 20.0000, 43.0000, 1.0000]])
 
 
-print(f"Using backend {plt.get_backend()}")
+log.info(f"Using backend {plt.get_backend()}")
 
 GRID_X = 70
 GRID_Y = 40
@@ -192,7 +192,7 @@ def camera_basis_from(camera_depth_z_vector):
     # We choose to align the up veector with the X-axis in this case.
     if (torch.equal(camera_up_vector, INHOMOGENEOUS_ZERO_VECTOR)):
         camera_up_vector = torch.tensor([1., 0., 0.])
-    print(f"Up vector is: {camera_up_vector}")
+    log.info(f"Up vector is: {camera_up_vector}")
     # The camera coordinate system now has the direction of camera and the up direction of the camera.
     # We need to find the third vector which needs to be orthogonal to both the previous vectors.
     # Taking the cross product of these vectors gives us this third component
@@ -206,8 +206,8 @@ def camera_basis_from(camera_depth_z_vector):
 
 
 def basis_from_depth(look_at, camera_center):
-    print(f"Looking at: {look_at}")
-    print(f"Looking from: {camera_center}")
+    log.info(f"Looking at: {look_at}")
+    log.info(f"Looking from: {camera_center}")
     depth_vector = torch.sub(look_at, camera_center)
     depth_vector[3] = 1.
     return camera_basis_from(depth_vector)
@@ -235,7 +235,7 @@ def generate_camera_angles(radius, look_at):
             camera_positions.append(torch.tensor([x, y, z, 0]))
 
     positions = (torch.stack(camera_positions).unique(dim=0)) + look_at
-    print(positions)
+    log.info(positions)
     return positions
 
 
@@ -333,7 +333,7 @@ class Ray:
         self.voxels = voxels
         self.voxel_positions = voxel_positions
         if num_samples != len(ray_sample_positions):
-            print(f"WARNING: num_samples = {num_samples}, sample_positions = {ray_sample_positions}")
+            log.warning(f"WARNING: num_samples = {num_samples}, sample_positions = {ray_sample_positions}")
 
     def at(self, index):
         start = index * Voxel.NUM_INTERPOLATING_VOXEL_NEIGHBOURS
@@ -430,7 +430,7 @@ class VoxelGrid:
 
     @classmethod
     def new(cls, voxel_x, voxel_y, voxel_z, make_voxel, scale=DEFAULT_SCALE):
-        print(f"Initialising world with dimensions ({voxel_x, voxel_y, voxel_z})")
+        log.info(f"Initialising world with dimensions ({voxel_x, voxel_y, voxel_z})")
         voxel_grid = np.ndarray((voxel_x, voxel_y, voxel_z), dtype=list)
         for i in range(voxel_x):
             for j in range(voxel_y):
@@ -449,7 +449,7 @@ class VoxelGrid:
         new_dimensions = self.voxel_dimensions() * 2
         new_scale = self.scale / 2
         x_scale, y_scale, z_scale = new_scale
-        print(f"New dimensions={new_dimensions}")
+        log.info(f"New scaled up dimensions={new_dimensions}")
         scaled_up_world = VoxelGrid.build_empty_world(new_dimensions[0], new_dimensions[1], new_dimensions[2],
                                                       scale=new_scale)
         for i, j, k, original_voxel in self.voxels_in_world(
@@ -470,7 +470,7 @@ class VoxelGrid:
     def set(self, voxel_position, voxel):
         voxel_x, voxel_y, voxel_z = voxel_position
         if self.is_outside_grid(voxel_x, voxel_y, voxel_z):
-            print(f"[WARNING]: set() attempted to set a value at {(voxel_position)} outside grid")
+            log.warning(f"[WARNING]: set() attempted to set a value at {(voxel_position)} outside grid")
             return
         else:
             self.voxel_grid[voxel_x, voxel_y, voxel_z] = voxel
@@ -507,7 +507,7 @@ class VoxelGrid:
         if (voxel[0] > Voxel.VOXEL_PRUNING_OPACITY_THRESHOLD):
             return False
         surrounding_opacities = self.neighbour_opacities(*voxel_position)
-        print(f"Scanning neighbours...{surrounding_opacities}")
+        log.info(f"Scanning neighbours...{surrounding_opacities}")
         if (surrounding_opacities.less_equal(
                 Voxel.VOXEL_PRUNING_NEIGHBOUR_OPACITY_THRESHOLDS).all()):
             voxel.requires_grad = False
@@ -653,9 +653,9 @@ class VoxelGrid:
         c = c_0 * (1 - z_d) + c_1 * z_d
         MASTER_VOXELS_STRUCTURE += [c_000, c_001, c_010, c_011, c_100, c_101, c_110, c_111]
         if (c[0].abs() > 900):
-            print(f"WARNING: Bad neighbouring tensor at {(ray_sample_world_position)}")
-            print(f"WARNING: {(x_d, y_d, z_d)}")
-            print(interpolating_neighbours)
+            log.warning(f"WARNING: Bad neighbouring tensor at {(ray_sample_world_position)}")
+            log.warning(f"WARNING: {(x_d, y_d, z_d)}")
+            log.warning(interpolating_neighbours)
         return c
 
     def neighbours(self, world_x, world_y, world_z):
@@ -684,12 +684,6 @@ class VoxelGrid:
                 voxel_y < 0 or voxel_y >= self.voxel_grid_y or
                 voxel_z < 0 or voxel_z >= self.voxel_grid_z):
             return torch.zeros(VoxelGrid.VOXEL_DIMENSION)
-        # if (z_ is None):
-        #     print(f"[WARNING] {(voxel_x, voxel_y, voxel_z)} is empty in world")
-        #     exit(1)
-        # if (len(z_) != VoxelGrid.VOXEL_DIMENSION):
-        #     print("[WARNING] Voxel not Initialised!!!")
-        #     exit(1)
         return self.voxel_grid[voxel_x, voxel_y, voxel_z]
 
 
@@ -731,7 +725,7 @@ class Renderer:
 
         if (view_x < self.x_1 or view_x > self.x_2
                 or view_y < self.y_1 or view_y > self.y_2):
-            print(f"Warning: bad generation: {view_x}, {view_y}")
+            log.warning(f"[WARNING]: bad generation: {view_x}, {view_y}")
 
         # print(color_tensor)
         return torch.cat([torch.tensor([view_x, view_y]), color_tensor])
@@ -745,7 +739,7 @@ class Renderer:
         red_channel = composite_colour_tensors[:, [X, Y, RED_CHANNEL]]
         green_channel = composite_colour_tensors[:, [X, Y, GREEN_CHANNEL]]
         blue_channel = composite_colour_tensors[:, [X, Y, BLUE_CHANNEL]]
-        print("Done volumetric calculations from rays!!")
+        log.info("Done volumetric calculations from rays!!")
         return (red_channel, green_channel, blue_channel)
 
     def render_serial(self, voxel_access, camera, clamping_function):
@@ -767,15 +761,15 @@ class Renderer:
         start_copy_rays = timer()
         rays = list(map(lambda i: voxel_access.for_ray(i), range(num_view_points)))
         end_copy_rays = timer()
-        print(f"Copying rays took {end_copy_rays - start_copy_rays}")
-        print(f"Wall clock is {timer()}")
+        log.info(f"Copying rays took {end_copy_rays - start_copy_rays}")
+        log.info(f"Wall clock is {timer()}")
         start_render_rays = timer()
         # responses = p.map(lambda ray: self.render_from_ray(ray, viewing_angle), rays)
         responses = p.map(self.render_from_angle, rays)
         p.close()
         p.join()
         end_render_rays = timer()
-        print(f"Actual rendering took {end_render_rays - start_render_rays}")
+        log.info(f"Actual rendering took {end_render_rays - start_render_rays}")
         composite_colour_tensors = torch.stack(list(responses))
         return composite_colour_tensors
 
@@ -840,8 +834,8 @@ class Renderer:
 
             if (view_x < self.x_1 or view_x > self.x_2
                     or view_y < self.y_1 or view_y > self.y_2):
-                print(f"Warning: bad generation: {view_x}, {view_y}")
-        print("Done building candidate rays!!")
+                log.warning(f"[WARNING]: bad generation: {view_x}, {view_y}")
+        log.info("Done building candidate rays!!")
 
         return VoxelAccess(view_points, torch.stack(ray_sample_positions), voxel_pointers, all_voxels,
                            all_voxel_positions)
@@ -861,9 +855,9 @@ class Renderer:
         camera_center_inhomogenous = camera.center[:3]
 
         Renderer.initialise_plt(plt)
-        print(f"Camera basis={camera.basis}")
+        log.info(f"Camera basis={camera.basis}")
         view_screen_origin = camera_basis_z * camera.focal_length + camera_center_inhomogenous
-        print(f"View screen origin={view_screen_origin}")
+        log.info(f"View screen origin={view_screen_origin}")
         for i in np.linspace(self.x_1, self.x_2, int(self.num_view_samples_x)):
             red_column = []
             green_column = []
@@ -927,7 +921,7 @@ class Renderer:
         if (text is not None):
             plt.text(0.5, 0.5, text, fontsize=14, backgroundcolor="white", alpha=0.5, color="black")
         plt.show()
-        print("Done rendering in full!!")
+        log.info("Done rendering in full!!")
         return (red_image_tensor, green_image_tensor, blue_image_tensor)
 
     def plot_from_image(self, image_data, plt, text=None):
@@ -967,7 +961,7 @@ def fullscreen_samples(view_spec):
         for j in np.linspace(y_1, y_2, int(num_view_samples_y)):
             ray_intersection_weights.append(torch.tensor([i, j]))
 
-    print(f"Number of weights={len(ray_intersection_weights)}")
+    log.info(f"Number of weights={len(ray_intersection_weights)}")
     return ray_intersection_weights
 
 
@@ -1052,8 +1046,8 @@ def tv_for_voxel(voxel_accessor, world):
 
     tv_regularisation_term = (delta_x + delta_y + delta_z + 0.0001).sqrt().sum()
     if (math.isnan(tv_regularisation_term)):
-        print("[WARNING] NaN in TV regularisation term")
-        print(
+        log.warning("[WARNING] NaN in TV regularisation term")
+        log.warning(
             f"Sqrt sum={tv_regularisation_term}, Source voxel={voxel}, Positions are: {(x_plus_1, y_plus_1, z_plus_1)}, Voxels = {(voxel_x1, voxel_y1, voxel_z1)}, Deltas={(delta_x, delta_y, delta_z)}")
     return tv_regularisation_term
 
@@ -1087,9 +1081,9 @@ def modify_grad(parameter_world, voxel_access):
                 activated_parameters.append(torch.tensor([x, y, z]))
 
     if activated_parameters:
-        print(f"Activated {len(torch.stack(activated_parameters).unique(dim=0))} parameters...")
+        log.info(f"Activated {len(torch.stack(activated_parameters).unique(dim=0))} parameters...")
     else:
-        print(f"[WARNING] No parameters were activated!!")
+        log.warning(f"[WARNING] No parameters were activated!!")
 
 
 class PlenoxelModel(nn.Module):
@@ -1116,8 +1110,8 @@ class PlenoxelModel(nn.Module):
         # Use self.parameter_world as the weights, take camera as input
         renderer = Renderer(self.parameter_world, camera, view_spec, ray_spec)
         num_stochastic_rays = NUM_STOCHASTIC_RAYS
-        # voxel_access = renderer.build_rays(stochastic_samples(num_stochastic_rays, view_spec))
-        voxel_access = renderer.build_rays(fullscreen_samples(view_spec))
+        voxel_access = renderer.build_rays(stochastic_samples(num_stochastic_rays, view_spec))
+        # voxel_access = renderer.build_rays(fullscreen_samples(view_spec))
         r, g, b = renderer.render_from_rays(voxel_access)
         modify_grad(self.parameter_world, voxel_access)
         return r, g, b, renderer, voxel_access
@@ -1130,30 +1124,31 @@ def cauchy_term(voxel_access, world):
 
 @profile
 def train_minibatch(model, optimizer, camera, view_spec, ray_spec, image_channels, batch_index, epoch_index):
-    print(f"Shape = {image_channels.shape}")
+    log.info(f"Shape = {image_channels.shape}")
     optimizer.zero_grad()
 
     r, g, b, renderer, voxel_access = model([camera, view_spec, ray_spec])
     image = samples_to_image(r, g, b, view_spec, generate_background_pixel=Empty.ALL_EMPTY)
 
+    log.info("Calculating loss...")
+    log.info(f"TV Regularising using {int(len(voxel_access.all_voxels) * REGULARISATION_FRACTION)} voxels...")
+    log.info(f"Cauchy Regularising using {len(voxel_access.all_voxels)} voxels...")
     red_mse = mse(r, image_channels[0], view_spec)
     green_mse = mse(g, image_channels[1], view_spec)
     blue_mse = mse(b, image_channels[2], view_spec)
-    print(f"TV Regularising using {int(len(voxel_access.all_voxels) * REGULARISATION_FRACTION)} voxels...")
-    print(f"Cauchy Regularising using {len(voxel_access.all_voxels)} voxels...")
     total_loss = red_mse + green_mse + blue_mse + \
                  TV_REGULARISATION_LAMBDA * tv_term(voxel_access, model.parameter_world) + \
                  CAUCHY_REGULARISATION_LAMBDA * cauchy_term(voxel_access, model.parameter_world)
-    print(f"Loss={total_loss}, RGB MSE={(red_mse, green_mse, blue_mse)}")
+    log.info(f"Loss={total_loss}, RGB MSE={(red_mse, green_mse, blue_mse)}")
     total_loss.backward()
-    print(f"Model parameters: {len(list(model.parameters()))}")
+    log.info(f"Model parameters: {len(list(model.parameters()))}")
     num_activated_parameters = 0
     for param in model.parameters():
         if (param.grad is None):
             continue
         num_activated_parameters += 1
         # print(f"Param grad after={param.grad}")
-    print(f"Activated parameters tally with non-null gradient={num_activated_parameters}")
+    log.info(f"Activated parameters tally with non-null gradient={num_activated_parameters}")
     #     print(f"Gradients={torch.max(param.grad)}")
     # make_dot(total_mse, params=dict(list(model.named_parameters()))).render("mse", format="png")
     # make_dot(r, params=dict(list(model.named_parameters()))).render("channel", format="png")
@@ -1169,7 +1164,7 @@ def render_training_images(camera_positions, focal_length, camera_look_at, world
         save_image(torch.stack([red, green, blue]), f"./images/cube/training/rotating-cube-{index:02}.png")
 
     plt.show()
-    print("Completed rendering images")
+    log.info("Completed rendering images")
 
 
 def prune_voxels(world, voxel_accessors):
@@ -1201,7 +1196,7 @@ def train(world, camera_look_at, focal_length, view_spec, ray_spec, training_pos
     data_loader = torch.utils.data.DataLoader(dataset, batch_size=100, shuffle=False)
     training_images = list(data_loader)[0][0]
 
-    print(
+    log.info(
         f"{training_images.shape[0]} images, {training_images.shape[1]} channels per image, resolution is {training_images.shape[2:]}")
 
     model = PlenoxelModel(world)
@@ -1210,16 +1205,16 @@ def train(world, camera_look_at, focal_length, view_spec, ray_spec, training_pos
     voxel_accessors = []
     for epoch in range(num_epochs):
         batch_losses = []
-        print(f"In epoch {epoch}")
+        log.info(f"In epoch {epoch}")
         for batch, position in enumerate(training_positions[:1]):
-            print(f"Before Training for camera position #{batch}={position}")
+            log.info(f"Before Training for camera position #{batch}={position}")
             test_camera = Camera(focal_length, position, camera_look_at)
             minibatch_loss, renderer, image, voxel_access = train_minibatch(model, optimizer, test_camera, view_spec,
                                                                             ray_spec,
                                                                             training_images[batch], batch, epoch)
             batch_losses.append(minibatch_loss)
             # voxel_accessors.append(voxel_access)
-            print(f"After Training for camera position #{batch}={position}")
+            log.info(f"After Training for camera position #{batch}={position}")
             renderer.plot_from_image(image, plt, f"Epoch: {epoch} Image: {batch}")
             save_image(image, f"{OUTPUT_FOLDER}/reconstruction/reconstruction-{epoch:02}-{batch:02}.png")
 
@@ -1232,29 +1227,28 @@ def train(world, camera_look_at, focal_length, view_spec, ray_spec, training_pos
     final_renderer = Renderer(model.world(), final_camera, view_spec, ray_spec)
     red, green, blue = final_renderer.render(plt)
     transforms.ToPILImage()(torch.stack([red, green, blue])).show()
-    print("Rendered final result")
+    log.info("Rendered final result")
     plt.show()
     return model.parameter_world, epoch_losses
 
 
 # Reconstructs the world from disk
 def reconstruct_flyby_from_file(filename, camera_positions, focal_length, look_at, view_spec, ray_spec):
-    print(f"Camera position: {camera_positions}")
+    log.info(f"Camera position: {camera_positions}")
     voxel_grid = torch.load(filename)
-    print(voxel_grid.shape)
     reconstructed_world = VoxelGrid.from_tensor(voxel_grid)
-    print("Constructing flyby...")
+    log.info("Constructing flyby...")
     reconstruct_flyby_from_world(reconstructed_world, camera_positions, focal_length, look_at, view_spec, ray_spec)
 
 
 def reconstruct_flyby_from_world(world, camera_positions, focal_length, look_at, view_spec, ray_spec):
-    print("Constructing flyby...")
+    log.info("Constructing flyby...")
     for index, view_point in enumerate(camera_positions):
         c = Camera(focal_length, view_point, look_at)
         r1 = Renderer(world, c, view_spec, ray_spec)
         red, green, blue = r1.render(plt, text=f"Frame {index}")
         save_image(torch.stack([red, green, blue]), f"{OUTPUT_FOLDER}/frames/animated-cube-{index:02}.png")
-    print("Finished constructing flyby!!")
+    log.info("Finished constructing flyby!!")
 
 
 def model_stats(filename, plt):
@@ -1266,7 +1260,7 @@ def model_stats(filename, plt):
     plt.figure()
     plt.hist(all_opacities, bins=50)
     pruned_voxels = prune_voxels2(world)
-    print(f"Pruned voxels = {len(pruned_voxels)}")
+    log.info(f"Pruned voxels = {len(pruned_voxels)}")
     plt.show()
 
 
@@ -1287,18 +1281,18 @@ def run_training(world, camera, view_spec, ray_spec):
     test_positions = torch.tensor([[-20., -10., 40., 1.]])
     # training_positions = cube_training_positions()
     training_positions = table_training_positions()
-    num_epochs = 40
+    num_epochs = 30
     reconstructed_world, epoch_losses = train(world, camera_look_at, focal_length, view_spec, ray_spec,
                                               training_positions, camera, num_epochs)
-    print(f"Epoch losses = {epoch_losses}")
+    log.info(f"Epoch losses = {epoch_losses}")
     torch.save(reconstructed_world.voxel_grid, RECONSTRUCTED_WORLD_FILENAME)
-    print(f"Saved world to {RECONSTRUCTED_WORLD_FILENAME}!")
+    log.info(f"Saved world to {RECONSTRUCTED_WORLD_FILENAME}!")
     reconstruct_flyby_from_file(RECONSTRUCTED_WORLD_FILENAME, training_positions, focal_length, camera_look_at,
                                 view_spec,
                                 ray_spec)
     # camera_positions = generate_camera_angles(camera_radius, camera_look_at)
 
-    print("Everything done!!")
+    log.info("Everything done!!")
 
 
 def test_rendering(renderer, view_spec):
@@ -1309,19 +1303,19 @@ def test_rendering(renderer, view_spec):
     voxel_access = renderer.build_rays(fullscreen_samples(view_spec))
     # voxel_access = renderer.build_rays(stochastic_samples(2000, view_spec))
     end_build_rays = timer()
-    print(f"Building rays took {end_build_rays - start_build_rays}")
+    log.info(f"Building rays took {end_build_rays - start_build_rays}")
     start_render_rays = timer()
     r, g, b = renderer.render_from_rays(voxel_access, clamping_function=ClampingFunctions.CLAMP)
     end_render_rays = timer()
-    print(f"Rendering rays took {end_render_rays - start_render_rays}")
+    log.info(f"Rendering rays took {end_render_rays - start_render_rays}")
     image_data = samples_to_image(r, g, b, view_spec, generate_background_pixel=Empty.ALL_EMPTY)
     renderer.plot_from_image(image_data, plt)
     transforms.ToPILImage()(image_data).show()
     start_render_full = timer()
     renderer.render(plt, clamping_function=ClampingFunctions.CLAMP)
     end_render_full = timer()
-    print(f"Rendering rays in full took {end_render_full - start_render_full}")
-    print("Finished rendering!!")
+    log.info(f"Rendering rays in full took {end_render_full - start_render_full}")
+    log.info("Finished rendering!!")
 
 
 def main():
