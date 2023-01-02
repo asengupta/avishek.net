@@ -1111,7 +1111,7 @@ class PlenoxelModel(nn.Module):
     def world(self):
         return self.parameter_world
 
-    @profile
+    # @profile
     def forward(self, input):
         camera, view_spec, ray_spec = input
         # Use self.parameter_world as the weights, take camera as input
@@ -1129,7 +1129,7 @@ def cauchy_term(voxel_access, world):
     return torch.log(1 + 2 * all_unique_voxels[:, 0].pow(2)).sum()
 
 
-@profile
+# @profile
 def train_minibatch(model, optimizer, camera, view_spec, ray_spec, image_channels, batch_index, epoch_index):
     log.info(f"Shape = {image_channels.shape}")
     optimizer.zero_grad()
