@@ -536,9 +536,9 @@ class VoxelGrid:
         summing_matrix = torch.tensor(list(
             functools.reduce(lambda acc, n: acc + [[1.] * n + [0.] * (number_of_samples - n)],
                              range(1, number_of_samples + 1),
-                             [])))
+                             []))).t()
         # print(f"Sigma-D={density_distance_products.type()}, summing matrix = {summing_matrix.t().type()}")
-        transmittances = torch.matmul(density_distance_products.double(), summing_matrix.t().double())
+        transmittances = torch.matmul(density_distance_products.double(), summing_matrix.double())
         transmittances = torch.exp(-transmittances)
 
         red_channel, green_channel, blue_channel = [], [], []
