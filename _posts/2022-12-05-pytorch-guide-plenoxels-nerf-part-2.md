@@ -13,6 +13,7 @@ This is part of a series of posts breaking down the paper [Plenoxels: Radiance F
 - [Part 3]({% post_url 2022-12-07-pytorch-guide-plenoxels-nerf-part-3 %})
 - [Part 4]({% post_url 2022-12-18-pytorch-guide-plenoxels-nerf-part-4 %})
 - [Part 5]({% post_url 2022-12-19-pytorch-guide-plenoxels-nerf-part-5 %})
+- [Part 6]({% post_url 2022-12-27-pytorch-guide-plenoxels-nerf-part-6 %})
 
 We continue looking at [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131). We set up a very contrived opacity model in our last post, which gave us an image like this:
 

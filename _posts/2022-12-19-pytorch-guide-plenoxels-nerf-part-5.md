@@ -13,6 +13,7 @@ This is part of a series of posts breaking down the paper [Plenoxels: Radiance F
 - [Part 3]({% post_url 2022-12-07-pytorch-guide-plenoxels-nerf-part-3 %})
 - [Part 4]({% post_url 2022-12-18-pytorch-guide-plenoxels-nerf-part-4 %})
 - [Part 5 (this one)]({% post_url 2022-12-19-pytorch-guide-plenoxels-nerf-part-5 %})
+- [Part 6]({% post_url 2022-12-27-pytorch-guide-plenoxels-nerf-part-6 %})
 
 We continue looking at [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131). We have built our volumetric renderer, trained it on a single training image; it is now time to extend the idea to **multiple training images** obtained by cameras around the model. We will also add **Total Variance regularisation** to the loss calculations in this post, and compare the results for good and skewed initial randomised values. Ultimately, we show results of the reconstruction using our simple cube.
 

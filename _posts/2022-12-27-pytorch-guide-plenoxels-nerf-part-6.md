@@ -17,6 +17,8 @@ This is part of a series of posts breaking down the paper [Plenoxels: Radiance F
 
 We continue looking at [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131). In this sequel, we address some remaining aspects of the paper, before concluding with our study of this paper. We specifically consider the following:
 
+**Note:** We leave this post open-ended, and will append to/modify it as we obtain further results.
+
 - **Voxel pruning:** This will probably require us to modify our core data structure to be a little more efficient, because it will involve storing all the transmittances of the entire training set per epoch, and then zeroing out candidate voxels.
 - **Encouraging voxel sparsity:** Adding more regularisation terms will encourage sparsity of voxels. In the paper, the Cauchy loss is incorporated to speed up computations.
 - **Coarse-to-fine resolution scaling:** This will be needed to better resolve the fine structure of our training scenes. At this point, we are working with a very coarse low resolution of $$40 \times 40 \times 40$$. We can get higher resolutions than this, but this will need more work, and more computations.
