@@ -27,10 +27,14 @@ We continue looking at [Plenoxels: Radiance Fields without Neural Networks](http
 
 **The code for this article can be found here: [Volumetric Rendering Code with TV Regularisation](https://github.com/asengupta/avishek.net/blob/master/code/pytorch-learn/volumetric_rendering_with_tv_pruning.py)**
 
-**Applying to a real world dataset**
-For our field-testing we pick a model from the Amazon Berkeley Objects dataset. The ABO Dataset is made available under the [**Creative Commons Attribution-NonCommercial 4.0 International Public License (CC BY-NC 4.0)**](https://creativecommons.org/licenses/by-nc/4.0/), and is available [here](https://amazon-berkeley-objects.s3.amazonaws.com/index.html).
+### Demonstration on a real world dataset
+For our field-testing we pick a model from the **Amazon Berkeley Objects dataset**. The ABO Dataset is made available under the [**Creative Commons Attribution-NonCommercial 4.0 International Public License (CC BY-NC 4.0)**](https://creativecommons.org/licenses/by-nc/4.0/), and is available [here](https://amazon-berkeley-objects.s3.amazonaws.com/index.html).
 
-We have picked 72 views of a full $${360}^\circ$$ fly-around of the object, and run it through our code. We demonstrate
+We have picked 72 views of a full $${360}^\circ$$ fly-around of the object, and run it through our code. We demonstrate the learning using a single training for the image. We will show more results as they become available.
+
+![Rough Reconstruction](/assets/images/plenoxels-table-reconstruction-single.png)
+![Ground Truth](/assets/images/plenoxels-table-training-single.png)
+![Table Reconstruction - Single View - 15 Epochs](/assets/images/out-table-single-large.gif)
 
 ### Notes on the Code
 #### 1. Fixing a Transmittance calculation bug
@@ -135,12 +139,6 @@ A scale parameter is introduced in the world; this represents the scale of the v
 
 Note that though the grid size doubles, the size of the world stays the same; in effect, the voxels halve in each dimension.
 
-![Table Reconstruction - Single View - 15 Epochs](/assets/images/out-table-single-large.gif)
-
-![Ground Truth](/assets/images/plenoxels-table-training-single.png)
-![Rough Reconstruction](/assets/images/plenoxels-table-reconstruction-single.png)
-
-
 ### Cauchy Regularisation
 
 The Cauchy Loss Function is introduced in the paper [Robust subspace clustering by Cauchy loss function](https://arxiv.org/abs/1904.12274). The Cauchy Loss function in the Plenoxels paper is given as:
@@ -161,9 +159,9 @@ TODO: Explain why CLF is used as a sparsity prior.
 
 
 ### Conclusion
+This concludes our study of the Plenoxels paper. There is a lot more scope for fine-tuning, but on the whole this survey covers the important aspects. It is a lovely paper, and is a good example of what can be accomplished without resorting directly to Neural Networks.
 
 ### References
-
 - [Amazon Berkeley Objects Dataset](https://amazon-berkeley-objects.s3.amazonaws.com/index.html)
 - [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131)
 - [Plenoxels Explained](https://deeprender.ai/blog/plenoxels-radiance-fields-without-neural-networks)
