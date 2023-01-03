@@ -8,6 +8,8 @@ draft: false
 
 This is part of a series of posts breaking down the paper [Plenoxels: Radiance Fields without Neural Networks](https://arxiv.org/abs/2112.05131), and providing (hopefully) well-annotated source code to aid in understanding.
 
+**The final code has been moved to its own repository at [plenoxels-pytorch](https://github.com/asengupta/plenoxels-pytorch).**
+
 - [Part 1 (this one)]({% post_url 2022-12-04-pytorch-guide-plenoxels-nerf-part-1 %})
 - [Part 2]({% post_url 2022-12-05-pytorch-guide-plenoxels-nerf-part-2 %})
 - [Part 3]({% post_url 2022-12-07-pytorch-guide-plenoxels-nerf-part-3 %})
