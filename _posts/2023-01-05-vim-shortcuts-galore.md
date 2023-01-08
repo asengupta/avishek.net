@@ -29,3 +29,4 @@ This short post lists the Neovim (Vim) shortcuts I am getting used to. I've rece
 - ```<C-o>```/```<C-i>```: Go to old/new positions
 - ```<C-u>```/```<C-d>```: Move up/down half a page
 - ```{```/```}```: Jump forward/back across a contiguous block of text
+- ```+```/```-```: Jump to start of next/previous line
