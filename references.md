@@ -50,4 +50,5 @@ title: Book References
 - **Gaussian Processes**: https://distill.pub/2019/visual-exploration-gaussian-processes/
 - **Statistical Machine Learning Theory**: https://www.youtube.com/c/T%C3%BCbingenML/playlists
 - **Kernel Methods**: https://www.youtube.com/channel/UCotztBOmGVl9pPGIN4YqcRw/videos
+- **Lagrange Multipliers**: https://www.youtube.com/watch?v=5A39Ht9Wcu0
 
