@@ -132,20 +132,20 @@ Let's put **Level Sets** into action. Let's take a familiar exercise, and apply 
 
 This is the level set of a function $$g(x,y)=y-x^2$$, with $$G(4)$$, if we assume $$G$$ to be the level set function.
 
-Let's work with just $$g(x)$$. Differentiating partially:
+Let's work with just $$g(x,y)$$. Differentiating partially:
 
 $$
-Dg(x,y) = \left[ \frac{\partial g(x)}{\partial x} \frac{\partial g(x)}{\partial x} \right] = [2x \hspace{1cm} 1]
+Dg(x,y) = \left[ \frac{\partial g(x,y)}{\partial x} \frac{\partial g(x,y)}{\partial y} \right] = [-2x \hspace{1cm} 1]
 $$
 
-This immediately gives us the vector normal to the curve at a given $$(x,y)$$. The normal vector at $$x=3$$ is
+This immediately gives us the vector normal to the curve at a given $$(x,y)$$. Remember, $$g(x,y)$$ is a surface, so the differentiation gives us a **tangent plane**. The tangent plane is represented by its normal vector, hence the vector is normal to the curve. The normal vector at $$x=3$$ is
 $$
 \begin{bmatrix}
 -6 \\ 1
 \end{bmatrix}
 $$
 
-**However this is not the tangent line.** If you consider the actual line (actually, one of the lines, you can get infinitely many lines by translation, we discuss this below) this normal vector represents, that is: $$\mathbf{y-6x=0}$$ which passes through the origin, and is definitely not tangent to the curve, as shown in the picture below. It has the correct slope, but it is displaced.
+**However this is not the tangent line.** If you consider the actual line that this normal vector represents (actually, one of the lines, you can get infinitely many lines by translation, we discuss this below), that is: $$\mathbf{y-6x=0}$$, we see that it passes through the origin, and is definitely not tangent to the curve, as shown in the picture below. It has the correct slope, but it is displaced.
 
 ![Level Sets of Tangers](/assets/images/tangent-lines-level-sets.png)
 
@@ -160,7 +160,8 @@ Plugging in -5 as the level set value for the function gives us $$\mathbf{y-6x=-
 We could have solved it taking a slightly different, possibly more general, approach. We know that the tangent exists at $$(3,13)$$. We know that $$y$$ can be expressed in terms of $$x$$ as $$y=x^2+4$$. Thus, any point in the neighbourhood of $$(3,13)$$ will still lie on the tangent line, and must satisfy the following:
 
 $$
-y-13=\frac{\partial y}{\partial x}(x-3)
+\frac{y-13}{x-3}=\frac{\partial y}{\partial x} \\
+\Rightarrow y-13=\frac{\partial y}{\partial x}(x-3)
 $$
 
 Well, $$y$$ does not depend upon anything other than $$x$$, so taking the partial is the same as your normal derivative, which is $$\frac{dy}{dx}=6$$. Substituting this back into the above identity, we get:
