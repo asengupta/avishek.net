@@ -8,19 +8,3 @@
     {% endif %}
   {% endfor %}
 </ul>
-
-<h2>Published</h2>
-<ul>
-  {% for post in site.posts %}
-    {% if post.tags contains 'Software Engineering' and post.draft == false %}
-      {% assign author = site.authors | where: 'short_name', post.author | first %}
-        <li>
-          <h2><a href="{{ post.url }}">{{ post.title }}</a></h2>
-          <i>{{ post.date | date: "%-d %B %Y" }}</i>
-          <br/>
-          {{ post.excerpt }}
-          <hr/>
-        </li>
-    {% endif %}
-  {% endfor %}
-</ul>

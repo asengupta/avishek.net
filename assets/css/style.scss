@@ -1,16 +1,32 @@
+---
+---
+
 @import "{{ site.theme }}";
 
-.listx li {
-	
+body {
+  //display: none;
+  //background-color: black;
 }
 
-#xxx {
-	color: red;
-}
-.listx ul > li {
-	
+.wrapper {
+  margin-left: 20px;
+  margin-right: 20px;
+  width: 1200px;
 }
 
-.listx a {
-	
+section {
+  width: 900px;
+}
+
+.postgrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  grid-auto-rows: minmax(100px, auto);
+}
+
+.post-summary {
+  border: 1px solid;
+  padding: 5px;
+  background-color: aliceblue;
 }
