@@ -130,6 +130,7 @@ Changing the initial random values to between -1 and 1, gives us the following, 
 ![Cube Reconstruction using good initial values](/assets/images/cube-reconstruction-good-initial-scaled.gif)![Original Cube](/assets/images/training-cube-scaled.gif)
 
 These are training scenes from the first three epochs:
+
 ![Cube Reconstruction training steps](/assets/images/training-steps-new-scaled.gif)
 
 More epochs and training images are obviously needed. The paper mentions running 12800 batches before it converges sufficiently.
