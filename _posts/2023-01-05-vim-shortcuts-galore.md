@@ -12,6 +12,8 @@ This short post lists the Neovim (Vim) shortcuts I am getting used to. I've rece
 - ```.```: Repeat last command
 - ```w```/```b```: Move forward/backward by a word
 - ```i```/```a```/```I```/```A```: Start editing before/after cursor, before start/after end of line
+  - ```i```: Considers whitespace as words too, so ```i2w``` selects a word and any whitespace after it.
+  - ```a```: Considers word + whitespace as a text object, so ```a2w``` selects ```"text1 text2 "```.
 - ```0```/```_```/```$```: Go to starting character / starting non-whitespace character / end of line
 - ```d```: Delete (suffix with counter and text object, like ```d2w```, ```dd```) 
 - ```c```: Change (suffix with counter and text object, like ```c2w```, ```cc```) 
@@ -23,7 +25,8 @@ This short post lists the Neovim (Vim) shortcuts I am getting used to. I've rece
 - ```/``` and ```?```: Find string forward/backward
 - ```P```/```p```: Paste before/after cursor
 - ```x```: Delete character under cursor
-- ```n + G```: Go to line number ```n```
+- ```nG```/```ngg```: Go to line number ```n```
+- ```G```: Go to end of file
 - ```i```: "Everything inside" qualifier used in conjunction with other verbs, like ```diw```, ```ci"```
 - ```<C-v>```: Visual Block Mode, use ```I``` to insert en-masse
 - ```<C-o>```/```<C-i>```: Go to old/new positions
