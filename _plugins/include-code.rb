@@ -7,15 +7,14 @@ module Jekyll
       def initialize(tag_name, text, tokens)
         super
         params = text.split("!")
-        uri = URI.parse(params[0])
-        from = params[1].to_i - 1
-        to = params[2].to_i - 1
-        response = Net::HTTP.get_response(uri)
-        @body = response.body.lines[Range.new(from, to)]
+        @uri = URI.parse(params[0])
+        @from = params[1].to_i - 1
+        @to = params[2].to_i - 1
       end
 
       def render(context)
-        @body
+        response = Net::HTTP.get_response(@uri)
+        response.body.lines[Range.new(@from, @to)]
       end
     end
   end
