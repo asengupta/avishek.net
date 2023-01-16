@@ -1,5 +1,5 @@
 ---
-title: "The No-Questions Asked Guide to PyTorch : Transformers, Part 2"
+title: "Transformers using PyTorch : Worklog Part 2"
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "PyTorch", "Programming", "Deep Learning", "Transformers"]
@@ -32,7 +32,7 @@ The code in the main Transformer implementation which implements the positional 
 ## Data Flow
 The diagram below (you'll need to zoom in) shows the data flow for a single Encoder/Decoder, with 8 attention blocks per multihead attention layer. $$n$$ represents the number of words passed into the Encoder. $$m$$ represents the number of words passed into the Decoder. $$V$$ represents the length of the full vocabulary.
 
-The dimensions of the data at each stage is depicted to facilitate understanding.
+The dimensions of the data at each stage are depicted to facilitate understanding.
 
 {% mermaid %}
 %%{init: {

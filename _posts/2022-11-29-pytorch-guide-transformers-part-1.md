@@ -1,5 +1,5 @@
 ---
-title: "The No-Questions Asked Guide to PyTorch : Transformers, Part 1"
+title: "Transformers using PyTorch : Worklog Part 1"
 author: avishek
 usemathjax: true
 tags: ["Machine Learning", "PyTorch", "Programming", "Deep Learning", "Transformers"]
