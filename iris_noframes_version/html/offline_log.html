@@ -1,0 +1,285 @@
+<html>
+<head>
+<title>Project COMRADE - The IRIS vision system</title>
+</head>
+<body bgcolor="cccccc">
+
+<font face="arial">
+
+<br>
+
+<h2>IRIS API progress + application notes (unedited)</h2>
+<u>Random notes??</u>
+
+<p>Documentation started a little late, unavoidable delays (7.8.2003.).
+Anyway, if you are reading this, please note that work on this started
+almost a month ago, just before my exams. Anyway...</p>
+
+<p>IRIS API is well on its way to becoming something like a poor cousin of
+Paintshop or Photoshop (really?). I think I must remodel a more stripped-down
+version of the engine for COMRADE. Maybe I'll call it IRIS-Lite. Name sounds good.
+Work on the recognition engine still to start off. Thinking of names:</p>
+
+<ul>
+<li>COG</li>
+<li>Scorpio</li>
+<li>Mindseye</li>
+<li>Object Signature - IRIS (OSIRIS)</li>
+<li>Watermark</li>
+<li>Rainbow16.7 ->good one</li>
+</ul>
+
+<p>Dev-C++ is easy to use. It's based on the gcc/g++ system, so should have no
+problems porting it. I tried compiling with Borland's command line compiler
+BCC5.5.1. It compiled but for some reason, it cannot find the file and gives
+abnormal program termination.</p>
+<p>I think I might have to actually go into StrongARM assembly to get more speed.
+I do not believe that the Simputer will be enough for Rainbow16.7 (or whatever
+name the platform will have).</p>
+
+Added block copy to and from .bmp files (7.8.2003.).
+<br>
+Iterated rapidly into templatised version of the buffer class. Works the same,
+but will be able to use the same buffer class for later HSI/HSL calculations (7.8.2003.).
+<br>
+ 
+Known issues/errata with IRIS
+
+<ol>
+<li>Venetian blind effect during color processing with files of x-resolutions
+around 450. Works perfectly fine for anything higher/lower.</li>
+<li>Buffer copy to/from features gives a skewed image for odd x-resolutions,
+like an off-by-one error. Problem cannot be traced. Two separately defined
+algorithms give the same problem. Works perfectly fine at resolutions higher
+or lower than this. Why only the devil knows.</li>
+<li>Iterators currently work only with inverted (positive) height-field bitmaps.</li>
+</ol>
+
+<h3>Developments on 09.08.2003.</h3>
+
+<p>Great deal of work accomplished today. Rectified a return value defect in the HSL-RGB conversion functions (if saturation was zero, HSL_to_RGB( ) returned black, not grey as it should). Altered the convolution routine to make it faster (see stats in IRIS-Profile.txt). Changed the idiotic RGB-based kernel convolution with the proper luminance convolution routine. Cross-checked the effects of some custom filters of Adobe Photoshop 6.0 with those of IRIS. Very good results. Must determine whether the StrongARM processor we'll be using has a DSP blockset or not. May need it.
+Today may be a day which marks a transition of IRIS from just an experiment to a somewhat inquisitive developer's platform. To that end, IRIS breaks up into two streams. The first one will be the IRIS used for COMRADE in conjunction with Rainbow16.7. I'll call this IRIS-Lite.
+The other one, already somewhat different from IRIS-Lite in its internal operation, will be a larger, more demanding platform. I call it IRIS-XT for now. It decouples some features, making it easier and more OO. Basically, IRIS-XT will expand into something larger than its original application environment.
+Also, created a small excuse of a incode profiler/tracer called Gollum. Should help somewhat.
+</p>
+ 
+
+<h3>Developments on 10.08.2003.</h3>
+
+<p>Lot of restructuring and new coding done today. First, created a nice wrapper class for converting between image buffers. Added two new functions, implementing dilation and erosion of images. Cool effects. Added a parameterised version of convolve(). The programmer will now have a lot more flexibility with it. Made Gollum better. It really helps to have Gollum. It can store checkpoints and times in a file IRISprofile.txt. The file has been really useful for tuning the performance of IRIS.
+IRIS-XT is growing very fast. But work on Rainbow16.7 must start soon. Maybe today? Possibly start with the SOM system first. The faster techniques using Fourier that I have developed will need edge detection algorithms to be added to IRIS-XT. Also need to design the color filter banks for IRIS, and a basic color signature detection system. Besides that, need to think up a reliable backup scheme.
+More work was done which spilled over to the morning of 11.08.2003.  So...
+</p>
+ 
+<h3>Developments on 11.08.2003.</h3>
+
+<p>Extreme work done in the wee hours of the morning. Already added greyscale convertor and inverter. Added a color channel adjustment procedure for color correction. Corrected some serious bugs in the routines. However, still need to optimise them further (though I must say, the routines work rather well on this 200 MHz Pentium MMX louse. Must get a book on optimisation somehow. Anyway, IRIS-XT is going very well. Tired and exhausted. Work on the recognition engine should start tomorrow. I need that data quickly.
+I think the line-following algorithm detection scheme could be solved using the erosion routine. Must tune it up, since line-following is a more real-time component than the other tasks.
+Had a team meeting today. Need the StrongARM type and instruction set, if I have to optimise. Replaced erosion for line-following with a simpler, regression-based direction finder. Regression routine still to be written. Inlined several functions like at(), which get called heavily. Possibly noticed a performance increase.
+Regression routine written. It's blindingly fast. Works directly on the original image buffer and no performance degradation. Scaling down is actually slower. Regression routine still needs some proper testing but has performed admirably till now. I'm actually contemplating of starting to work on IRIS-3D, but later. Recognition engine still not started. Should start today night or tomorrow at the latest.
+Wonders never cease, especially unpleasant ones! IRIS-XT failed to link every time I tried to demonstrate the kernel multiplication feature to Mrinal. Found out later that three inlined functions had their bodies defined in a separate .cpp file, instead of in the header file, as should have been the case. How IRIS-XT linked properly for so long I do not know. Possibly because I changed the main() .cpp to demonstrate the features. Must remember this in the future.
+Last notes of the day. Got the digital camera. Figured how to plug it in (genius, no?). But the real problem starts now. IRIS-XT was tested in a 'cleanroom' environment, so to speak, with very little color and luminance variations. The images from the digital camera are – well, I think IRIS-XT has quite a long way to go – still: with not a little help from the still-unborn Rainbow16.7. Specifically, edge detection will be very important. Color detection and key identification – well, I need to think, and experiment. Only way out. Feeling sleepy...
+</p>
+
+<h3>Developments on 15.08.2003.</h3>
+
+<p>Rainbow16.7 had a very difficult birth. Worked on it at for the last two days, with very little concrete results. Though I still believe that the Fourier approach is a very good one, albeit one that needs some developments. Anyway, Rainbow16.7, existing as RainbowPreAlpha, has begun, for better or for worse.
+Have decided to merge IRIS-XT and IRIS-Lite. Not much difference, besides IRIS-Lite will need all the capabilities it can get. Also, begun work on an experimental Cellular Automata based edge detector. Let's see where this goes.
+CA_EdgeDetector was very successful. Besides, the possibility of being able to tune the parameters is very useful. Maybe Canny and other methods will not be needed after all.
+Parameterised CA_EdgeDetector's methods, much like the others. There are three parameters that I can change, and tuning them gives good results.
+</p>
+
+<h3>Developments on 17.08.2003.</h3>
+
+<p>Installed Red Hat Linux 6.0 on my PC yesterday. Except for the fact that the X server will not start (SiS 6215C is not listed by Xconfigurator), everything is fine. I think I rather like Linux. Also, ran IRIS+Rainbow under Linux g++. Compiled and ran without a hitch, without a single error or warning. Guess true portability has been achieved. Started work on the more conventional edge detection routines.
+</p>
+ 
+<h3>Developments on 18.08.2003.</h3>
+
+<p>Ditched the conventional edge detection routines (for now). Will use them if needed. CA_EdgeDetector works very well. Besides, I'm not sure I should go into the extra complexity, at least for now. Added a unsharp mask routine for sharpening the image edges. Works very well. Also added memory reallocation (i.e., resizing) capabilities to the Buffer class. Emphasises the fact that IRIS-XT must be able to work with a very small memory footprint.
+</p>
+<p>Added a Cellular Automata based (very basic) skeletoniser to IRIS-XT. Works at first glance, but need to test it properly. It is 3:30 am and I'm sleepy...
+</p>
+ 
+<h3>Developments on 19.08.2003.</h3>
+
+<p>Added a proper histogram equalisation function today. Works well but need to cross-check with the standard ones in Photoshop. Skeletoniser needs a lot of improvement. IRIS-XT is fast reaching critical mass. Already, it is Linux-tested (and no errors), is also not too slow. Somewhat comfortable speed on my 200 MHz PC. So, should be good enough for the StrongARM platform.
+</p>
+IRIS-XT is now large enough that it warrants proper programmer documentation. Should start on that soon. I think IRIS-XT is suited more to a powerful robotics vision platform, than a conventional image processing API. But then, that is exactly what I am building it for.
+
+Finally designed all the remaining edge detection routines, though they do not work very well. I started with a very vague idea of the techniques, and the stupid book I bought is not very helpful. Guess it's back to the Net again. Skeletoniser not worked upon yet. The histogram equalisation function works properly, but does not match exactly with Photoshop's, though it performs its intended task.
+
+Boring day, mainly taken up by testing and tweaking. Tomorrow may be the same.
+
+ 
+
+Developments on 20.08.2003.
+
+ 
+
+Refactored the edge detectors so that they derive their kernels from some central repository. This central repository is SpecialKernels.h. Added a quantised Gaussian filter with variable size and standard deviation. Used for smoothening, and works quite well, though the division factor has to be adjusted for proper luminance. Nothing else today.
+
+ 
+
+Developments on 21.08.2003.
+
+ 
+
+Had a talk with Mrinal today. Discussed the big picture for COMRADE. Cleared some of my doubts, and decided to continue on with my work. Already complicated as it is. The object search algorithm has to be fast. So, back to reading and brainstorming. We decided that there should be a website for COMRADE, but who is going to make it? Besides, till now, there is no proper documentation going on anywhere – I think. I've started off, but that's it. Maybe I should start some work on the site – a rudimentary outline will do.
+
+Before tonight, Rainbow was a part of IRIS-XT. It broke free from complete dependency at 4:15 am, on the 22nd that is. Added another CA-based routine which will detect centers of dense populations of a given hue with an adjustable tolerance factor. Works well and fast. Maybe even capable of working in pseudo-realtime. Maybe take a break from all of this for a week. Already beating self-imposed deadlines with remarkable consistency.
+
+Using assertions for the first time as well. Good for catching strange bugs which give “Illegal operation” messages. Still wondering how big the whole thing is going to be when it all comes together. 'Massive' is an understatement.
+
+ 
+
+Developments on 22.08.2003.
+
+ 
+
+Developed more parameterised routines for ColorSeeker. Also added a contrast stretching algorithm. Works very well. Cleaned up some glitches in the routines which would operate on windows inside the buffers. Introduced an optional copy_to_output for possible optimisation tweaks later on in the project. I think color will be the most important component in realtime image sensing/detection. Also, the histogram equalisation function works amazingly well for poorly lighted images. Used CA_EdgeDetector after that. Gives good results, but also need to introduce one more important differentiating component – color. Will continue this log after vacation. Bye.
+
+ 
+
+Developments on 27.09.2003.
+
+ 
+
+Well, no technical developments to speak of, except that I have a new monitor.
+
+ 
+
+Developments on 02.11.2003.
+
+ 
+
+Not something to speak of in the proper sense of the term. Still banging my head over the space-carving algorithm. I’m trying to work out the gargoyle image sequence, but for some reason, it gives some weird results which I’ve saved for later viewing. However, they are not just random images. The regularity or progression through various stages is clearly visible, and that is what has set me thinking. Why so regular? Is there some, very subtle point that I’m missing, or do I have the whole mental model entirely wrong?
+
+This is one of the few times that I’m afraid I might not succeed. But I must go on. Besides, also need to implement the Hough transform. It’ll be useful for line-following and any other shape detection algorithms in the noisy image space.
+
+A big plus is that we’ve decided that my code will not be restricted to the Simputer. The second machine, Adam, will have a state-of-the-art P4 processor onboard, so that makes things easier…or harder. Optimisation is still a necessity. However, I can’t feel any peace until I’ve finished with this space-carving algorithm.
+
+ 
+
+Developments on 10.11.2003.
+
+ 
+
+Space carving algorithm actually worked from day one. I was looking at the reconstructed cross sections upside down!
+
+ 
+
+Developments on 30.01.2004.
+
+ 
+
+Incorporated namespaces into IRIS-XT. The available namespaces are:
+
+ 
+
+1)       Comrade::IrisFoundation contains the shared data types used by both IRIS-XT and IRIS-3D.
+
+2)       Comrade::IrisXT
+
+3)       Comrade::Iris3D (still to come)
+
+ 
+
+Added conventional edge-detectors and zero-crossing detectors. Also ported IRIS-XT to Red Hat Linux 9.0 gcc 3.2.x; took an entire evening at JD’s place. Plagued with multiple errors at first (possibly 70 or so!), got a hard-earned lesson in ANSI/ISO/GNU C++ compliance, but finally managed to get it working flawlessly, many thanks to JD and his inimitable tea even with his VLSI exams tomorrow. Anyway, it works properly. Have decided to use sonar for camera calibration. May write a paper on it :-D
+
+ 
+
+Developments on 06.02.2004.
+
+ 
+
+The space carving algorithm was not giving conclusive results, so developed a debugger’s version of it, replete with printing statements. Thanks to that, found several bugs (oh-so-subtle ones), and the end result seems to be getting close to what I want.
+
+But I need a more powerful PC as soon as possible. 2.8 GHz should do.
+
+ 
+
+Developments on 09.02.2004.
+
+ 
+
+Debug, execute, debug, execute…that was exactly what the entire day was taken up in. But the effort is worth it. The 3D reconstruction is now good enough to be shown off, though not yet texture-mapped, which hinders comprehension a bit. But it’s good enough for my purposes.
+
+OK, next thing, next immediate step is to move from the coordinate geometry-centric calculations to the projective matrix form. Works faster, though less intuitive and requires calibration. But the results should give exact reconstructions. But that is not the primary reason I’m aiming for this model. I want to see if calibration is really worth it.
+
+Another thing to keep in mind is that I intend to fuse all stereoscopic range images into a single unified 3D view of the environment. The reason this cannot be done using space carving is that the technique necessarily requires all possible views at once to reconstruct (or rebuild, if you like) the model. Adding new images always forces a total recompile of the object model. I don’t want that. I want the environment to be refined with successive depth maps. Plus there is another objective I want to achieve: localisation through images. My objective is to bring the vision code to the level that it should be able to supplant sonar if necessary. Oops, too ambitious. OK. But it should be able to do all tasks a sonar can do, and more. Plus I need to fuse the sonar data and the image data together.
+
+OK, things to do the next week:
+
+ 
+
+1)       Move to projective matrix representation+associated calibration. Read, read, READ. Besides, why am I so lazy to perform calibration?
+
+2)       Write a more advanced stereo correspondence routine and refine the current search method: it sucks. Luckily, have a lot of papers which detail several methods to do this. So, can start on this immediately.
+
+3)       Find a way to fuse several stereoscopic views together to get information for the 3D map. This of course needs some localisation information, thus what I need are papers.
+
+4)       Rough pose estimation+localisation using images. Have heard of Markov models and other stuff; have to download a whole slew of papers quickly.
+
+5)       Integrate texture with space-carved object model. Should take some time, was plagued by a bug which doesn’t allow voxels to register projected textures correctly.
+
+6)       Test and integrate the new stereoscopic vision and space carving code into the Linux platform. (it has only the IrisFoundation and the IrisXT namespaces defined properly)
+
+ 
+
+Phew! Lots of work still left.
+
+ 
+
+Developments 0n 10.02.2004.
+
+ 
+
+Moved to the projective matrix representation. The only difference was in the order of evaluation of the projection onto the image. I initially did an intersection and R-T transform, in that order. The projective matrix involves the R-T transformation first, followed by a simple, almost too easy, perspective transformation. Will give a performance boost, because the intersection test was somewhat expensive. Question is, does it give the same results? Can’t run it on the 200 MHz machine; have to check it out on a faster one.
+
+ 
+
+Developments on 11.02.2004.
+
+ 
+
+Wrote code for a nice templatised tree structure. Rather late addition to the IrisFoundation namespace, but had to do it sometime. Very generic. Will use it for the quadtree segmentation, which in turn will be used for the new, better, stereo correspondence algorithm. It has a subsethood function which goes well with checking whether a pixel is within bounds of a particular rectangle/square, and traverse the tree down from the root, specialising until the terminal node is reached.
+
+ 
+
+Developments on 19.03.2004.
+
+ 
+
+Haven’t updated the log for a long time. Was working furiously, I guess. Anyway, the current status of IRIS is very heartening, to say the least. Used the quadtree segmentation routine to develop a new stereovision engine, which does not give any corona effect, and is fast to boot. Have finished the Hough Transform code, including the generalised version which can detect arbitrary shapes (after edge detection).
+
+Also, updated two of the oldest classes of IRIS – Buffer and BufferManager. Buffer had problems with its copy constructor, and BufferManager was a farce for showing off RGB_BufferManager. BufferManager is templatised now, and has some generic Buffer-handling routines, and one or two functions of RGB_BufferManager have been shifted to it. Interfaces remain same.
+
+Two new namespaces added. They are:
+
+ 
+
+1)       Comrade::IrisRuntime
+
+2)       Comrade::Osiris
+
+ 
+
+IrisRuntime will contain the runtime environment where IRIS objects will be created and destroyed. It will also contain appropriate interfaces to a existing/home-grown scripting language. Currently have ScorpioCLI running for IRIS; no use till date.
+
+Osiris will contain localisation code and depth map fusion algorithms. May contain other stuff I haven’t thought of yet.
+
+Map-building will be a cinch only if I get proper localisation. Currently working on a scheme for SOM-based localisation (good for a technology demonstration), but it won’t give me (x,y) coordinate pairs. Besides, I have no idea at what stage the rest of the team is in. Pure vision-based localisation is impossible without some constraints and more equipment like inclinometers and pitch-roll meters, as I can see from the papers. Maximum I can do is create a moving coordinate system so that the robots (minimum of 3) can know where they are with reference to each other, but there are at least three degrees of freedom with this system, so cannot use it in any way for now.
+
+Been wondering whether we can use WLAN localisation. Can be fast and effective, and will give no problem even on undulating terrain (JD’s dream comes true J). Because without localisation, there are some things I cannot do, like 3D map-building.
+
+Working on it.
+
+<br><br>
+<hr width=100%>
+
+<center><font size=2>Copyright (c) 2004 Avishek Sen Gupta</font></center>
+</font>
+</body>
+</html>
+

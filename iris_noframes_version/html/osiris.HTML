@@ -1,0 +1,118 @@
+<html>
+<head>
+<title>Project COMRADE - The IRIS vision system</title>
+</head>
+<body bgcolor="000000">
+<font face="arial">
+
+<table width=100% border=0 cellpadding=10>
+<tr>
+<td colspan=2 bgcolor="000000">
+<h1 align="center"><img src="../images/splash.gif" align="center" width=640 height=90></h1>
+<h3 align="center"><img src="../images/comrade_legend.gif" align="center" ></h3>
+</td>
+</tr>
+
+<tr>
+<td background="../images/greystrip.gif" width=25% valign="TOP" bgcolor="000000">
+<table align="center" width=90% border=0>
+
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="home.html"><font color="ffffff"><b>IRIS Home</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_foundation.html"><font color="ffffff"><b>IRIS Foundation</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_xt.html"><font color="ffffff"><b>IRIS-XT</font></b></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_3d.html"><font color="ffffff"><b>IRIS-3D</font></b></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_runtime.html"><font color="ffffff"><b>IRIS Runtime</font></b></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="osiris.html"><font color="ffffff"><b>Osiris</font></b></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_src.html"><font color="ffffff"><b>Source code</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_discuss.html"><font color="ffffff"><b>Discussions</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_datasets.html"><font color="ffffff"><b>Datasets</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%>
+<a href="http://livejournal.com/community/project_comrade" TARGET="_top"><font color="ffffff"><b>LiveJournal</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_references.html"><font color="ffffff"><b>References</b></font></a></td>
+</tr>
+<td bgcolor="222222" align="center" width=20%><a href="http://project-comrade.org" TARGET="_top"><font color="ffffff"><b>COMRADE Home</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="aboutme.html"><font color="ffffff"><b>About me</b></font></a></td>
+</tr>
+</table>
+
+</td>
+<td  valign="TOP" bgcolor="cccccc">
+<br>
+<h2>Osiris</h2>
+<h3>What is Osiris ?</h3>
+
+<p>I started off with the idea of making IRIS a basic functional
+image processing segment for COMRADE. It has evolved beyond its aims
+to an extent I'd not anticipated. And now, even beyond IRIS-3D
+(for the moment forgetting the fact that there are lots of refinements
+still needed), lies Osiris. Osiris is not IRIS, and will soon warrant
+a much more detailed description than is possible here. Osiris will be
+the controlling "brain" that IRIS will report to.</p>
+<p>Please note that Osiris is still what IRIS was about six months ago,
+but will evolve as fast as its creator can write code :-) Among the
+first things it should be able to do is perform localisation.
+COMRADE's odometry is projected to be notoriously erroneous, so
+vision-based localisation is a good bet. There are some problems,
+however.</p>
+<ul>
+<li>Most localisation systems use omnidirectional vision for
+triangulation purposes or panoramic images. These require mirrors
+and other fragile equipment which are prohibitively expensive to
+set up.</li>
+<li>Our team leader (sorry JD, couldn't resist that ;-) wants to run
+COMRADE on rough terrain (and no, we don't have inclinometers). In
+which case, odometry is virtually useless, unless there is explicit
+correction applied, which is also something Osiris should attempt.</li>
+</ul>
+
+<p>This is a classic case of using existing resources to solve an
+unanticipated problem. I'm currently trying to build a localisation
+system based on a biological model of place recognition, using neural
+networks embedded in a self organising map (SOM).</p>
+
+<p>Watch this page for more updates on this exciting approach.</p>
+
+<p>Secondly, and as important, is the issue of constructing 3D maps
+of the environment during exploration. This task is not difficult at all
+if we have proper localisation. Turns out, localisation and map-building
+depend upon each other intimately.</p>
+<p>However, since we cannot provide a world map to the robot, the first
+task <i>has</i> to be localisation. The SOM-based localisation is useful
+for more high-level tasks, but accuracy in terms of an <i>(x,y)</i> pair
+is not its intended goal. The problem is currently under active study,
+and we may use sonar, vision, WLAN or a combination of these tools
+to achieve robust localisation.</p>
+
+<hr width=100%>
+
+<center><font size=2>Copyright (c) 2004 Avishek Sen Gupta</font></center>
+</td>
+</tr>
+</table>
+</font>
+</body>
+</html>
+

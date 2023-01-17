@@ -1,0 +1,161 @@
+<html>
+<head>
+<title>Project COMRADE - The IRIS vision system</title>
+</head>
+<body bgcolor="000000">
+<font face="arial">
+
+<table width=100% border=0 cellpadding=10>
+<tr>
+<td colspan=2 bgcolor="000000">
+<h1 align="center"><img src="../images/splash.gif" align="center" width=640 height=90></h1>
+<h3 align="center"><img src="../images/comrade_legend.gif" align="center" ></h3>
+</td>
+</tr>
+
+<tr>
+<td background="../images/greystrip.gif" width=25% valign="TOP" bgcolor="000000">
+<table align="center" width=90% border=0>
+
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="home.html"><font color="ffffff"><b>IRIS Home</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_foundation.html"><font color="ffffff"><b>IRIS Foundation</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_xt.html"><font color="ffffff"><b>IRIS-XT</font></b></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_3d.html"><font color="ffffff"><b>IRIS-3D</font></b></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_runtime.html"><font color="ffffff"><b>IRIS Runtime</font></b></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="osiris.html"><font color="ffffff"><b>Osiris</font></b></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_src.html"><font color="ffffff"><b>Source code</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_discuss.html"><font color="ffffff"><b>Discussions</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_datasets.html"><font color="ffffff"><b>Datasets</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%>
+<a href="http://livejournal.com/community/project_comrade" TARGET="_top"><font color="ffffff"><b>LiveJournal</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_references.html"><font color="ffffff"><b>References</b></font></a></td>
+</tr>
+<td bgcolor="222222" align="center" width=20%><a href="http://project-comrade.org" TARGET="_top"><font color="ffffff"><b>COMRADE Home</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="aboutme.html"><font color="ffffff"><b>About me</b></font></a></td>
+</tr>
+</table>
+
+</td>
+<td valign="TOP" bgcolor="cccccc">
+
+<br>
+<h2>Welcome to IRIS !</h2>
+<h3>What is IRIS ?</h3>
+<p> IRIS is the vision system being developed for COMRADE.
+However, it is also being designed keeping in mind future
+expansions and applications on other robot platforms and/or
+desktop applications.
+As of now, it is still evolving continuously in terms of
+code and performance. You can keep track of the latest
+developments through this site or by visiting our
+<a href="http://livejournal.com/community/project_comrade">
+project journal</a>.</p>
+<p>IRIS is organised (as of now) functionally into five distinct components:
+<ul>
+<li><a href="iris_foundation.html"><b>IRIS Foundation</b></a>:
+This contains all the data structures and frequently-used
+algorithms required by the other two components,
+<a href="iris_xt.html">IRIS-XT</a> and <a href="iris_3d.html">
+IRIS-3D</a>.</li>
+<li><a href="iris_xt.html"><b>IRIS-XT</b></a>:
+This component is resposible for the basic image processing
+functions as well as all the 2D machine vision tasks like 
+line detection and shape matching.</li>
+<li><a href="iris_3d.html"><b>IRIS-3D</b></a>:
+This component is responsible for performing 3D vision tasks
+like 3D reconstruction and stereoscopic vision.</li>
+<li><a href="iris_runtime.html"><b>IRIS Runtime</b></a>:
+This component (still under active construction), is responsible for
+providing a runtime environment within which all objects belonging
+to any IRIS class will be created and destroyed. It will also
+include an interface to a scripting language like Python, Pike or Cint.</li>
+<li><a href="osiris.html"><b>Osiris</b></a>: This is not strictly a part
+of IRIS, but it is intended to provide methods for localisation, either
+purely vision-based, or based on fused data from sonar and vision.
+It should also be capable of map-building in unknown environments, and is
+still under construction.</li>
+ 
+</ul>
+</p>
+
+<hr width=100%>
+
+<h3>On which platforms can IRIS be used ?</h3>
+<p>IRIS is being developed under Windows (98, Me, XP whatever)
+using <a href="http://www.bloodshed.net">Dev-C++ 4.9.5</a>.
+However, it is targeted for the Linux platform; thus the code has
+been kept as platform-independent as possible by sticking to
+Standard C++. Both implementations have been merged into a
+single distribution, though they will diverge in the near future
+(possibly due to linking issues with scripting languages and GUI
+issues).
+You can find a discussion on this and other issues in the
+<a href="iris_discuss.html">Discussions</a> section.
+</p>
+<p>Currently, IRIS is being tested using gcc 3.3 under Red Hat
+Linux 9.</p>
+
+<hr width=100%>
+
+<h3>How can I reuse IRIS ?</h3>
+<p>In any way you see fit. IRIS is basically designed for machine
+vision applications, but that does not restrict its domain of use.
+You can add several algorithms which perform fancy effects, add a
+few functions for reading different image formats, and design your
+custom image processing engine.</p>
+<p>In fact, you can go even further and dismember parts of
+<a href="iris_3d.html">IRIS-3D</a> to get a (very) basic 3D graphics
+engine (In fact, many functions <a href="iris_3d.html">IRIS-3D</a>
+uses have been ripped off from an engine for robotic arm
+visualisation I wrote in Turbo C++ a few years ago!).</p>
+
+<hr width=100%>
+
+<h3>Which parts of IRIS are complete enough for me to use ?</h3>
+<p>A rather hard question to answer, since IRIS is evolving
+continuously. In a sense, a lot of IRIS is complete but a lot still
+remains to be done, like some optimisations and inclusion of
+better algorithms in existing modules, besides the coding of the
+new modules themselves.
+<p>However, that does not mean you cannot start using IRIS
+immediately for your purposes. Some of my reference material
+is listed in the
+<a href="iris_references.html">References</a> section. You can also
+find out the status of each IRIS component by going to the
+appropriate section, or see what IRIS can already do (Check out
+the <a href="iris_datasets.html">Datasets</a> section).</p>
+
+<hr width=100%>
+
+<center><font size=2>Copyright (c) 2004 Avishek Sen Gupta</font></center>
+</td>
+</tr>
+</table>
+
+</font>
+</body>
+</html>
+

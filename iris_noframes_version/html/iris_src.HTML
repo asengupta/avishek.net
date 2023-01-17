@@ -1,0 +1,137 @@
+<html>
+<head>
+<title>Project COMRADE - The IRIS vision system</title>
+</head>
+<body bgcolor="000000">
+
+<font face="arial">
+
+<table width=100% border=0 cellpadding=10>
+<tr>
+<td colspan=2 bgcolor="000000">
+<h1 align="center"><img src="../images/splash.gif" align="center" width=640 height=90></h1>
+<h3 align="center"><img src="../images/comrade_legend.gif" align="center" ></h3>
+</td>
+</tr>
+
+<tr>
+<td background="../images/greystrip.gif" width=25% valign="TOP" bgcolor="000000">
+<table align="center" width=90% border=0>
+
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="home.html"><font color="ffffff"><b>IRIS Home</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_foundation.html"><font color="ffffff"><b>IRIS Foundation</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_xt.html"><font color="ffffff"><b>IRIS-XT</font></b></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_3d.html"><font color="ffffff"><b>IRIS-3D</font></b></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_runtime.html"><font color="ffffff"><b>IRIS Runtime</font></b></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="osiris.html"><font color="ffffff"><b>Osiris</font></b></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_src.html"><font color="ffffff"><b>Source code</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_discuss.html"><font color="ffffff"><b>Discussions</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_datasets.html"><font color="ffffff"><b>Datasets</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%>
+<a href="http://livejournal.com/community/project_comrade" TARGET="_top"><font color="ffffff"><b>LiveJournal</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_references.html"><font color="ffffff"><b>References</b></font></a></td>
+</tr>
+<td bgcolor="222222" align="center" width=20%><a href="http://project-comrade.org" TARGET="_top"><font color="ffffff"><b>COMRADE Home</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="aboutme.html"><font color="ffffff"><b>About me</b></font></a></td>
+</tr>
+</table>
+
+</td>
+<td  valign="TOP" bgcolor="cccccc">
+<br>
+
+<h2>The IRIS source code</h2>
+
+<h3>Current releases</h3>
+<p>The most current release of IRIS is intended to be as stable as possible,
+but no more. The "no more" clause refers to the fact that there are some
+parts of IRIS which are being used as stopgap measures in place of
+the final product/code that will actually be used.</p>
+<p>The most notable example is the current version of IRIS Runtime and
+its associated Scorpio command line editor.
+<a href="iris_runtime.html">IRIS Runtime</a> is projected to be
+more streamlined and better-behaved; Scorpio will be replaced by a much
+nicer scripting language (promise :-) Similarly <a href="osiris.html">Osiris</a>
+is still under development. They are included in this release for
+completeness only. Use them at your own risk!</p>
+
+<p>
+The problem of portability has been solved since the Linux
+version compiles nicely under Windows (tested on Dev-C++ 4.0
+and Dev-C++ 4.9.5). Also, note that the stable release does not have
+the GHT (Generalised Hough Trandform) engine yet.
+</p>
+
+<a href="../source/linux_iris_technology_demo.zip">
+Download source for IRIS for Linux (gcc 3.3) and Windows (Dev-C++ 4.0 and
+Dev-C++ 4.9.5)</a>
+
+<p>For those who want the latest code, there is always the
+<a href="../source/IRIS_Source_Bleeding_Edge_Version.zip">
+Bleeding Edge Version</a>.
+Currently, it features the updated versions of the buffer and buffer accessor
+classes, plus the (preliminary) Generalised Hough Transform (GHT) engine.
+This version makes no claims to safety at all, but use it by all means,
+if you wish to.</p>
+
+<a href="../source/IRIS_Source_Bleeding_Edge_Version.zip">
+Download source for IRIS - Bleeding Edge Version for Linux (gcc 3.3)
+and Windows (Dev-C++ 4.0 and Dev-C++ 4.9.5)</a>
+
+<h3>Older releases</h3>
+<p>Below is stuff that is a little older, without any experimental
+namespaces but definitely useable. If you do not intend to use
+IRIS' newest features (which are not finalised anyway), I'd
+recommend the downloads below. You'll find these useful if you specifically
+intend to use IRIS as a base for dedicated image processing operations.</p>
+
+<h3>Linux <font size=2>(note: older code!)</font></h3>
+<p>Due to some radical restructuring of the source code, I haven't found time for updating the
+Linux distribution of IRIS. Consequently, the Linux IRIS source is restricted to IRIS-XT only
+excluding quadtree segmentation.</p>
+<a href="../source/IrisXT_v1.00_Linux.zip">Download source for IRIS-XT for Red Hat Linux 9 (gcc 3.2)</a><br>
+
+<h3>Windows <font size=2>(note: older code!)</font></h3>
+<p>The older version of IRIS (includes <a href="iris_foundation.html">IRIS Foundation</a>,
+<a href="iris_xt.html">IRIS-XT</a> and
+<a href="iris_3d.html">IRIS-3D</a>) is available for download. However, please note that this has
+not been tested on any C++ compiler other than MingW compiler, i.e.
+<a href="http:\\www.bloodshed.net">Dev-C++ 4.0</a>, since the Windows version is only for my
+convenience.</p>
+<a href="../source/Extended_IRIS_API_Alpha_Template_Version.zip">
+Download source for IRIS for Windows (Dev-C++ 4.0)</a>
+
+<br><br>
+<hr width=100%>
+
+<center><font size=2>Copyright (c) 2004 Avishek Sen Gupta</font></center>
+</td>
+</tr>
+</table>
+</font>
+</body>
+</html>
+

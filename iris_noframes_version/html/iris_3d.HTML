@@ -1,0 +1,165 @@
+<html>
+<head>
+<title>Project COMRADE - The IRIS vision system</title>
+</head>
+<body bgcolor="000000">
+
+<font face="arial">
+<table width=100% border=0 cellpadding=10>
+<tr>
+<td colspan=2 bgcolor="000000">
+<h1 align="center"><img src="../images/splash.gif" align="center" width=640 height=90></h1>
+<h3 align="center"><img src="../images/comrade_legend.gif" align="center" ></h3>
+</td>
+</tr>
+
+<tr>
+<td background="../images/greystrip.gif" width=25% valign="TOP" bgcolor="000000">
+<table align="center" width=90% border=0>
+
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="home.html"><font color="ffffff"><b>IRIS Home</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_foundation.html"><font color="ffffff"><b>IRIS Foundation</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_xt.html"><font color="ffffff"><b>IRIS-XT</font></b></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_3d.html"><font color="ffffff"><b>IRIS-3D</font></b></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_runtime.html"><font color="ffffff"><b>IRIS Runtime</font></b></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="osiris.html"><font color="ffffff"><b>Osiris</font></b></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_src.html"><font color="ffffff"><b>Source code</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_discuss.html"><font color="ffffff"><b>Discussions</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_datasets.html"><font color="ffffff"><b>Datasets</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%>
+<a href="http://livejournal.com/community/project_comrade" TARGET="_top"><font color="ffffff"><b>LiveJournal</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="iris_references.html"><font color="ffffff"><b>References</b></font></a></td>
+</tr>
+<td bgcolor="222222" align="center" width=20%><a href="http://project-comrade.org" TARGET="_top"><font color="ffffff"><b>COMRADE Home</b></font></a></td>
+</tr>
+<tr>
+<td bgcolor="222222" align="center" width=20%><a href="aboutme.html"><font color="ffffff"><b>About me</b></font></a></td>
+</tr>
+</table>
+
+</td>
+<td  valign="TOP" bgcolor="cccccc">
+
+<br>
+<h2>IRIS-3D</h2>
+<h3>What is IRIS-3D?</h3>
+<p>IRIS-3D is the component of the IRIS vision system responsible for endowing COMRADE with a sense
+of the third dimension - depth, distance, whatever you call it - thus enabling us to program robots
+to perform even more complex tasks. Sonar is a good method for measuring depth, but it is limited
+in range. For determination of 3D information using cost-effective means, vision is a sure-fire
+winner, though the algorithms and maths involved aren't all that easy.</p>
+<p>IRIS-3D is a newer component of the IRIS system and thus is extremely prone to changes
+(almost daily in an average). But most of the architecture is in place; it remains to tune the
+algorithms or replace them using better/faster ones. IRIS-3D already shows promising
+<a href="iris_datasets.html#iris_3d_op">results</a>,
+and will only get better with time.</p>
+
+<hr width=100%>
+
+<h3>A rough structural description</h3>
+<p>IRIS-3D resides in the namespace <font size=5><tt>Comrade::Iris3D</tt></font>,
+so to use it, you'll either have to refer to its data types and functions in a fully qualified
+fashion, or bring in the whole thing with the <font size=5><tt>using</tt></font> directive.</p>
+
+<p>The classes currently implemented in the IRIS-3D are as follows:
+</p>
+<ul>
+<li><p><b>Matrix4x4</b>: This structure is almost exclusively used for homogeneous 3D operations
+on a point. For efficiency purposes, therefore, its dimensions are fixed to 4-by-4.</p></li>
+
+<li><p><b>Coordinate</b>: This is IRIS' basic 3D point structure. It can be translated,
+rotated or multiplied by any arbitrary <font size=5><tt>Matrix4x4</tt></font> object. Note
+that the axis of rotation can also be arbitrary, thus making this a very flexible structure
+at the lowest hierarchical level.</p></li>
+
+<li><p><b>Voxel</b>: This represents the basic volume element in 3D space and is used in the
+3D space carver engine. It is important to note that since the voxel is a finite cube, its
+footprint will be more than one pixel if it is 'projected' onto a screen during a projective
+transformation.</p></li>
+
+<li><p><b>Sensor</b>: This class represents the mathematical model of the imaging sensor, i.e.,
+the camera. Strictly speaking, there should be other functions in addtion to the ones present
+to optimise the calibration matrix of the camera in a least-mean-squares sense. Also, the
+camera model should also model (at a minimum) a first-order projective distortion. All of this
+is currently being worked upon, though the model as it is adequate for approximate results.
+</p></li>
+
+<li><p><b>VoxelWorker</b>: This class is responsible for calculating various mathematical
+interactions of a <font size=5><tt>Voxel</tt></font> object with its environment; for example,
+determining the footprint of a voxel on an arbitrary plane.</p></li>
+
+<li><p><b>WorldSpace</b>: This represents a cuboidal arrangement of voxels (a 'box') and is
+used by the space carver engine to reconstruct the model from its N projective views within
+this space.</p></li>
+</ul>
+<p>Besides the above, there are a few other data structures like <font size=5><tt>Point</tt>
+</font> and <font size=5><tt>Parametric</tt></font>, but they are not for direct use by the
+programmer.</p>
+
+<hr width=100%>
+<h3>Stereovision and space carving</h3>
+<p>The two most important algorithms in IRIS-3D are currently not encapsulated inside classes
+because they are not the final versions. Nevertheless, they still provide useful results. They
+are as follows:</p>
+<ol>
+<li><p><b>Stereovision algorithm</b>: It enables binocular stereoscopic vision, by analysing
+pairs of images. Currently, the method implemented is a fixed-window correlation method, which
+gives useful <a href="iris_datasets.html#iris_3d_op">results</a>
+already. However, this causes the so-called <i>corona</i> effect at discontinuities,
+in addition to being slow. For this reason, a new fast multiresolution,
+variable window, stereovision algorithm has been designed. Initial
+<a href="iris_datasets.html#iris_3d_op">results</a> are already interesting.
+You can also read the associated <a href="../files/stereo_paper.doc" TARGET="+top">
+paper.</a></p></li>
+
+<li><p><b>Space carving engine</b>: This allows the robot to reconstruct the 3D model of an
+object (upto an approximation) from N calibrated views of the same. This uses the basic
+space carving algorithm given by Kyros Kutulakos. Currently, it performs reconstruction
+with a very good degree of accuracy. Photorealism will involve mapping the image texture
+onto the model, and is nice to look at, but not very useful right now.
+You can see some results with uncalibrated images
+<a href="iris_datasets.html#iris_3d_op">here</a>.</p></li>
+</ol>
+
+<hr width=100%>
+
+<h3>Possible goals for IRIS-3D</h3>
+<ul>
+<li>Integrated automatic/semiautomatic camera calibration routine</li>
+<li>Map building using multiple stereo images in a 3D evidence grid (will possibly
+be moved to the <a href="osiris.html">Osiris</a> engine)</li>
+<li>Fast optical flow estimation and consequent tracking of (multiple?) moving targets</li>
+</ul>
+You can check out the latest developments in IRIS-3D in our
+<a href="http://www.livejournal.com/community/project_comrade">project journal</a>.<br><br>
+<hr width=100%>
+
+<center><font size=2>Copyright (c) 2004 Avishek Sen Gupta</font></center>
+</td>
+</tr>
+</table>
+</font>
+</body>
+</html>
+
