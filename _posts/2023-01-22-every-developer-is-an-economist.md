@@ -23,14 +23,44 @@ This is easier said than done, because of several factors:
 Important Concepts that every software developer should know:
 
 - Decision-Making Processes
+- Utility-based Architecture Decision Making: CBAM
+  - https://people.ece.ubc.ca/matei/EECE417/BASS/ch12.html
+  - https://apps.dtic.mil/sti/pdfs/ADA408740.pdf
+  - The above goes some way towards assigning utility to architectural decisions. These are at the level of Cross-Functional Requirements, and DORA metrics, but do not point the way towards calculating financial implications.
 - Cost-Benefit Analysis
 - Cash Flows and Cash Instances
   - How do we quantify future cash flows?
+  - Cash Outflows:
+    - Hardware costs, Cloud costing (Uncertainty: Low) [Legacy Modernisation]
+    - Software Licensing costs (Uncertainty: Low) [Build vs Buy]
+      - Future Effort in Adding New Features / Modifying Existing Feature (Uncertainty: Variable: Depends upon the profitability of the feature) [Refactoring, Tech Debt Repayment]: Closely related to Change Lead Time and Deployment Frequency, but projected into the future
+    - Cost of fixing potential bugs (Variable: Depends upon rate of modification of code, especially untested code) [Testing, Refactoring/Rewriting, Tech Debt Repayment]: Not necessarily related to Change Failure Rate
+    - Cost of Recovering System in case of Failure (Statistically measurable from Dashboards) [Observability, Microservices]: Closely related to Time to Restore Service (DORA), projected into the future
+    - Time spent by people on doing a task manually (Uncertainty: Low) [Automation in General]
+    - Internal client costs (Uncertainty: Variable): This is frequently what the software might be targeted to reduce. It shows up as "money saved", even though it might not strictly be a **Cash Inflow**.
+  - Cash Inflows
+    - Number of successfully serviced transactions (Statistically measurable) [Performance]: Useful when transactions are financial. Unrealised inflow can be measured by number of failed transactions.
+    - License Fees: This is at the application level, and cannot always be traced to a single architectural or design decision, unless explicitly modelled as potential new licenses because of a new capability/feature.
+
+| Factor                                         | Type    | Uncertainty                                                 | Influencer    | Notes |
+|------------------------------------------------|---------|-------------------------------------------------------------|---------------|--|
+| Time to Market Leader Revenue                  | Inflow  | High                                                        | Modernisation | Closely related to Change Lead Time and Deployment Frequency, but projected into the future |
+| Number of successful transactions              | Inflow  | Low                                                         | Cloud Migration, Performance, Modernisation, Architecture Refactoring (eg, CQRS) | Useful when transactions are financial. Unrealised inflow can be measured by number of failed transactions |
+| Software Licenses / Contracts                  | Inflow  | Variable                                                    | Legacy Modernisation | This is at the application level, and cannot always be traced to a single architectural or design decision, unless explicitly modelled as potential new licenses because of a new capability/feature. |
+| Hardware / Cloud Costs                         | Outflow | Low                                                         | Legacy Modernisation |  |
+| Software Licenses                              | Outflow | Low                                                         | Build vs Buy Recommendations |  |
+| Future Effort of Adding New Features           | Outflow | Variable (Depends upon profitability of the feature)        | Refactoring, Tech Debt Repayment | Closely related to Change Lead Time and Deployment Frequency, but projected into the future |
+| Cost of fixing potential bugs                  | Outflow | Depends upon rate of modification of possibly untested code | Testing, Refactoring/Rewriting, Tech Debt Repayment | Not necessarily related to Change Failure Rate |
+| Cost of Recovering System in Production        | Outflow | Measurable from dashboard statistics                        | Observability, Cloud Migration, Traceability, Microservices | Closely related to Time to Restore Service (DORA), projected into the future |
+| Internal client waste (Manual workflows, etc.) | Outflow | Low                                                         |               | This is frequently what the software might be targeted to reduce. It shows up as "money saved", even though it might not strictly be a **Cash Inflow**. |
+|                                                | Outflow |                                                             |               |  |
+
 - Net Present Value
 - Real Options
   - Disadvantages of the NPV approach
   - Opportunity Cost
-  - Example
+  - Examples
+    - One example where we could have applied: The team had built a data engineering pipeline using Spark and Scala. The stakeholder felt that hiring developers with the requisite skillsets would be hard, and wanted to move to plain Java-based processing. A combination of cash flow modeling and buying the option of redesign would have probably made for a compelling case.
 - Agile in SEE
   - Delayability
 
