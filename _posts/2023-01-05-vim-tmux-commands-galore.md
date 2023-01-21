@@ -14,6 +14,8 @@ I've also added TMux shortcuts because I'm learning to use that too.
 - ```u```/```<C-r>```: Undo/Redo
 - ```.```: Repeat last command
 - ```w```/```b```: Move forward/backward by a word
+- ```s``` refers to a sentence. Thus ```diw``` and ```daw``` deletes a sentence from anywhere inside it, and everything around the sentence, respectively.
+- ```(```/```)```: Jump to previous/next sentence
 - ```i```/```a```/```I```/```A```: Start editing before/after cursor, before start/after end of line
   - ```i```: Considers whitespace as words too, so ```i2w``` selects a word and any whitespace after it.
   - ```a```: Considers word + whitespace as a text object, so ```a2w``` selects ```"text1 text2 "```.
