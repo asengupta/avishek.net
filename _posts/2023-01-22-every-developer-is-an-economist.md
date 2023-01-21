@@ -6,7 +6,7 @@ tags: ["Software Engineering", "Economics"]
 draft: false
 ---
 
-Every software engineer is also an economist; an architect, even more so. There is a wealth of literature around articulating value of software development, and in fact, several agile development principles embody some of these, but I see two issues in my day-to-day interactions with software engineers and architects.
+**Every software engineer is also an economist; an architect, even more so.** There is a wealth of literature around articulating value of software development, and in fact, several agile development principles embody some of these, but I see two issues in my day-to-day interactions with software engineers and architects.
 
 - Folks are reluctant to quantify things they build, beyond the standard practices they have been brought up on (like estimation exercises, test coverage). Some of this can be attributed to their prior bad experiences of being micromanaged via largely meaningless metrics.
 - Folks struggle to articulate value beyond a certain point to stakeholders who demand a certain measure of rigour and/or quantifiability. The DORA metrics are good starter indicators, but I contend that they are not enough.
@@ -22,7 +22,7 @@ This is easier said than done, because of several factors:
 
 Important Concepts that every software developer should know:
 
-- Arming Software Engineers with the weapons to deal with sociopathic CxOs
+- Decision-Making Processes
 - Cost-Benefit Analysis
 - Cash Flows and Cash Instances
   - How do we quantify future cash flows?
