@@ -1,7 +1,5 @@
 - name: Home
   link: /
-- name: Blog
-  link: /blog.html
 - name: Machine Learning
   link: /ml-foundations.html
 - name: Mathematics

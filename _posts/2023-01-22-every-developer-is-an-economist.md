@@ -3,7 +3,7 @@ title: "Every Software Engineer is also an Economist"
 author: avishek
 usemathjax: true
 tags: ["Software Engineering", "Economics"]
-draft: false
+draft: true
 ---
 
 **Every software engineer is also an economist; an architect, even more so.** There is a wealth of literature around articulating value of software development, and in fact, several agile development principles embody some of these, but I see two issues in my day-to-day interactions with software engineers and architects.
