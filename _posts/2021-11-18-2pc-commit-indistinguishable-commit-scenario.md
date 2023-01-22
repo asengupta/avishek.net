@@ -2,7 +2,7 @@
 title: "Two Phase Commit: Indistinguishable Commit Scenario"
 author: avishek
 usemathjax: false
-tags: ["Distributed Systems"]
+tags: ["Distributed Systems", "Software Engineering"]
 draft: false
 ---
 

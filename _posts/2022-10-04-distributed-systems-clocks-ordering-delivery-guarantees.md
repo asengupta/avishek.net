@@ -2,7 +2,7 @@
 title: "Ordering, Clocks, and Delivery Guarantees"
 author: avishek
 usemathjax: false
-tags: ["Distributed Systems"]
+tags: ["Distributed Systems", "Software Engineering"]
 draft: true
 ---
 

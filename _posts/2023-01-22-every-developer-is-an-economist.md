@@ -23,6 +23,7 @@ This is easier said than done, because of several factors:
 Important Concepts that every software developer should know:
 
 - Decision-Making Processes
+  - Analytic Hierarchy Process
 - Utility-based Architecture Decision Making: CBAM
   - [The CBAM: A Quantitative Approach to Architecture Design Decision Making](https://people.ece.ubc.ca/matei/EECE417/BASS/ch12.html)
   - [Making Architecture Design Decisions: An Economic Approach](https://apps.dtic.mil/sti/pdfs/ADA408740.pdf)
@@ -79,11 +80,26 @@ If you are suggesting a new microservice for processing payments, these might be
     - Cost of cloud resources to scale the new microservice: New cash outflow
     - Cost of higher latency leading to lower service capacity (if the microservice is part of a workflow): Decreased cash inflow, depending upon if you ever reach the load limits of the service before other parts of the system start to fail
     - Cost of fixing bugs: New cash outflow, depending upon complexity of the microservice
+    - Cost of Integrations: 
 - Single or Few-Time Cash Flows
   - Cost of development: New cash outflow
   - Cost of deployment setup: New cash outflow (ideally should be as low as possible)
 
 **Causal Graph**
+
+{% mermaid %}
+graph LR;
+microservice[Microservice]-->resources[Cloud Resources];
+microservice-->database[Cloud DB Resources];
+microservice-->development_cost[Development Cost];
+microservice-->latency[Latency];
+microservice-->bugs[Fixing bugs];
+microservice-->downtime[Downtime]-->lost_transactions[Lesser Lost Transactions];
+
+style chol fill:#006f00,stroke:#000,stroke-width:2px,color:#fff
+style mvn fill:#006fff,stroke:#000,stroke-width:2px,color:#fff
+style gp fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
+{% endmermaid %}
 
 #### 1. The Economics of Technical Debt repayment
 #### 1. The Economics of New Features
@@ -92,4 +108,4 @@ If you are suggesting a new microservice for processing payments, these might be
 
 - [Economics-Driven Software Architecture](https://www.amazon.in/Economics-Driven-Software-Architecture-Ivan-Mistrik/dp/0124104649)
 - [Software Design Decisions as Real Options](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=24f7bdda5f3721faa2da58719ae72432f782312f)
-- 
+- [How to Measure Anything](https://www.amazon.in/How-Measure-Anything-Intangibles-Business/dp/1118539273)

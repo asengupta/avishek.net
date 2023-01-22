@@ -54,6 +54,7 @@ I've also added TMux shortcuts because I'm learning to use that too.
 
 - ```<C-b><Arrow Keys>```: Moves across TMux panes
 - ```<C-b>d```: Detaches from current TMux session
+- ```<C-b>[```: Enables scroll mode
 - ```tmux ls```: Lists running TMux sessions
 - ```tmux attach -t <SessionID>```: Attaches to specified TMux session
 - ```tmux rename-session -t <OldSessionID> <NewSessionID>```: Renames a TMux session
