@@ -24,46 +24,69 @@ Important Concepts that every software developer should know:
 
 - Decision-Making Processes
 - Utility-based Architecture Decision Making: CBAM
-  - https://people.ece.ubc.ca/matei/EECE417/BASS/ch12.html
-  - https://apps.dtic.mil/sti/pdfs/ADA408740.pdf
+  - [The CBAM: A Quantitative Approach to Architecture Design Decision Making](https://people.ece.ubc.ca/matei/EECE417/BASS/ch12.html)
+  - [Making Architecture Design Decisions: An Economic Approach](https://apps.dtic.mil/sti/pdfs/ADA408740.pdf)
   - The above goes some way towards assigning utility to architectural decisions. These are at the level of Cross-Functional Requirements, and DORA metrics, but do not point the way towards calculating financial implications.
 - Cost-Benefit Analysis
-- Cash Flows and Cash Instances
-  - How do we quantify future cash flows?
-  - Cash Outflows:
-    - Hardware costs, Cloud costing (Uncertainty: Low) [Legacy Modernisation]
-    - Software Licensing costs (Uncertainty: Low) [Build vs Buy]
-      - Future Effort in Adding New Features / Modifying Existing Feature (Uncertainty: Variable: Depends upon the profitability of the feature) [Refactoring, Tech Debt Repayment]: Closely related to Change Lead Time and Deployment Frequency, but projected into the future
-    - Cost of fixing potential bugs (Variable: Depends upon rate of modification of code, especially untested code) [Testing, Refactoring/Rewriting, Tech Debt Repayment]: Not necessarily related to Change Failure Rate
-    - Cost of Recovering System in case of Failure (Statistically measurable from Dashboards) [Observability, Microservices]: Closely related to Time to Restore Service (DORA), projected into the future
-    - Time spent by people on doing a task manually (Uncertainty: Low) [Automation in General]
-    - Internal client costs (Uncertainty: Variable): This is frequently what the software might be targeted to reduce. It shows up as "money saved", even though it might not strictly be a **Cash Inflow**.
-  - Cash Inflows
-    - Number of successfully serviced transactions (Statistically measurable) [Performance]: Useful when transactions are financial. Unrealised inflow can be measured by number of failed transactions.
-    - License Fees: This is at the application level, and cannot always be traced to a single architectural or design decision, unless explicitly modelled as potential new licenses because of a new capability/feature.
+- Net Present Value
+
+### Cash Flow Sources
 
 | Factor                                         | Type    | Uncertainty                                                 | Influencer    | Notes |
 |------------------------------------------------|---------|-------------------------------------------------------------|---------------|--|
 | Time to Market Leader Revenue                  | Inflow  | High                                                        | Modernisation | Closely related to Change Lead Time and Deployment Frequency, but projected into the future |
 | Number of successful transactions              | Inflow  | Low                                                         | Cloud Migration, Performance, Modernisation, Architecture Refactoring (eg, CQRS) | Useful when transactions are financial. Unrealised inflow can be measured by number of failed transactions |
 | Software Licenses / Contracts                  | Inflow  | Variable                                                    | Legacy Modernisation | This is at the application level, and cannot always be traced to a single architectural or design decision, unless explicitly modelled as potential new licenses because of a new capability/feature. |
+| Support / On Call costs                         | Outflow | Low                                                         | Observability, Process Automation (eg, Refunds, Self Service, etc.) |  |
 | Hardware / Cloud Costs                         | Outflow | Low                                                         | Legacy Modernisation |  |
 | Software Licenses                              | Outflow | Low                                                         | Build vs Buy Recommendations |  |
 | Future Effort of Adding New Features           | Outflow | Variable (Depends upon profitability of the feature)        | Refactoring, Tech Debt Repayment | Closely related to Change Lead Time and Deployment Frequency, but projected into the future |
 | Cost of fixing potential bugs                  | Outflow | Depends upon rate of modification of possibly untested code | Testing, Refactoring/Rewriting, Tech Debt Repayment | Not necessarily related to Change Failure Rate |
 | Cost of Recovering System in Production        | Outflow | Measurable from dashboard statistics                        | Observability, Cloud Migration, Traceability, Microservices | Closely related to Time to Restore Service (DORA), projected into the future |
 | Internal client waste (Manual workflows, etc.) | Outflow | Low                                                         |               | This is frequently what the software might be targeted to reduce. It shows up as "money saved", even though it might not strictly be a **Cash Inflow**. |
-|                                                | Outflow |                                                             |               |  |
 
-- Net Present Value
-- Real Options
-  - Disadvantages of the NPV approach
-  - Opportunity Cost
-  - Examples
-    - One example where we could have applied: The team had built a data engineering pipeline using Spark and Scala. The stakeholder felt that hiring developers with the requisite skillsets would be hard, and wanted to move to plain Java-based processing. A combination of cash flow modeling and buying the option of redesign would have probably made for a compelling case.
+
+### Real Options
+
+We will discuss the Options Thinking approach here. See - [Software Design Decisions as Real Options](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=24f7bdda5f3721faa2da58719ae72432f782312f) and, more recently, [The Software Architect Elevator](https://www.amazon.com/Software-Architect-Elevator-Redefining-Architects-ebook/dp/B086WQ9XL1).
+
+- Disadvantages of the NPV approach
+- Opportunity Cost
+- Examples
+  - One example where we could have applied: The team had built a data engineering pipeline using Spark and Scala. The stakeholder felt that hiring developers with the requisite skillsets would be hard, and wanted to move to plain Java-based processing. A combination of cash flow modeling and buying the option of redesign would have probably made for a compelling case.
 - Agile in SEE
   - Delayability
 
+## Incorporating economics into daily thinking
+
+Here are some generic tips.
+
+- Practise drawing causal graphs. Complete the trace all the way up to where the perceived benefit is (money) is. It may be tempting to stop if you reach a DORA metric. Don't; get to the money.
+- If you are already measuring DORA metrics, relentlessly ask what each DORA metric translates to in terms of money.
+- Along the way of the graph, list out other incidental cash outflows.
+- Remember that story points must always be converted into hours to actually be incorporated into economic estimates.
+- CALCULATE NPV!!! HOW?
+- Build Options tree. Deduce whether it is better to defer execution, or do it right now.
+
+Here are some tips for specific but standard cases.
+
+#### 1. The Economics of Microservices
+
+If you are suggesting a new microservice for processing payments, these might be the new cash flows:
+  - Recurring Cash Flows
+    - Transactions: New cash inflow
+    - Cost of recovering the whole system back from failure: Reduced cash outflow
+    - Cost of cloud resources to scale the new microservice: New cash outflow
+    - Cost of higher latency leading to lower service capacity (if the microservice is part of a workflow): Decreased cash inflow, depending upon if you ever reach the load limits of the service before other parts of the system start to fail
+    - Cost of fixing bugs: New cash outflow, depending upon complexity of the microservice
+- Single or Few-Time Cash Flows
+  - Cost of development: New cash outflow
+  - Cost of deployment setup: New cash outflow (ideally should be as low as possible)
+
+**Causal Graph**
+
+#### 1. The Economics of Technical Debt repayment
+#### 1. The Economics of New Features
 
 ### References
 
