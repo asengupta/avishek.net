@@ -15,3 +15,6 @@ fileignoreconfig:
   checksum: 591d658c6df414eb5b7431201b79937cfebaa5df0d86aef09b05e01d3db0e564
 - filename: _posts/2023-01-22-every-developer-is-an-economist.md
   checksum: 70fdc4a460d037b87992ee92f50c076d8b45c31361e579f272427a75a3a23a65
+- filename: assets/papers/APracticalMethodforValuingRealOptions-TheBoeingApproach.pdf
+  checksum: dc11efc1c686af3f6aaa3bf4be54df65e53adb9ae3da9990b9ace1d2fe50338f
+

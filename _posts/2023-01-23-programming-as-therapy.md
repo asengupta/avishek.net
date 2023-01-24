@@ -1,7 +1,7 @@
 ---
-title: "Every Software Engineer is an Economist"
+title: "Programming as Therapy"
 author: avishek
 usemathjax: true
-tags: ["Software Engineering", "Economics"]
+tags: ["Software Engineering", "Life"]
 draft: false
 ---
