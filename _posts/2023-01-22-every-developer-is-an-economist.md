@@ -1,15 +1,20 @@
 ---
-title: "Every Software Engineer is also an Economist"
+title: "Every Software Engineer is an Economist"
 author: avishek
 usemathjax: true
 tags: ["Software Engineering", "Economics"]
-draft: true
+draft: false
 ---
 
-**Every software engineer is also an economist; an architect, even more so.** There is a wealth of literature around articulating value of software development, and in fact, several agile development principles embody some of these, but I see two issues in my day-to-day interactions with software engineers and architects.
+Background: This post took me a while to write: much of this is motivated by problems that I've noticed teams facing day-to-day at work. To be clear, this post does not offer a solution; only some thoughts, and maybe a path forward in aligning developers' and architects' thinking more closely with the frameworks used by people controlling the purse-strings of software development projects.
+
+The other caveat is that this article does not touch the topic of estimation. That is intentional; I won't be extolling the virtues or limitations of #NoEstimates, for example (sidebar: the smoothest teams I've worked with essentially dispensed with estimation).
+
+**Every software engineer is an economist; an architect, even more so.** There is a wealth of literature around articulating value of software development, and in fact, several agile development principles embody some of these, but I see two issues in my day-to-day interactions with software engineers and architects.
 
 - Folks are reluctant to quantify things they build, beyond the standard practices they have been brought up on (like estimation exercises, test coverage). Some of this can be attributed to their prior bad experiences of being micromanaged via largely meaningless metrics.
 - Folks struggle to articulate value beyond a certain point to stakeholders who demand a certain measure of rigour and/or quantifiability. The DORA metrics are good starter indicators, but I contend that they are not enough.
+- There is a reluctance to rely too much on metrics because people think metrics are easily gamed. This can be avoided if we use econometric methods, because 1) falsified data is immediately apparent 2) showing the work steps, assumptions and risks aids in this transparency because they are in the language of economics which is much more easily understandable to business stakeholders.
 - Thinking about value and deciding tradeoffs based on economic factors is not something that is done enough, if at all, at the level of engineering teams. For example, questions like "Should I do this refactoring?" and "Why should we repay this tech debt?", or "How are we better at this versus our competitor?" are usually framed in terms of statements which stop before traversing the full utility tree of value.
 
 Thinking in these terms, and projecting these decisions in these terms to micromanagers, heads/directors of engineering -- but most importantly, to execs -- is key to engineers getting the necessary clout in higher-strategic decisions. It is also an instrumental value engineers should acquire to break several firms' perceptions that "engineers are here to do what we say".
@@ -89,7 +94,10 @@ If you are suggesting a new microservice for processing payments, these might be
 
 {% mermaid %}
 graph LR;
-microservice[Microservice]-->resources[Cloud Resources];
+debt[Tech Debt]-->principal[Cost of Fixing Debt: Principal];
+debt-->interest[Recurring Cost: Interest];
+debt-->risk[Risk-Related Cost];
+architecture_decision[Architecture Decision]-->resources[Cloud Resources];
 microservice-->database[Cloud DB Resources];
 microservice-->development_cost[Development Cost];
 microservice-->latency[Latency];
@@ -102,10 +110,19 @@ style gp fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
 {% endmermaid %}
 
 #### 1. The Economics of Technical Debt repayment
+- Recurring Cash Flows
+  - Cost of Manual Troubleshooting and Resolution
+  - Cost of recurring change to a specific module
+- Single or Few-Time Cash Flows
+  - Cost of repaying tech debt
+
+**Valuing Real Options using [Datar-Matthews](https://www.researchgate.net/publication/227374121_A_Practical_Method_for_Valuing_Real_Options_The_Boeing_Approach)**
+
 #### 1. The Economics of New Features
 
 ### References
 
 - [Economics-Driven Software Architecture](https://www.amazon.in/Economics-Driven-Software-Architecture-Ivan-Mistrik/dp/0124104649)
 - [Software Design Decisions as Real Options](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=24f7bdda5f3721faa2da58719ae72432f782312f)
+- [A Practical Method for Valuing Real Options: The Boeing Approach](https://www.researchgate.net/publication/227374121_A_Practical_Method_for_Valuing_Real_Options_The_Boeing_Approach)
 - [How to Measure Anything](https://www.amazon.in/How-Measure-Anything-Intangibles-Business/dp/1118539273)
