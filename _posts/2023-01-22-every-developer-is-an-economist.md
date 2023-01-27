@@ -17,11 +17,11 @@ The other caveat is that this article does not touch the topic of estimation. Th
 - There is a reluctance to rely too much on metrics because people think metrics are easily gamed. This can be avoided if we use econometric methods, because 1) falsified data is immediately apparent 2) showing the work steps, assumptions and risks aids in this transparency because they are in the language of economics which is much more easily understandable to business stakeholders.
 - Thinking about value and deciding tradeoffs based on economic factors is not something that is done enough, if at all, at the level of engineering teams. For example, questions like "Should I do this refactoring?" and "Why should we repay this tech debt?", or "How are we better at this versus our competitor?" are usually framed in terms of statements which stop before traversing the full utility tree of value.
 
-Thinking in these terms, and projecting these decisions in these terms to micromanagers, heads/directors of engineering -- but most importantly, to execs -- is key to engineers getting the necessary clout in higher-strategic decisions. It is also an instrumental value engineers should acquire to break several firms' perceptions that "engineers are here to do what we say".
+Thinking in these terms, and projecting these decisions in these terms to micromanagers, heads/directors of engineering -- but most importantly, to execs -- is key to engineers articulating value in a manner which is compelling, and eases friction between engineering and executive management. It is also a value engineers should acquire to break several firms' perceptions that "engineers are here to do what we say".
 
 This is easier said than done, because of several factors:
 
-- The data to apply these frameworks is not always easily available.
+- The data to apply these frameworks is not always easily available, or people are not ready to gather that data.
 - Engineers are usually emotionally invested in decisions that they think are their "pet" ideas.
 - It can be hard to inculcate this mindset en masse among engineers if they do not have a clear perception of the value of adopting this mindset. Engineers don't want theory, they want tools they can apply quickly and easily. Hence the burden is on us to propose advances to the state of the art in a way that is actionable.
 
@@ -33,37 +33,47 @@ Important Concepts that every software developer should know:
   - [The CBAM: A Quantitative Approach to Architecture Design Decision Making](https://people.ece.ubc.ca/matei/EECE417/BASS/ch12.html)
   - [Making Architecture Design Decisions: An Economic Approach](https://apps.dtic.mil/sti/pdfs/ADA408740.pdf)
   - The above goes some way towards assigning utility to architectural decisions. These are at the level of Cross-Functional Requirements, and DORA metrics, but do not point the way towards calculating financial implications.
-- Cost-Benefit Analysis
-- Net Present Value
+- Net Present Value and Discounted Cash Flows
 
-### Cash Flow Sources
+### Deriving Value in Legacy Modernisation
 
-| Factor                                         | Type    | Uncertainty                                                 | Influencer    | Notes |
-|------------------------------------------------|---------|-------------------------------------------------------------|---------------|--|
-| Time to Market Leader Revenue                  | Inflow  | High                                                        | Modernisation | Closely related to Change Lead Time and Deployment Frequency, but projected into the future |
-| Number of successful transactions              | Inflow  | Low                                                         | Cloud Migration, Performance, Modernisation, Architecture Refactoring (eg, CQRS) | Useful when transactions are financial. Unrealised inflow can be measured by number of failed transactions |
-| Software Licenses / Contracts                  | Inflow  | Variable                                                    | Legacy Modernisation | This is at the application level, and cannot always be traced to a single architectural or design decision, unless explicitly modelled as potential new licenses because of a new capability/feature. |
-| Support / On Call costs                         | Outflow | Low                                                         | Observability, Process Automation (eg, Refunds, Self Service, etc.) |  |
-| Hardware / Cloud Costs                         | Outflow | Low                                                         | Legacy Modernisation |  |
-| Software Licenses                              | Outflow | Low                                                         | Build vs Buy Recommendations |  |
-| Future Effort of Adding New Features           | Outflow | Variable (Depends upon profitability of the feature)        | Refactoring, Tech Debt Repayment | Closely related to Change Lead Time and Deployment Frequency, but projected into the future |
-| Cost of fixing potential bugs                  | Outflow | Depends upon rate of modification of possibly untested code | Testing, Refactoring/Rewriting, Tech Debt Repayment | Not necessarily related to Change Failure Rate |
-| Cost of Recovering System in Production        | Outflow | Measurable from dashboard statistics                        | Observability, Cloud Migration, Traceability, Microservices | Closely related to Time to Restore Service (DORA), projected into the future |
-| Internal client waste (Manual workflows, etc.) | Outflow | Low                                                         |               | This is frequently what the software might be targeted to reduce. It shows up as "money saved", even though it might not strictly be a **Cash Inflow**. |
+$$C_{HW}$$ = Cost of Hardware / Hosting \\
+$$C_{HUF}$$ = Cost of manual work equivalent of feature (if completely new feature or if feature has manual interventions) \\
+$$C_{RED}$$ = Cost of recovery, including human investments (related to MTTR) \\
+$$C_{LBD}$$ = Cost of lost business / productivity during downtime (related to MTTR) \\
+$$C_{ENF}$$ = Cost of development of an enhancement to a feature (related to DORA Lead Time) \\
+$$C_{NUF}$$ = Cost of development of a new feature (related to DORA Lead Time) \\
+$$C_{BUG}$$ = Cost of bug fixes for feature \\
+$$n_D$$ = Number of downtime incidents per year \\
+$$n_E$$ = Number of enhancements to feature per year \\
+$$n_B$$ = Number of bugs in feature per year
 
+The cost of a feature is then denoted by $$V$$, and the total value of the feature is $$V_{total}$$. These are given by:
+
+$$
+V=C_{HUF} + n_D.(C_{RED} + C_{LBD}) + n_E.C_{ENF} + n_B.C_{BUG} \\
+V_{total} = \sum_{i} V_i + C_{HW} + n_F.C_{NUF}
+$$
+
+Retention of customer base is also a valid use case. Not sure how to quantify this...
 
 ### Real Options
 
-We will discuss the Options Thinking approach here. See - [Software Design Decisions as Real Options](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=24f7bdda5f3721faa2da58719ae72432f782312f) and, more recently, [The Software Architect Elevator](https://www.amazon.com/Software-Architect-Elevator-Redefining-Architects-ebook/dp/B086WQ9XL1).
+We will not discuss the Options Thinking approach from scratch here; rather we will delve into some of its possible applications in architectural decision-making and technical debt repayment. See the following for excellent discussions on the topic:
 
+- [Software Design Decisions as Real Options](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=24f7bdda5f3721faa2da58719ae72432f782312f)
+- [The Software Architect Elevator](https://www.amazon.com/Software-Architect-Elevator-Redefining-Architects-ebook/dp/B086WQ9XL1)
+- Chapter 4 of [Extreme Programming Perspectives](https://www.amazon.com/Extreme-Programming-Perspectives-Michele-Marchesi/dp/0201770059)
+- Chapter 3 of [Value-Based Software Engineering](https://link.springer.com/book/10.1007/3-540-29263-2)
+
+
+- 
 - Disadvantages of the NPV approach
 - Opportunity Cost
 - Examples
   - One example where we could have applied: The team had built a data engineering pipeline using Spark and Scala. The stakeholder felt that hiring developers with the requisite skillsets would be hard, and wanted to move to plain Java-based processing. A combination of cash flow modeling and buying the option of redesign would have probably made for a compelling case.
-- Agile in SEE
-  - Delayability
 
-## Incorporating economics into daily thinking
+## Incorporating economics into daily architectural thinking
 
 Here are some generic tips.
 
@@ -126,3 +136,5 @@ style gp fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
 - [Software Design Decisions as Real Options](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=24f7bdda5f3721faa2da58719ae72432f782312f)
 - [A Practical Method for Valuing Real Options: The Boeing Approach](https://www.researchgate.net/publication/227374121_A_Practical_Method_for_Valuing_Real_Options_The_Boeing_Approach)
 - [How to Measure Anything](https://www.amazon.in/How-Measure-Anything-Intangibles-Business/dp/1118539273)
+- [Excellent Video on Real Options ECO423: IIT Kanpur](https://www.youtube.com/watch?v=lwoCGAqv5RU)
+
