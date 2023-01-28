@@ -8,12 +8,14 @@ draft: false
 
 Background: This post took me a while to write: much of this is motivated by problems that I've noticed teams facing day-to-day at work. To be clear, this post does not offer a solution; only some thoughts, and maybe a path forward in aligning developers' and architects' thinking more closely with the frameworks used by people controlling the purse-strings of software development projects.
 
-The other caveat is that this article does not touch the topic of estimation. That is intentional; I won't be extolling the virtues or limitations of #NoEstimates, for example (sidebar: the smoothest teams I've worked with essentially dispensed with estimation).
+The other caveat is that even though this article touches the topic of estimation, it is to talk about building uncertainty into estimates as a way to communicate risk and uncertainties with stakeholders, and not to *refine* estimates. I won't be extolling the virtues or limitations of **#NoEstimates**, for example (sidebar: the smoothest teams I've worked with essentially dispensed with estimation, but they also had excellent stakeholders).
+
+> "All models are wrong, but some are useful." - George Box
 
 **Every software engineer is an economist; an architect, even more so.** There is a wealth of literature around articulating value of software development, and in fact, several agile development principles embody some of these, but I see two issues in my day-to-day interactions with software engineers and architects.
 
 - Folks are reluctant to quantify things they build, beyond the standard practices they have been brought up on (like estimation exercises, test coverage). Some of this can be attributed to their prior bad experiences of being micromanaged via largely meaningless metrics.
-- Folks struggle to articulate value beyond a certain point to stakeholders who demand a certain measure of rigour and/or quantifiability. The DORA metrics are good starter indicators, but I contend that they are not enough.
+- Folks struggle to articulate value beyond a certain point to stakeholders who demand a certain measure of rigour and/or quantifiability. Similarly, engineers fail to communicate risk to decision-makers. The problem is then that The DORA metrics are good starter indicators, but I contend that they are not enough.
 - There is a reluctance to rely too much on metrics because people think metrics are easily gamed. This can be avoided if we use econometric methods, because 1) falsified data is immediately apparent 2) showing the work steps, assumptions and risks aids in this transparency because they are in the language of economics which is much more easily understandable to business stakeholders.
 - Thinking about value and deciding tradeoffs based on economic factors is not something that is done enough, if at all, at the level of engineering teams. For example, questions like "Should I do this refactoring?" and "Why should we repay this tech debt?", or "How are we better at this versus our competitor?" are usually framed in terms of statements which stop before traversing the full utility tree of value.
 
@@ -73,7 +75,7 @@ We will not discuss the Options Thinking approach from scratch here; rather we w
 - Examples
   - One example where we could have applied: The team had built a data engineering pipeline using Spark and Scala. The stakeholder felt that hiring developers with the requisite skillsets would be hard, and wanted to move to plain Java-based processing. A combination of cash flow modeling and buying the option of redesign would have probably made for a compelling case.
 
-## Incorporating economics into daily architectural thinking
+### Incorporating economics into daily architectural thinking
 
 Here are some generic tips.
 
@@ -119,7 +121,7 @@ style mvn fill:#006fff,stroke:#000,stroke-width:2px,color:#fff
 style gp fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
 {% endmermaid %}
 
-#### 1. The Economics of Technical Debt repayment
+#### 2. The Economics of Technical Debt repayment
 - Recurring Cash Flows
   - Cost of Manual Troubleshooting and Resolution
   - Cost of recurring change to a specific module
@@ -128,7 +130,25 @@ style gp fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
 
 **Valuing Real Options using [Datar-Matthews](https://www.researchgate.net/publication/227374121_A_Practical_Method_for_Valuing_Real_Options_The_Boeing_Approach)**
 
-#### 1. The Economics of New Features
+#### 3. The Economics of New Features
+
+### Articulating Value
+### Communicate Uncertainty in Estimation Models
+
+$$
+\text{Confidence Interval } = \hat{X} \pm Z.\frac{\sigma}{\sqrt{n} }
+$$
+
+- Calculate $$\sigma$$ given confidence interval of 0.9 (Z-score is correspondingly 1.65).
+- Do this for each story.
+- Calculate the joint probability distribution of all the random variables (one per story). This is easy if we assume all the estimate distributions are Gaussian. If not, perform Monte Carlo simulations.
+- Choose acceptable confidence level, and pick that estimate. Alternatively, pick an acceptable estimate, and record confidence level, and acknowledge the risk involved.
+- Negotiation should happen around acceptable levels of uncertainty levels, not on modifying story estimates to fit a particular target.
+
+See [this spreadsheet](https://docs.google.com/spreadsheets/d/1jBHwntpPI3QK5rM5yw5m2Gge9otgDf7pddNZs1sBZlw/edit?usp=sharing) for a sample calculation.
+
+### The Value of Measurement (aka, the Cost of Information)
+- The Expected Value of Perfect Information
 
 ### References
 
