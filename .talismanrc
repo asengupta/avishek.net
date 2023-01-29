@@ -27,4 +27,6 @@ fileignoreconfig:
   checksum: 43ce69888ebafc6ecc7d5ccf51311cbac304b4021eed6d872fb839090b274e84
 - filename: assets/papers/financial-aspect-tech-debt-literature-review.pdf
   checksum: 10e9f8055b0656109e891f03c3dd523375ddfa1044e1f1eef98adf7a82970261
+- filename: assets/presentations/value-articulation-guide-ppt.html
+  checksum: 7d4324d93bb75a836d8a3a60dd521e5566c786822ea8c54dbdce151a63c4857d
 
