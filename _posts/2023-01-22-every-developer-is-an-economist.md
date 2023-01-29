@@ -2,11 +2,11 @@
 title: "Every Software Engineer is an Economist"
 author: avishek
 usemathjax: true
-tags: ["Software Engineering", "Economics"]
+tags: ["Software Engineering", "Software Engineering Economics"]
 draft: false
 ---
 
-Background: This post took me a while to write: much of this is motivated by problems that I've noticed teams facing day-to-day at work. To be clear, this post does not offer a solution; only some thoughts, and maybe a path forward in aligning developers' and architects' thinking more closely with the frameworks used by people controlling the purse-strings of software development projects.
+**Background**: This post took me a while to write: much of this is motivated by problems that I've noticed teams facing day-to-day at work. To be clear, this post does not offer a solution; only some thoughts, and maybe a path forward in aligning developers' and architects' thinking more closely with the frameworks used by people controlling the purse-strings of software development projects.
 
 The other caveat is that even though this article touches the topic of estimation, it is to talk about building uncertainty into estimates as a way to communicate risk and uncertainties with stakeholders, and not to *refine* estimates. I won't be extolling the virtues or limitations of **#NoEstimates**, for example (sidebar: the smoothest teams I've worked with essentially dispensed with estimation, but they also had excellent stakeholders).
 
@@ -83,8 +83,10 @@ Here are some generic tips.
 - If you are already measuring DORA metrics, relentlessly ask what each DORA metric translates to in terms of money.
 - Along the way of the graph, list out other incidental cash outflows.
 - Remember that story points must always be converted into hours to actually be incorporated into economic estimates.
-- CALCULATE NPV!!! HOW?
 - Build Options tree. Deduce whether it is better to defer execution, or do it right now.
+
+- Non-technical things can also be calculated, i.e., the need for training.
+- These metrics must be measured as part of standardised project protocols.
 
 Here are some tips for specific but standard cases.
 
@@ -98,9 +100,11 @@ If you are suggesting a new microservice for processing payments, these might be
     - Cost of higher latency leading to lower service capacity (if the microservice is part of a workflow): Decreased cash inflow, depending upon if you ever reach the load limits of the service before other parts of the system start to fail
     - Cost of fixing bugs: New cash outflow, depending upon complexity of the microservice
     - Cost of Integrations: 
-- Single or Few-Time Cash Flows
-  - Cost of development: New cash outflow
-  - Cost of deployment setup: New cash outflow (ideally should be as low as possible)
+    - Single or Few-Time Cash Flows
+      - Cost of development: New cash outflow
+      - Cost of deployment setup: New cash outflow (ideally should be as low as possible)
+    - Option Premium
+      - Architecture Seam
 
 **Causal Graph**
 
@@ -130,7 +134,6 @@ style gp fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
 
 **Valuing Real Options using [Datar-Matthews](https://www.researchgate.net/publication/227374121_A_Practical_Method_for_Valuing_Real_Options_The_Boeing_Approach)**
 
-#### 3. The Economics of New Features
 
 ### Articulating Value
 ### Communicate Uncertainty in Estimation Models
@@ -149,6 +152,12 @@ See [this spreadsheet](https://docs.google.com/spreadsheets/d/1jBHwntpPI3QK5rM5y
 
 ### The Value of Measurement (aka, the Cost of Information)
 - The Expected Value of Perfect Information
+### Research relating Development Metrics to Wasted Development Time
+
+- ATD must have cost=principal (amount to pay to implement) + interest (continuing incurred costs of not implementing ATD)
+- [Code Red: The Business Impact of Code Quality - A Quantitative Study of 39 Proprietary Production Codebases](https://arxiv.org/abs/2203.04374)
+- [The financial aspect of managing technical debt: A systematic literature review](https://www.semanticscholar.org/paper/The-financial-aspect-of-managing-technical-debt%3A-A-Ampatzoglou-Ampatzoglou/de5db6c07899c1d90b4ff4428e68b2dd799b9d6e)
+- [The Pricey Bill of Technical Debt: When and by Whom will it be Paid?](https://www.researchgate.net/publication/320057934_The_Pricey_Bill_of_Technical_Debt_When_and_by_Whom_will_it_be_Paid)
 
 ### References
 
