@@ -8,6 +8,8 @@ draft: false
 
 **Background**: This post took me a while to write: much of this is motivated by problems that I've noticed teams facing day-to-day at work. To be clear, this post does not offer a solution; only some thoughts, and maybe a path forward in aligning developers' and architects' thinking more closely with the frameworks used by people controlling the purse-strings of software development projects.
 
+Here is a [presentation version](/assets/presentations/value-articulation-guide-ppt.html) of this article.
+
 The other caveat is that even though this article touches the topic of estimation, it is to talk about building uncertainty into estimates as a way to communicate risk and uncertainties with stakeholders, and not to *refine* estimates. I won't be extolling the virtues or limitations of **#NoEstimates**, for example (sidebar: the smoothest teams I've worked with essentially dispensed with estimation, but they also had excellent stakeholders).
 
 > "All models are wrong, but some are useful." - George Box
@@ -37,45 +39,30 @@ Important Concepts that every software developer should know:
   - The above goes some way towards assigning utility to architectural decisions. These are at the level of Cross-Functional Requirements, and DORA metrics, but do not point the way towards calculating financial implications.
 - Net Present Value and Discounted Cash Flows
 
-### Deriving Value in Legacy Modernisation
-
-$$C_{HW}$$ = Cost of Hardware / Hosting \\
-$$C_{HUF}$$ = Cost of manual work equivalent of feature (if completely new feature or if feature has manual interventions) \\
-$$C_{RED}$$ = Cost of recovery, including human investments (related to MTTR) \\
-$$C_{LBD}$$ = Cost of lost business / productivity during downtime (related to MTTR) \\
-$$C_{ENF}$$ = Cost of development of an enhancement to a feature (related to DORA Lead Time) \\
-$$C_{NUF}$$ = Cost of development of a new feature (related to DORA Lead Time) \\
-$$C_{BUG}$$ = Cost of bug fixes for feature \\
-$$n_D$$ = Number of downtime incidents per year \\
-$$n_E$$ = Number of enhancements to feature per year \\
-$$n_B$$ = Number of bugs in feature per year
-
-The cost of a feature is then denoted by $$V$$, and the total value of the feature is $$V_{total}$$. These are given by:
+### 1. Articulating Value: Communicate Uncertainty in Estimation Models
 
 $$
-V=C_{HUF} + n_D.(C_{RED} + C_{LBD}) + n_E.C_{ENF} + n_B.C_{BUG} \\
-V_{total} = \sum_{i} V_i + C_{HW} + n_F.C_{NUF}
+\text{Confidence Interval } = \hat{X} \pm Z.\frac{\sigma}{\sqrt{n} }
 $$
 
-Retention of customer base is also a valid use case. Not sure how to quantify this...
+- Calculate $$\sigma$$ given confidence interval of 0.9 (Z-score is correspondingly 1.65).
+- Do this for each story.
+- Calculate the joint probability distribution of all the random variables (one per story). This is easy if we assume all the estimate distributions are Gaussian. If not, perform Monte Carlo simulations.
+- Choose acceptable confidence level, and pick that estimate. Alternatively, pick an acceptable estimate, and record confidence level, and acknowledge the risk involved.
+- Negotiation should happen around acceptable levels of uncertainty levels, not on modifying story estimates to fit a particular target.
 
-### Real Options
+See [this spreadsheet](https://docs.google.com/spreadsheets/d/1jBHwntpPI3QK5rM5yw5m2Gge9otgDf7pddNZs1sBZlw/edit?usp=sharing) for a sample calculation.
 
-We will not discuss the Options Thinking approach from scratch here; rather we will delve into some of its possible applications in architectural decision-making and technical debt repayment. See the following for excellent discussions on the topic:
+### 2. Articulating Value: Economics and Risks of Tech Debt and Architectural Decisions
+#### Research relating Development Metrics to Wasted Development Time
 
-- [Software Design Decisions as Real Options](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=24f7bdda5f3721faa2da58719ae72432f782312f)
-- [The Software Architect Elevator](https://www.amazon.com/Software-Architect-Elevator-Redefining-Architects-ebook/dp/B086WQ9XL1)
-- Chapter 4 of [Extreme Programming Perspectives](https://www.amazon.com/Extreme-Programming-Perspectives-Michele-Marchesi/dp/0201770059)
-- Chapter 3 of [Value-Based Software Engineering](https://link.springer.com/book/10.1007/3-540-29263-2)
+- [Code Red: The Business Impact of Code Quality - A Quantitative Study of 39 Proprietary Production Codebases](https://arxiv.org/abs/2203.04374)
+- [The financial aspect of managing technical debt: A systematic literature review](https://www.semanticscholar.org/paper/The-financial-aspect-of-managing-technical-debt%3A-A-Ampatzoglou-Ampatzoglou/de5db6c07899c1d90b4ff4428e68b2dd799b9d6e)
+- [The Pricey Bill of Technical Debt: When and by Whom will it be Paid?](https://www.researchgate.net/publication/320057934_The_Pricey_Bill_of_Technical_Debt_When_and_by_Whom_will_it_be_Paid)
 
+ATD must have cost=principal (amount to pay to implement) + interest (continuing incurred costs of not implementing ATD)
 
-- 
-- Disadvantages of the NPV approach
-- Opportunity Cost
-- Examples
-  - One example where we could have applied: The team had built a data engineering pipeline using Spark and Scala. The stakeholder felt that hiring developers with the requisite skillsets would be hard, and wanted to move to plain Java-based processing. A combination of cash flow modeling and buying the option of redesign would have probably made for a compelling case.
-
-### Incorporating economics into daily architectural thinking
+#### Incorporating economics into daily architectural thinking
 
 Here are some generic tips.
 
@@ -93,18 +80,18 @@ Here are some tips for specific but standard cases.
 #### 1. The Economics of Microservices
 
 If you are suggesting a new microservice for processing payments, these might be the new cash flows:
-  - Recurring Cash Flows
+- Recurring Cash Flows
     - Transactions: New cash inflow
     - Cost of recovering the whole system back from failure: Reduced cash outflow
     - Cost of cloud resources to scale the new microservice: New cash outflow
     - Cost of higher latency leading to lower service capacity (if the microservice is part of a workflow): Decreased cash inflow, depending upon if you ever reach the load limits of the service before other parts of the system start to fail
     - Cost of fixing bugs: New cash outflow, depending upon complexity of the microservice
-    - Cost of Integrations: 
+    - Cost of Integrations:
     - Single or Few-Time Cash Flows
-      - Cost of development: New cash outflow
-      - Cost of deployment setup: New cash outflow (ideally should be as low as possible)
+        - Cost of development: New cash outflow
+        - Cost of deployment setup: New cash outflow (ideally should be as low as possible)
     - Option Premium
-      - Architecture Seam
+        - Architecture Seam
 
 **Causal Graph**
 
@@ -127,43 +114,68 @@ style gp fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
 
 #### 2. The Economics of Technical Debt repayment
 - Recurring Cash Flows
-  - Cost of Manual Troubleshooting and Resolution
-  - Cost of recurring change to a specific module
+    - Cost of Manual Troubleshooting and Resolution
+    - Cost of recurring change to a specific module
 - Single or Few-Time Cash Flows
-  - Cost of repaying tech debt
+    - Cost of repaying tech debt
+
+### 3. Articulating Value: Deriving Value in Legacy Modernisation
+
+$$C_{HW}$$ = Cost of Hardware / Hosting \\
+$$C_{HUF}$$ = Cost of manual work equivalent of feature (if completely new feature or if feature has manual interventions) \\
+$$C_{RED}$$ = Cost of recovery, including human investments (related to MTTR) \\
+$$C_{LBD}$$ = Cost of lost business / productivity during downtime (related to MTTR) \\
+$$C_{ENF}$$ = Cost of development of an enhancement to a feature (related to DORA Lead Time) \\
+$$C_{NUF}$$ = Cost of development of a new feature (related to DORA Lead Time) \\
+$$C_{BUG}$$ = Cost of bug fixes for feature \\
+$$n_D$$ = Number of downtime incidents per year \\
+$$n_E$$ = Number of enhancements to feature per year \\
+$$n_B$$ = Number of bugs in feature per year
+
+The cost of a feature is then denoted by $$V$$, and the total value of the feature is $$V_{total}$$. These are given by:
+
+$$
+V=C_{HUF} + n_D.(C_{RED} + C_{LBD}) + n_E.C_{ENF} + n_B.C_{BUG} \\
+V_{total} = \sum_{i} V_i + C_{HW} + n_F.C_{NUF}
+$$
+
+Retention of customer base is also a valid use case. Not sure how to quantify this...
+
+### 4. Articulating Value: The Value of Measurement (aka, the Cost of Information)
+- The Expected Value of Perfect Information
+
+### 5. Articulating Value: The Value of Timing (aka, Real Options)
+
+#### Real Options
+
+We will not discuss the Options Thinking approach from scratch here; rather we will delve into some of its possible applications in architectural decision-making and technical debt repayment. See the following for excellent discussions on the topic:
+
+- [Software Design Decisions as Real Options](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=24f7bdda5f3721faa2da58719ae72432f782312f)
+- [The Software Architect Elevator](https://www.amazon.com/Software-Architect-Elevator-Redefining-Architects-ebook/dp/B086WQ9XL1)
+- Chapter 4 of [Extreme Programming Perspectives](https://www.amazon.com/Extreme-Programming-Perspectives-Michele-Marchesi/dp/0201770059)
+- Chapter 3 of [Value-Based Software Engineering](https://link.springer.com/book/10.1007/3-540-29263-2)
+
+- Disadvantages of the NPV approach
+- Opportunity Cost
+- Examples
+    - One example where we could have applied: The team had built a data engineering pipeline using Spark and Scala. The stakeholder felt that hiring developers with the requisite skillsets would be hard, and wanted to move to plain Java-based processing. A combination of cash flow modeling and buying the option of redesign would have probably made for a compelling case.
+
 
 **Valuing Real Options using [Datar-Matthews](https://www.researchgate.net/publication/227374121_A_Practical_Method_for_Valuing_Real_Options_The_Boeing_Approach)**
 
+# References
 
-### Articulating Value
-### Communicate Uncertainty in Estimation Models
-
-$$
-\text{Confidence Interval } = \hat{X} \pm Z.\frac{\sigma}{\sqrt{n} }
-$$
-
-- Calculate $$\sigma$$ given confidence interval of 0.9 (Z-score is correspondingly 1.65).
-- Do this for each story.
-- Calculate the joint probability distribution of all the random variables (one per story). This is easy if we assume all the estimate distributions are Gaussian. If not, perform Monte Carlo simulations.
-- Choose acceptable confidence level, and pick that estimate. Alternatively, pick an acceptable estimate, and record confidence level, and acknowledge the risk involved.
-- Negotiation should happen around acceptable levels of uncertainty levels, not on modifying story estimates to fit a particular target.
-
-See [this spreadsheet](https://docs.google.com/spreadsheets/d/1jBHwntpPI3QK5rM5yw5m2Gge9otgDf7pddNZs1sBZlw/edit?usp=sharing) for a sample calculation.
-
-### The Value of Measurement (aka, the Cost of Information)
-- The Expected Value of Perfect Information
-### Research relating Development Metrics to Wasted Development Time
-
-- ATD must have cost=principal (amount to pay to implement) + interest (continuing incurred costs of not implementing ATD)
-- [Code Red: The Business Impact of Code Quality - A Quantitative Study of 39 Proprietary Production Codebases](https://arxiv.org/abs/2203.04374)
-- [The financial aspect of managing technical debt: A systematic literature review](https://www.semanticscholar.org/paper/The-financial-aspect-of-managing-technical-debt%3A-A-Ampatzoglou-Ampatzoglou/de5db6c07899c1d90b4ff4428e68b2dd799b9d6e)
-- [The Pricey Bill of Technical Debt: When and by Whom will it be Paid?](https://www.researchgate.net/publication/320057934_The_Pricey_Bill_of_Technical_Debt_When_and_by_Whom_will_it_be_Paid)
-
-### References
-
-- [Economics-Driven Software Architecture](https://www.amazon.in/Economics-Driven-Software-Architecture-Ivan-Mistrik/dp/0124104649)
-- [Software Design Decisions as Real Options](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=24f7bdda5f3721faa2da58719ae72432f782312f)
-- [A Practical Method for Valuing Real Options: The Boeing Approach](https://www.researchgate.net/publication/227374121_A_Practical_Method_for_Valuing_Real_Options_The_Boeing_Approach)
-- [How to Measure Anything](https://www.amazon.in/How-Measure-Anything-Intangibles-Business/dp/1118539273)
-- [Excellent Video on Real Options ECO423: IIT Kanpur](https://www.youtube.com/watch?v=lwoCGAqv5RU)
-
+- Books
+    - [Economics-Driven Software Architecture](https://www.amazon.in/Economics-Driven-Software-Architecture-Ivan-Mistrik/dp/0124104649)
+    - [How to Measure Anything](https://www.amazon.in/How-Measure-Anything-Intangibles-Business/dp/1118539273)
+    - [Value-Based Software Engineering](https://link.springer.com/book/10.1007/3-540-29263-2)
+    - [The Software Architect Elevator](https://www.amazon.com/Software-Architect-Elevator-Redefining-Architects-ebook/dp/B086WQ9XL1)
+    - [Extreme Programming Perspectives](https://www.amazon.com/Extreme-Programming-Perspectives-Michele-Marchesi/dp/0201770059)
+- Papers
+    - [Software Design Decisions as Real Options](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=24f7bdda5f3721faa2da58719ae72432f782312f)
+    - [A Practical Method for Valuing Real Options: The Boeing Approach](https://www.researchgate.net/publication/227374121_A_Practical_Method_for_Valuing_Real_Options_The_Boeing_Approach)
+    - [Code Red: The Business Impact of Code Quality - A Quantitative Study of 39 Proprietary Production Codebases](https://arxiv.org/abs/2203.04374)
+    - [The financial aspect of managing technical debt: A systematic literature review](https://www.semanticscholar.org/paper/The-financial-aspect-of-managing-technical-debt%3A-A-Ampatzoglou-Ampatzoglou/de5db6c07899c1d90b4ff4428e68b2dd799b9d6e)
+    - [The Pricey Bill of Technical Debt: When and by Whom will it be Paid?](https://www.researchgate.net/publication/320057934_The_Pricey_Bill_of_Technical_Debt_When_and_by_Whom_will_it_be_Paid)
+- Videos
+    - [Excellent Video on Real Options ECO423: IIT Kanpur](https://www.youtube.com/watch?v=lwoCGAqv5RU)

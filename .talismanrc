@@ -29,4 +29,10 @@ fileignoreconfig:
   checksum: 10e9f8055b0656109e891f03c3dd523375ddfa1044e1f1eef98adf7a82970261
 - filename: assets/presentations/value-articulation-guide-ppt.html
   checksum: 7d4324d93bb75a836d8a3a60dd521e5566c786822ea8c54dbdce151a63c4857d
+- filename: assets/presentations/value-articulation-guide.md
+  checksum: 5b20aedff41542d624e605b8b6732e06c09bad266fe2cb9b78be6004bd208300
+- filename: _posts/2023-01-22-every-developer-is-an-economist.md
+  checksum: b7b1601e5af34974b1d1020f687b1b50fd97a4b8f33e20a5634225feadebe6ca
+- filename: assets/presentations/value-articulation-guide-ppt.html
+  checksum: 833e8aea7d1bb8bc305e42cee8a66e923d0085391d8840cca325e96ed2bf44a6
 
