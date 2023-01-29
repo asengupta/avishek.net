@@ -7,13 +7,13 @@ module Jekyll
       def initialize(tag_name, text, tokens)
         super
         params = text.split("!")
-        @uri = URI.parse(params[0])
+        @chart_name = URI.parse(params[0])
         @from = params[1].to_i - 1
         @to = params[2].to_i - 1
       end
 
       def render(context)
-        response = Net::HTTP.get_response(@uri)
+        response = Net::HTTP.get_response(@chart_name)
         response.body.lines[Range.new(@from, @to)]
       end
     end

@@ -62,6 +62,29 @@ See [this spreadsheet](https://docs.google.com/spreadsheets/d/1jBHwntpPI3QK5rM5y
 
 ATD must have cost=principal (amount to pay to implement) + interest (continuing incurred costs of not implementing ATD)
 
+**Example Cash Flows**
+
+{% include_chart myChart!500!500!{
+    type: 'polarArea',
+    data: {
+      labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
+      datasets: [{
+        label: '# of Votes',
+        data: [12, 19, 3, 5, 2, 3],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: false,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  } %}
+
 #### Incorporating economics into daily architectural thinking
 
 Here are some generic tips.
