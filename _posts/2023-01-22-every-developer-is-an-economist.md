@@ -3,7 +3,7 @@ title: "Every Software Engineer is an Economist"
 author: avishek
 usemathjax: true
 tags: ["Software Engineering", "Software Engineering Economics"]
-draft: true
+draft: false
 ---
 
 **Background**: This post took me a while to write: much of this is motivated by problems that I've noticed teams facing day-to-day at work. To be clear, this post does not offer a solution; only some thoughts, and maybe a path forward in aligning developers' and architects' thinking more closely with the frameworks used by people controlling the purse-strings of software development projects.
@@ -62,27 +62,51 @@ See [this spreadsheet](https://docs.google.com/spreadsheets/d/1jBHwntpPI3QK5rM5y
 
 ATD must have cost=principal (amount to pay to implement) + interest (continuing incurred costs of not implementing ATD)
 
-**Example Cash Flows**
+**Example Tech Debt Cash Flow**
 
-{% include_chart myChart!500!500!{
-    type: 'polarArea',
+{% include_chart myChartx!500!500!{
+    type: 'bar',
     data: {
-      labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
-      datasets: [{
-        label: '# of Votes',
-        data: [12, 19, 3, 5, 2, 3],
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: false,
-      maintainAspectRatio: false,
-      scales: {
-        y: {
-          beginAtZero: true
-        }
-      }
-    }
+            labels: ['Jan', 'Feb', 'March', 'April', 'May', 'June'],
+            datasets: [
+                        {
+                            label: 'Downtime Costs (Interest)',
+                            data: [-5000, -10000, -13000, -5000, -2000, -2000],
+                        },
+                        {
+                            label: 'Bug Costs (Interest)',
+                            data: [-5000, -12000, -13000, -5000, -2000, -1000],
+                        },
+                        {
+                            label: 'Repay Tech Debt (Principal)',
+                            data: [0, 0, -20000, -5000, 0, 0],
+                        },
+                      ]
+            },
+            options: {
+                responsive: false,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                    },
+                    y: {
+                        stacked: true,
+                        ticks: {
+                            // Include a dollar sign in the ticks
+                                callback: function(value, index, ticks) {
+                                return '$' + value;
+                            }
+                        }
+                    }
+                }
+            }
+
   } %}
 
 #### Incorporating economics into daily architectural thinking
@@ -122,17 +146,21 @@ If you are suggesting a new microservice for processing payments, these might be
 graph LR;
 debt[Tech Debt]-->principal[Cost of Fixing Debt: Principal];
 debt-->interest[Recurring Cost: Interest];
+debt-->td_option_premium[Tech Debt Option Premium];
 debt-->risk[Risk-Related Cost];
-architecture_decision[Architecture Decision]-->resources[Cloud Resources];
+architecture_decision[Architecture Decision]-->atd_principal[Cost of Architectural Decision: Principal];
+architecture_decision-->recurring_atd_interest[Recurring Cost: Interest];
+architecture_decision-->atd_option_premium[Architecture Option Premium];
 microservice-->database[Cloud DB Resources];
 microservice-->development_cost[Development Cost];
 microservice-->latency[Latency];
-microservice-->bugs[Fixing bugs];
-microservice-->downtime[Downtime]-->lost_transactions[Lesser Lost Transactions];
+microservice-->bugs[Fixing bugs]-->bugfix_time[Wasted Bugfix Time Costs];
+microservice-->downtime[Downtime]-->lost_transactions[Lost Transaction Costs];
+microservice-->microservice_option_premium[Architecture Seam: Option Premium];
 
-style chol fill:#006f00,stroke:#000,stroke-width:2px,color:#fff
-style mvn fill:#006fff,stroke:#000,stroke-width:2px,color:#fff
-style gp fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
+style debt fill:#006f00,stroke:#000,stroke-width:2px,color:#fff
+style architecture_decision fill:#006fff,stroke:#000,stroke-width:2px,color:#fff
+style microservice fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
 {% endmermaid %}
 
 #### 2. The Economics of Technical Debt repayment

@@ -11,14 +11,15 @@ module Jekyll
       end
 
       def render(context)
+        r = Random.rand(10000)
         return p <<HERE
 <div width="#{@chart_x}" height="#{@chart_y}">
   <canvas id="#{@chart_name}" border="2px" width="#{@chart_x}" height="#{@chart_y}"></canvas>
 </div>
 
 <script>
-  const ctx = document.getElementById('#{@chart_name}');
-  new Chart(ctx, #{@chart_config});
+  const ctx_#{r} = document.getElementById('#{@chart_name}');
+  new Chart(ctx_#{r}, #{@chart_config});
 </script>
 HERE
       end
