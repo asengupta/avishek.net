@@ -317,5 +317,6 @@ We need to decide what is the importance of these variables in making the decisi
     - [Code Red: The Business Impact of Code Quality - A Quantitative Study of 39 Proprietary Production Codebases](https://arxiv.org/abs/2203.04374)
     - [The financial aspect of managing technical debt: A systematic literature review](https://www.semanticscholar.org/paper/The-financial-aspect-of-managing-technical-debt%3A-A-Ampatzoglou-Ampatzoglou/de5db6c07899c1d90b4ff4428e68b2dd799b9d6e)
     - [The Pricey Bill of Technical Debt: When and by Whom will it be Paid?](https://www.researchgate.net/publication/320057934_The_Pricey_Bill_of_Technical_Debt_When_and_by_Whom_will_it_be_Paid)
+    - [Software Risk Management: Principles and Practices](https://www.cs.virginia.edu/~sherriff/papers/Boehm%20-%201991.pdf)
 - Videos
     - [Excellent Video on Real Options ECO423: IIT Kanpur](https://www.youtube.com/watch?v=lwoCGAqv5RU)
