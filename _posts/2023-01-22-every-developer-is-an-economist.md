@@ -3,7 +3,7 @@ title: "Every Software Engineer is an Economist"
 author: avishek
 usemathjax: true
 tags: ["Software Engineering", "Software Engineering Economics"]
-draft: true
+draft: false
 ---
 
 **Background**: This post took me a while to write: much of this is motivated by problems that I've noticed teams facing day-to-day at work. To be clear, this post does not offer a solution; only some thoughts, and maybe a path forward in aligning developers' and architects' thinking more closely with the frameworks used by people controlling the purse-strings of software development projects.
@@ -104,7 +104,7 @@ style architecture_decision fill:#006fff,stroke:#000,stroke-width:2px,color:#fff
                     ticks: {
                         // Include a dollar sign in the ticks
                         callback: function(value, index, ticks) {
-                        return '$' + value;
+                        return Intl.NumberFormat('en-US', {style: 'currency', currency: 'USD'}).format(value);
                     }
                 }
             }
@@ -207,7 +207,7 @@ style debt fill:#006f00,stroke:#000,stroke-width:2px,color:#fff
                     ticks: {
                         // Include a dollar sign in the ticks
                         callback: function(value, index, ticks) {
-                        return '$' + value;
+                        return Intl.NumberFormat('en-US', {style: 'currency', currency: 'USD'}).format(value);
                     }
                 }
             }
