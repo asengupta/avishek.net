@@ -70,7 +70,7 @@ The correct approach of convolving the estimate sdistributions of all the storie
 - What are the upper and lower bounds with 90% confidence? 324 and 270, respectively, which is different from the result of naively summing the upper and lower bounds.
 - Suppose we want to use a lower estimate of the upper bound, say, 310; what then is the risk of being wrong? The answer is 23%, which you can calculate for yourself by going to the spreadsheet directly.
 
-The idea is that you can now communicate risk in your estimates, in the form of [**risk exposure**](https://www.playbookhq.co/blog/calculate-risk-exposure). This is done by finding the expected value of the normal distribution from the probability at the upper bound to $$\infty$$. In this case, risk exposure communicates how much extra time (and consequently, money) will need to be expended, if the estimate overshoots 310 (assuming the budget was allotted only for 310).
+The idea is that you can now communicate risk in your estimates, in the form of [**risk exposure**](https://www.playbookhq.co/blog/calculate-risk-exposure). This is done by finding the expected differential between your upper bound and the overshoot value of the normal distribution from the probability at the upper bound to $$\infty$$. In this case, risk exposure communicates how much extra time (and consequently, money) will need to be expended, if the estimate overshoots 310 (assuming the budget was allotted only for 310).
 
 The risk exposure curve for the above scenario is shown below:
 
@@ -88,8 +88,8 @@ ATD must have cost=principal (amount to pay to implement) + interest (continuing
 {% mermaid %}
 graph LR;
 architecture_decision[Architecture Decision]-->atd_principal[Cost of Architectural Decision: Principal];
-architecture_decision-->recurring_atd_interest[Recurring Cost: Interest];
-architecture_decision-->recurring_atd_interest[Recurring Development Savings];
+architecture_decision-->recurring_atd_interest[Recurring Costs: Interest];
+architecture_decision-->recurring_atd_savings[Recurring Development Savings];
 architecture_decision-->atd_option_premium[Architecture Option Premium];
 
 style architecture_decision fill:#006fff,stroke:#000,stroke-width:2px,color:#fff
@@ -166,7 +166,8 @@ If you are suggesting a new microservice for processing payments, these might be
 
 {% mermaid %}
 graph LR;
-microservice-->database[Cloud DB Resources];
+microservice[Microservice ADR]-->database[Cloud DB Resources];
+microservice-->hosting[Cloud Hosting Resources];
 microservice-->development_cost[Development Cost];
 microservice-->latency[Latency];
 microservice-->bugs[Fixing bugs]-->bugfix_time[Wasted Bugfix Time Costs];
