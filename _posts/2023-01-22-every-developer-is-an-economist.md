@@ -3,7 +3,7 @@ title: "Every Software Engineer is an Economist"
 author: avishek
 usemathjax: true
 tags: ["Software Engineering", "Software Engineering Economics"]
-draft: false
+draft: true
 ---
 
 **Background**: This post took me a while to write: much of this is motivated by problems that I've noticed teams facing day-to-day at work. To be clear, this post does not offer a solution; only some thoughts, and maybe a path forward in aligning developers' and architects' thinking more closely with the frameworks used by people controlling the purse-strings of software development projects.
@@ -39,6 +39,11 @@ Important Concepts that every software developer should know:
   - The above goes some way towards assigning utility to architectural decisions. These are at the level of Cross-Functional Requirements, and DORA metrics, but do not point the way towards calculating financial implications.
 - Net Present Value and Discounted Cash Flows
 
+## Simplifying Assumptions
+
+- The conversion of time to money is simply treated as the Cost to Company for a single individual working. This is a lower bound, since there will usually be multiple people on a work item, and there may be other ancilliary costs.
+
+
 ## 1. Articulating Value: Communicate Uncertainty in Estimation Models
 
 $$
@@ -54,6 +59,22 @@ $$
 See [this spreadsheet](https://docs.google.com/spreadsheets/d/1jBHwntpPI3QK5rM5yw5m2Gge9otgDf7pddNZs1sBZlw/edit?usp=sharing) for a sample calculation. In the diagram below, the normal distribution on the far right is the final distribution resulting from convolving all the story estimates (which are normal distributions themselves). The Y-axis has been scaled by 1000 for ease of visualisation.
 
 ![Uncertainty in Estimates](/assets/images/estimate-uncertainty-sum.png)
+![Estimation Calculations](/assets/images/estimation-calculation.png)
+
+As you can see, the attempt to find a naive lower and upper bounds by summing the lower and upper bounds gives us 210 and 385. In fact, it is misleading to call these simply lower and upper bounds. They are bounds, but in this case, we want to use the term 90% confidence level uncertainty bounds. This implies that the estimators are 90% sure that the estimates for the first story (for example) lies between 10 and 30. Whether narrowing this uncertainty is worth it (without artificially manipulating numbers) is the subject of the discussion in **Articulating Value: The Value of Measurement**. However, the point is to not settle on a single number, but to always use a range of values. This, in itself, is not new. However, the upper and lower bounds are always taken as fixed, without any discussion around the risk involved in picking a lower estimate.
+
+This is what the above calculation brings out. In this simplifying example, we have chosen the estimates to be normal distributions, to keep calculations simply. It could even be a fat-tailed distribution like a Log-Normal Distribution (to bias it towards higher estimates), but then we'd need to run Monte Carlo simulations to come up with the data. So, let's keep it simple for now.
+
+The correct approach of convolving the estimate sdistributions of all the stories results in the single normal distribution above. With this graph, we can answer questions like:
+
+- What are the upper and lower bounds with 90% confidence? 324 and 270, respectively, which is different from the result of naively summing the upper and lower bounds.
+- Suppose we want to use a lower estimate of the upper bound, say, 310; what then is the risk of being wrong? The answer is 23%, which you can calculate for yourself by going to the spreadsheet directly.
+
+The idea is that you can now communicate risk in your estimates, in the form of [**risk exposure**](https://www.playbookhq.co/blog/calculate-risk-exposure). This is done by finding the expected value of the normal distribution from the probability at the upper bound to $$\infty$$. In this case, risk exposure communicates how much extra time (and consequently, money) will need to be expended, if the estimate overshoots 310 (assuming the budget was allotted only for 310).
+
+The risk exposure curve for the above scenario is shown below:
+
+![Risk Curve above 310](/assets/images/estimation-risk-curve.png)
 
 ## 2. Articulating Value: Economics and Risks of Tech Debt and Architectural Decisions
 Here is some research relating **Development Metrics to Wasted Development Time**:
@@ -233,9 +254,10 @@ The cost of a feature is then denoted by $$V$$, and the total value of the featu
 
 $$
 V=C_{HUF} + n_D.(C_{RED} + C_{LBD}) + n_E.C_{ENF} + n_B.C_{BUG} \\
-V_{total} = \sum_{i} V_i + C_{HW} + n_F.C_{NUF}
+V_{legacy} = \sum_{i} V_i + C_{HW} + n_F.C_{NUF}
 $$
 
+In legacy modernisation, the idea is to minimise $$V_{legacy}$$, so that $$V_{legacy}-V_{modern} > 0$$.
 Retention of customer base is also a valid use case. Not sure how to quantify this...
 
 ## 4. Articulating Value: The Value of Timing (aka, Real Options)
