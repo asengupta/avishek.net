@@ -3,7 +3,7 @@ title: "Every Software Engineer is an Economist"
 author: avishek
 usemathjax: true
 tags: ["Software Engineering", "Software Engineering Economics"]
-draft: false
+draft: true
 ---
 
 **Background**: This post took me a while to write: much of this is motivated by problems that I've noticed teams facing day-to-day at work. To be clear, this post does not offer a solution; only some thoughts, and maybe a path forward in aligning developers' and architects' thinking more closely with the frameworks used by people controlling the purse-strings of software development projects.
@@ -51,7 +51,9 @@ $$
 - Choose acceptable confidence level, and pick that estimate. Alternatively, pick an acceptable estimate, and record confidence level, and acknowledge the risk involved.
 - Negotiation should happen around acceptable levels of uncertainty levels, not on modifying story estimates to fit a particular target.
 
-See [this spreadsheet](https://docs.google.com/spreadsheets/d/1jBHwntpPI3QK5rM5yw5m2Gge9otgDf7pddNZs1sBZlw/edit?usp=sharing) for a sample calculation.
+See [this spreadsheet](https://docs.google.com/spreadsheets/d/1jBHwntpPI3QK5rM5yw5m2Gge9otgDf7pddNZs1sBZlw/edit?usp=sharing) for a sample calculation. In the diagram below, the normal distribution on the far right is the final distribution resulting from convolving all the story estimates (which are normal distributions themselves). The Y-axis has been scaled by 1000 for ease of visualisation.
+
+![Uncertainty in Estimates](/assets/images/estimate-uncertainty-sum.png)
 
 ## 2. Articulating Value: Economics and Risks of Tech Debt and Architectural Decisions
 Here is some research relating **Development Metrics to Wasted Development Time**:
