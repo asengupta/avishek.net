@@ -34,9 +34,9 @@ Most of the thinking and tools discussed in this article have been borrowed from
 For these ideas to effectively work, they must permeate all the way across developers to tech leads to architects to managers. Thus, this article is divided into the following sections:
 
 - [Communicating Uncertainty and Risk in Estimation Models](#1-articulating-value-communicating-uncertainty-and-risk-in-estimation-models)
-- [Communicating Values and Risks of Tech Debt and Architectural Decisions](#2-articulating-value-economics-and-risks-of-tech-debt-and-architectural-decisions)
-- [Deriving Value in Legacy Modernisation](#3-articulating-value-deriving-value-in-legacy-modernisation)
-- [Articulating the Value of Timing (aka, Real Options)](#4-articulating-value-the-value-of-timing-aka-real-options)
+- [Articulating the Value of Timing (aka, Real Options)](#2-articulating-value-the-value-of-timing-aka-real-options)
+- [Communicating Values and Risks of Tech Debt and Architectural Decisions](#3-articulating-value-economics-and-risks-of-tech-debt-and-architectural-decisions)
+- [Deriving Value in Legacy Modernisation](#4-articulating-value-deriving-value-in-legacy-modernisation)
 - [Articulating the Value of Measurement (aka, the Cost of Information)](#5-articulating-value-the-value-of-measurement-aka-the-cost-of-information)
 
 ## Simplifying Assumptions
@@ -123,7 +123,51 @@ The **risk exposure curve** for the above scenario is shown below:
 
 ![Risk Curve above 310](/assets/images/estimation-risk-curve.png)
 
-## 2. Articulating Value: Economics and Risks of Tech Debt and Architectural Decisions
+## 2. Articulating Value: The Value of Timing (aka, Real Options)
+
+### Real Options
+
+**Competent Architects and Engineers identify Real Options. Good Architects and Engineers create Real Options.**
+
+We have already talked about options earlier. Here we talk about **Real Options**, which are the strategic equivalent of Call Options. Most of the characteristics remain the same; however, real options are not traded on financial markets, but are used as a tool to optimise investments. We will delve into some of its possible applications in architectural decision-making and technical debt repayment, by way of example. Specifically, the YAGNI principle derives from the Real Options approach. See the following references for excellent discussions on the topic:
+
+- [Software Design Decisions as Real Options](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=24f7bdda5f3721faa2da58719ae72432f782312f)
+- [The Software Architect Elevator](https://www.amazon.com/Software-Architect-Elevator-Redefining-Architects-ebook/dp/B086WQ9XL1)
+- Chapter 4 of [Extreme Programming Perspectives](https://www.amazon.com/Extreme-Programming-Perspectives-Michele-Marchesi/dp/0201770059)
+- Chapter 3 of [Value-Based Software Engineering](https://link.springer.com/book/10.1007/3-540-29263-2)
+
+Here is an example.
+Let us assume that we have an Architecture Decision that we'd like to implement. The investment to implement this is 70.
+We project the following probabilities:
+
+- 30% chance that the change will result in savings of 45 (in the current legacy process) per month for the next 3 months
+- 40% chance that the change will result in savings of 30 (in the current legacy process) per month for the next 3 months
+- 30% chance that the change will result in savings of 15 (in the current legacy process) per month for the next 3 months
+
+Furthermore, we have determined that the Risk-Free Rate of Interest and the Risk Interest Rate are 6% and 10%, respectively. These will be used to calculate the Discounted Cash Flows.
+
+The two scenarios are presented in this [spreadsheet](https://docs.google.com/spreadsheets/d/1jBHwntpPI3QK5rM5yw5m2Gge9otgDf7pddNZs1sBZlw/edit?usp=sharing).
+
+![Real Option Valuation](/assets/images/real-options-valuation.png)
+
+We see that the Expected Net Present Value is 3.9. This is a positive cash flow, so we might be tempted to implement the architecture decision right now. However, consider the risk. There is a 30% chance that the investment will be more than the savings and that we will end up with a negative cash flow of 25.
+
+Let us assume that we wait a month to gather more data or more importantly, run a spike to validate that this architecture will pan out to give us the desired savings. How much should we invest into the spike? Usually, spikes are timeboxed, but for larger architecture decisions, we can also put a economic upper bound on investment we want to make in the spike.
+
+The second set of calculations above show the second scenario of waiting a month. We see that if we can eliminate the uncertainty of incurring a loss (i.e., the [30%,15] scenario), the Net Present Value of the endeavour comes to 11.33. This is much higher than the NPV of the first scenario. This implies that waiting for one month doing the spike, and then making a decision is more valuable.
+
+More importantly, this value of 11.33 gives us the Option Premium, which is the maximum value we'd like to pay in order to eliminate this uncertainty of loss. Note that this number is much less than the investment we'd have to make. Essentially, we are paying the price of eliminating uncertainty, and we'd like to make sure that this price is not too high.
+
+Incidentally, the above calculations use the **[Datar-Matthews](https://www.researchgate.net/publication/227374121_A_Practical_Method_for_Valuing_Real_Options_The_Boeing_Approach)**, because its parameters are more easily estimatable, but it also gives the same results as the famous [Black-Scholes Model](https://en.wikipedia.org/wiki/Black%E2%80%93Scholes_model), which is used to price derivatives in financial markets.
+
+### Examples
+- One example where we could have applied: The team had built a data engineering pipeline using Spark and Scala. The stakeholder felt that hiring developers with the requisite skillsets would be hard, and wanted to move to plain Java-based processing. A combination of cash flow modeling and buying the option of redesign would have probably made for a compelling case.
+
+So, to reiterate: **real options are valuable because they allow us to make smaller investments to eliminate uncertainty on the return on investment for a large investment, without actually making that investment immediately, but deferring it**. The value comes from deciding whether to defer this investment or not, whether this investment is implementing an architectural decision, or repaying tech debt. In many situations, the **Real Option Premium** is effectively zero, which means we don't really need to do anything, but can just wait for more information on whether the investment seems worthwhile or not.
+
+More philosophically, **every line of code we write is an investment that we are making right now: an investment which might be worth delaying**. Articulating this value concretely between engineers grounds a lot of discussions on what is really valuable to stakeholders, and will preempt a lot of bike-shedding.
+
+## 3. Articulating Value: Economics and Risks of Tech Debt and Architectural Decisions
 Here is some research relating **Development Metrics to Wasted Development Time**:
 
 - [Code Red: The Business Impact of Code Quality - A Quantitative Study of 39 Proprietary Production Codebases](https://arxiv.org/abs/2203.04374)
@@ -187,8 +231,8 @@ Here are some generic tips.
 - Practise drawing causal graphs. Complete the trace all the way up to where the perceived benefit is (money) is. It may be tempting to stop if you reach a DORA metric. Don't; get to the money.
 - If you are already measuring DORA metrics, relentlessly ask what each DORA metric translates to in terms of money.
 - Along the way of the graph, list out other incidental cash outflows.
-- Build an option tree. Deduce whether it is better to defer execution, or do it right now. See [Articulating Value (The Value of Timing, aka Real Options)](#4-articulating-value-the-value-of-timing-aka-real-options) for guidance on this.
-- Examples of **architectural options** are:
+- Build an option tree. Deduce whether it is better to defer execution, or do it right now. See [Articulating Value (The Value of Timing, aka Real Options)](#2-articulating-value-the-value-of-timing-aka-real-options) for guidance on this.
+- Examples of **architectural options** are (see [Articulating Value: The Value of Timing](#2-articulating-value-the-value-of-timing-aka-real-options)):
   - Architecture Seams in Monoliths
   - Spikes
   - Simply waiting (**YAGNI - You Aren't Gonna Need It**)
@@ -211,7 +255,7 @@ If you are suggesting a new microservice for processing payments, these might be
     - Cost of development: New cash outflow
     - Cost of deployment setup: New cash outflow (ideally should be as low as possible)
 - **Option Premium**
-    - Architecture Seam
+    - Architecture Seam (see [Articulating Value: The Value of Timing](#2-articulating-value-the-value-of-timing-aka-real-options))
 
 {% mermaid %}
 graph LR;
@@ -234,7 +278,7 @@ style microservice fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
 - **Single or Few-Time Cash Flows**
     - Cost of repaying tech debt
 - **Option Premium**
-  - The cost of isolating the effect of the technical debt from affecting other code
+  - The cost of isolating the effect of the technical debt from affecting other code (see [Articulating Value: The Value of Timing](#2-articulating-value-the-value-of-timing-aka-real-options))
 
 {% mermaid %}
 graph LR;
@@ -287,7 +331,7 @@ style debt fill:#006f00,stroke:#000,stroke-width:2px,color:#fff
 } %}
 
 
-## 3. Articulating Value: Deriving Value in Legacy Modernisation
+## 4. Articulating Value: Deriving Value in Legacy Modernisation
 
 [TODO: Add more text content]
 
@@ -312,45 +356,6 @@ $$
 In legacy modernisation, the idea is to minimise $$V_{legacy}$$, so that $$V_{legacy}-V_{modern} > 0$$.
 Retention of customer base is also a valid use case. Not sure how to quantify this...
 
-## 4. Articulating Value: The Value of Timing (aka, Real Options)
-
-### Real Options
-
-**Competent Architects and Engineers identify Real Options. Good Architects and Engineers create Real Options.**
-
-We have already talked about options earlier. Here we talk about **Real Options**, which are the strategic equivalent of Call Options. Most of the characteristics remain the same; however, real options are not traded on financial markets, but are used as a tool to optimise investments. We will delve into some of its possible applications in architectural decision-making and technical debt repayment, by way of example. Specifically, the YAGNI principle derives from the Real Options approach. See the following references for excellent discussions on the topic:
-
-- [Software Design Decisions as Real Options](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=24f7bdda5f3721faa2da58719ae72432f782312f)
-- [The Software Architect Elevator](https://www.amazon.com/Software-Architect-Elevator-Redefining-Architects-ebook/dp/B086WQ9XL1)
-- Chapter 4 of [Extreme Programming Perspectives](https://www.amazon.com/Extreme-Programming-Perspectives-Michele-Marchesi/dp/0201770059)
-- Chapter 3 of [Value-Based Software Engineering](https://link.springer.com/book/10.1007/3-540-29263-2)
-
-Here is an example.
-Let us assume that we have an Architecture Decision that we'd like to implement. The investment to implement this is 70.
-We project the following probabilities:
-
-- 30% chance that the change will result in savings of 45 (in the current legacy process) per month for the next 3 months
-- 40% chance that the change will result in savings of 30 (in the current legacy process) per month for the next 3 months
-- 30% chance that the change will result in savings of 15 (in the current legacy process) per month for the next 3 months
-
-Furthermore, we have determined that the Risk-Free Rate of Interest and the Risk Interest Rate are 6% and 10%, respectively. These will be used to calculate the Discounted Cash Flows.
-
-The two scenarios are presented in this [spreadsheet](https://docs.google.com/spreadsheets/d/1jBHwntpPI3QK5rM5yw5m2Gge9otgDf7pddNZs1sBZlw/edit?usp=sharing).
-
-![Real Option Valuation](/assets/images/real-options-valuation.png)
-
-We see that the Expected Net Present Value is 3.9. This is a positive cash flow, so we might be tempted to implement the architecture decision right now. However, consider the risk. There is a 30% chance that the investment will be more than the savings and that we will end up with a negative cash flow of 25.
-
-Let us assume that we wait a month to gather more data or more importantly, run a spike to validate that this architecture will pan out to give us the desired savings. How much should we invest into the spike? Usually, spikes are timeboxed, but for larger architecture decisions, we can also put a economic upper bound on investment we want to make in the spike.
-
-The second set of calculations above show the second scenario of waiting a month. We see that if we can eliminate the uncertainty of incurring a loss (i.e., the [30%,15] scenario), the Net Present Value of the endeavour comes to 11.33. This is much higher than the NPV of the first scenario. This implies that waiting for one month doing the spike, and then making a decision is more valuable.
-
-More importantly, this value of 11.33 gives us the Option Premium, which is the maximum value we'd like to pay in order to eliminate this uncertainty of loss. Note that this number is much less than the investment we'd have to make. Essentially, we are paying the price of eliminating uncertainty, and we'd like to make sure that this price is not too high.
-
-Incidentally, the above calculations use the **[Datar-Matthews](https://www.researchgate.net/publication/227374121_A_Practical_Method_for_Valuing_Real_Options_The_Boeing_Approach)**, because its parameters are more easily estimatable, but it also gives the same results as the famous [Black-Scholes Model](https://en.wikipedia.org/wiki/Black%E2%80%93Scholes_model), which is used to price derivatives in financial markets.
-
-### Examples
-- One example where we could have applied: The team had built a data engineering pipeline using Spark and Scala. The stakeholder felt that hiring developers with the requisite skillsets would be hard, and wanted to move to plain Java-based processing. A combination of cash flow modeling and buying the option of redesign would have probably made for a compelling case.
 
 ## 5. Articulating Value: The Value of Measurement (aka, the Cost of Information)
 
