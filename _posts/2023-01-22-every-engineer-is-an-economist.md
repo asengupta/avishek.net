@@ -49,13 +49,13 @@ This is easier said than done, because of several factors:
 
 ## 1. Articulating Value: Communicating Uncertainty and Risk in Estimation Models
 
-Scenario: Developers are asked to estimate a certain piece of work. They put together the usual RAIDs (Risks, Assumptions, Issues, Dependencies), and come up with a number (or, if they are slightly more sophisticated, they throw a minimum, most likely, and maximum value for each story). They end up adding up the maximum values to get an "upper bound", do the same thing to the other two sets of estimates to get a total lower bound, and a total likely estimate. The analyst or the manager goes "This is too high!". The developers go back to their estimates and start scrutinising the estimates, all in the hope of finding something they can reduce. Most of the time, they simply end up lowering some estimates (by fiat, or common agreement); this may be accompanied by a rational explanation or not: the latter is usually more common.
+**Scenario:** The team is asked to estimate a certain piece of work. The developers and analysts put together the usual RAIDs (Risks, Assumptions, Issues, Dependencies), and come up with a number (or, if they are slightly more sophisticated, they throw a minimum, most likely, and maximum value for each story). They end up adding up the maximum values to get an "upper bound", do the same thing to the other two sets of estimates to get a total lower bound, and a total likely estimate. The analyst or the manager goes "This is too high!". The developers go back to their estimates and start scrutinising the estimates, all in the hope of finding something they can reduce. Most of the time, they simply end up lowering some estimates (by fiat, or common agreement); this may be accompanied by a rational explanation or not: the latter is usually more common.
 
 Happy with this number, the manager marches off to the client and shows off this estimate. The budget is approved; work commences. Then along comes the client all indignant: "We are not meeting the sprint commitments! The team is not moving fast enough!" Negotiations follow. No side ends up happy.
 
-There are so many things wrong in the above picture; unfortunately, this can happen more often than not. What has happened here is a failure of communication; between the developers and the manager, and between the team and the client. One of the primary reasons for this is the false sense of accuracy and precision that comes with ending up with a single number, and the lack of tools to articulate the uncertainty behind this number. What does "upper bound" mean? Are you saying it will never go past this number?
+There are so many things wrong in the above picture; unfortunately, this can happen more often than not. What has happened here is a **failure of communication**; between the developers and the manager, and between the team and the client. One of the primary reasons for this is the false sense of accuracy and precision that comes with ending up with a single number, and the lack of tools to articulate the uncertainty behind this number. What does "upper bound" mean? Are you saying it will never go past this number?
 
-If only there was a clear way of communicating this uncertainty, the team can make an informed decision of what level of risk they are taking up when committing to a certain estimate. The client would certainly appreciate this, instead of receiving a single number which ends up being treated as an ironclad guarantee of the date of delivery.
+**If there is a clear way of communicating this uncertainty, the team can make an informed decision of what level of risk they are taking up when committing to a certain estimate.** The client would certainly appreciate this, instead of receiving a single number which ends up being treated as an ironclad guarantee of the date of delivery.
 
 Thankfully, we can communicate this uncertainty using some time-tested statistical tools.
 
@@ -154,8 +154,11 @@ Here are some generic tips.
 - If you are already measuring DORA metrics, relentlessly ask what each DORA metric translates to in terms of money.
 - Along the way of the graph, list out other incidental cash outflows.
 - Remember that story points must always be converted into hours to actually be incorporated into economic estimates.
-- Build Options tree. Deduce whether it is better to defer execution, or do it right now.
-
+- Build Options tree. Deduce whether it is better to defer execution, or do it right now. See **Articulating Value (The Value of Timing, aka Real Options)** for guidance on this.
+- Examples of architectural options are:
+  - Architecture Seams in Monoliths
+  - Spikes
+  - Simply waiting (**YAGNI - You Aren't Gonna Need It**)
 - Non-technical things can also be calculated, i.e., the need for training.
 - These metrics must be measured as part of standardised project protocols.
 
