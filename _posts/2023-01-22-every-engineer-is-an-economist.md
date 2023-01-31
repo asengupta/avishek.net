@@ -3,7 +3,7 @@ title: "Every Software Engineer is an Economist"
 author: avishek
 usemathjax: true
 tags: ["Software Engineering", "Software Engineering Economics"]
-draft: false
+draft: true
 ---
 
 **Background**: This post took me a while to write: much of this is motivated by problems that I've noticed teams facing day-to-day at work. To be clear, this post does not offer a solution; only some thoughts, and maybe a path forward in aligning developers' and architects' thinking more closely with the frameworks used by people controlling the purse-strings of software development projects.
@@ -36,20 +36,45 @@ This is easier said than done, because of several factors:
 
 ## Key Concepts
 
-### Net Present Value
-[TODO]
-### Discounted Cash Flow
-[TODO]
-### Financial Derivative
-[TODO]
-### Risk Exposure
-[TODO]
-### Confidence Level
-[TODO]
+### Net Present Value and Discounted Cash Flow
+The concept behind the **Time Value of Money** is to calibrate some amount of money in the future to the present value of money. The idea is that a certain amount of money today is worth more in the future. This is because this money can be invested at some rate of return, which gives you returns in the future. Hence, receiving money earlier is better than receiving it late (because you can invest it right now). Similarly, spending money later is better than spending it right now, because that unspent money can earn interest. If $$r$$ is the rate of return (sometimes also called the hurdle rate), then $$P_0$$ (the amount of money right now) and the equivalent amount of money $$P_t$$ after $$t$$ time periods are related as:
+
+$$
+P_0=\frac{P_t}{ {(1+r)}^t }
+$$
+
+When making an investment, there are always projections of cash inflows and outflows upto some time in the future, in order to determine whether the investment is worth it. The sum of all of these cash flows (corrected to Net Present Values) minus the investment is a deciding factor of whether the investment was worth it; this is the Discounted Cash Flow, and is written as:
+
+$$
+DCF(T)=\sum_{t=1}^T \frac{ CF(t)}{ {(1+r)}^t }
+$$
+
+where $$CF(t)$$ is the cash flow at period $$t$$, and $$r$$ is the rate of return. Subtracting the investment from this value gives us the **Net Present Value**. If the NPV is positive, the investment is considered worth making, otherwise not.
+
+### Financial Derivative and Call Options
+A **Financial Derivative** is a financial instrument (something which can be bought and sold) whose price depends upon the price some underlying financial object (henceforth called "underlying"). For simplification, assume that this underlying is a stock. Thus the price of a derivative depends upon the price of the stock.
+
+A **Call Option** is a kind of financial derivative. There are different kinds of call options; for the purposes of this discussion, we will discuss **American Call Options**, and simply refer to it henceforth as "option". The following are the characteristics of a call option (options in general, in fact):
+
+- The option is associated with a specific stock.
+- The option costs money to buy. This is called the **Option Premium**. This is almost always less than the price of the underlying stock.
+- The option has an **expiry date**.
+- The option can be exercised at any time before its expiry date.
+- The option has a **strike price**, which is fixed at the time of purchase of the option. If the option owner exercises the option, they can buy the underlying stock at the strike price, regardless of the price of the stock at that time on the financial market.
+
+The idea is that we can pay a (relatively) small amount to fix the price of the stock for the lifetime of the option. If we choose to never exercise the option, the option lapses, and we have incurred a loss (because we paid for the option premium).
+
+- Let's take a simple example. The current stock price is $100. Let there be an option to buy this stock, with a strike price of $100. The option premium is $10.
+- We buy one option, and thus pay $10.
+- A few days later, the stock price rises to $120. We exercise the option, and buy the stock for $100, which is the strike price. We pay $100. We have paid a total of $110 so far.
+- We immediately sell the stock to the market at the current stock price of $120.
+- We have thus earned $120-$110=$10.
+
+Thus, options allow us to speculate on rising stocks. It is worth noting that there is the counterpart to the Call Option, which is the **Put Option**, which gives us the option to sell a stock at the specified strike price.
 
 ## 1. Articulating Value: Communicating Uncertainty and Risk in Estimation Models
 
-**Scenario:** The team is asked to estimate a certain piece of work. The developers and analysts put together the usual RAIDs (Risks, Assumptions, Issues, Dependencies), and come up with a number (or, if they are slightly more sophisticated, they throw a minimum, most likely, and maximum value for each story). They end up adding up the maximum values to get an "upper bound", do the same thing to the other two sets of estimates to get a total lower bound, and a total likely estimate. The analyst or the manager goes "This is too high!". The developers go back to their estimates and start scrutinising the estimates, all in the hope of finding something they can reduce. Most of the time, they simply end up lowering some estimates (by fiat, or common agreement); this may be accompanied by a rational explanation or not: the latter is usually more common.
+**Scenario:** The team is asked to estimate a certain piece of work. The developers and analysts put together the usual **RAIDs (Risks, Assumptions, Issues, Dependencies)**, and come up with a number (or, if they are slightly more sophisticated, they throw a minimum, most likely, and maximum value for each story). They end up adding up the maximum values to get an "upper bound", do the same thing to the other two sets of estimates to get a total lower bound, and a total likely estimate. The analyst or the manager goes "This is too high!". The developers go back to their estimates and start scrutinising the estimates, all in the hope of finding something they can reduce. Most of the time, they simply end up lowering some estimates (by fiat, or common agreement); this may be accompanied by a rational explanation or not: the latter is usually more common.
 
 Happy with this number, the manager marches off to the client and shows off this estimate. The budget is approved; work commences. Then along comes the client all indignant: "We are not meeting the sprint commitments! The team is not moving fast enough!" Negotiations follow. No side ends up happy.
 
@@ -61,12 +86,12 @@ Thankfully, we can communicate this uncertainty using some time-tested statistic
 
 ### Estimation Procedure using Confidence Levels
 
-- We assume that the estimate of a story is normally distributed. A potentially better candidate could be the log normal distribution, but let's keep it simple for now.
-- When you throw an estimate, pick a range. This range is not simply an "upper bound" and "lower bound", but it answers the question: "I'm 90% certain that it falls within $$x$$ and $$y$$". We don't bother with the most likely estimate in this scenario (it might matter if we are using something other than a Gaussian distribution, but let's keep it simple).
-- Calculate $$\sigma$$ given confidence interval of 0.9 (Z-score is correspondingly 1.65). Note that Confidence Interval is defined as $$\hat{X} \pm Z.\sigma $$.
+- We assume that the estimate of a story is **normally distributed**. A potentially better candidate could be the log normal distribution, but let's keep it simple for now.
+- When you throw an estimate, pick a range. This range is not simply an "upper bound" and "lower bound", but it answers the question: **"I'm 90% certain that it falls within $$x$$ and $$y$$"**. We don't bother with the most likely estimate in this scenario (it might matter if we are using something other than a Gaussian distribution, but let's keep it simple).
+- Calculate the variance $$\sigma$$ given **confidence interval** of 0.9 (Z-score is correspondingly 1.65). Note that Confidence Interval is defined as $$\hat{X} \pm Z.\sigma $$.
 - Do this for each story.
-- Calculate the joint probability distribution of all the random variables (one per story). This is easy if we assume all the estimate distributions are Gaussian. If not, perform Monte Carlo simulations. This will give you a new normal distribution that represents the aggregate of all your estimate distributions.
-- Pick a range of estimates based on an acceptable confidence level. Alternatively, pick an acceptable range of estimates, record the confidence level, and acknowledge the risk. Communicate this range and the confidence with the client.
+- Calculate the joint probability distribution of all the random variables (one per story). This is easy if we assume all the estimate distributions are Gaussian. If not, perform **Monte Carlo simulations**. This will give you a new normal distribution that represents the aggregate of all your estimate distributions.
+- Pick a range of estimates based on an **acceptable confidence level**. Alternatively, pick an acceptable range of estimates, record the confidence level, and acknowledge the risk. Communicate this range and the confidence with the client.
 - Negotiation with the client (or within the team) should happen around acceptable levels of uncertainty levels, not on modifying story estimates to fit a particular target. As long as all parties acknowledge the risk level, the uncertainty is explicitly communicated and may preempt the client coming back disappointed because the recorded effort exceeded a single number.
 
 See [this spreadsheet](https://docs.google.com/spreadsheets/d/1jBHwntpPI3QK5rM5yw5m2Gge9otgDf7pddNZs1sBZlw/edit?usp=sharing) for a sample calculation. In the diagram below, the normal distribution on the far right is the final distribution resulting from convolving all the story estimates (which are normal distributions themselves). The Y-axis has been scaled by 1000 for ease of visualisation.
@@ -80,12 +105,12 @@ This is what the above calculation brings out. In this simplifying example, we h
 
 The correct approach of convolving the estimate sdistributions of all the stories results in the single normal distribution above. With this graph, we can answer questions like:
 
-- What are the upper and lower bounds with 90% confidence? 324 and 270, respectively, which is different from the result of naively summing the upper and lower bounds.
-- Suppose we want to use a lower estimate of the upper bound, say, 310; what then is the risk of being wrong? The answer is 23%, which you can calculate for yourself by going to the spreadsheet directly.
+- **What are the upper and lower bounds with 90% confidence?** 324 and 270, respectively, which is different from the result of naively summing the upper and lower bounds.
+- **Suppose we want to use a lower estimate of the upper bound, say, 310; what then is the risk of being wrong?** The answer is 23%, which you can calculate for yourself by going to the spreadsheet directly.
 
-The idea is that you can now communicate risk in your estimates, in the form of [**risk exposure**](https://www.playbookhq.co/blog/calculate-risk-exposure). This is done by finding the expected differential between your upper bound and the overshoot value of the normal distribution from the probability at the upper bound to $$\infty$$. In this case, risk exposure communicates how much extra time (and consequently, money) will need to be expended, if the estimate overshoots 310 (assuming the budget was allotted only for 310).
+The idea is that you can now **communicate risk in your estimates**, in the form of [**risk exposure**](https://www.playbookhq.co/blog/calculate-risk-exposure). This is done by finding the expected differential between your upper bound and the overshoot value of the normal distribution from the probability at the upper bound to $$\infty$$. In this case, risk exposure communicates how much extra time (and consequently, money) will need to be expended, if the estimate overshoots 310 (assuming the budget was allotted only for 310).
 
-The risk exposure curve for the above scenario is shown below:
+The **risk exposure curve** for the above scenario is shown below:
 
 ![Risk Curve above 310](/assets/images/estimation-risk-curve.png)
 
@@ -153,9 +178,8 @@ Here are some generic tips.
 - Practise drawing causal graphs. Complete the trace all the way up to where the perceived benefit is (money) is. It may be tempting to stop if you reach a DORA metric. Don't; get to the money.
 - If you are already measuring DORA metrics, relentlessly ask what each DORA metric translates to in terms of money.
 - Along the way of the graph, list out other incidental cash outflows.
-- Remember that story points must always be converted into hours to actually be incorporated into economic estimates.
-- Build Options tree. Deduce whether it is better to defer execution, or do it right now. See **Articulating Value (The Value of Timing, aka Real Options)** for guidance on this.
-- Examples of architectural options are:
+- Build an option tree. Deduce whether it is better to defer execution, or do it right now. See **Articulating Value (The Value of Timing, aka Real Options)** for guidance on this.
+- Examples of **architectural options** are:
   - Architecture Seams in Monoliths
   - Spikes
   - Simply waiting (**YAGNI - You Aren't Gonna Need It**)
@@ -256,6 +280,8 @@ style debt fill:#006f00,stroke:#000,stroke-width:2px,color:#fff
 
 ## 3. Articulating Value: Deriving Value in Legacy Modernisation
 
+[TODO: Add more text content]
+
 $$C_{HW}$$ = Cost of Hardware / Hosting \\
 $$C_{HUF}$$ = Cost of manual work equivalent of feature (if completely new feature or if feature has manual interventions) \\
 $$C_{RED}$$ = Cost of recovery, including human investments (related to MTTR) \\
@@ -283,7 +309,7 @@ Retention of customer base is also a valid use case. Not sure how to quantify th
 
 **Competent Architects and Engineers identify Real Options. Good Architects and Engineers create Real Options.**
 
-We will not discuss the Options Thinking approach from scratch here; rather we will delve into some of its possible applications in architectural decision-making and technical debt repayment. See the following for excellent discussions on the topic:
+We have already talked about options earlier. Here we talk about **Real Options**, which are the strategic equivalent of Call Options. Most of the characteristics remain the same; however, real options are not traded on financial markets, but are used as a tool to optimise investments. We will delve into some of its possible applications in architectural decision-making and technical debt repayment, by way of example. Specifically, the YAGNI principle derives from the Real Options approach. See the following references for excellent discussions on the topic:
 
 - [Software Design Decisions as Real Options](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=24f7bdda5f3721faa2da58719ae72432f782312f)
 - [The Software Architect Elevator](https://www.amazon.com/Software-Architect-Elevator-Redefining-Architects-ebook/dp/B086WQ9XL1)
@@ -357,7 +383,6 @@ We need to decide what is the importance of these variables in making the decisi
     - [The financial aspect of managing technical debt: A systematic literature review](https://www.semanticscholar.org/paper/The-financial-aspect-of-managing-technical-debt%3A-A-Ampatzoglou-Ampatzoglou/de5db6c07899c1d90b4ff4428e68b2dd799b9d6e)
     - [The Pricey Bill of Technical Debt: When and by Whom will it be Paid?](https://www.researchgate.net/publication/320057934_The_Pricey_Bill_of_Technical_Debt_When_and_by_Whom_will_it_be_Paid)
     - [Software Risk Management: Principles and Practices](https://www.cs.virginia.edu/~sherriff/papers/Boehm%20-%201991.pdf)
-    -## Implementing State of the Art Research in Industry
     - [Generalization of an integrated cost model and extensions to COTS, PLE and TTM](https://researchrepository.wvu.edu/cgi/viewcontent.cgi?article=3261&context=etd)
 - Web
     - [Excellent Video on Real Options ECO423: IIT Kanpur](https://www.youtube.com/watch?v=lwoCGAqv5RU)
