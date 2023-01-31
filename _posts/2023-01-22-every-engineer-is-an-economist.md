@@ -16,27 +16,28 @@ The other caveat is that even though this article touches the topic of estimatio
 
 **Every software engineer is an economist; an architect, even more so.** There is a wealth of literature around articulating value of software development, and in fact, several agile development principles embody some of these, but I see two issues in my day-to-day interactions with software engineers and architects.
 
-- Folks are reluctant to quantify things they build, beyond the standard practices they have been brought up on (like estimation exercises, test coverage). Some of this can be attributed to their prior bad experiences of being micromanaged via largely meaningless metrics.
-- Folks struggle to articulate value beyond a certain point to stakeholders who demand a certain measure of rigour and/or quantifiability. Similarly, engineers fail to communicate risk to decision-makers. The problem is then that The DORA metrics are good starter indicators, but I contend that they are not enough.
+- **Folks are reluctant to quantify things they build**, beyond the standard practices they have been brought up on (like basic estimation exercises, test coverage). Some of this can be attributed to their prior bad experiences of being micromanaged via largely meaningless metrics.
+- **Folks struggle to articulate value beyond a certain point to stakeholders who demand a certain measure of rigour and/or quantifiability.** Similarly, engineers fail to communicate risk to decision-makers. The problem is then that The DORA metrics are good starter indicators, but I contend that they are not enough. Let me be as clear as possible: **CxOs don't really care about precious developer metrics; they really care about the savings or profits which result from improving those metrics**.
 - There is a reluctance to rely too much on metrics because people think metrics are easily gamed. This can be avoided if we use econometric methods, because 1) falsified data is immediately apparent 2) showing the work steps, assumptions and risks aids in this transparency because they are in the language of economics which is much more easily understandable to business stakeholders.
-- Thinking about value and deciding tradeoffs based on economic factors is not something that is done enough, if at all, at the level of engineering teams. For example, questions like "Should I do this refactoring?" and "Why should we repay this tech debt?", or "How are we better at this versus our competitor?" are usually framed in terms of statements which stop before traversing the full utility tree of value.
+- **Thinking about value and deciding tradeoffs based on economic factors is not something that is done enough, if at all, at the level of engineering teams.** For example, questions like "Should I do this refactoring?" and "Why should we repay this tech debt?", or "How are we better at this versus our competitor?" are usually framed in terms of statements which stop before traversing the full utility tree of value.
 
-Thinking in these terms, and projecting these decisions in these terms to micromanagers, heads/directors of engineering -- but most importantly, to execs -- is key to engineers articulating value in a manner which is compelling, and eases friction between engineering and executive management. It is also a value engineers should acquire to break several firms' perceptions that "engineers are here to do what we say".
+Thinking in these terms, and projecting these decisions in these terms to managers, heads/directors of engineering -- but most importantly, to execs -- is key to engineers articulating value in a manner which is compelling, and eases friction between engineering and executive management. It is also a skill engineers should acquire and practise to break several firms' perceptions that "engineers are here to do what we say".
 
 This is easier said than done, because of several factors:
 
-- The data to apply these frameworks is not always easily available, or people are not ready to gather that data.
-- Engineers are usually emotionally invested in decisions that they think are their "pet" ideas.
-- It can be hard to inculcate this mindset en masse among engineers if they do not have a clear perception of the value of adopting this mindset. Engineers don't want theory, they want tools they can apply quickly and easily. Hence the burden is on us to propose advances to the state of the art in a way that is actionable.
+- **The data to apply these frameworks is not always easily available**, and may require additional investment.
+- **Engineers can get invested** in decisions that they think are their "pet" ideas.
+- It can be hard to inculcate this mindset en masse among engineers if they do not have a clear perception of the value of adopting this mindset. **Engineers don't want theory, they want tools they can apply quickly and easily**. Hence, the burden is on us to propose advances to the state of the art in a way that is actionable.
 
+Most of the thinking and tools discussed in this article have been borrowed from domain of financial engineering and economics. None of this material is new; a lot of research has been done in quantifying the value of software-related activities. The problem usually is translating those ideas into actions.
 
 ## Simplifying Assumptions
 
-- The conversion of time to money is simply treated as the Cost to Company for a single individual working. This is a lower bound, since there will usually be multiple people on a work item, and there may be other ancilliary costs.
+- The conversion of time to money is simply treated as the Cost to Company for a single individual working. This is a lower bound, since there will usually be multiple people on a work item, and there may be other ancillary costs.
 
 ## Key Concepts
 
-### Net Present Value and Discounted Cash Flow
+### 1. Net Present Value and Discounted Cash Flow
 The concept behind the **Time Value of Money** is to calibrate some amount of money in the future to the present value of money. The idea is that a certain amount of money today is worth more in the future. This is because this money can be invested at some rate of return, which gives you returns in the future. Hence, receiving money earlier is better than receiving it late (because you can invest it right now). Similarly, spending money later is better than spending it right now, because that unspent money can earn interest. If $$r$$ is the rate of return (sometimes also called the hurdle rate), then $$P_0$$ (the amount of money right now) and the equivalent amount of money $$P_t$$ after $$t$$ time periods are related as:
 
 $$
@@ -51,7 +52,7 @@ $$
 
 where $$CF(t)$$ is the cash flow at period $$t$$, and $$r$$ is the rate of return. Subtracting the investment from this value gives us the **Net Present Value**. If the NPV is positive, the investment is considered worth making, otherwise not.
 
-### Financial Derivative and Call Options
+### 2. Financial Derivative and Call Options
 A **Financial Derivative** is a financial instrument (something which can be bought and sold) whose price depends upon the price some underlying financial object (henceforth called "underlying"). For simplification, assume that this underlying is a stock. Thus the price of a derivative depends upon the price of the stock.
 
 A **Call Option** is a kind of financial derivative. There are different kinds of call options; for the purposes of this discussion, we will discuss **American Call Options**, and simply refer to it henceforth as "option". The following are the characteristics of a call option (options in general, in fact):
