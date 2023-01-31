@@ -37,21 +37,37 @@ This is easier said than done, because of several factors:
 ## Key Concepts
 
 ### Net Present Value
+[TODO]
 ### Discounted Cash Flow
+[TODO]
 ### Financial Derivative
+[TODO]
 ### Risk Exposure
+[TODO]
+### Confidence Level
+[TODO]
 
 ## 1. Articulating Value: Communicating Uncertainty and Risk in Estimation Models
 
-$$
-\text{Confidence Interval } = \hat{X} \pm Z.\frac{\sigma}{\sqrt{n} }
-$$
+Scenario: Developers are asked to estimate a certain piece of work. They put together the usual RAIDs (Risks, Assumptions, Issues, Dependencies), and come up with a number (or, if they are slightly more sophisticated, they throw a minimum, most likely, and maximum value for each story). They end up adding up the maximum values to get an "upper bound", do the same thing to the other two sets of estimates to get a total lower bound, and a total likely estimate. The analyst or the manager goes "This is too high!". The developers go back to their estimates and start scrutinising the estimates, all in the hope of finding something they can reduce. Most of the time, they simply end up lowering some estimates (by fiat, or common agreement); this may be accompanied by a rational explanation or not: the latter is usually more common.
 
-- Calculate $$\sigma$$ given confidence interval of 0.9 (Z-score is correspondingly 1.65).
+Happy with this number, the manager marches off to the client and shows off this estimate. The budget is approved; work commences. Then along comes the client all indignant: "We are not meeting the sprint commitments! The team is not moving fast enough!" Negotiations follow. No side ends up happy.
+
+There are so many things wrong in the above picture; unfortunately, this can happen more often than not. What has happened here is a failure of communication; between the developers and the manager, and between the team and the client. One of the primary reasons for this is the false sense of accuracy and precision that comes with ending up with a single number, and the lack of tools to articulate the uncertainty behind this number. What does "upper bound" mean? Are you saying it will never go past this number?
+
+If only there was a clear way of communicating this uncertainty, the team can make an informed decision of what level of risk they are taking up when committing to a certain estimate. The client would certainly appreciate this, instead of receiving a single number which ends up being treated as an ironclad guarantee of the date of delivery.
+
+Thankfully, we can communicate this uncertainty using some time-tested statistical tools.
+
+### Estimation Procedure using Confidence Levels
+
+- We assume that the estimate of a story is normally distributed. A potentially better candidate could be the log normal distribution, but let's keep it simple for now.
+- When you throw an estimate, pick a range. This range is not simply an "upper bound" and "lower bound", but it answers the question: "I'm 90% certain that it falls within $$x$$ and $$y$$". We don't bother with the most likely estimate in this scenario (it might matter if we are using something other than a Gaussian distribution, but let's keep it simple).
+- Calculate $$\sigma$$ given confidence interval of 0.9 (Z-score is correspondingly 1.65). Note that Confidence Interval is defined as $$\hat{X} \pm Z.\sigma $$.
 - Do this for each story.
-- Calculate the joint probability distribution of all the random variables (one per story). This is easy if we assume all the estimate distributions are Gaussian. If not, perform Monte Carlo simulations.
-- Choose acceptable confidence level, and pick that estimate. Alternatively, pick an acceptable estimate, and record confidence level, and acknowledge the risk involved.
-- Negotiation should happen around acceptable levels of uncertainty levels, not on modifying story estimates to fit a particular target.
+- Calculate the joint probability distribution of all the random variables (one per story). This is easy if we assume all the estimate distributions are Gaussian. If not, perform Monte Carlo simulations. This will give you a new normal distribution that represents the aggregate of all your estimate distributions.
+- Pick a range of estimates based on an acceptable confidence level. Alternatively, pick an acceptable range of estimates, record the confidence level, and acknowledge the risk. Communicate this range and the confidence with the client.
+- Negotiation with the client (or within the team) should happen around acceptable levels of uncertainty levels, not on modifying story estimates to fit a particular target. As long as all parties acknowledge the risk level, the uncertainty is explicitly communicated and may preempt the client coming back disappointed because the recorded effort exceeded a single number.
 
 See [this spreadsheet](https://docs.google.com/spreadsheets/d/1jBHwntpPI3QK5rM5yw5m2Gge9otgDf7pddNZs1sBZlw/edit?usp=sharing) for a sample calculation. In the diagram below, the normal distribution on the far right is the final distribution resulting from convolving all the story estimates (which are normal distributions themselves). The Y-axis has been scaled by 1000 for ease of visualisation.
 
@@ -262,6 +278,8 @@ Retention of customer base is also a valid use case. Not sure how to quantify th
 
 ### Real Options
 
+**Competent Architects and Engineers identify Real Options. Good Architects and Engineers create Real Options.**
+
 We will not discuss the Options Thinking approach from scratch here; rather we will delve into some of its possible applications in architectural decision-making and technical debt repayment. See the following for excellent discussions on the topic:
 
 - [Software Design Decisions as Real Options](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=24f7bdda5f3721faa2da58719ae72432f782312f)
@@ -287,20 +305,14 @@ We see that the Expected Net Present Value is 3.9. This is a positive cash flow,
 
 Let us assume that we wait a month to gather more data or more importantly, run a spike to validate that this architecture will pan out to give us the desired savings. How much should we invest into the spike? Usually, spikes are timeboxed, but for larger architecture decisions, we can also put a economic upper bound on investment we want to make in the spike.
 
-The second set of calculations above show the second scenario of waiting a month. We see that if we can eliminate the uncertainty of incurring a loss (i.e., the 30$-15 scenario), the Net Present Value of the endeavour comes to 11.33. This is much higher than the NPV of the first scenario. This implies that waiting for one month doing the spike, and then making a decision is more valuable.
+The second set of calculations above show the second scenario of waiting a month. We see that if we can eliminate the uncertainty of incurring a loss (i.e., the [30%,15] scenario), the Net Present Value of the endeavour comes to 11.33. This is much higher than the NPV of the first scenario. This implies that waiting for one month doing the spike, and then making a decision is more valuable.
 
 More importantly, this value of 11.33 gives us the Option Premium, which is the maximum value we'd like to pay in order to eliminate this uncertainty of loss. Note that this number is much less than the investment we'd have to make. Essentially, we are paying the price of eliminating uncertainty, and we'd like to make sure that this price is not too high.
 
 Incidentally, the above calculations use the **[Datar-Matthews](https://www.researchgate.net/publication/227374121_A_Practical_Method_for_Valuing_Real_Options_The_Boeing_Approach)**, because its parameters are more easily estimatable, but it also gives the same results as the famous [Black-Scholes Model](https://en.wikipedia.org/wiki/Black%E2%80%93Scholes_model), which is used to price derivatives in financial markets.
 
-
-- Disadvantages of the NPV approach
-- Opportunity Cost
-- Examples
-    - One example where we could have applied: The team had built a data engineering pipeline using Spark and Scala. The stakeholder felt that hiring developers with the requisite skillsets would be hard, and wanted to move to plain Java-based processing. A combination of cash flow modeling and buying the option of redesign would have probably made for a compelling case.
-- **Competent Architects and Engineers identify Real Options. Good Architects and Engineers create Real Options.**
-
-**Valuing Real Options using [Datar-Matthews](https://www.researchgate.net/publication/227374121_A_Practical_Method_for_Valuing_Real_Options_The_Boeing_Approach)**
+### Examples
+- One example where we could have applied: The team had built a data engineering pipeline using Spark and Scala. The stakeholder felt that hiring developers with the requisite skillsets would be hard, and wanted to move to plain Java-based processing. A combination of cash flow modeling and buying the option of redesign would have probably made for a compelling case.
 
 ## 5. Articulating Value: The Value of Measurement (aka, the Cost of Information)
 
@@ -324,6 +336,7 @@ Quantify the **Decision Model**. The Decision Model will probably have multiple 
 We need to decide what is the importance of these variables in making the decision. If a measurement has zero information value, then it is not worth measuring. When multiple variables are involved, use the EVPI metric coupled with Monte Carlo simulations (assuming the decision model has been quantified) to decide on the most important metrics.
 
 - The Expected Value of Perfect Information
+[TODO]
 
 ## References
 
