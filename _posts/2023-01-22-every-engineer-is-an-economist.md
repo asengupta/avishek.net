@@ -31,6 +31,14 @@ This is easier said than done, because of several factors:
 
 Most of the thinking and tools discussed in this article have been borrowed from domain of financial engineering and economics. None of this material is new; a lot of research has been done in quantifying the value of software-related activities. The problem usually is translating those ideas into actions.
 
+For these ideas to effectively work, they must permeate all the way across developers to tech leads to architects to managers. Thus, this article is divided into the following sections:
+
+- [Communicating Uncertainty and Risk in Estimation Models](#1-articulating-value-communicating-uncertainty-and-risk-in-estimation-models)
+- [Communicating Values and Risks of Tech Debt and Architectural Decisions](#2-articulating-value-economics-and-risks-of-tech-debt-and-architectural-decisions)
+- [Deriving Value in Legacy Modernisation](#3-articulating-value-deriving-value-in-legacy-modernisation)
+- [Articulating the Value of Timing (aka, Real Options)](#4-articulating-value-the-value-of-timing-aka-real-options)
+- [Articulating the Value of Measurement (aka, the Cost of Information)](#5-articulating-value-the-value-of-measurement-aka-the-cost-of-information)
+
 ## Simplifying Assumptions
 
 - The conversion of time to money is simply treated as the Cost to Company for a single individual working. This is a lower bound, since there will usually be multiple people on a work item, and there may be other ancillary costs.
@@ -100,7 +108,7 @@ See [this spreadsheet](https://docs.google.com/spreadsheets/d/1jBHwntpPI3QK5rM5y
 ![Uncertainty in Estimates](/assets/images/estimate-uncertainty-sum.png)
 ![Estimation Calculations](/assets/images/estimation-calculation.png)
 
-As you can see, the attempt to find a naive lower and upper bounds by summing the lower and upper bounds gives us 210 and 385. In fact, it is misleading to call these simply lower and upper bounds. They are bounds, but in this case, we want to use the term 90% confidence level uncertainty bounds. This implies that the estimators are 90% sure that the estimates for the first story (for example) lies between 10 and 30. Whether narrowing this uncertainty is worth it (without artificially manipulating numbers) is the subject of the discussion in **Articulating Value: The Value of Measurement**. However, the point is to not settle on a single number, but to always use a range of values. This, in itself, is not new. However, the upper and lower bounds are always taken as fixed, without any discussion around the risk involved in picking a lower estimate.
+As you can see, the attempt to find a naive lower and upper bounds by summing the lower and upper bounds gives us 210 and 385. In fact, it is misleading to call these simply lower and upper bounds. They are bounds, but in this case, we want to use the term 90% confidence level uncertainty bounds. This implies that the estimators are 90% sure that the estimates for the first story (for example) lies between 10 and 30. Whether narrowing this uncertainty is worth it (without artificially manipulating numbers) is the subject of the discussion in [Articulating Value: The Value of Measurement](#5-articulating-value-the-value-of-measurement-aka-the-cost-of-information). However, the point is to not settle on a single number, but to always use a range of values. This, in itself, is not new. However, the upper and lower bounds are always taken as fixed, without any discussion around the risk involved in picking a lower estimate.
 
 This is what the above calculation brings out. In this simplifying example, we have chosen the estimates to be normal distributions, to keep calculations simply. It could even be a fat-tailed distribution like a Log-Normal Distribution (to bias it towards higher estimates), but then we'd need to run Monte Carlo simulations to come up with the data. So, let's keep it simple for now.
 
@@ -179,7 +187,7 @@ Here are some generic tips.
 - Practise drawing causal graphs. Complete the trace all the way up to where the perceived benefit is (money) is. It may be tempting to stop if you reach a DORA metric. Don't; get to the money.
 - If you are already measuring DORA metrics, relentlessly ask what each DORA metric translates to in terms of money.
 - Along the way of the graph, list out other incidental cash outflows.
-- Build an option tree. Deduce whether it is better to defer execution, or do it right now. See **Articulating Value (The Value of Timing, aka Real Options)** for guidance on this.
+- Build an option tree. Deduce whether it is better to defer execution, or do it right now. See [Articulating Value (The Value of Timing, aka Real Options)](#4-articulating-value-the-value-of-timing-aka-real-options) for guidance on this.
 - Examples of **architectural options** are:
   - Architecture Seams in Monoliths
   - Spikes
