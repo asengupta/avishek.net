@@ -3,7 +3,7 @@ title: "Every Software Engineer is an Economist"
 author: avishek
 usemathjax: true
 tags: ["Software Engineering", "Software Engineering Economics"]
-draft: true
+draft: false
 ---
 
 **Background**: This post took me a while to write: much of this is motivated by problems that I've noticed teams facing day-to-day at work. To be clear, this post does not offer a solution; only some thoughts, and maybe a path forward in aligning developers' and architects' thinking more closely with the frameworks used by people controlling the purse-strings of software development projects.
@@ -29,22 +29,19 @@ This is easier said than done, because of several factors:
 - Engineers are usually emotionally invested in decisions that they think are their "pet" ideas.
 - It can be hard to inculcate this mindset en masse among engineers if they do not have a clear perception of the value of adopting this mindset. Engineers don't want theory, they want tools they can apply quickly and easily. Hence the burden is on us to propose advances to the state of the art in a way that is actionable.
 
-Important Concepts that every software developer should know:
-
-- Decision-Making Processes
-  - Analytic Hierarchy Process
-- Utility-based Architecture Decision Making: CBAM
-  - [The CBAM: A Quantitative Approach to Architecture Design Decision Making](https://people.ece.ubc.ca/matei/EECE417/BASS/ch12.html)
-  - [Making Architecture Design Decisions: An Economic Approach](https://apps.dtic.mil/sti/pdfs/ADA408740.pdf)
-  - The above goes some way towards assigning utility to architectural decisions. These are at the level of Cross-Functional Requirements, and DORA metrics, but do not point the way towards calculating financial implications.
-- Net Present Value and Discounted Cash Flows
 
 ## Simplifying Assumptions
 
 - The conversion of time to money is simply treated as the Cost to Company for a single individual working. This is a lower bound, since there will usually be multiple people on a work item, and there may be other ancilliary costs.
 
+## Key Concepts
 
-## 1. Articulating Value: Communicate Uncertainty in Estimation Models
+### Net Present Value
+### Discounted Cash Flow
+### Financial Derivative
+### Risk Exposure
+
+## 1. Articulating Value: Communicating Uncertainty and Risk in Estimation Models
 
 $$
 \text{Confidence Interval } = \hat{X} \pm Z.\frac{\sigma}{\sqrt{n} }
@@ -272,6 +269,31 @@ We will not discuss the Options Thinking approach from scratch here; rather we w
 - Chapter 4 of [Extreme Programming Perspectives](https://www.amazon.com/Extreme-Programming-Perspectives-Michele-Marchesi/dp/0201770059)
 - Chapter 3 of [Value-Based Software Engineering](https://link.springer.com/book/10.1007/3-540-29263-2)
 
+Here is an example.
+Let us assume that we have an Architecture Decision that we'd like to implement. The investment to implement this is 70.
+We project the following probabilities:
+
+- 30% chance that the change will result in savings of 45 (in the current legacy process) per month for the next 3 months
+- 40% chance that the change will result in savings of 30 (in the current legacy process) per month for the next 3 months
+- 30% chance that the change will result in savings of 15 (in the current legacy process) per month for the next 3 months
+
+Furthermore, we have determined that the Risk-Free Rate of Interest and the Risk Interest Rate are 6% and 10%, respectively. These will be used to calculate the Discounted Cash Flows.
+
+The two scenarios are presented in this [spreadsheet](https://docs.google.com/spreadsheets/d/1jBHwntpPI3QK5rM5yw5m2Gge9otgDf7pddNZs1sBZlw/edit?usp=sharing).
+
+![Real Option Valuation](/assets/images/real-options-valuation.png)
+
+We see that the Expected Net Present Value is 3.9. This is a positive cash flow, so we might be tempted to implement the architecture decision right now. However, consider the risk. There is a 30% chance that the investment will be more than the savings and that we will end up with a negative cash flow of 25.
+
+Let us assume that we wait a month to gather more data or more importantly, run a spike to validate that this architecture will pan out to give us the desired savings. How much should we invest into the spike? Usually, spikes are timeboxed, but for larger architecture decisions, we can also put a economic upper bound on investment we want to make in the spike.
+
+The second set of calculations above show the second scenario of waiting a month. We see that if we can eliminate the uncertainty of incurring a loss (i.e., the 30$-15 scenario), the Net Present Value of the endeavour comes to 11.33. This is much higher than the NPV of the first scenario. This implies that waiting for one month doing the spike, and then making a decision is more valuable.
+
+More importantly, this value of 11.33 gives us the Option Premium, which is the maximum value we'd like to pay in order to eliminate this uncertainty of loss. Note that this number is much less than the investment we'd have to make. Essentially, we are paying the price of eliminating uncertainty, and we'd like to make sure that this price is not too high.
+
+Incidentally, the above calculations use the **[Datar-Matthews](https://www.researchgate.net/publication/227374121_A_Practical_Method_for_Valuing_Real_Options_The_Boeing_Approach)**, because its parameters are more easily estimatable, but it also gives the same results as the famous [Black-Scholes Model](https://en.wikipedia.org/wiki/Black%E2%80%93Scholes_model), which is used to price derivatives in financial markets.
+
+
 - Disadvantages of the NPV approach
 - Opportunity Cost
 - Examples
@@ -311,6 +333,7 @@ We need to decide what is the importance of these variables in making the decisi
     - [Value-Based Software Engineering](https://link.springer.com/book/10.1007/3-540-29263-2)
     - [The Software Architect Elevator](https://www.amazon.com/Software-Architect-Elevator-Redefining-Architects-ebook/dp/B086WQ9XL1)
     - [Extreme Programming Perspectives](https://www.amazon.com/Extreme-Programming-Perspectives-Michele-Marchesi/dp/0201770059)
+    - [The Value of Custom Software as an Asset](https://paper-leaf.com/insights/custom-software-value-useful-life/)
 - Papers
     - [Software Design Decisions as Real Options](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=24f7bdda5f3721faa2da58719ae72432f782312f)
     - [A Practical Method for Valuing Real Options: The Boeing Approach](https://www.researchgate.net/publication/227374121_A_Practical_Method_for_Valuing_Real_Options_The_Boeing_Approach)
@@ -318,5 +341,16 @@ We need to decide what is the importance of these variables in making the decisi
     - [The financial aspect of managing technical debt: A systematic literature review](https://www.semanticscholar.org/paper/The-financial-aspect-of-managing-technical-debt%3A-A-Ampatzoglou-Ampatzoglou/de5db6c07899c1d90b4ff4428e68b2dd799b9d6e)
     - [The Pricey Bill of Technical Debt: When and by Whom will it be Paid?](https://www.researchgate.net/publication/320057934_The_Pricey_Bill_of_Technical_Debt_When_and_by_Whom_will_it_be_Paid)
     - [Software Risk Management: Principles and Practices](https://www.cs.virginia.edu/~sherriff/papers/Boehm%20-%201991.pdf)
-- Videos
+    -## Implementing State of the Art Research in Industry
+    - [Generalization of an integrated cost model and extensions to COTS, PLE and TTM](https://researchrepository.wvu.edu/cgi/viewcontent.cgi?article=3261&context=etd)
+- Web
     - [Excellent Video on Real Options ECO423: IIT Kanpur](https://www.youtube.com/watch?v=lwoCGAqv5RU)
+    - [Risk Exposure](https://www.wallstreetmojo.com/risk-exposure/)
+
+[TODO: Write about these later]
+- Decision-Making Tools
+    - Analytic Hierarchy Process
+- Utility-based Architecture Decision Making: CBAM
+    - [The CBAM: A Quantitative Approach to Architecture Design Decision Making](https://people.ece.ubc.ca/matei/EECE417/BASS/ch12.html)
+    - [Making Architecture Design Decisions: An Economic Approach](https://apps.dtic.mil/sti/pdfs/ADA408740.pdf) describes a pilot study of a modified CBAM approach applied at NASA.
+ 

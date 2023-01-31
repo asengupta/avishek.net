@@ -37,3 +37,5 @@ fileignoreconfig:
   checksum: 833e8aea7d1bb8bc305e42cee8a66e923d0085391d8840cca325e96ed2bf44a6
 - filename: _posts/2023-01-22-every-developer-is-an-economist.md
   checksum: e5ede2c9b00ceea03c3e43efccb7c073a589eeb7c56774532f93d78f2828545d
+- filename: _posts/2023-01-22-every-developer-is-an-economist.md
+  checksum: f2a205f93fd62042ff0cea83326c72eb60076fc0cb1c4b5b9e9bc2b541c871e9
