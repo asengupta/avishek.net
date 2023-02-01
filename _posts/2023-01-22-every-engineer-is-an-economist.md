@@ -401,16 +401,21 @@ first_mover_fast_follower-->|No|no_invest[Don't Invest]
 first_mover_fast_follower-->|Yes|invest[Invest]
 time_value-->|Low|less_invest[Invest Less]
 time_value-->|High|more_invest[Invest More]
-
 {% endmermaid %}
+
+It is also important to note that a single metric does not contribute to the speed effect. Other factors like development effort are key input factors in custom software development. Let's speak of the values which a metric can be traced to.
+
+- **First Mover/Fast Follower Economic Advantage:** The advantage gained by getting to market first with a novel product or feature is not to be underestimated. This is the First Mover Advantage. However, the First Mover Advantage has been disputed with the proposition that the Second Mover / Fast Follower Advantage may be significantly less riskier, and as profitable, if note more. Regardless of debate in this area, speed plays a key contribution in gaining this advantage.
+- **Time Value of Savings/Profits:** The value of speed not only lies in a first mover advantage. Even if we discount such an advantage, we can see that a savings (or profit) made earlier is always more valuable than the same amount gained at a later point in time, as we noted in [Key Concepts](#key-concepts). Essentially, the later the client starts seeing the profits/savings, the more money they are losing. At the risk of repeating the concept, this is because the savings or profits made right now could be invested and gaining returns from that interest.
+
 
 ### The Economics of DORA Metrics
 What business decisions do DORA metrics support? We can follow the above MECE tree, and see that they fit in very well with the template.
 
-- Deployment Frequency is a proxy for speed of feature development, which is itself a proxy for time to market.
-- Lead Time for Changes is a proxy for speed of feature development, which is itself a proxy for time to market.
-- Mean Time to Recovery is a metric for financial loss during downtime.
-- Change Failure Rate is a proxy for speed of development of features, which is itself a proxy for time to market.
+- **Deployment Frequency** is a proxy for speed of feature development, which is itself a proxy for time to market.
+- **Lead Time for Changes** is a proxy for speed of feature development, which is itself a proxy for time to market.
+- **Mean Time to Recovery** is a metric for financial loss during downtime.
+- **Change Failure Rate** is a proxy for speed of development of features, which is itself a proxy for time to market.
 
 This is the MECE tree for DORA metrics.
 
@@ -426,12 +431,15 @@ time_value-->|Low|less_invest[Invest Less]
 time_value-->|High|more_invest[Invest More]
 {% endmermaid %}
 
+### Procedure
+[TODO]
+
 ### The Expected Value of Perfect Information
+[TODO]
 
 ### When is a metric's performance good enough?
 
 - Theory of Constraints
-
 [TODO]
 
 ## References
