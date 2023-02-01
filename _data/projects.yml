@@ -3,6 +3,9 @@ projects:
   - name: Plenoxels
     description: An implementation of Plenoxels in PyTorch, for 3D reconstruction using Neural Radiance Fields
     link: https://github.com/asengupta/plenoxels-pytorch
+  - name: Transformer
+    description: An implementation of the Transformer architecture in PyTorch, based on the original Transformers paper
+    link: https://github.com/asengupta/transformers-paper-implementation
   - name: Basis-Processing
     description: A graphing library written in Ruby built on top of Ruby-Processing
     link: https://github.com/asengupta/Basis
