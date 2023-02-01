@@ -3,7 +3,7 @@ title: "Every Software Engineer is an Economist"
 author: avishek
 usemathjax: true
 tags: ["Software Engineering", "Software Engineering Economics"]
-draft: true
+draft: false
 ---
 
 **Background**: This post took me a while to write: much of this is motivated by problems that I've noticed teams facing day-to-day at work. To be clear, this post does not offer a solution; only some thoughts, and maybe a path forward in aligning developers' and architects' thinking more closely with the frameworks used by people controlling the purse-strings of software development projects.
@@ -384,6 +384,8 @@ Quantify the **Decision Model**. The Decision Model will probably have multiple 
 We need to decide what is the importance of these variables in making the decision. If a measurement has zero information value, then it is not worth measuring. When multiple variables are involved, use the EVPI metric coupled with Monte Carlo simulations (assuming the decision model has been quantified) to decide on the most important metrics.
 
 - The Expected Value of Perfect Information
+
+
 [TODO]
 
 ## References
