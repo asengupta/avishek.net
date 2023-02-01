@@ -359,12 +359,18 @@ V_{legacy} = \sum_{i} V_i + C_{HW} + n_F.C_{NUF}
 $$
 
 In legacy modernisation, the idea is to minimise $$V_{legacy}$$, so that $$V_{legacy}-V_{modern} > 0$$.
-Retention of customer base is also a valid use case. Not sure how to quantify this...
+Retention of customer base is also a valid use case. [TODO]
 
+## Interlude: MECE Patterns Repository
 
-## 5. Articulating Value: The Value of Measurement (aka, the Cost of Information)
+Here we talk about the different MECE value patterns that arise in different scenarios. Ideally, engineers should be able to pluck a MECE pattern and modify it to their context, to build trees. Something very similar is used inside McKinsey, but here we use it specifically in the context of tracing the following:
 
-For a measurement to have economic value, it must support a decision. Examples of decisions are:
+- Decisions (Architectural/Tech Debt) to Value
+- Metrics to Value
+
+## 5. Articulating Value: The Value of Metrics (aka, the Cost of Information)
+
+For a metric to have economic value, it must support a decision. Examples of decisions are:
 
 - The investment will either be made or not. Alternatively, the amount of investment will be more or less.
 - Teams will be restructured or not.
@@ -383,8 +389,48 @@ Quantify the **Decision Model**. The Decision Model will probably have multiple 
 
 We need to decide what is the importance of these variables in making the decision. If a measurement has zero information value, then it is not worth measuring. When multiple variables are involved, use the EVPI metric coupled with Monte Carlo simulations (assuming the decision model has been quantified) to decide on the most important metrics.
 
-- The Expected Value of Perfect Information
+Before we get into the nitty-gritties of how to actually measure this, let's talk about the chain of value where we trace a metric to its value to the business decision it facilitates.
 
+In general, any metric's MECE tree should encapsulate (most of) the following elements.
+
+{% mermaid %}
+graph LR;
+metric[Metric]-->speed[Speed]-->time_to_market[Time to Market]-->first_mover_fast_follower[First Mover/Fast Follower Economic Advantage]
+time_to_market-->time_value[Time Value of Savings/Profits]
+first_mover_fast_follower-->|No|no_invest[Don't Invest]
+first_mover_fast_follower-->|Yes|invest[Invest]
+time_value-->|Low|less_invest[Invest Less]
+time_value-->|High|more_invest[Invest More]
+
+{% endmermaid %}
+
+### The Economics of DORA Metrics
+What business decisions do DORA metrics support? We can follow the above MECE tree, and see that they fit in very well with the template.
+
+- Deployment Frequency is a proxy for speed of feature development, which is itself a proxy for time to market.
+- Lead Time for Changes is a proxy for speed of feature development, which is itself a proxy for time to market.
+- Mean Time to Recovery is a metric for financial loss during downtime.
+- Change Failure Rate is a proxy for speed of development of features, which is itself a proxy for time to market.
+
+This is the MECE tree for DORA metrics.
+
+{% mermaid %}
+graph LR;
+df[Deployment Frequency]-->speed[Speed]-->time_to_market[Time to Market]-->first_mover_fast_follower[First Mover/Fast Follower Economic Advantage]
+mlt[Lead Time for Changes]-->speed
+cfl[Change Failure Rate]-->bugs[Bugs]-->speed
+time_to_market-->time_value[Time Value of Savings/Profits]
+first_mover_fast_follower-->|No|no_invest[Don't Invest]
+first_mover_fast_follower-->|Yes|invest[Invest]
+time_value-->|Low|less_invest[Invest Less]
+time_value-->|High|more_invest[Invest More]
+{% endmermaid %}
+
+### The Expected Value of Perfect Information
+
+### When is a metric's performance good enough?
+
+- Theory of Constraints
 
 [TODO]
 
