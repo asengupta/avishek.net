@@ -176,6 +176,8 @@ Here is some research relating **Development Metrics to Wasted Development Time*
 
 ATD must have cost=principal (amount to pay to implement) + interest (continuing incurred costs of not implementing ATD)
 
+The following is an example of how a cash flow of an architectural decision might look like.
+
 {% mermaid %}
 graph LR;
 architecture_decision[Architecture Decision]-->atd_principal[Cost of Architectural Decision: Principal];
@@ -243,7 +245,8 @@ Here are some tips for specific but standard cases.
 
 #### 1. The Economics of Microservices
 
-If you are suggesting a new microservice for processing payments, these might be the new cash flows:
+If you are suggesting a new microservice for processing payments, these might be the new cash flows, as an example:
+
 - **Recurring Cash Flows**
     - Transactions: New cash inflow
     - Cost of recovering the whole system back from failure: Reduced cash outflow
@@ -279,6 +282,8 @@ style microservice fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
     - Cost of repaying tech debt
 - **Option Premium**
   - The cost of isolating the effect of the technical debt from affecting other code (see [Articulating Value: The Value of Timing](#2-articulating-value-the-value-of-timing-aka-real-options))
+
+The following is an example of how a value tree of a (general) Tech Debt might look like.
 
 {% mermaid %}
 graph LR;
