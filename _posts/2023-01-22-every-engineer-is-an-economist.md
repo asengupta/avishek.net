@@ -432,6 +432,8 @@ There are a lot more concepts that I'd like to cover, including:
 - Value Tree Repository
 - The Cost of Unreleased Software
 
+I will continue adding more information on the topic of the value of metrics going forward. Stay tuned.
+
 ## References
 
 - Books
