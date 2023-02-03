@@ -430,6 +430,7 @@ There are a lot more concepts that I'd like to cover, including:
 - Possible procedures for determining the value of a metric
 - When is a metric's performance good enough?
 - Value Tree Repository
+- The Cost of Unreleased Software
 
 ## References
 
