@@ -338,7 +338,7 @@ style debt fill:#006f00,stroke:#000,stroke-width:2px,color:#fff
 
 ## 4. Articulating Value: Deriving Value in Legacy Modernisation
 
-[TODO: Add more text content]
+Legacy Modernisation is an involved beast, and usually there are far too many variables to create an exhaustive model. However, a candidate cost model is a starter. We'll write more about this going forward.
 
 $$C_{HW}$$ = Cost of Hardware / Hosting \\
 $$C_{HUF}$$ = Cost of manual work equivalent of feature (if completely new feature or if feature has manual interventions) \\
@@ -359,14 +359,7 @@ V_{legacy} = \sum_{i} V_i + C_{HW} + n_F.C_{NUF}
 $$
 
 In legacy modernisation, the idea is to minimise $$V_{legacy}$$, so that $$V_{legacy}-V_{modern} > 0$$.
-Retention of customer base is also a valid use case. [TODO]
-
-## Interlude: MECE Patterns Repository
-
-Here we talk about the different MECE value patterns that arise in different scenarios. Ideally, engineers should be able to pluck a MECE pattern and modify it to their context, to build trees. Something very similar is used inside McKinsey, but here we use it specifically in the context of tracing the following:
-
-- Decisions (Architectural/Tech Debt) to Value
-- Metrics to Value
+Retention of customer base is also a valid use case, which we will touch upon in sequels.
 
 ## 5. Articulating Value: The Value of Metrics (aka, the Cost of Information)
 
@@ -391,7 +384,7 @@ We need to decide what is the importance of these variables in making the decisi
 
 Before we get into the nitty-gritties of how to actually measure this, let's talk about the chain of value where we trace a metric to its value to the business decision it facilitates.
 
-In general, any metric's MECE tree should encapsulate (most of) the following elements.
+In general, any metric's value tree should encapsulate (most of) the following elements.
 
 {% mermaid %}
 graph LR;
@@ -410,14 +403,14 @@ It is also important to note that a single metric does not contribute to the spe
 
 
 ### The Economics of DORA Metrics
-What business decisions do DORA metrics support? We can follow the above MECE tree, and see that they fit in very well with the template.
+What business decisions do DORA metrics support? We can follow the above value tree, and see that they fit in very well with the template.
 
 - **Deployment Frequency** is a proxy for speed of feature development, which is itself a proxy for time to market.
 - **Lead Time for Changes** is a proxy for speed of feature development, which is itself a proxy for time to market.
 - **Mean Time to Recovery** is a metric for financial loss during downtime.
 - **Change Failure Rate** is a proxy for speed of development of features, which is itself a proxy for time to market.
 
-This is the MECE tree for DORA metrics.
+This is an example value tree for DORA metrics.
 
 {% mermaid %}
 graph LR;
@@ -431,16 +424,12 @@ time_value-->|Low|less_invest[Invest Less]
 time_value-->|High|more_invest[Invest More]
 {% endmermaid %}
 
-### Procedure
-[TODO]
+There are a lot more concepts that I'd like to cover, including:
 
-### The Expected Value of Perfect Information
-[TODO]
-
-### When is a metric's performance good enough?
-
-- Theory of Constraints
-[TODO]
+- Expected Value of Perfect Information
+- Possible procedures for determining the value of a metric
+- When is a metric's performance good enough?
+- Value Tree Repository
 
 ## References
 
@@ -452,8 +441,9 @@ time_value-->|High|more_invest[Invest More]
     - [Extreme Programming Perspectives](https://www.amazon.com/Extreme-Programming-Perspectives-Michele-Marchesi/dp/0201770059)
     - [The Value of Custom Software as an Asset](https://paper-leaf.com/insights/custom-software-value-useful-life/)
 - Papers
+    - [Making Architecture Design Decisions: An Economic Approach](https://apps.dtic.mil/sti/pdfs/ADA408740.pdf) describes a pilot study of a modified CBAM approach applied at NASA.
     - [Software Design Decisions as Real Options](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=24f7bdda5f3721faa2da58719ae72432f782312f)
-    - [A Practical Method for Valuing Real Options: The Boeing Approach](https://www.researchgate.net/publication/227374121_A_Practical_Method_for_Valuing_Real_Options_The_Boeing_Approach)
+    - [A Practical Method for Valuing Real Options: The Boeing Approach](https://www.researchgate.net/publication/227374121_A_Practical_Method_for_Valuing_Real_Options_The_Boeing_Approach) describes the Datar-Matthews approach used in the real options example in this article.
     - [Code Red: The Business Impact of Code Quality - A Quantitative Study of 39 Proprietary Production Codebases](https://arxiv.org/abs/2203.04374)
     - [The financial aspect of managing technical debt: A systematic literature review](https://www.semanticscholar.org/paper/The-financial-aspect-of-managing-technical-debt%3A-A-Ampatzoglou-Ampatzoglou/de5db6c07899c1d90b4ff4428e68b2dd799b9d6e)
     - [The Pricey Bill of Technical Debt: When and by Whom will it be Paid?](https://www.researchgate.net/publication/320057934_The_Pricey_Bill_of_Technical_Debt_When_and_by_Whom_will_it_be_Paid)
@@ -462,11 +452,4 @@ time_value-->|High|more_invest[Invest More]
 - Web
     - [Excellent Video on Real Options ECO423: IIT Kanpur](https://www.youtube.com/watch?v=lwoCGAqv5RU)
     - [Risk Exposure](https://www.wallstreetmojo.com/risk-exposure/)
-
-[TODO: Write about these later]
-- Decision-Making Tools
-    - Analytic Hierarchy Process
-- Utility-based Architecture Decision Making: CBAM
     - [The CBAM: A Quantitative Approach to Architecture Design Decision Making](https://people.ece.ubc.ca/matei/EECE417/BASS/ch12.html)
-    - [Making Architecture Design Decisions: An Economic Approach](https://apps.dtic.mil/sti/pdfs/ADA408740.pdf) describes a pilot study of a modified CBAM approach applied at NASA.
- 
