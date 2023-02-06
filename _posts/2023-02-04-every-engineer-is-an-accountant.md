@@ -8,34 +8,12 @@ draft: false
 
 This article continues from where [Every Software Engineer is an Economist]({% post_url 2023-01-22-every-engineer-is-an-economist %}) left off, and delves slightly deeper into some of the topics already introduced there, as well as several new ones. Specifically, we cover the following:
 
+- [Waterfall Accounting: Capitalisable vs. Non-Capitalisable Costs](#waterfall-accounting-capitalisable-vs-non-capitalisable-costs)
 - [How much are you willing to pay to reduce uncertainty? (the Expected Value of Perfect Information)](#how-much-are-you-willing-to-pay-to-reduce-uncertainty)
 - [Articulating Value: The Cost of Unreleased Software](#articulating-value-the-cost-of-unreleased-software)
-- [Waterfall Accounting: Capitalisable vs. Non-Capitalisable Costs](#waterfall-accounting-capitalisable-vs-non-capitalisable-costs)
 - [Articulating Value: Architecture Decisions as Options, with Options](#articulating-value-architecture-decisions-as-options-with-options)
 - Value trees and Probabilistic Graphical Models
 - Value Tree Repository
-
-## How much are you willing to pay to reduce uncertainty?
-
-We will use [this spreadsheet](https://docs.google.com/spreadsheets/d/1jBHwntpPI3QK5rM5yw5m2Gge9otgDf7pddNZs1sBZlw/edit?usp=sharing) again for our calculations. We spoke of the risk curve, which is the expected loss if the actual effort exceeds 310. Let us assume that the customer is adamant that we put in extra effort in narrowing our estimates so that we know whether we are over or below 310.
-
-The question we'd like to answer is: **how much are we willing to pay to reduce the uncertainty of this loss to zero?** In other words, what is the maximum effort we are willing to spend to reduce the uncertainty of this estimate?
-
-For this, we create a **Loss Function**, and this loss is simply calculated as $$L_i=P_i.E_i$$ for every estimate $$i \geq 310$$. Not too unsurprisingly, this is not the only choice for a loss function.
-
-The answer is the area under the loss curve. This would usually done by integration, and is easily achieved if you are using a normal distribution, but is usually done through numerical integration for other arbitrary distributions. In this case, we can very roughly numerically integrate as shown in the diagram below, to get the maximum effort we are willing to invest.
-
-![EVPI Example](/assets/images/evpi-example.png)
-
-In our example, this comes out to 1.89. We can say that we are willing to make a maximum investment of 1.89 points of effort for the reduction in uncertainty to make economic sense. This value is termed the **Expected Value of Information** and is broadly defined as the amount someone is willing to pay for information that will reduce uncertainty about an estimate, or the information about a forecase. This technique is usually used to calculate the maximum amount of money you'd be willing to pay for a forecast about a business metric that affects your profits, but the same principle applies to estimates as well.
-
-**Usually, the actual effort to reduce the uncertainty takes far longer, and hopefully an example like this can convince you that refining estimates is not necessarily a productive exercise.**
-
-## Articulating Value: The Cost of Unreleased Software
-
-## Statistics (aka Lies)
-
-## Articulating Value: Architecture Decisions as Options, with Options
 
 ## Waterfall Accounting: Capitalisable vs. Non-Capitalisable Costs
 
@@ -87,6 +65,28 @@ For Cloud Costing, we have the following categories from an accounting perspecti
 [This link](https://leasequery.com/blog/asc-350-internal-use-software-accounting-fasb/) and [Accounting for Cloud Development Costs](https://www.pwc.com/us/en/services/consulting/cloud-digital/cloud-transformation/cloud-computing.html) are readable treatments of the subject.
 
 Also see [this](https://dart.deloitte.com/USDART/home/publications/deloitte/accounting-spotlight/cloud-computing-arrangements).
+
+## How much are you willing to pay to reduce uncertainty?
+
+We will use [this spreadsheet](https://docs.google.com/spreadsheets/d/1jBHwntpPI3QK5rM5yw5m2Gge9otgDf7pddNZs1sBZlw/edit?usp=sharing) again for our calculations. We spoke of the risk curve, which is the expected loss if the actual effort exceeds 310. Let us assume that the customer is adamant that we put in extra effort in narrowing our estimates so that we know whether we are over or below 310.
+
+The question we'd like to answer is: **how much are we willing to pay to reduce the uncertainty of this loss to zero?** In other words, what is the maximum effort we are willing to spend to reduce the uncertainty of this estimate?
+
+For this, we create a **Loss Function**, and this loss is simply calculated as $$L_i=P_i.E_i$$ for every estimate $$i \geq 310$$. Not too unsurprisingly, this is not the only choice for a loss function.
+
+The answer is the area under the loss curve. This would usually done by integration, and is easily achieved if you are using a normal distribution, but is usually done through numerical integration for other arbitrary distributions. In this case, we can very roughly numerically integrate as shown in the diagram below, to get the maximum effort we are willing to invest.
+
+![EVPI Example](/assets/images/evpi-example.png)
+
+In our example, this comes out to 1.89. We can say that we are willing to make a maximum investment of 1.89 points of effort for the reduction in uncertainty to make economic sense. This value is termed the **Expected Value of Information** and is broadly defined as the amount someone is willing to pay for information that will reduce uncertainty about an estimate, or the information about a forecase. This technique is usually used to calculate the maximum amount of money you'd be willing to pay for a forecast about a business metric that affects your profits, but the same principle applies to estimates as well.
+
+**Usually, the actual effort to reduce the uncertainty takes far longer, and hopefully an example like this can convince you that refining estimates is not necessarily a productive exercise.**
+
+## Articulating Value: The Cost of Unreleased Software
+
+## Statistics (aka Lies)
+
+## Articulating Value: Architecture Decisions as Options, with Options
 
 ## Footnotes
 

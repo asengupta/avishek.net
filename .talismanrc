@@ -49,4 +49,5 @@ fileignoreconfig:
   checksum: 9a13b8925b0e3fd3e02b81342ad88f18c4f0e397ecd3019bf49e6d54fc837e80
 - filename: assets/papers/it-investment-closest-accurate-method.pdf
   checksum: 75775c8af43567df8b65d038f38a7e307a81a421e47e099c72694b95f2823ded
-
+- filename: _posts/2023-02-04-every-engineer-is-an-accountant.md
+  checksum: 342eb2eb50d9c2ed5082c108d1e75f52af373aa8159a28431805d442434a3a68
