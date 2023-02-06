@@ -43,3 +43,10 @@ fileignoreconfig:
   checksum: 34c31ea02ba498507c11fbfaef7b7e405c36983891bf61ac14a124198ab44cc1
 - filename: _posts/2023-02-04-every-engineer-is-an-economist-2.md
   checksum: adf5a587b13b9db9f64e154a9314fb73981e858daaf46ebf0dbb04c723e503d5
+- filename: _posts/2023-02-04-every-engineer-is-an-accountant.md
+  checksum: 7658f6794b946b2b6c65d242d13a36e27883f8a0542e451686398e3967492080
+- filename: assets/papers/The_Business_Value_of_IT_A_Conceptual_Model_for_Se.pdf
+  checksum: 9a13b8925b0e3fd3e02b81342ad88f18c4f0e397ecd3019bf49e6d54fc837e80
+- filename: assets/papers/it-investment-closest-accurate-method.pdf
+  checksum: 75775c8af43567df8b65d038f38a7e307a81a421e47e099c72694b95f2823ded
+
