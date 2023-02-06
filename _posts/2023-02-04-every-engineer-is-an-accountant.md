@@ -19,16 +19,16 @@ This article continues from where [Every Software Engineer is an Economist]({% p
 
 Capitalizable is an accounting term that refers to costs that can be recorded on the balance sheet, as opposed to being expensed immediately. These costs are viewed more favorably as they are spread out over the useful life of the asset, reducing the impact on net income. The accounting standards outline specific criteria for determining which costs are capitalizable. One criterion is the extent to which they provide a long-term benefit to the organization.
 
-Accounting plays a significant role in software development processes. There are specific guidelines which state rules about what costs can be capitalised, and what costs should be accounted as expenses incurred. Unfortunately, the accounting world lags behind the agile development model; GAAP guidelines have been established based on the waterfall model of software development.
+Accounting plays a significant role in software development processes. There are specific guidelines which state rules about what costs can be capitalised, and what costs should be accounted as expenses incurred. **Unfortunately, the accounting world lags behind the agile development model; GAAP guidelines have been established based on the waterfall model of software development.**
 
 ![Waterfall Accounting](/assets/images/waterfall-accounting.png)
 
 Costs can be capitalised once "technological feasibility" has been achieved. Topic 985 says that:
 > "the technological feasibility of a computer software product is established when the entity has completed all planning, designing, coding, and testing activities that are necessary to establish that the product can be produced to meet its design specifications including functions, features, and technical performance requirements."
 
-Agile doesn't work that way. Agile does not always have a clear point at which "technological feasibility" is achieved; therefore the criteria for "technological feasibility" may be an important point to agree upon between client and vendor.
+Agile doesn't work that way. Agile does not have "one-and-done" stages of development since it is iterative; there is not necessarily a clear point at which "technological feasibility" is achieved; therefore **the criteria for "technological feasibility" may be an important point to agree upon between client and vendor**.
 
-The problem is this: the guidelines state that the costs that should not be capitalized include the work that needs to be done to understand the product’s desired features and feasibility; these costs should be expensed as incurred costs.
+The problem is this: the guidelines state that the costs that should not be capitalized include the work that needs to be done to understand the product’s desired features and feasibility; **these costs should be expensed as incurred costs**.
 
 For example, using development of external software (software developed for purchase or lease by external customers) as an example, the following activities cannot be capitalised:
 
