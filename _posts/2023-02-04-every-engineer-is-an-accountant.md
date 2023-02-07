@@ -11,7 +11,8 @@ This article continues from where [Every Software Engineer is an Economist]({% p
 - [Waterfall Accounting: Capitalisable vs. Non-Capitalisable Costs](#waterfall-accounting-capitalisable-vs-non-capitalisable-costs)
 - [How much are you willing to pay to reduce uncertainty? (the Expected Value of Perfect Information)](#how-much-are-you-willing-to-pay-to-reduce-uncertainty)
 - [Articulating Value: The Cost of Unreleased Software](#articulating-value-the-cost-of-unreleased-software)
-- [Articulating Value: Architecture Decisions as Options, with Options](#articulating-value-architecture-decisions-as-options-with-options)
+- [Articulating Value: NPV Analysis Example](#articulating-value-compound-options)
+- [Articulating Value: Pair Programming](#articulating-value-pair-programming)
 - Value trees and Probabilistic Graphical Models
 - Value Tree Repository
 
@@ -86,7 +87,67 @@ In our example, this comes out to 1.89. We can say that we are willing to make a
 
 ## Statistics (aka Lies)
 
-## Articulating Value: Architecture Decisions as Options, with Options
+## Articulating Value: Circuit Breaker and Microservice Template example
+
+We show an example of articulating value for a simple (or not-sp-simple case), where multiple factors can be at play.
+
+We are building a platform on Google Cloud Platform, consisting of a bunch of microservices. Many of these microservices are projected to call external APIs. Some of these APIs are prone to failure or extended downtimes; we need to be able to implement the circuit breaker pattern. We assume that one new microservice will be built per month for the next 6 months.
+
+- The development cost of these microservices is $2000.
+- The rate of return (hurdle rate) is 10%. This will be used to calculate the Net Present Value of future costs and benefits.
+- These microservices also require ground-up work when creating a new one. A microservice template or starter pack would reduce work required to deploy future microservices as well.
+
+Unfortunately, Istio is currently not being used. Istio is an open source service mesh that layers transparently onto existing distributed applications. If Istio was being used, we could have leveraged its circuit breaker pattern pretty easily. We need to advocate for using Istio in our ecosystem. Let us assume that currently we have no circuit breaker patterns implemented at all. How can we build a business case around this?
+
+There are a couple of considerations:
+
+- The deployment of the service mesh may be an expensive process.
+- The microservice template could also encapsulate a library-level circuit breaker implementation.
+- The microservice template would have other benefits that are not articulated in this example.
+
+1. Articulate Tech Debt due to No Circuit Breaker
+2. Articulate Library-level Circuit Breaker Option
+3. Articulate Microservice Starter Pack-level Circuit Breaker Option
+4. Articulate Service Mesh Circuit Breaker Option
+5. Explore combinations of these options
+
+All the calculations are shown in [this spreadsheet](https://docs.google.com/spreadsheets/d/1jBHwntpPI3QK5rM5yw5m2Gge9otgDf7pddNZs1sBZlw/edit?usp=sharing).
+
+### 1. Articulate Tech Debt due to No Circuit Breaker
+
+Suppose we analyse the downtime suffered by our platform per month because of requests piling up because of slow, or unresponsive third party APIs. We assume that this number is around $10000. This cost and that of new microservice development, are shown below.
+
+![Original Tech Debt Outflow](/assets/images/tech-debt.png)
+
+The current cash outflow projected over 6 months, discounted to today, comes out to -$58733. This is the first step towards convincing stakeholders that they are losing money. Of course, we can project further out into the future, but the uncertainty of calculations obviously grows the more you go out.
+
+We'd like to propose a set of options 
+
+### 2. Articulate Immediate Library-level Circuit Breaker Option
+
+![Only Library Option](/assets/images/circuit-breaker-library.png)
+
+### 3. Articulate Immediate Service Mesh Option
+
+![Only Service Mesh](/assets/images/service-mesh.png)
+
+### 4. Articulate Immediate Starter Pack Option
+
+![Only Starter Pack](/assets/images/starter-pack.png)
+
+### 5. Articulate Immediate Library + Delayed Starter Pack Option
+
+![Library and Delayed Starter Pack](/assets/images/library-plus-delayed-starter-pack.png)
+
+### 6. Articulate Immediate Library + Delayed Starter Pack Option + Delayed Service Mesh Option
+
+![Library and Delayed Starter Pack and Service Mesh](/assets/images/library-plus-delayed-starter-pack-and-service-mesh.png)
+
+### 7. Review and Rank all Options
+
+![All Options Returns](/assets/images/value-realisation-of-all-options.png)
+
+## Articulating Value: Pair Programming
 
 ## Footnotes
 

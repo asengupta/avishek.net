@@ -51,3 +51,5 @@ fileignoreconfig:
   checksum: 75775c8af43567df8b65d038f38a7e307a81a421e47e099c72694b95f2823ded
 - filename: _posts/2023-02-04-every-engineer-is-an-accountant.md
   checksum: 342eb2eb50d9c2ed5082c108d1e75f52af373aa8159a28431805d442434a3a68
+- filename: _posts/2023-02-04-every-engineer-is-an-accountant.md
+  checksum: 2070b00ccb11a4f170e2aaf9752ad5e84b2bdc7d90a7e0d8184b5798e2c7ac61
