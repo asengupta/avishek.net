@@ -3,7 +3,7 @@ title: "Every Software Engineer is an Accountant"
 author: avishek
 usemathjax: true
 tags: ["Software Engineering", "Software Engineering Economics"]
-draft: false
+draft: true
 ---
 
 This article continues from where [Every Software Engineer is an Economist]({% post_url 2023-01-22-every-engineer-is-an-economist %}) left off, and delves slightly deeper into some of the topics already introduced there, as well as several new ones. Specifically, we cover the following:
@@ -85,7 +85,11 @@ In our example, this comes out to 1.89. We can say that we are willing to make a
 
 ## Articulating Value: The Cost of Unreleased Software
 
-## Statistics (aka Lies)
+[This spreadsheet](https://docs.google.com/spreadsheets/d/1jBHwntpPI3QK5rM5yw5m2Gge9otgDf7pddNZs1sBZlw/edit?usp=sharing) contains all the calculations.
+
+![Incremental Releases Calculations](/assets/images/incremental-releases-calculations.png)
+
+![Incremental Releases Graph](/assets/images/incremental-releases-graph.png)
 
 ## Articulating Value: Circuit Breaker and Microservice Template example
 
@@ -119,7 +123,7 @@ Suppose we analyse the downtime suffered by our platform per month because of re
 
 ![Original Tech Debt Outflow](/assets/images/tech-debt.png)
 
-The current cash outflow projected over 6 months, discounted to today, comes out to -$58733. This is the first step towards convincing stakeholders that they are losing money. Of course, we can project further out into the future, but the uncertainty of calculations obviously grows the more you go out.
+The current cash outflow projected over 10 months, discounted to today, comes out to -$87785. This is the first step towards convincing stakeholders that they are losing money. Of course, we can project further out into the future, but the uncertainty of calculations obviously grows the more you go out.
 
 We'd like to propose a set of options 
 
@@ -149,14 +153,17 @@ We'd like to propose a set of options
 
 ## Articulating Value: Pair Programming
 
-## Footnotes
+Pair programming effectiveness seems to be a mixed bag, based on a survey of multiple studies in the paper [The effectiveness of pair programming: A meta-analysis](https://www.researchgate.net/publication/222408325_The_effectiveness_of_pair_programming_A_meta-analysis).
 
-- The [IEEE-CS/ACM Software Engineering Code of Ethics and Professional Practices](https://ethics.acm.org/code-of-ethics/software-engineering-code/) requires software professionals to quote uncertainties along with their estimates.
+The key takeaway is this:
+
+>  If you do not know the seniority or skill levels of your programmers, but do have a feeling for task complexity, then employ pair programming either when task complexity is low and time is of the essence, or when task complexity is high and correctness is important.
 
 ## References
 - Papers
   - [Information Technology Investment: In Search of The Closest Accurate Method](https://www.sciencedirect.com/science/article/pii/S187705091931837X/pdf?md5=8ef46147c1296b09b1a4945fe12a8db1&pid=1-s2.0-S187705091931837X-main.pdf)
   - [The Business Value of IT; A Conceptual Model for Selecting Valuation Methods](https://www.researchgate.net/publication/239776307_The_Business_Value_of_IT_A_Conceptual_Model_for_Selecting_Valuation_Methods)
+  - [The effectiveness of pair programming: A meta-analysis](https://www.researchgate.net/publication/222408325_The_effectiveness_of_pair_programming_A_meta-analysis)
 - Web
   - [Overview of Software Capitalisation Rules](https://leasequery.com/blog/software-capitalization-us-gaap-gasb/)
   - [Accounting for external-use software development costs in an agile environment](https://www.journalofaccountancy.com/news/2018/mar/accounting-for-external-use-software-development-costs-201818259.html)

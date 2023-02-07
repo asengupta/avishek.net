@@ -123,6 +123,8 @@ The **risk exposure curve** for the above scenario is shown below:
 
 ![Risk Curve above 310](/assets/images/estimation-risk-curve.png)
 
+**Interesting Note:** The [IEEE-CS/ACM Software Engineering Code of Ethics and Professional Practices](https://ethics.acm.org/code-of-ethics/software-engineering-code/) requires software professionals to quote uncertainties along with their estimates.
+
 ## 2. Articulating Value: The Value of Timing (aka, Real Options)
 
 ### Real Options
