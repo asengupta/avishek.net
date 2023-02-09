@@ -12,6 +12,7 @@ This article continues from where [Every Software Engineer is an Economist]({% p
 - [How much are you willing to pay to reduce uncertainty? (the Expected Value of Perfect Information)](#how-much-are-you-willing-to-pay-to-reduce-uncertainty)
 - [Articulating Value: The Cost of Unreleased Software](#articulating-value-the-cost-of-unreleased-software)
 - [Articulating Value: NPV Analysis Example](#articulating-value-compound-options)
+- 
 - [Articulating Value: Pair Programming](#articulating-value-pair-programming)
 - Value trees and Probabilistic Graphical Models
 - Value Tree Repository
@@ -151,6 +152,26 @@ We'd like to propose a set of options
 
 ![All Options Returns](/assets/images/value-realisation-of-all-options.png)
 
+## The value of software
+
+There is no consensus on how value of engineering practices should be articulated. In this scenario, the easiest way to quantify software value is to turn to Financial Valuation techniques as well. Ultimately, the value of any asset is determined by the amount of money that the market wants to pay for it. Let's take a simple example: suppose the company which owns/builds a piece of software is being acquired. Its assets need to be valued as part of the acquisition valuation; these are both tangible and intangible assets. These intangible assets include this software. The question is: how is this valuation done?
+
+### Cost Approach
+The cost approach, based on the principle of replacement, determines the value of software by considering the expected cost of replacing it with a similar one. There are two types of costs involved: reproduction costs and replacement costs. Reproduction costs evaluate the cost of creating an exact copy of the software, while replacement costs measure the cost of recreating the software's functionality. This method is often used for valuing internal-use software.
+
+### Trended Historical Cost Method
+The trended historical cost method calculates the actual historical development costs, such as programmer personnel costs and associated expenses, such as payroll taxes, overhead, and profit. These costs are then adjusted for inflation to reflect the current valuation date. However, implementing this method can be challenging, as historical records of development costs may be missing or mixed with those of operations and maintenance.
+
+### Market Approach
+The market approach values software by comparing it to similar packages and taking into account any variations. One issue with this method is the lack of comparable transactions, especially when dealing with internal-use software designed to specific standards. More data is available for transactions related to software development companies' shares compared to software.
+
+### Income Approach
+The income approach values software based on its future earnings, cash flows, or cost savings. The discounted cash flow method calculates the worth of software as the present value of its future net cash flows, taking into account expected revenues and expenses. The cash flows are estimated for the remaining life of the software, and a discount rate that considers general economic, product, and industry risks is calculated. If the software had to be licensed from a third party, its value is determined based on published license prices for similar software found in intellectual property databases and other sources.
+
+
+
+
+
 ## Articulating Value: Pair Programming
 
 Pair programming effectiveness seems to be a mixed bag, based on a survey of multiple studies in the paper [The effectiveness of pair programming: A meta-analysis](https://www.researchgate.net/publication/222408325_The_effectiveness_of_pair_programming_A_meta-analysis).
@@ -161,10 +182,14 @@ The key takeaway is this:
 
 ## References
 - Papers
+  - [The Valuation of Modern Software Investment in the US](https://www.researchgate.net/publication/351840180_THE_VALUATION_OF_MODERN_SOFTWARE_INVESTMENT_IN_THE_US)
   - [Information Technology Investment: In Search of The Closest Accurate Method](https://www.sciencedirect.com/science/article/pii/S187705091931837X/pdf?md5=8ef46147c1296b09b1a4945fe12a8db1&pid=1-s2.0-S187705091931837X-main.pdf)
   - [The Business Value of IT; A Conceptual Model for Selecting Valuation Methods](https://www.researchgate.net/publication/239776307_The_Business_Value_of_IT_A_Conceptual_Model_for_Selecting_Valuation_Methods)
   - [The effectiveness of pair programming: A meta-analysis](https://www.researchgate.net/publication/222408325_The_effectiveness_of_pair_programming_A_meta-analysis)
+  - [Software Economics: A Roadmap](https://www.researchgate.net/publication/2411293_Software_Economics_A_Roadmap)
 - Web
+  - [Parameters of Software Valuation from Finantis Value](https://www.finantisvalue.com/en/2018/03/21/how-to-estimate-the-value-of-your-software-or-digital-products/)
+  - [Valuing Software Assets from an Accounting Perspective](https://eqvista.com/business-assets/value-software-asset/)
   - [Overview of Software Capitalisation Rules](https://leasequery.com/blog/software-capitalization-us-gaap-gasb/)
   - [Accounting for external-use software development costs in an agile environment](https://www.journalofaccountancy.com/news/2018/mar/accounting-for-external-use-software-development-costs-201818259.html)
   - External Use Software guidelines - FASB Accounting Standards Codification (ASC) Topic 985, Software

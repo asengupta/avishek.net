@@ -55,3 +55,6 @@ fileignoreconfig:
   checksum: 2070b00ccb11a4f170e2aaf9752ad5e84b2bdc7d90a7e0d8184b5798e2c7ac61
 - filename: _posts/2023-02-04-every-engineer-is-an-accountant.md
   checksum: 78408c254f32981f4080971721a23a665f44ca1b6a96209f697faf29c960a4c2
+- filename: assets/papers/estimation-errors-real-options.pdf
+  checksum: 36e961d05ba6213e2d6040a0a5b7127af42b247dc1f21c40b11eb1d33c59a14c
+
