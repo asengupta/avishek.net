@@ -3,16 +3,17 @@ title: "Every Software Engineer is an Accountant"
 author: avishek
 usemathjax: true
 tags: ["Software Engineering", "Software Engineering Economics"]
-draft: true
+draft: false
 ---
 
 This article continues from where [Every Software Engineer is an Economist]({% post_url 2023-01-22-every-engineer-is-an-economist %}) left off, and delves slightly deeper into some of the topics already introduced there, as well as several new ones. Specifically, we cover the following:
 
 - [Waterfall Accounting: Capitalisable vs. Non-Capitalisable Costs](#waterfall-accounting-capitalisable-vs-non-capitalisable-costs)
-- [How much are you willing to pay to reduce uncertainty? (the Expected Value of Perfect Information)](#how-much-are-you-willing-to-pay-to-reduce-uncertainty)
+- [Articulating Value: The Cost of Reducing Uncertainty](#articulating-value-the-cost-of-reducing-uncertainty)
+- [Articulating Value: The Cost of Expert but Imperfect Knowledge](#articulating-value-the-cost-of-expert-but-imperfect-knowledge)
 - [Articulating Value: The Cost of Unreleased Software](#articulating-value-the-cost-of-unreleased-software)
 - [Articulating Value: NPV Analysis Example](#articulating-value-compound-options)
-- 
+- [Articulating Value: The Value of Security](#articulating-value-the-value-of-security)
 - [Articulating Value: Pair Programming](#articulating-value-pair-programming)
 - Value trees and Probabilistic Graphical Models
 - Value Tree Repository
@@ -68,7 +69,7 @@ For Cloud Costing, we have the following categories from an accounting perspecti
 
 Also see [this](https://dart.deloitte.com/USDART/home/publications/deloitte/accounting-spotlight/cloud-computing-arrangements).
 
-## How much are you willing to pay to reduce uncertainty?
+## Articulating Value: The Cost of Reducing Uncertainty
 
 We will use [this spreadsheet](https://docs.google.com/spreadsheets/d/1jBHwntpPI3QK5rM5yw5m2Gge9otgDf7pddNZs1sBZlw/edit?usp=sharing) again for our calculations. We spoke of the risk curve, which is the expected loss if the actual effort exceeds 310. Let us assume that the customer is adamant that we put in extra effort in narrowing our estimates so that we know whether we are over or below 310.
 
@@ -83,6 +84,159 @@ The answer is the area under the loss curve. This would usually done by integrat
 In our example, this comes out to 1.89. We can say that we are willing to make a maximum investment of 1.89 points of effort for the reduction in uncertainty to make economic sense. This value is termed the **Expected Value of Information** and is broadly defined as the amount someone is willing to pay for information that will reduce uncertainty about an estimate, or the information about a forecase. This technique is usually used to calculate the maximum amount of money you'd be willing to pay for a forecast about a business metric that affects your profits, but the same principle applies to estimates as well.
 
 **Usually, the actual effort to reduce the uncertainty takes far longer, and hopefully an example like this can convince you that refining estimates is not necessarily a productive exercise.**
+
+## Articulating Value: The Cost of Expert but Imperfect Knowledge
+
+Suppose you, the tech lead or architect, wants to make a decision around some architecture or tech stack. You've heard about it, and you think it would be a good fit for your current project scenario. But you are not *completely* sure, so in the worst case, there would be no benefit and just the cost sunk into the investment of implementing this decision. The two questions you'd like to ask are:
+
+- **What is the maximum I'm willing to pay to reduce the uncertainty of this decision completely?** This question is exactly the same as the one in the previous section, so is not in itself that novel, but it is a stepping stone to the next question.
+- **What is the maximum I'm willing to pay to bring in an expert who can help me reduce this uncertainty to a lower value, but probably not to zero?** In this case, the expert will not be able to provide you perfect information, and we must incorporate our confidence in the expert into our economics calculations.
+
+**We can use Decision Theory to quantify these costs.** The technique we'll be using involves **Probabilistic Graphical Models**, and all of this can be easily automated: this step-by-step example is for comprehension.
+
+Suppose we have the situation above where a decision needs to be made. There is 30% possibility that the decision will result in a savings of $100000 going forward, and 70% possibility that there won't be any benefit at all.
+
+Let X be the event that there will be a savings of $20000. Then $$P(X)=0.3$$. We can represent all the possibilities using a Decision Tree, like below.
+
+{% mermaid %}
+graph LR
+A ==>|Cost=5000| implement["Implement"]
+A -->|Cost=0| dont_implement["Do Not Implement"]
+implement ==>|"P(X)=0.3"| savings_1[Savings=20000-5000=15000]
+implement ==>|"1-P(X)=0.7"| no_savings_1[Savings=0-5000=-5000]
+dont_implement -->|"P(X)=0.3"| savings_2[Savings=0]
+dont_implement -->|"1-P(X)=0.7"| no_savings_2[Savings=0]
+{% endmermaid %}
+
+Now, if we did not have any information beyond these probabilities, we'd pick the decision which maximises the expected payoff. The payoff from this decision is called the Expected Monetary Value, and is defined as:
+
+$$
+EMV=\text{max}_i \sum_i P_i.R_{ij}
+$$
+
+This is simply the maximum expected value of all the expected values arising from all the choices $$j\in J$$. The monetary value for the "Implement" decision is $$0.3 \times 15000 + 0.7 \times (-5000)=$1000$$, whereas that of the "Do Not Implement" decision is zero. Thus, we pick the monetary value of the former, and our EMV is $1000.
+
+Now assume we had a perfect expert who knew whether the decision is going to actually result in savings or not. If they told us the answer, we could effectively know whether to implement the decision or not with complete certainty.
+
+The payoff then would be calculated using the following graph. The graph switches the chance nodes and the decision nodes, and for each chance node, picks the decision node which maximises the payoff.
+
+{% mermaid %}
+graph LR
+A ==> savings["Savings<br>P(X)=0.3"]
+A ==> no_savings["No Savings<br>1-P(X)=0.7"]
+savings ==>|Cost=5000| implement_1[Implement<br>Savings=20000-5000=15000]
+savings -->|Cost=0| dont_implement_1[Don't Implement<br>Savings=0]
+no_savings -->|Cost=5000| implement_2[Implement<br>Savings=0-5000=-5000]
+no_savings ==>|Cost=0| dont_implement_2[Don't Implement<br>Savings=0]
+{% endmermaid %}
+
+We can then calculate expected payoff given perfect information (denoted as EV\|PI) as:
+
+$$
+EV|PI = \sum_i P_{j}.\text{max}_i R_{ij}
+$$
+
+In our case, this comes out to: $$0.3 \times 15000 + 0.7 \times 0=$4500$$.  
+Thus the Expected Value of Perfect Information is defined as the additional amount we are willing to pay to get to EV|PI:
+
+$$
+EVPI=EV|PI-EMV=4500-1000=$3500
+$$
+
+Thus, we are willing to pay a maximum of $3500 to fully resolve the uncertainty of whether our decision will yield the expected savings or not.
+
+But the example we have described is not a real-world example. In the real world, even if we pay an expert to help us resolve this, they are not infallible. They might increase the odds in our favour, but there is always a possibility that they are wrong. We assume that we get an expert to consult for us. **They want to be paid $3400. Are they overpriced or not?**
+
+We'd like to know what is the maximum we are willing to pay an expert if they can give us imperfect information about our situation. To do this, we will need to quantify our confidence in the expert.
+
+Assume that if there are savings to be made, the expert says "Good" 80% of the time. If there are no savings to be made, the expert says "Bad" 90% of the time. This quantifies our confidence in the expert, and can be written as a table like so:
+
+| Savings (S) / Expert (E) | Good | Bad |
+|--------------------------|------|-----|
+| Savings                  | 0.8  | 0.1 |
+| No Savings               | 0.2  | 0.9 |
+
+In the above table, E is the random variable representing the opinion of the expert, and S is the random variable representing the realisation of savings. We can again represent all possibilities via a probability tree, like so:
+
+{% mermaid %}
+graph LR
+A ==> savings["Savings<br>P(X)=0.3"]
+A ==> no_savings["No Savings<br>1-P(X)=0.7"]
+savings --> expert_good_1["Good<br>P(R)=0.8"]
+savings --> expert_bad_1["Bad<br>1-P(R)=0.2"]
+no_savings --> expert_good_2["Good<br>P(R)=0.1"]
+no_savings --> expert_bad_2["Bad<br>1-P(R)=0.9"]
+expert_good_1 --> p_1["P(Good,Savings)=0.3 x 0.8 = 0.24"]
+expert_bad_1 --> p_2["P(Bad,Savings)=0.3 x 0.2 = 0.06"]
+expert_good_2 --> p_3["P(Good,No Savings)=0.7 x 0.1 = 0.07"]
+expert_bad_2 --> p_4["P(Bad,No Savings)=0.7 x 0.9 = 0.63"]
+p_1-->p_good["P(Good)=0.24+0.07=0.31"]
+p_3-->p_good
+p_2-->p_bad["P(Bad)=0.06+0.63=0.69"]
+p_4-->p_bad
+{% endmermaid %}
+
+We now have our joint probabilities $$P(S,E)$$. What we really want to find is $$P(S \vert E)$$. By Bayes' Rule, we can write:
+
+$$
+P(S|E)=\frac{P(S,E)}{P(E)}
+$$
+
+We can thus calculate the conditional probabilities of the payoff given the expert's prediction with the following graph.
+
+{% mermaid %}
+graph LR
+p_1["P(Good,Savings)=0.3 x 0.8 = 0.24"]-->p_good["P(Good)=0.24+0.07=0.31"]
+p_2["P(Bad,Savings)=0.3 x 0.2 = 0.06"]-->p_bad["P(Bad)=0.06+0.63=0.69"]
+p_3["P(Good,No Savings)=0.7 x 0.1 = 0.07"]-->p_good
+p_4["P(Bad,No Savings)=0.7 x 0.9 = 0.63"]-->p_bad
+p_1 --> p_savings_good["P(Savings | Good)=0.24/0.31=0.774"]
+p_good --> p_savings_good
+p_2 --> p_savings_bad["P(Savings | Bad)=0.06/0.69=0.087"]
+p_bad --> p_savings_bad
+p_3 --> p_no_savings_good["P(No Savings | Good)=0.07/0.31=0.226"]
+p_good --> p_no_savings_good
+p_4 --> p_no_savings_bad["P(No Savings | Bad)=0.63/0.69=0.913"]
+p_bad --> p_no_savings_bad
+{% endmermaid %}
+
+Now we go back and calculate EMV again in the light of these new probabilities. The difference in this new tree is that in addition to the probability branches of our original uncertainty, we also need to add the branches for the expert's predictions, whose conditional probabilities we have just deduced.
+
+{% mermaid %}
+graph LR
+A ==>|0.31| p_good[Good]
+A ==>|0.69| p_bad[Bad]
+p_good ==> p_implement_good[Implement]
+p_good --> p_dont_implement_good[Do Not Implement]
+p_bad --> p_implement_bad[Implement]
+p_bad ==> p_dont_implement_bad[Do Not Implement]
+
+p_implement_good ==>|-5000| implement_savings_given_good["Savings=20000<br>P(Savings|Good)=0.774"]
+p_implement_good ==>|-5000| implement_no_savings_given_good["Savings=0<br>P(No Savings|Good)=0.226"]
+p_dont_implement_good -->|0| dont_implement_savings_given_good["Savings=0<br>P(Savings|Good)=0.774"]
+p_dont_implement_good -->|0| dont_implement_no_savings_given_good["Savings=0<br>P(No Savings|Good)=0.226"]
+
+p_implement_bad -->|-5000| implement_savings_given_bad["Savings=20000<br>P(Savings|Bad)=0.087"]
+p_implement_bad -->|-5000| implement_no_savings_given_bad["Savings=0<br>P(No Savings|Bad)=0.913"]
+p_dont_implement_bad ==>|0| dont_implement_savings_given_bad["Savings=0<br>P(Savings|Bad)=0.087"]
+p_dont_implement_bad ==>|0| dont_implement_no_savings_given_bad["Savings=0<br>P(No Savings|Bad)=0.913"]
+
+implement_savings_given_good ==> implement_savings_given_good_payoff["0.774 x (20000-5000)=11610"]
+implement_no_savings_given_good ==> implement_no_savings_given_good_payoff["0.226 x (0-5000)=-1130"]
+dont_implement_savings_given_good --> dont_implement_savings_given_good_payoff["0.774 x 0=0"]
+dont_implement_no_savings_given_good --> dont_implement_no_savings_given_good_payoff["0.226 x 0=0"]
+
+implement_savings_given_bad --> implement_savings_given_bad_payoff["0.087 x (20000-5000)=1305"]
+implement_no_savings_given_bad --> implement_no_savings_given_bad_payoff["0.913 x (0-5000)=-4565"]
+dont_implement_savings_given_bad ==> dont_implement_savings_given_bad_payoff["0.087 x 0=0"]
+dont_implement_no_savings_given_bad ==> dont_implement_no_savings_given_bad_payoff["0.913 x 0=0"]
+
+implement_savings_given_good_payoff ==> plus(("+"))
+implement_no_savings_given_good_payoff ==> plus
+plus ==> max_payoff_given_good[10480] ==> max_payoff[10480 X 0.31=3249]
+{% endmermaid %}
+
+Thus, $3249 is the maximum amount we'd be willing to pay this expert given the level of our confidence in them. This number is the **Expected Value of Imperfect Information**. Remember that the EVPI was $3500, so EVII <= EVPI. If you remember, the expert's fee was $3400. This means that we would be overpaying the expert by $3400-$3249=$151.
 
 ## Articulating Value: The Cost of Unreleased Software
 
@@ -152,26 +306,54 @@ We'd like to propose a set of options
 
 ![All Options Returns](/assets/images/value-realisation-of-all-options.png)
 
-## The value of software
+## The Value of Software
 
-There is no consensus on how value of engineering practices should be articulated. In this scenario, the easiest way to quantify software value is to turn to Financial Valuation techniques as well. Ultimately, the value of any asset is determined by the amount of money that the market wants to pay for it. Let's take a simple example: suppose the company which owns/builds a piece of software is being acquired. Its assets need to be valued as part of the acquisition valuation; these are both tangible and intangible assets. These intangible assets include this software. The question is: how is this valuation done?
+**There is no consensus on how value of engineering practices should be articulated.** Metrics like DORA metrics can quantify the speed at which features are released, but the ultimate consequences - savings in effort, eventual profits, for example -- are seldom quantified. It is not that estimates of these numbers are not available; it is discussed when making a business case for the investment into a project, but those numbers are almost never encountered or leveraged by engineering terms to articulate how they are progressing towards their goal. The measure of progress across iterations is story points, which is useful, but that is just quantifying the run cost, instead of the actual final value that this investment will deliver.
 
-### Cost Approach
-The cost approach, based on the principle of replacement, determines the value of software by considering the expected cost of replacing it with a similar one. There are two types of costs involved: reproduction costs and replacement costs. Reproduction costs evaluate the cost of creating an exact copy of the software, while replacement costs measure the cost of recreating the software's functionality. This method is often used for valuing internal-use software.
+How do we then articulate this value?
 
-### Trended Historical Cost Method
-The trended historical cost method calculates the actual historical development costs, such as programmer personnel costs and associated expenses, such as payroll taxes, overhead, and profit. These costs are then adjusted for inflation to reflect the current valuation date. However, implementing this method can be challenging, as historical records of development costs may be missing or mixed with those of operations and maintenance.
+**Economics and current accounting practices can show one way forward.**
+
+One straightforward way to quantify software value is to turn to **Financial Valuation** techniques. **Ultimately, the value of any asset is determined by the amount of money that the market wants to pay for it.** Software is an **intangible asset**. Let's take a simple example: suppose the company which owns/builds a piece of software is being **acquired**. This software could be for its internal use, e.g., accounting, order management, etc., or it could be a product that is sold or licensed to the company's clients. This software needs to be valued as part of the acquisition valuation.
+
+The question then becomes: **how is the valuation of this software done?**
+
+There are several ways in which valuation firms estimate the value of software.
+
+### 1. Cost Approach
+
+This approach is usually used for valuing internal-use software. The cost approach, based on the principle of replacement, determines the value of software by considering the expected cost of replacing it with a similar one. There are two types of costs involved: reproduction costs and replacement costs. **Reproduction Costs** evaluate the cost of creating an exact copy of the software. **Replacement Costs** measure the cost of recreating the software's functionality.
+
+- **Trended Historical Cost Method:** The trended historical cost method calculates the actual historical development costs, such as programmer personnel costs and associated expenses, such as payroll taxes, overhead, and profit. These costs are then adjusted for inflation to reflect the current valuation date. However, implementing this method can be challenging, as historical records of development costs may be missing or mixed with those of operations and maintenance.
+
+- **Software engineering model method:** This method uses specific metrics from the software system, like size/complexity, and feeds this information to some empirical software development models like COCOMO (Constructive Cost Model and its sequels) and SLIM (Software LIfecycle Management) to get estimated costs. The formulae in these models are derived from analyses of historical databases of actual software projects.
+
+See [Application of the Cost Approach to Value Internally Developed Computer Software: Williamette Management Associates](https://willamette.com/insights_journal/18/summer_2018_4.pdf) for some comprehensive examples of this approach.
+
+Obviously, this approach completely ignores the actual value that the software has brought to the organisation, whether it is in the form of reduced Operational Expenses, or otherwise.
 
 ### Market Approach
 The market approach values software by comparing it to similar packages and taking into account any variations. One issue with this method is the lack of comparable transactions, especially when dealing with internal-use software designed to specific standards. More data is available for transactions related to software development companies' shares compared to software.
 
+- **Availability & comparability issues**
+- **Market transaction method**
+- **Market replacement cost method**
+
 ### Income Approach
 The income approach values software based on its future earnings, cash flows, or cost savings. The discounted cash flow method calculates the worth of software as the present value of its future net cash flows, taking into account expected revenues and expenses. The cash flows are estimated for the remaining life of the software, and a discount rate that considers general economic, product, and industry risks is calculated. If the software had to be licensed from a third party, its value is determined based on published license prices for similar software found in intellectual property databases and other sources.
 
+The Income Approach is usually the one used most often by corporate valuation companies when valuing intangible assets like software during acquisition. However, this software is usually assumed to be complete, and serving its purpose, and not necessarily software which is still in development (or not providing cash flows right now).
+
+- **Income or cost savings**
+- **Discounted cash flow method:** 
+- **Relief from Royalty Method:** This method is used to determine the value of intangible assets by taking into account the hypothetical royalty payments that would be avoided by owning the asset instead of licensing it. The idea behind the RRM is straightforward: owning an intangible asset eliminates the need to pay for the right to use that asset. The RRM is commonly applied in the valuation of domain names, trademarks, licensed computer software, and ongoing research and development projects that can be associated with a particular revenue stream, and where market data on royalty and license fees from previous transactions is available. One possible example is if a company is building its own private cloud as an alternative to AWS; the value that the project provides could be calculated from the fees that are projected to be saved if the company did not use AWS for hosting its services.
+
+### Real Options Valusation
+
+This is used when the asset (software) is not currently producing cash flows, but has the potential to generate cash flows in the future, incorporating the idea of the uncertain nature of these cash flows. We will look at this in more detail.
 
 
-
-
+## Articulating Value: The Value of Security
 ## Articulating Value: Pair Programming
 
 Pair programming effectiveness seems to be a mixed bag, based on a survey of multiple studies in the paper [The effectiveness of pair programming: A meta-analysis](https://www.researchgate.net/publication/222408325_The_effectiveness_of_pair_programming_A_meta-analysis).
@@ -181,19 +363,29 @@ The key takeaway is this:
 >  If you do not know the seniority or skill levels of your programmers, but do have a feeling for task complexity, then employ pair programming either when task complexity is low and time is of the essence, or when task complexity is high and correctness is important.
 
 ## References
+- Books
+  - Real Options Analysis
 - Papers
+  - [Decision Analysis and Real Options: A Discrete Time Approach to Real Option Valuation](https://www.researchgate.net/publication/220461843_Decision_Analysis_and_Real_Options_A_Discrete_Time_Approach_to_Real_Option_Valuation)
+  - [Illustrative Example of Intangible Asset Valuation: Shockwave Corporation](https://www.oecd.org/tax/transfer-pricing/47426115.pdf)
   - [The Valuation of Modern Software Investment in the US](https://www.researchgate.net/publication/351840180_THE_VALUATION_OF_MODERN_SOFTWARE_INVESTMENT_IN_THE_US)
   - [Information Technology Investment: In Search of The Closest Accurate Method](https://www.sciencedirect.com/science/article/pii/S187705091931837X/pdf?md5=8ef46147c1296b09b1a4945fe12a8db1&pid=1-s2.0-S187705091931837X-main.pdf)
   - [The Business Value of IT; A Conceptual Model for Selecting Valuation Methods](https://www.researchgate.net/publication/239776307_The_Business_Value_of_IT_A_Conceptual_Model_for_Selecting_Valuation_Methods)
   - [The effectiveness of pair programming: A meta-analysis](https://www.researchgate.net/publication/222408325_The_effectiveness_of_pair_programming_A_meta-analysis)
   - [Software Economics: A Roadmap](https://www.researchgate.net/publication/2411293_Software_Economics_A_Roadmap)
 - Web
-  - [Parameters of Software Valuation from Finantis Value](https://www.finantisvalue.com/en/2018/03/21/how-to-estimate-the-value-of-your-software-or-digital-products/)
-  - [Valuing Software Assets from an Accounting Perspective](https://eqvista.com/business-assets/value-software-asset/)
-  - [Overview of Software Capitalisation Rules](https://leasequery.com/blog/software-capitalization-us-gaap-gasb/)
-  - [Accounting for external-use software development costs in an agile environment](https://www.journalofaccountancy.com/news/2018/mar/accounting-for-external-use-software-development-costs-201818259.html)
-  - External Use Software guidelines - FASB Accounting Standards Codification (ASC) Topic 985, Software
-  - Internal Use Software guidelines - FASB Accounting Standards Codification (ASC) Topic 350, Intangibles — Goodwill and Other
-  - [Accounting for internal-use software using Cloud Computing development costs](https://leasequery.com/blog/asc-350-internal-use-software-accounting-fasb/)
-  - [Accounting for Cloud Development Costs](https://www.pwc.com/us/en/services/consulting/cloud-digital/cloud-transformation/cloud-computing.html) are covered under FASB Subtopic ASC 350-40 (Customer’s Accounting for Implementation Costs Incurred in a Cloud Computing Arrangement That Is a Service Contact (ASC 350-40)).
-  - [Financial Reporting Developments: Intangibles - goodwill and other](https://assets.ey.com/content/dam/ey-sites/ey-com/en_us/topics/assurance/accountinglink/ey-frdbb1499-05-09-2022.pdf?download). The actual formal document is [here](https://fasb.org/document/blob?fileName=ASU%202021-03.pdf)
+  - Decision Theory
+    - [Video on Expected Value of Perfect and Imperfect Information](https://www.youtube.com/watch?v=jOafCEFZ1_8)
+  - Software Valuation
+    - [Application of the Cost Approach to Value Internally Developed Computer Software: Williamette Management Associates](https://willamette.com/insights_journal/18/summer_2018_4.pdf)
+    - [Valuation of Software Intangible Assets by Willamette Management Associates](https://immagic.com/eLibrary/ARCHIVES/GENERAL/WMA_US/W020828T.pdf)
+    - [Parameters of Software Valuation: Finantis Value](https://www.finantisvalue.com/en/2018/03/21/how-to-estimate-the-value-of-your-software-or-digital-products/)
+    - [Valuing Software Assets from an Accounting Perspective: EqVista](https://eqvista.com/business-assets/value-software-asset/)
+  - Software Accounting
+    - [Overview of Software Capitalisation Rules](https://leasequery.com/blog/software-capitalization-us-gaap-gasb/)
+    - [Accounting for external-use software development costs in an agile environment](https://www.journalofaccountancy.com/news/2018/mar/accounting-for-external-use-software-development-costs-201818259.html)
+    - External Use Software guidelines - FASB Accounting Standards Codification (ASC) Topic 985, Software
+    - Internal Use Software guidelines - FASB Accounting Standards Codification (ASC) Topic 350, Intangibles — Goodwill and Other
+    - [Accounting for internal-use software using Cloud Computing development costs](https://leasequery.com/blog/asc-350-internal-use-software-accounting-fasb/)
+    - [Accounting for Cloud Development Costs](https://www.pwc.com/us/en/services/consulting/cloud-digital/cloud-transformation/cloud-computing.html) are covered under FASB Subtopic ASC 350-40 (Customer’s Accounting for Implementation Costs Incurred in a Cloud Computing Arrangement That Is a Service Contact (ASC 350-40)).
+    - [Financial Reporting Developments: Intangibles - goodwill and other](https://assets.ey.com/content/dam/ey-sites/ey-com/en_us/topics/assurance/accountinglink/ey-frdbb1499-05-09-2022.pdf?download). The actual formal document is [here](https://fasb.org/document/blob?fileName=ASU%202021-03.pdf)
