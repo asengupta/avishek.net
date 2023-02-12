@@ -9,11 +9,11 @@ draft: false
 This article continues from where [Every Software Engineer is an Economist]({% post_url 2023-01-22-every-engineer-is-an-economist %}) left off, and delves slightly deeper into some of the topics already introduced there, as well as several new ones. Specifically, we cover the following:
 
 - [Waterfall Accounting: Capitalisable vs. Non-Capitalisable Costs](#waterfall-accounting-capitalisable-vs-non-capitalisable-costs)
+- [Articulating Value: The Value of a Software System](#articulating-value-the-value-of-a-software-system)
 - [Articulating Value: The Cost of Reducing Uncertainty](#articulating-value-the-cost-of-reducing-uncertainty)
 - [Articulating Value: The Cost of Expert but Imperfect Knowledge](#articulating-value-the-cost-of-expert-but-imperfect-knowledge)
 - [Articulating Value: The Cost of Unreleased Software](#articulating-value-the-cost-of-unreleased-software)
 - [Static NPV Analysis Example: Circuit Breaker and Microservice Template](#static-npv-analysis-example-circuit-breaker-and-microservice-template)
-- [Articulating Value: The Value of a Software System](#articulating-value-the-value-of-a-software-system)
 - [Articulating Value: Pair Programming](#articulating-value-pair-programming)
 - There is not Enough Data
 
@@ -66,6 +66,74 @@ For Cloud Costing, we have the following categories from an accounting perspecti
 [This link](https://leasequery.com/blog/asc-350-internal-use-software-accounting-fasb/) and [Accounting for Cloud Development Costs](https://www.pwc.com/us/en/services/consulting/cloud-digital/cloud-transformation/cloud-computing.html) are readable treatments of the subject.
 
 Also see [this](https://dart.deloitte.com/USDART/home/publications/deloitte/accounting-spotlight/cloud-computing-arrangements).
+
+## Articulating Value: The Value of a Software System
+
+**There is no consensus on how value of engineering practices should be articulated.** Metrics like DORA metrics can quantify the speed at which features are released, but the ultimate consequences - savings in effort, eventual profits, for example -- are seldom quantified. It is not that estimates of these numbers are not available; it is discussed when making a business case for the investment into a project, but those numbers are almost never encountered or leveraged by engineering terms to articulate how they are progressing towards their goal. The measure of progress across iterations is story points, which is useful, but that is just quantifying the run cost, instead of the actual final value that this investment will deliver.
+
+How do we then articulate this value?
+
+**Economics and current accounting practices can show one way forward.**
+
+One straightforward way to quantify software value is to turn to **Financial Valuation** techniques. **Ultimately, the value of any asset is determined by the amount of money that the market wants to pay for it.** Software is an **intangible asset**. Let's take a simple example: suppose the company which owns/builds a piece of software is being **acquired**. This software could be for its internal use, e.g., accounting, order management, etc., or it could be a product that is sold or licensed to the company's clients. This software needs to be valued as part of the acquisition valuation.
+
+The question then becomes: **how is the valuation of this software done?**
+
+There are several ways in which valuation firms estimate the value of software.
+
+### 1. Cost Approach
+
+This approach is usually used for valuing internal-use software. The cost approach, based on the principle of replacement, determines the value of software by considering the expected cost of replacing it with a similar one. There are two types of costs involved: reproduction costs and replacement costs. **Reproduction Costs** evaluate the cost of creating an exact copy of the software. **Replacement Costs** measure the cost of recreating the software's functionality.
+
+- **Trended Historical Cost Method:** The trended historical cost method calculates the actual historical development costs, such as programmer personnel costs and associated expenses, such as payroll taxes, overhead, and profit. These costs are then adjusted for inflation to reflect the current valuation date. However, implementing this method can be challenging, as historical records of development costs may be missing or mixed with those of operations and maintenance.
+
+- **Software engineering model method:** This method uses specific metrics from the software system, like size/complexity, and feeds this information to some empirical software development models like COCOMO (Constructive Cost Model and its sequels) and SLIM (Software LIfecycle Management) to get estimated costs. The formulae in these models are derived from analyses of historical databases of actual software projects.
+
+See [Application of the Cost Approach to Value Internally Developed Computer Software: Williamette Management Associates](https://willamette.com/insights_journal/18/summer_2018_4.pdf) for some comprehensive examples of this approach.
+
+Obviously, this approach completely ignores the actual value that the software has brought to the organisation, whether it is in the form of reduced Operational Expenses, or otherwise.
+
+### Market Approach
+The market approach values software by comparing it to similar packages and taking into account any variations. One issue with this method is the lack of comparable transactions, especially when dealing with internal-use software designed to specific standards. More data is available for transactions related to software development companies' shares compared to software. This method could be potentially applicable to internal-use systems which are being developed even though there are commercial off the shelf solutions available; this could be because the COTS solutions are not exact fits to the problem at hand, or lack some specific features that the company could really do with.
+
+### Income Approach
+The Income Approach values software based on its future earnings, cash flows, or cost savings. The discounted cash flow method calculates the worth of software as the present value of its future net cash flows, taking into account expected revenues and expenses. The cash flows are estimated for the remaining life of the software, and a discount rate that considers general economic, product, and industry risks is calculated. If the software had to be licensed from a third party, its value is determined based on published license prices for similar software found in intellectual property databases and other sources.
+
+The Income Approach is usually the one used most often by corporate valuation companies when valuing intangible assets like software during acquisition. However, this software is usually assumed to be complete, and serving its purpose, and not necessarily software which is still in development (or not providing cash flows right now).
+
+- **Discounted cash flow method:** This is the usual method where an NPV analysis is done on projected future cash flows arising from the product.
+- **Relief from Royalty Method:** This method is used to determine the value of intangible assets by taking into account the hypothetical royalty payments that would be avoided by owning the asset instead of licensing it. The idea behind the RRM is straightforward: owning an intangible asset eliminates the need to pay for the right to use that asset. The RRM is commonly applied in the valuation of domain names, trademarks, licensed computer software, and ongoing research and development projects that can be associated with a particular revenue stream, and where market data on royalty and license fees from previous transactions is available. One possible example is if a company is building its own private cloud as an alternative to AWS; the value that the project provides could be calculated from the fees that are projected to be saved if the company did not use AWS for hosting its services.
+
+### Real Options Valuation
+
+This is used when the asset (software) is not currently producing cash flows, but has the potential to generate cash flows in the future, incorporating the idea of the uncertain nature of these cash flows. We will look at this in more detail. Specifically, we will look at the most commonly used technique for valuing real options. The paper [Modeling Choices in the Valuation of Real Options: Reflections on Existing Models and Some New Ideas](https://realoptions.org/openconf2011/data/papers/24.pdf) discusses classic and recent advances in the valuation of real options. Specifically surveyed are:
+
+- **Black-Scholes Option Pricing formula**: The original, rigid assumptions on underlying model, not originally intended for pricing real options
+- **Binomial Option Pricing Model:** Discrete time approximation model of Black-Scholes; not originally intended for pricing real options
+- **Datar-Matthews Method:** Simulation-based model with cash flows as expert inputs; no rigid assumptions around cash flow models
+- **Fuzzy Pay-off Method:** Payoff treated as a fuzzy number with cash flows as expert input; no rigid assumptions
+
+I admit that I'm partial to the Binomial Option Pricing Model, because the binomial lattice graphic is very explainable; we'll cover the **Binomial Option Pricing Model** and the **Datar-Matthews Method** in a sequel.
+
+### What approach do we pick?
+
+**1. Platform**  
+**Use: Real Option Valuation**  
+A platform by itself does not provide value; it is the opportunities that it creates to rapidly build and offer new products to the market that is its chief attraction.
+
+**2. Specific Products providing External Transactional Value**  
+**Use: Income, Market**
+
+**3. Internal-Use products**  
+**Use: OpEx NPV Analysis, Relief from Royalty**
+
+**4. Enterprise Modernisation initiatives**  
+**Use: Real Option Valuation, OpEx NPV Analysis**
+
+Enterprise Modernisation can certainly benefit from an NPV analysis of Operational Expenses, but the main reason for undertaking modernisation is usually creating options for greater traffic, a more diverse product portfolio, etc.
+
+**5. Maintenance**  
+**Use: OpEx NPV Analysis**
 
 ## Articulating Value: The Cost of Reducing Uncertainty
 
@@ -303,75 +371,6 @@ We'd like to propose a set of options
 ### 7. Review and Rank all Options
 
 ![All Options Returns](/assets/images/value-realisation-of-all-options.png)
-
-## Articulating Value: The Value of a Software System
-
-**There is no consensus on how value of engineering practices should be articulated.** Metrics like DORA metrics can quantify the speed at which features are released, but the ultimate consequences - savings in effort, eventual profits, for example -- are seldom quantified. It is not that estimates of these numbers are not available; it is discussed when making a business case for the investment into a project, but those numbers are almost never encountered or leveraged by engineering terms to articulate how they are progressing towards their goal. The measure of progress across iterations is story points, which is useful, but that is just quantifying the run cost, instead of the actual final value that this investment will deliver.
-
-How do we then articulate this value?
-
-**Economics and current accounting practices can show one way forward.**
-
-One straightforward way to quantify software value is to turn to **Financial Valuation** techniques. **Ultimately, the value of any asset is determined by the amount of money that the market wants to pay for it.** Software is an **intangible asset**. Let's take a simple example: suppose the company which owns/builds a piece of software is being **acquired**. This software could be for its internal use, e.g., accounting, order management, etc., or it could be a product that is sold or licensed to the company's clients. This software needs to be valued as part of the acquisition valuation.
-
-The question then becomes: **how is the valuation of this software done?**
-
-There are several ways in which valuation firms estimate the value of software.
-
-### 1. Cost Approach
-
-This approach is usually used for valuing internal-use software. The cost approach, based on the principle of replacement, determines the value of software by considering the expected cost of replacing it with a similar one. There are two types of costs involved: reproduction costs and replacement costs. **Reproduction Costs** evaluate the cost of creating an exact copy of the software. **Replacement Costs** measure the cost of recreating the software's functionality.
-
-- **Trended Historical Cost Method:** The trended historical cost method calculates the actual historical development costs, such as programmer personnel costs and associated expenses, such as payroll taxes, overhead, and profit. These costs are then adjusted for inflation to reflect the current valuation date. However, implementing this method can be challenging, as historical records of development costs may be missing or mixed with those of operations and maintenance.
-
-- **Software engineering model method:** This method uses specific metrics from the software system, like size/complexity, and feeds this information to some empirical software development models like COCOMO (Constructive Cost Model and its sequels) and SLIM (Software LIfecycle Management) to get estimated costs. The formulae in these models are derived from analyses of historical databases of actual software projects.
-
-See [Application of the Cost Approach to Value Internally Developed Computer Software: Williamette Management Associates](https://willamette.com/insights_journal/18/summer_2018_4.pdf) for some comprehensive examples of this approach.
-
-Obviously, this approach completely ignores the actual value that the software has brought to the organisation, whether it is in the form of reduced Operational Expenses, or otherwise.
-
-### Market Approach
-The market approach values software by comparing it to similar packages and taking into account any variations. One issue with this method is the lack of comparable transactions, especially when dealing with internal-use software designed to specific standards. More data is available for transactions related to software development companies' shares compared to software. This method could be potentially applicable to internal-use systems which are being developed even though there are commercial off the shelf solutions available; this could be because the COTS solutions are not exact fits to the problem at hand, or lack some specific features that the company could really do with.
-
-### Income Approach
-The Income Approach values software based on its future earnings, cash flows, or cost savings. The discounted cash flow method calculates the worth of software as the present value of its future net cash flows, taking into account expected revenues and expenses. The cash flows are estimated for the remaining life of the software, and a discount rate that considers general economic, product, and industry risks is calculated. If the software had to be licensed from a third party, its value is determined based on published license prices for similar software found in intellectual property databases and other sources.
-
-The Income Approach is usually the one used most often by corporate valuation companies when valuing intangible assets like software during acquisition. However, this software is usually assumed to be complete, and serving its purpose, and not necessarily software which is still in development (or not providing cash flows right now).
-
-- **Discounted cash flow method:** This is the usual method where an NPV analysis is done on projected future cash flows arising from the product.
-- **Relief from Royalty Method:** This method is used to determine the value of intangible assets by taking into account the hypothetical royalty payments that would be avoided by owning the asset instead of licensing it. The idea behind the RRM is straightforward: owning an intangible asset eliminates the need to pay for the right to use that asset. The RRM is commonly applied in the valuation of domain names, trademarks, licensed computer software, and ongoing research and development projects that can be associated with a particular revenue stream, and where market data on royalty and license fees from previous transactions is available. One possible example is if a company is building its own private cloud as an alternative to AWS; the value that the project provides could be calculated from the fees that are projected to be saved if the company did not use AWS for hosting its services.
-
-### Real Options Valuation
-
-This is used when the asset (software) is not currently producing cash flows, but has the potential to generate cash flows in the future, incorporating the idea of the uncertain nature of these cash flows. We will look at this in more detail. Specifically, we will look at the most commonly used technique for valuing real options. The paper [Modeling Choices in the Valuation of Real Options: Reflections on Existing Models and Some New Ideas](https://realoptions.org/openconf2011/data/papers/24.pdf) discusses classic and recent advances in the valuation of real options. Specifically surveyed are:
-
-- **Black-Scholes Option Pricing formula**: The original, rigid assumptions on underlying model, not originally intended for pricing real options
-- **Binomial Option Pricing Model:** Discrete time approximation model of Black-Scholes; not originally intended for pricing real options
-- **Datar-Matthews Method:** Simulation-based model with cash flows as expert inputs; no rigid assumptions around cash flow models
-- **Fuzzy Pay-off Method:** Payoff treated as a fuzzy number with cash flows as expert input; no rigid assumptions
-
-I admit that I'm partial to the Binomial Option Pricing Model, because the binomial lattice graphic is very explainable; we'll cover the **Binomial Option Pricing Model** and the **Datar-Matthews Method** in a sequel.
-
-### What approach do we pick?
-
-**1. Platform**  
-**Use: Real Option Valuation**  
-A platform by itself does not provide value; it is the opportunities that it creates to rapidly build and offer new products to the market that is its chief attraction.
-
-**2. Specific Products providing External Transactional Value**  
-**Use: Income, Market**
-
-**3. Internal-Use products**  
-**Use: OpEx NPV Analysis, Relief from Royalty**
-
-**4. Enterprise Modernisation initiatives**  
-**Use: Real Option Valuation, OpEx NPV Analysis**
-
-Enterprise Modernisation can certainly benefit from an NPV analysis of Operational Expenses, but the main reason for undertaking modernisation is usually creating options for greater traffic, a more diverse product portfolio, etc.
-
-**5. Maintenance**  
-**Use: OpEx NPV Analysis**
-
 
 ## Articulating Value: Pair Programming
 
