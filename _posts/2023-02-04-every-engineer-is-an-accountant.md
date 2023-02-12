@@ -12,11 +12,10 @@ This article continues from where [Every Software Engineer is an Economist]({% p
 - [Articulating Value: The Cost of Reducing Uncertainty](#articulating-value-the-cost-of-reducing-uncertainty)
 - [Articulating Value: The Cost of Expert but Imperfect Knowledge](#articulating-value-the-cost-of-expert-but-imperfect-knowledge)
 - [Articulating Value: The Cost of Unreleased Software](#articulating-value-the-cost-of-unreleased-software)
-- [Articulating Value: NPV Analysis Example](#articulating-value-compound-options)
-- [Articulating Value: The Value of Security](#articulating-value-the-value-of-security)
+- [Static NPV Analysis Example: Circuit Breaker and Microservice Template](#static-npv-analysis-example-circuit-breaker-and-microservice-template)
 - [Articulating Value: Pair Programming](#articulating-value-pair-programming)
-- Value trees and Probabilistic Graphical Models
-- Value Tree Repository
+- [Articulating Value: The Value of a Software System](#articulating-value-the-value-of-a-software-system)
+- There is not Enough Data
 
 ## Waterfall Accounting: Capitalisable vs. Non-Capitalisable Costs
 
@@ -41,8 +40,7 @@ For example, using development of external software (software developed for purc
 - Prototyping
 - Comparable design work
 
-The above points apply even during iterations/sprints.
-If we wanted to be really pedantic, during development, the following activities cannot be capitalised either, but must be expensed:
+The above points apply even during iterations/sprints. If we wanted to be really pedantic, during development, the following activities cannot be capitalised either, but must be expensed:
 
 - Troubleshooting
 - Discovery
@@ -246,7 +244,7 @@ Thus, $3249 is the maximum amount we'd be willing to pay this expert given the l
 
 ![Incremental Releases Graph](/assets/images/incremental-releases-graph.png)
 
-## Articulating Value: Circuit Breaker and Microservice Template example
+## Static NPV Analysis Example: Circuit Breaker and Microservice Template
 
 We show an example of articulating value for a simple (or not-sp-simple case), where multiple factors can be at play.
 
@@ -306,7 +304,7 @@ We'd like to propose a set of options
 
 ![All Options Returns](/assets/images/value-realisation-of-all-options.png)
 
-## The Value of Software
+## Articulating Value: The Value of a Software System
 
 **There is no consensus on how value of engineering practices should be articulated.** Metrics like DORA metrics can quantify the speed at which features are released, but the ultimate consequences - savings in effort, eventual profits, for example -- are seldom quantified. It is not that estimates of these numbers are not available; it is discussed when making a business case for the investment into a project, but those numbers are almost never encountered or leveraged by engineering terms to articulate how they are progressing towards their goal. The measure of progress across iterations is story points, which is useful, but that is just quantifying the run cost, instead of the actual final value that this investment will deliver.
 
@@ -350,10 +348,16 @@ The Income Approach is usually the one used most often by corporate valuation co
 
 ### Real Options Valusation
 
-This is used when the asset (software) is not currently producing cash flows, but has the potential to generate cash flows in the future, incorporating the idea of the uncertain nature of these cash flows. We will look at this in more detail.
+This is used when the asset (software) is not currently producing cash flows, but has the potential to generate cash flows in the future, incorporating the idea of the uncertain nature of these cash flows. We will look at this in more detail. Specifically, we will look at the most commonly used technique for valuing real options. The paper [Modeling Choices in the Valuation of Real Options: Reflections on Existing Models and Some New Ideas](https://realoptions.org/openconf2011/data/papers/24.pdf) discusses classic and recent advances in the valuation of real options. Specifically surveyed are:
+
+- **Black-Scholes Option Pricing formula**: The original, rigid assumptions on underlying model, not originally intended for pricing real options
+- **Binomial Option Pricing Model:** Discrete time approximation model of Black-Scholes; not originally intended for pricing real options
+- **Datar-Matthews Method:** Simulation-based model with cash flows as expert inputs; no rigid assumptions around cash flow models
+- **Fuzzy Pay-off Method:** Payoff treated as a fuzzy number with cash flows as expert input; no rigid assumptions
+
+We will look at the **Datar-Matthews Method**, since that seems to be more practitioner-oriented.
 
 
-## Articulating Value: The Value of Security
 ## Articulating Value: Pair Programming
 
 Pair programming effectiveness seems to be a mixed bag, based on a survey of multiple studies in the paper [The effectiveness of pair programming: A meta-analysis](https://www.researchgate.net/publication/222408325_The_effectiveness_of_pair_programming_A_meta-analysis).
@@ -362,17 +366,25 @@ The key takeaway is this:
 
 >  If you do not know the seniority or skill levels of your programmers, but do have a feeling for task complexity, then employ pair programming either when task complexity is low and time is of the essence, or when task complexity is high and correctness is important.
 
+## There is not Enough Data
+
+The title of this topic is somewhat misleading, in that there is enough data, but that it is ignored or not synthesized, beyond qualitative platitudes of success.
+
 ## References
 - Books
   - Real Options Analysis
 - Papers
-  - [Decision Analysis and Real Options: A Discrete Time Approach to Real Option Valuation](https://www.researchgate.net/publication/220461843_Decision_Analysis_and_Real_Options_A_Discrete_Time_Approach_to_Real_Option_Valuation)
-  - [Illustrative Example of Intangible Asset Valuation: Shockwave Corporation](https://www.oecd.org/tax/transfer-pricing/47426115.pdf)
-  - [The Valuation of Modern Software Investment in the US](https://www.researchgate.net/publication/351840180_THE_VALUATION_OF_MODERN_SOFTWARE_INVESTMENT_IN_THE_US)
-  - [Information Technology Investment: In Search of The Closest Accurate Method](https://www.sciencedirect.com/science/article/pii/S187705091931837X/pdf?md5=8ef46147c1296b09b1a4945fe12a8db1&pid=1-s2.0-S187705091931837X-main.pdf)
-  - [The Business Value of IT; A Conceptual Model for Selecting Valuation Methods](https://www.researchgate.net/publication/239776307_The_Business_Value_of_IT_A_Conceptual_Model_for_Selecting_Valuation_Methods)
-  - [The effectiveness of pair programming: A meta-analysis](https://www.researchgate.net/publication/222408325_The_effectiveness_of_pair_programming_A_meta-analysis)
-  - [Software Economics: A Roadmap](https://www.researchgate.net/publication/2411293_Software_Economics_A_Roadmap)
+  - Real Options
+    - [How Do Real Options Concepts Fit in Agile Requirements Engineering?](https://www.researchgate.net/publication/221541824_How_Do_Real_Options_Concepts_Fit_in_Agile_Requirements_Engineering)
+    - [Decision Analysis and Real Options: A Discrete Time Approach to Real Option Valuation](https://www.researchgate.net/publication/220461843_Decision_Analysis_and_Real_Options_A_Discrete_Time_Approach_to_Real_Option_Valuation)
+    - [Modeling Choices in the Valuation of Real Options: Reflections on Existing Models and Some New Ideas](https://realoptions.org/openconf2011/data/papers/24.pdf)
+  - Valuation
+    - [Illustrative Example of Intangible Asset Valuation: Shockwave Corporation](https://www.oecd.org/tax/transfer-pricing/47426115.pdf)
+    - [The Valuation of Modern Software Investment in the US](https://www.researchgate.net/publication/351840180_THE_VALUATION_OF_MODERN_SOFTWARE_INVESTMENT_IN_THE_US)
+    - [Information Technology Investment: In Search of The Closest Accurate Method](https://www.sciencedirect.com/science/article/pii/S187705091931837X/pdf?md5=8ef46147c1296b09b1a4945fe12a8db1&pid=1-s2.0-S187705091931837X-main.pdf)
+    - [The Business Value of IT; A Conceptual Model for Selecting Valuation Methods](https://www.researchgate.net/publication/239776307_The_Business_Value_of_IT_A_Conceptual_Model_for_Selecting_Valuation_Methods)
+    - [The effectiveness of pair programming: A meta-analysis](https://www.researchgate.net/publication/222408325_The_effectiveness_of_pair_programming_A_meta-analysis)
+    - [Software Economics: A Roadmap](https://www.researchgate.net/publication/2411293_Software_Economics_A_Roadmap)
 - Web
   - Decision Theory
     - [Video on Expected Value of Perfect and Imperfect Information](https://www.youtube.com/watch?v=jOafCEFZ1_8)

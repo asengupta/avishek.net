@@ -337,6 +337,25 @@ style debt fill:#006f00,stroke:#000,stroke-width:2px,color:#fff
     }
 } %}
 
+We see options thinking happening on projects to some degree; however they are either not explicitly articulated, nor are the value of these decisions explicitly communicated to stakeholders. This is corroborated in the paper [How Do Real Options Concepts Fit in Agile Requirements Engineering?](https://www.researchgate.net/publication/221541824_How_Do_Real_Options_Concepts_Fit_in_Agile_Requirements_Engineering), where they attempt to answer some research questions. The ones of interest are listed below, and the relevant excerpts are quoted from this paper.
+
+### Research Question: What is the level of agile software organizations’ awareness of using options thinking in support of agile requirements reprioritization?
+> "Both the literature sources and the case study showed that there is awareness in the organizations, and that they apply option thinking for making mid-course project decisions, both from clients and developers perspective. Although the agile companies propagate development process driven only by value creation
+for the client, we observed that in practice option thinking is intrinsic for the developers as well. They consider trade offs between quality and schedule..."
+
+### Research Question: In which way does options-thinking add value?
+> " In the searched literature, we could not find a case where options are explicitly documented and compared in terms of value or in other quantitative way."
+
+### Research Question: Which aspects of using options thinking in agile RE can be recognized as topics for future research?
+> "...we found that the options thinking is mostly described in terms of how it works for developers’
+organizations. The perspective of the clients’ organizations seems under-researched."
+
+> "We must note that in the literature, we found instances
+of using options-thinking which represent anecdotic experiences of either agile consultants or agile-practiceadopting organizations. We were really surprised that we couldn’t find a more substantive evidence that could be used to answer our research questions."
+
+> "In both the literature review and the case study, we found that options are not expressed in quantitative terms. This finding makes us think that it may not be realistic at all to expect agile teams to reason about options quantitatively. Whether this is the case or not is a line for future research."
+
+**(I emphatically content that quantification of value in concrete economic terms should be one of the building blocks of articulating this value.)**
 
 ## 4. Articulating Value: Deriving Value in Legacy Modernisation
 
@@ -446,6 +465,7 @@ I will continue adding more information on the topic of the value of metrics goi
     - [Extreme Programming Perspectives](https://www.amazon.com/Extreme-Programming-Perspectives-Michele-Marchesi/dp/0201770059)
     - [The Value of Custom Software as an Asset](https://paper-leaf.com/insights/custom-software-value-useful-life/)
 - Papers
+    - [How Do Real Options Concepts Fit in Agile Requirements Engineering?](https://www.researchgate.net/publication/221541824_How_Do_Real_Options_Concepts_Fit_in_Agile_Requirements_Engineering)
     - [Making Architecture Design Decisions: An Economic Approach](https://apps.dtic.mil/sti/pdfs/ADA408740.pdf) describes a pilot study of a modified CBAM approach applied at NASA.
     - [Software Design Decisions as Real Options](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=24f7bdda5f3721faa2da58719ae72432f782312f)
     - [A Practical Method for Valuing Real Options: The Boeing Approach](https://www.researchgate.net/publication/227374121_A_Practical_Method_for_Valuing_Real_Options_The_Boeing_Approach) describes the Datar-Matthews approach used in the real options example in this article.
