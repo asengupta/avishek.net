@@ -6,7 +6,9 @@ tags: ["Software Engineering", "Software Engineering Economics"]
 draft: false
 ---
 
-This article continues from where [Every Software Engineer is an Economist]({% post_url 2023-01-22-every-engineer-is-an-economist %}) left off, and delves slightly deeper into some of the topics already introduced there, as well as several new ones. Specifically, we cover the following:
+This article continues from where [Every Software Engineer is an Economist]({% post_url 2023-01-22-every-engineer-is-an-economist %}) left off, and delves slightly deeper into some of the topics already introduced there, as well as several new ones. In the spirit of continuing the theme of "Every Software Engineer is an X", we've chosen accounting as the next profession.
+
+In this article, we cover the following:
 
 - [Waterfall Accounting: Capitalisable vs. Non-Capitalisable Costs](#waterfall-accounting-capitalisable-vs-non-capitalisable-costs)
 - [Articulating Value: The Value of a Software System](#articulating-value-the-value-of-a-software-system)
@@ -14,18 +16,16 @@ This article continues from where [Every Software Engineer is an Economist]({% p
 - [Articulating Value: The Cost of Expert but Imperfect Knowledge](#articulating-value-the-cost-of-expert-but-imperfect-knowledge)
 - [Articulating Value: The Cost of Unreleased Software](#articulating-value-the-cost-of-unreleased-software)
 - [Static NPV Analysis Example: Circuit Breaker and Microservice Template](#static-npv-analysis-example-circuit-breaker-and-microservice-template)
-- [Articulating Value: Pair Programming](#articulating-value-pair-programming)
-- There is not Enough Data
 
 ## Waterfall Accounting: Capitalisable vs. Non-Capitalisable Costs
 
-Capitalizable is an accounting term that refers to costs that can be recorded on the balance sheet, as opposed to being expensed immediately. These costs are viewed more favorably as they are spread out over the useful life of the asset, reducing the impact on net income. The accounting standards outline specific criteria for determining which costs are capitalizable. One criterion is the extent to which they provide a long-term benefit to the organization.
+**Capitalisable** is an accounting term that refers to costs that can be recorded on the balance sheet, as opposed to being expensed immediately. These costs are viewed more favorably as they are spread out over the useful life of the asset, reducing the impact on net income. The accounting standards outline specific criteria for determining which costs are capitalizable. One criterion is the extent to which they provide a long-term benefit to the organization.
 
-Accounting plays a significant role in software development processes. There are specific guidelines which state rules about what costs can be capitalised, and what costs should be accounted as expenses incurred. **Unfortunately, the accounting world lags behind the agile development model; GAAP guidelines have been established based on the waterfall model of software development.**
+**Accounting plays a significant role in software development processes.** There are specific guidelines which state rules about what costs can be capitalised, and what costs should be accounted as expenses incurred. **Unfortunately, the accounting world lags behind the agile development model; GAAP guidelines have been established based on the waterfall model of software development.**
 
 ![Waterfall Accounting](/assets/images/waterfall-accounting.png)
 
-Costs can be capitalised once "technological feasibility" has been achieved. Topic 985 says that:
+Costs can be capitalised once **"technological feasibility"** has been achieved. Topic 985 says that:
 > "the technological feasibility of a computer software product is established when the entity has completed all planning, designing, coding, and testing activities that are necessary to establish that the product can be produced to meet its design specifications including functions, features, and technical performance requirements."
 
 Agile doesn't work that way. Agile does not have "one-and-done" stages of development since it is iterative; there is not necessarily a clear point at which "technological feasibility" is achieved; therefore **the criteria for "technological feasibility" may be an important point to agree upon between client and vendor**.
@@ -63,15 +63,13 @@ For Cloud Costing, we have the following categories from an accounting perspecti
     - Costs for training activities
     - Software maintenance costs
 
-[This link](https://leasequery.com/blog/asc-350-internal-use-software-accounting-fasb/) and [Accounting for Cloud Development Costs](https://www.pwc.com/us/en/services/consulting/cloud-digital/cloud-transformation/cloud-computing.html) are readable treatments of the subject.
-
-Also see [this](https://dart.deloitte.com/USDART/home/publications/deloitte/accounting-spotlight/cloud-computing-arrangements).
+[This link](https://leasequery.com/blog/asc-350-internal-use-software-accounting-fasb/) and [Accounting for Cloud Development Costs](https://www.pwc.com/us/en/services/consulting/cloud-digital/cloud-transformation/cloud-computing.html) are readable treatments of the subject. Also see [this](https://dart.deloitte.com/USDART/home/publications/deloitte/accounting-spotlight/cloud-computing-arrangements).
 
 ## Articulating Value: The Value of a Software System
 
 **There is no consensus on how value of engineering practices should be articulated.** Metrics like DORA metrics can quantify the speed at which features are released, but the ultimate consequences - savings in effort, eventual profits, for example -- are seldom quantified. It is not that estimates of these numbers are not available; it is discussed when making a business case for the investment into a project, but those numbers are almost never encountered or leveraged by engineering terms to articulate how they are progressing towards their goal. The measure of progress across iterations is story points, which is useful, but that is just quantifying the run cost, instead of the actual final value that this investment will deliver.
 
-How do we then articulate this value?
+**How, then, do we then articulate this value?**
 
 **Economics and current accounting practices can show one way forward.**
 
@@ -83,30 +81,30 @@ There are several ways in which valuation firms estimate the value of software.
 
 ### 1. Cost Approach
 
-This approach is usually used for valuing internal-use software. The cost approach, based on the principle of replacement, determines the value of software by considering the expected cost of replacing it with a similar one. There are two types of costs involved: reproduction costs and replacement costs. **Reproduction Costs** evaluate the cost of creating an exact copy of the software. **Replacement Costs** measure the cost of recreating the software's functionality.
+This approach is usually used for valuing **internal-use software**. The cost approach, based on the principle of replacement, determines the value of software by considering the expected cost of replacing it with a similar one. There are two types of costs involved: reproduction costs and replacement costs. **Reproduction Costs** evaluate the cost of creating an exact copy of the software. **Replacement Costs** measure the cost of recreating the software's functionality.
 
 - **Trended Historical Cost Method:** The trended historical cost method calculates the actual historical development costs, such as programmer personnel costs and associated expenses, such as payroll taxes, overhead, and profit. These costs are then adjusted for inflation to reflect the current valuation date. However, implementing this method can be challenging, as historical records of development costs may be missing or mixed with those of operations and maintenance.
 
-- **Software engineering model method:** This method uses specific metrics from the software system, like size/complexity, and feeds this information to some empirical software development models like COCOMO (Constructive Cost Model and its sequels) and SLIM (Software LIfecycle Management) to get estimated costs. The formulae in these models are derived from analyses of historical databases of actual software projects.
+- **Software engineering model method:** This method uses specific metrics from the software system, like size/complexity, and feeds this information to some empirical software development models like **COCOMO** (Constructive Cost Model and its sequels) and **SLIM (Software LIfecycle Management)** to get estimated costs. The formulae in these models are derived from analyses of historical databases of actual software projects.
 
 See [Application of the Cost Approach to Value Internally Developed Computer Software: Williamette Management Associates](https://willamette.com/insights_journal/18/summer_2018_4.pdf) for some comprehensive examples of this approach.
 
-Obviously, this approach completely ignores the actual value that the software has brought to the organisation, whether it is in the form of reduced Operational Expenses, or otherwise.
+Obviously, **this approach largely ignores the actual value** that the software has brought to the organisation, whether it is in the form of reduced Operational Expenses, or otherwise.
 
 ### 2. Market Approach
-The market approach values software by comparing it to similar packages and taking into account any variations. One issue with this method is the lack of comparable transactions, especially when dealing with internal-use software designed to specific standards. More data is available for transactions related to software development companies' shares compared to software. This method could be potentially applicable to internal-use systems which are being developed even though there are commercial off the shelf solutions available; this could be because the COTS solutions are not exact fits to the problem at hand, or lack some specific features that the company could really do with.
+The market approach values software by **comparing it to similar packages** and taking into account any variations. One issue with this method is the lack of comparable transactions, especially when dealing with internal-use software designed to specific standards. More data is available for transactions related to software development companies' shares compared to software. This method could be potentially applicable to internal-use systems which are being developed even though there are commercial off the shelf solutions available; this could be because the COTS solutions are not exact fits to the problem at hand, or lack some specific features that the company could really do with.
 
 ### 3. Income Approach
-The Income Approach values software based on its future earnings, cash flows, or cost savings. The discounted cash flow method calculates the worth of software as the present value of its future net cash flows, taking into account expected revenues and expenses. The cash flows are estimated for the remaining life of the software, and a discount rate that considers general economic, product, and industry risks is calculated. If the software had to be licensed from a third party, its value is determined based on published license prices for similar software found in intellectual property databases and other sources.
+The Income Approach values software based on its **future earnings, or cost savings**. The discounted cash flow method calculates the worth of software as the present value of its future net cash flows, taking into account expected revenues and expenses. The cash flows are estimated for the remaining life of the software, and a discount rate that considers general economic, product, and industry risks is calculated. If the software had to be licensed from a third party, its value is determined based on published license prices for similar software found in intellectual property databases and other sources.
 
-The Income Approach is usually the one used most often by corporate valuation companies when valuing intangible assets like software during acquisition. However, this software is usually assumed to be complete, and serving its purpose, and not necessarily software which is still in development (or not providing cash flows right now).
+**The Income approach is usually the one used most often by corporate valuation companies when valuing intangible assets like software during acquisition.** However, this software is usually assumed to be complete, and serving its purpose, and not necessarily software which is still in development (or not providing cash flows right now).
 
 - **Discounted cash flow method:** This is the usual method where an NPV analysis is done on projected future cash flows arising from the product.
-- **Relief from Royalty Method:** This method is used to determine the value of intangible assets by taking into account the hypothetical royalty payments that would be avoided by owning the asset instead of licensing it. The idea behind the RRM is straightforward: owning an intangible asset eliminates the need to pay for the right to use that asset. The RRM is commonly applied in the valuation of domain names, trademarks, licensed computer software, and ongoing research and development projects that can be associated with a particular revenue stream, and where market data on royalty and license fees from previous transactions is available. One possible example is if a company is building its own private cloud as an alternative to AWS; the value that the project provides could be calculated from the fees that are projected to be saved if the company did not use AWS for hosting its services.
+- **Relief from Royalty Method:** This method is used to determine the value of intangible assets by taking into account the **hypothetical royalty payments** that would be avoided by owning the asset instead of licensing it. The idea behind the RRM is straightforward: owning an intangible asset eliminates the need to pay for the right to use that asset. The RRM is commonly applied in the valuation of domain names, trademarks, licensed computer software, and ongoing research and development projects that can be associated with a particular revenue stream, and where market data on royalty and license fees from previous transactions is available. One possible example is if a company is building its own private cloud as an alternative to AWS; the value that the project provides could be calculated from the fees that are projected to be saved if the company did not use AWS for hosting its services.
 
 ### Real Options Valuation
 
-This is used when the asset (software) is not currently producing cash flows, but has the potential to generate cash flows in the future, incorporating the idea of the uncertain nature of these cash flows. We will look at this in more detail. Specifically, we will look at the most commonly used technique for valuing real options. The paper [Modeling Choices in the Valuation of Real Options: Reflections on Existing Models and Some New Ideas](https://realoptions.org/openconf2011/data/papers/24.pdf) discusses classic and recent advances in the valuation of real options. Specifically surveyed are:
+This is used when the asset (software) is not currently producing cash flows, but has the potential to generate cash flows in the future, incorporating the idea of the uncertain nature of these cash flows. The paper [Modeling Choices in the Valuation of Real Options: Reflections on Existing Models and Some New Ideas](https://realoptions.org/openconf2011/data/papers/24.pdf) discusses classic and recent advances in the valuation of real options. Specifically surveyed are:
 
 - **Black-Scholes Option Pricing formula**: The original, rigid assumptions on underlying model, not originally intended for pricing real options
 - **Binomial Option Pricing Model:** Discrete time approximation model of Black-Scholes; not originally intended for pricing real options
@@ -117,7 +115,7 @@ I admit that I'm partial to the Binomial Option Pricing Model, because the binom
 
 ### What approach do we pick?
 
-There is no one approach that can account for all types of software. At the same time, multiple approaches may be applicable to a single type of software, with varying degrees of importance. It is important to note that the following categories are not mutually exclusive. The map below shows the type of value analysis that could be done for each kind of investment or asset.
+**There is no one approach that can account for all types of software.** At the same time, multiple approaches may be applicable to a single type of software, with varying degrees of importance. It is important to note that the following categories are not mutually exclusive. The map below shows the type of value analysis that could be done for each kind of investment or asset.
 
 {% mermaid %}
 graph TD
@@ -161,7 +159,7 @@ Another approach to valuing software using different dimensions is discussed in 
 
 ![Valuation Method Selection](/assets/images/valuation-methods-selection-paper.png)
 
-This paper also mentions using Information Economics to articulate value. Information Economics uses multiple criteria, both tangible and non-tangible, to come to a unified scorecard of value. Unfortunately, this does not have a monetary value attached to it for the intangible value creation processes. We may talk about it in the future. [Information Economics: Managing IT Investment](https://itgov.cs.ui.ac.id/miti/IE%20Presentation%20for%20MTI2.pdf) expounds upon this approach.
+This paper also mentions using **Information Economics** to articulate value. Information Economics uses multiple criteria, both tangible and non-tangible, to come to a unified scorecard of value. Unfortunately, this does not have a monetary value attached to it for the intangible value creation processes. We may talk about it in the future. [Information Economics: Managing IT Investment](https://itgov.cs.ui.ac.id/miti/IE%20Presentation%20for%20MTI2.pdf) expounds upon this approach.
 
 ## Articulating Value: The Cost of Reducing Uncertainty
 
@@ -344,10 +342,10 @@ Thus, $3249 is the maximum amount we'd be willing to pay this expert given the l
 
 We show an example of articulating value for a simple (or not-sp-simple case), where multiple factors can be at play.
 
-We are building a platform on Google Cloud Platform, consisting of a bunch of microservices. Many of these microservices are projected to call external APIs. Some of these APIs are prone to failure or extended downtimes; we need to be able to implement the circuit breaker pattern. We assume that one new microservice will be built per month for the next 6 months.
+We are building a platform on Google Cloud Platform, consisting of a bunch of microservices. Many of these microservices are projected to call external APIs. Some of these APIs are prone to failure or extended downtimes; we need to be able to implement the circuit breaker pattern. We assume that one new microservice will be built per month for the next **6 months**.
 
-- The development cost of these microservices is $2000.
-- The rate of return (hurdle rate) is 10%. This will be used to calculate the Net Present Value of future costs and benefits.
+- The development cost of these microservices is **$2000**.
+- The rate of return (hurdle rate) is **10%**. This will be used to calculate the Net Present Value of future costs and benefits.
 - These microservices also require ground-up work when creating a new one. A microservice template or starter pack would reduce work required to deploy future microservices as well.
 
 Unfortunately, Istio is currently not being used. Istio is an open source service mesh that layers transparently onto existing distributed applications. If Istio was being used, we could have leveraged its circuit breaker pattern pretty easily. We need to advocate for using Istio in our ecosystem. Let us assume that currently we have no circuit breaker patterns implemented at all. How can we build a business case around this?
@@ -377,40 +375,45 @@ The current cash outflow projected over 10 months, discounted to today, comes ou
 We'd like to propose a set of options 
 
 ### 2. Articulate Immediate Library-level Circuit Breaker Option
+This one shows cash flows arising out of immediately incorporating a circuit breaker library in each new microservice. The cost of incorporating this microservice includes any integration code as well as configuration. This effort remains more or less constant with each new microservice.
 
 ![Only Library Option](/assets/images/circuit-breaker-library.png)
 
-### 3. Articulate Immediate Service Mesh Option
-
-![Only Service Mesh](/assets/images/service-mesh.png)
-
-### 4. Articulate Immediate Starter Pack Option
+### 3. Articulate Immediate Starter Pack Option
+This one shows cash flows arising out of immediately beginning to implement a Starter Pack which can be used as a template for building new microservices. Circuit breaker functionality is also included in this starter pack. Any integration code is also present in the pack by default. Note that the starter pack would normally also have other benefits, like preconfigured logging, error handling, etc.
 
 ![Only Starter Pack](/assets/images/starter-pack.png)
 
+### 4. Articulate Immediate Service Mesh Option
+This one shows cash flows arising out of immediately beginning to implement a Service Mesh.
+
+![Only Service Mesh](/assets/images/service-mesh.png)
+
 ### 5. Articulate Immediate Library + Delayed Starter Pack Option
+This option immediately starts integrating a circuit breaker library to reduce downtimes, but starts work on the starter pack a couple of months down the line. Once the starter pack is functional, explicit integration of the circuit breaker library will no longer be needed for each new microservice.
 
 ![Library and Delayed Starter Pack](/assets/images/library-plus-delayed-starter-pack.png)
 
 ### 6. Articulate Immediate Library + Delayed Starter Pack Option + Delayed Service Mesh Option
+This option is the same as above, except that later on, it also begins to implement a service mesh. Once the service mesh is complete, integration of the circuit breaker functionality in the starter pack will no longer be needed, but it will still continue to provide other benefits, like reducing initial setup time for a new microservice.
 
 ![Library and Delayed Starter Pack and Service Mesh](/assets/images/library-plus-delayed-starter-pack-and-service-mesh.png)
 
-### 7. Review and Rank all Options
+### 7. Review, Rank, and Choose
+Here, we chart the (negative) discounted costs per month for all our options.
 
 ![All Options Returns](/assets/images/value-realisation-of-all-options.png)
 
-## Articulating Value: Pair Programming
+We may naively choose the one which has the least potential cost in the near horizon (which is the immediate starter pack option), or we can choose one of the service mesh options, assuming that service mesh is part of our architecture strategy, and that the cost differential is not too much. It is to be noted that for the service mesh to be part of our architecture strategy, other benefits of the service mesh need to be articulated using cash flows against the option of just having the starter pack do all those things.
 
-Pair programming effectiveness seems to be a mixed bag, based on a survey of multiple studies in the paper [The effectiveness of pair programming: A meta-analysis](https://www.researchgate.net/publication/222408325_The_effectiveness_of_pair_programming_A_meta-analysis).
+Thus, it is not important to know which factors are being taken into account when doing the NPV analysis, and the final decision rests on all the relevant factors, not just an isolated one, like the one we presented in this example.
 
-The key takeaway is this:
+## Conclusion
+There are several other topics that we will defer to the next post. The following is a *possible* list of topics we'll cover going forward.
 
->  If you do not know the seniority or skill levels of your programmers, but do have a feeling for task complexity, then employ pair programming either when task complexity is low and time is of the essence, or when task complexity is high and correctness is important.
-
-## There is not Enough Data
-
-The title of this topic is somewhat misleading, in that there is enough data, but that it is ignored or not synthesized, beyond qualitative platitudes of success.
+- The Value of Security
+- The Value of Pair Programming
+- Value Chain Analysis
 
 ## References
 - Books
@@ -425,7 +428,6 @@ The title of this topic is somewhat misleading, in that there is enough data, bu
     - [The Valuation of Modern Software Investment in the US](https://www.researchgate.net/publication/351840180_THE_VALUATION_OF_MODERN_SOFTWARE_INVESTMENT_IN_THE_US)
     - [Information Technology Investment: In Search of The Closest Accurate Method](https://www.sciencedirect.com/science/article/pii/S187705091931837X/pdf?md5=8ef46147c1296b09b1a4945fe12a8db1&pid=1-s2.0-S187705091931837X-main.pdf)
     - [The Business Value of IT; A Conceptual Model for Selecting Valuation Methods](https://www.researchgate.net/publication/239776307_The_Business_Value_of_IT_A_Conceptual_Model_for_Selecting_Valuation_Methods)
-    - [The effectiveness of pair programming: A meta-analysis](https://www.researchgate.net/publication/222408325_The_effectiveness_of_pair_programming_A_meta-analysis)
     - [Software Economics: A Roadmap](https://www.researchgate.net/publication/2411293_Software_Economics_A_Roadmap)
 - Web
   - Information Economics

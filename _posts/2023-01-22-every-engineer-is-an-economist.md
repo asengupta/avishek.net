@@ -8,6 +8,8 @@ draft: false
 
 **Background**: This post took me a while to write: much of this is motivated by problems that I've noticed teams facing day-to-day at work. To be clear, this post does not offer a solution; only some thoughts, and maybe a path forward in aligning developers' and architects' thinking more closely with the frameworks used by people controlling the purse-strings of software development projects.
 
+The sequel to this post, [Every Software Engineer is an Accountant]({% post_url 2023-02-04-every-engineer-is-an-accountant%}), is also out now.
+
 [WIP] Here is a [presentation version](/assets/presentations/value-articulation-guide-ppt.html) of this article.
 
 The other caveat is that even though this article touches the topic of estimation, it is to talk about building uncertainty into estimates as a way to communicate risk and uncertainties with stakeholders, and not to *refine* estimates. I won't be extolling the virtues or limitations of **#NoEstimates**, for example (sidebar: the smoothest teams I've worked with essentially dispensed with estimation, but they also had excellent stakeholders).
