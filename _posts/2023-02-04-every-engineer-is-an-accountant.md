@@ -93,10 +93,10 @@ See [Application of the Cost Approach to Value Internally Developed Computer Sof
 
 Obviously, this approach completely ignores the actual value that the software has brought to the organisation, whether it is in the form of reduced Operational Expenses, or otherwise.
 
-### Market Approach
+### 2. Market Approach
 The market approach values software by comparing it to similar packages and taking into account any variations. One issue with this method is the lack of comparable transactions, especially when dealing with internal-use software designed to specific standards. More data is available for transactions related to software development companies' shares compared to software. This method could be potentially applicable to internal-use systems which are being developed even though there are commercial off the shelf solutions available; this could be because the COTS solutions are not exact fits to the problem at hand, or lack some specific features that the company could really do with.
 
-### Income Approach
+### 3. Income Approach
 The Income Approach values software based on its future earnings, cash flows, or cost savings. The discounted cash flow method calculates the worth of software as the present value of its future net cash flows, taking into account expected revenues and expenses. The cash flows are estimated for the remaining life of the software, and a discount rate that considers general economic, product, and industry risks is calculated. If the software had to be licensed from a third party, its value is determined based on published license prices for similar software found in intellectual property databases and other sources.
 
 The Income Approach is usually the one used most often by corporate valuation companies when valuing intangible assets like software during acquisition. However, this software is usually assumed to be complete, and serving its purpose, and not necessarily software which is still in development (or not providing cash flows right now).
@@ -117,23 +117,51 @@ I admit that I'm partial to the Binomial Option Pricing Model, because the binom
 
 ### What approach do we pick?
 
+There is no one approach that can account for all types of software. At the same time, multiple approaches may be applicable to a single type of software, with varying degrees of importance. It is important to note that the following categories are not mutually exclusive. The map below shows the type of value analysis that could be done for each kind of investment or asset.
+
+{% mermaid %}
+graph TD
+platform[Platform] --> rov[Real Options Valuation]
+external[Products with External Transactional Value] --> dcf[Discounted Cash Flow]
+external --> market[Market]
+internal[Internal-Use Products] --> opex_npv[OpEx NPV Analysis]
+internal --> rrm[Relief from Royalty Method]
+enterprise_modernisation[Enterprise Modernisation] --> rov
+enterprise_modernisation --> opex_npv
+maintenance[Maintenance] --> opex_npv
+{% endmermaid %}
+
 **1. Platform**  
 **Use: Real Option Valuation**  
-A platform by itself does not provide value; it is the opportunities that it creates to rapidly build and offer new products to the market that is its chief attraction.
+A platform by itself does not provide value; it is the opportunities that it creates to rapidly build and offer new products to the market that is its chief attraction. A platform also allows creating other types of options as well, like allowing the company to build customised products of the same type to enter into new markets. For example, a custom e-commerce platform not only creates options to higher volumes of sales transactions in the current country, but provides the options to deploy a custom e-commerce site in a new country.
 
-**2. Specific Products providing External Transactional Value**  
-**Use: Income, Market**
+**2. Products providing External Transactional Value**  
+**Use: Income, Market**  
+These cover software which enable e-commerce, or allow access to assets in exchange for money. In many situations, projected incoming cash flows are easier to predict because of historical data, and provide a direct link to the value of the software. It is to be noted that components of these product may be built on top of a platform themselves, so the platform itself might be valued using real option pricing, while these are the actual investments themselves.  
+Also, products like COTS e-commerce platforms are widely available, and thus can provide good benchmarks in terms of the value being provided by the custom implementation.
 
 **3. Internal-Use products**  
-**Use: OpEx NPV Analysis, Relief from Royalty**
+**Use: OpEx NPV Analysis, Relief from Royalty, Market**  
+These cover systems which are used to streamline operational processes inside the company, and thus reduce waste. It is to be noted that there might be second, third and n-th order effects of these systems, thus reasonable efforts should be made to articulate those effects to provide a lower bound on the value of these systems. In most cases (but maybe not all), these reductions apply to the operational expenses of the company, hence the NPV analysis of OpEx is suggested. Such systems may also have COTS alternatives, through subscription or outright purchase. In those cases, Relief from Royalty and Market methods are also valuable ways of benchmarking value.
 
 **4. Enterprise Modernisation initiatives**  
-**Use: Real Option Valuation, OpEx NPV Analysis**
+**Use: Real Option Valuation, OpEx NPV Analysis**  
+Enterprise Modernisation can have multiple objectives. It can target any combination of the following:
+- Mitigation of risk (no one knows how the old code, and long-time maintainers are retiring)
+- Expansion of service capacity (to meet higher traffic)
+- Decrease time to market for future features (it might take very long to add features to the current system)
 
-Enterprise Modernisation can certainly benefit from an NPV analysis of Operational Expenses, but the main reason for undertaking modernisation is usually creating options for greater traffic, a more diverse product portfolio, etc.
+Enterprise Modernisation can certainly benefit from an NPV analysis of Operational Expenses, but the main reason for undertaking modernisation is usually creating options for a more diverse product portfolio, or faster time to market for new features to continue retaining customers.
 
 **5. Maintenance**  
-**Use: OpEx NPV Analysis**
+**Use: OpEx NPV Analysis**  
+Maintenance of production software which isn't expected to evolve (much) is usually a matter of minimising production issues, and streamlining the operational pipeline which is already (hopefully) reliably delivering value. The primary metric for value in this case should be the expected reduction in operational expenses. If new features are added occasionally, positive cash flows may also figure in this NPV analysis.
+
+Another approach to valuing software using different dimensions is discussed in the paper [The Business Value of IT; A Conceptual Model for Selecting Valuation Methods](https://www.researchgate.net/publication/239776307_The_Business_Value_of_IT_A_Conceptual_Model_for_Selecting_Valuation_Methods). However, these are not methods that are strictly used by valuation firms. We've reproduced the selection model below.
+
+![Valuation Method Selection](/assets/images/valuation-methods-selection-paper.png)
+
+This paper also mentions using Information Economics to articulate value. Information Economics uses multiple criteria, both tangible and non-tangible, to come to a unified scorecard of value. Unfortunately, this does not have a monetary value attached to it for the intangible value creation processes. We may talk about it in the future. [Information Economics: Managing IT Investment](https://itgov.cs.ui.ac.id/miti/IE%20Presentation%20for%20MTI2.pdf) expounds upon this approach.
 
 ## Articulating Value: The Cost of Reducing Uncertainty
 
@@ -400,6 +428,8 @@ The title of this topic is somewhat misleading, in that there is enough data, bu
     - [The effectiveness of pair programming: A meta-analysis](https://www.researchgate.net/publication/222408325_The_effectiveness_of_pair_programming_A_meta-analysis)
     - [Software Economics: A Roadmap](https://www.researchgate.net/publication/2411293_Software_Economics_A_Roadmap)
 - Web
+  - Information Economics
+    - [Good Presentation](https://itgov.cs.ui.ac.id/miti/IE%20Presentation%20for%20MTI2.pdf) on using multicriteria (tangible and non-tangible parameters) methods of Information Economics to link to software value
   - Decision Theory
     - [Video on Expected Value of Perfect and Imperfect Information](https://www.youtube.com/watch?v=jOafCEFZ1_8)
   - Software Valuation
@@ -414,4 +444,4 @@ The title of this topic is somewhat misleading, in that there is enough data, bu
     - Internal Use Software guidelines - FASB Accounting Standards Codification (ASC) Topic 350, Intangibles — Goodwill and Other
     - [Accounting for internal-use software using Cloud Computing development costs](https://leasequery.com/blog/asc-350-internal-use-software-accounting-fasb/)
     - [Accounting for Cloud Development Costs](https://www.pwc.com/us/en/services/consulting/cloud-digital/cloud-transformation/cloud-computing.html) are covered under FASB Subtopic ASC 350-40 (Customer’s Accounting for Implementation Costs Incurred in a Cloud Computing Arrangement That Is a Service Contact (ASC 350-40)).
-    - [Financial Reporting Developments: Intangibles - goodwill and other](https://assets.ey.com/content/dam/ey-sites/ey-com/en_us/topics/assurance/accountinglink/ey-frdbb1499-05-09-2022.pdf?download). The actual formal document is [here](https://fasb.org/document/blob?fileName=ASU%202021-03.pdf)
+    - [Financial Reporting Developments: Intangibles - goodwill and other](https://assets.ey.com/content/dam/ey-sites/ey-com/en_us/topics/assurance/accountinglink/ey-frdbb1499-05-09-2022.pdf?download). The actual formal document is [here](https://fasb.org/document/blob?fileName=ASU%202021-03.pdf).
