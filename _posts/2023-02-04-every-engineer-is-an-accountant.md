@@ -13,8 +13,8 @@ This article continues from where [Every Software Engineer is an Economist]({% p
 - [Articulating Value: The Cost of Expert but Imperfect Knowledge](#articulating-value-the-cost-of-expert-but-imperfect-knowledge)
 - [Articulating Value: The Cost of Unreleased Software](#articulating-value-the-cost-of-unreleased-software)
 - [Static NPV Analysis Example: Circuit Breaker and Microservice Template](#static-npv-analysis-example-circuit-breaker-and-microservice-template)
-- [Articulating Value: Pair Programming](#articulating-value-pair-programming)
 - [Articulating Value: The Value of a Software System](#articulating-value-the-value-of-a-software-system)
+- [Articulating Value: Pair Programming](#articulating-value-pair-programming)
 - There is not Enough Data
 
 ## Waterfall Accounting: Capitalisable vs. Non-Capitalisable Costs
@@ -331,22 +331,17 @@ See [Application of the Cost Approach to Value Internally Developed Computer Sof
 Obviously, this approach completely ignores the actual value that the software has brought to the organisation, whether it is in the form of reduced Operational Expenses, or otherwise.
 
 ### Market Approach
-The market approach values software by comparing it to similar packages and taking into account any variations. One issue with this method is the lack of comparable transactions, especially when dealing with internal-use software designed to specific standards. More data is available for transactions related to software development companies' shares compared to software.
-
-- **Availability & comparability issues**
-- **Market transaction method**
-- **Market replacement cost method**
+The market approach values software by comparing it to similar packages and taking into account any variations. One issue with this method is the lack of comparable transactions, especially when dealing with internal-use software designed to specific standards. More data is available for transactions related to software development companies' shares compared to software. This method could be potentially applicable to internal-use systems which are being developed even though there are commercial off the shelf solutions available; this could be because the COTS solutions are not exact fits to the problem at hand, or lack some specific features that the company could really do with.
 
 ### Income Approach
-The income approach values software based on its future earnings, cash flows, or cost savings. The discounted cash flow method calculates the worth of software as the present value of its future net cash flows, taking into account expected revenues and expenses. The cash flows are estimated for the remaining life of the software, and a discount rate that considers general economic, product, and industry risks is calculated. If the software had to be licensed from a third party, its value is determined based on published license prices for similar software found in intellectual property databases and other sources.
+The Income Approach values software based on its future earnings, cash flows, or cost savings. The discounted cash flow method calculates the worth of software as the present value of its future net cash flows, taking into account expected revenues and expenses. The cash flows are estimated for the remaining life of the software, and a discount rate that considers general economic, product, and industry risks is calculated. If the software had to be licensed from a third party, its value is determined based on published license prices for similar software found in intellectual property databases and other sources.
 
 The Income Approach is usually the one used most often by corporate valuation companies when valuing intangible assets like software during acquisition. However, this software is usually assumed to be complete, and serving its purpose, and not necessarily software which is still in development (or not providing cash flows right now).
 
-- **Income or cost savings**
-- **Discounted cash flow method:** 
+- **Discounted cash flow method:** This is the usual method where an NPV analysis is done on projected future cash flows arising from the product.
 - **Relief from Royalty Method:** This method is used to determine the value of intangible assets by taking into account the hypothetical royalty payments that would be avoided by owning the asset instead of licensing it. The idea behind the RRM is straightforward: owning an intangible asset eliminates the need to pay for the right to use that asset. The RRM is commonly applied in the valuation of domain names, trademarks, licensed computer software, and ongoing research and development projects that can be associated with a particular revenue stream, and where market data on royalty and license fees from previous transactions is available. One possible example is if a company is building its own private cloud as an alternative to AWS; the value that the project provides could be calculated from the fees that are projected to be saved if the company did not use AWS for hosting its services.
 
-### Real Options Valusation
+### Real Options Valuation
 
 This is used when the asset (software) is not currently producing cash flows, but has the potential to generate cash flows in the future, incorporating the idea of the uncertain nature of these cash flows. We will look at this in more detail. Specifically, we will look at the most commonly used technique for valuing real options. The paper [Modeling Choices in the Valuation of Real Options: Reflections on Existing Models and Some New Ideas](https://realoptions.org/openconf2011/data/papers/24.pdf) discusses classic and recent advances in the valuation of real options. Specifically surveyed are:
 
@@ -355,7 +350,27 @@ This is used when the asset (software) is not currently producing cash flows, bu
 - **Datar-Matthews Method:** Simulation-based model with cash flows as expert inputs; no rigid assumptions around cash flow models
 - **Fuzzy Pay-off Method:** Payoff treated as a fuzzy number with cash flows as expert input; no rigid assumptions
 
-We will look at the **Datar-Matthews Method**, since that seems to be more practitioner-oriented.
+I admit that I'm partial to the Binomial Option Pricing Model, because the binomial lattice graphic is very explainable; we'll cover the **Binomial Option Pricing Model** and the **Datar-Matthews Method** in a sequel.
+
+### What approach do we pick?
+
+**1. Platform**  
+**Use: Real Option Valuation**  
+A platform by itself does not provide value; it is the opportunities that it creates to rapidly build and offer new products to the market that is its chief attraction.
+
+**2. Specific Products providing External Transactional Value**  
+**Use: Income, Market**
+
+**3. Internal-Use products**  
+**Use: OpEx NPV Analysis, Relief from Royalty**
+
+**4. Enterprise Modernisation initiatives**  
+**Use: Real Option Valuation, OpEx NPV Analysis**
+
+Enterprise Modernisation can certainly benefit from an NPV analysis of Operational Expenses, but the main reason for undertaking modernisation is usually creating options for greater traffic, a more diverse product portfolio, etc.
+
+**5. Maintenance**  
+**Use: OpEx NPV Analysis**
 
 
 ## Articulating Value: Pair Programming
