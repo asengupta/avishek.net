@@ -15,7 +15,7 @@ We start this tirade with a memorable quote from **Alice Through the Looking-Gla
 
 ## Durable Foundations in a Shifting Technology Landscape
 
-React. Data Mesh. Keras. By the time, I finish writing this, probably half of these technologies will have been superseded by a new set of challengers. You'd be forgiven for thinking that the race to stay relevant is specifically dictated by the (often breakneck) speed at which you can assimilate the latest framework, or the latest "enterprise innovation".
+By the time, I finish writing this, probably half of the technologies I work with daily, will have been superseded by a new set of challengers. You'd be forgiven for thinking that the race to stay relevant is specifically dictated by the (often breakneck) speed at which you can assimilate the latest framework, or the latest "enterprise innovation".
 
 More importantly, if you are a senior technologist, you are expected to have **fluent opinions** about the latest and greatest "in-thing"; and that's fine, since that becomes increasingly a major part of how you add value to clients. **It might end up seeming like a race to merely maintain the position you are in.**
 
