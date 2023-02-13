@@ -8,7 +8,7 @@ draft: false
 
 This is a weird mix of advice I'd give the less-experienced me, as well as reflections of my personal value system. This verbal diarrhoea came out all at once in a single sitting of 45 minutes. I apologise for some of the strong language in here, but I thought I'd share it without much censoring.
 
-This post sums up a lot of my core beliefs and reflects many of my biases, so it's not necessarily "good" advice; it's just things I would share with someone I was mentoring. All of these are personal opinions.
+This post sums up a lot of my core beliefs and reflects many of my biases, so it's not necessarily "good" advice; it's just things I would share with someone I was mentoring. **All of these are personal opinions.**
 
 Happy Reading!
 
