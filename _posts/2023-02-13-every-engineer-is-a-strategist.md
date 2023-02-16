@@ -27,6 +27,6 @@ Stuff Stuff Stuff
 ## References
 - Books
 - Papers
-  - Valuation
     - [The effectiveness of pair programming: A meta-analysis](https://www.researchgate.net/publication/222408325_The_effectiveness_of_pair_programming_A_meta-analysis)
+    - [The Economic Impacts of Inadequate Infrastructure for Software Testing](https://www.nist.gov/system/files/documents/director/planning/report02-3.pdf)
 - Web
