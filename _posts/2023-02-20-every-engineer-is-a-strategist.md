@@ -43,22 +43,22 @@ The decisions start to matter at higher levels of abstraction: at the architectu
 
 We thus propose the following baselines for some frequently occurring decisions:
 
-- Monoliths as baseline when considering microservices
-- Hardcoded plugins as baseline when considering microkernel architectures
-- Peer-to-peer invocations as baseline when considering event-driven architectures
-- Hardcoded components as baseline when considering pipe and filter patterns
-- Peer-to-Peer invocations as baseline when considering event buses
-- RDBMS (something like PostgreSQL) as baseline when considering NoSQL databases
+- **Monoliths** as baseline when considering **microservices**
+- **Hardcoded plugins** as baseline when considering **microkernel architectures**
+- **Peer-to-peer invocations** as baseline when considering **event-driven architectures**
+- **Hardcoded components** as baseline when considering **pipe and filter patterns**
+- **Peer-to-Peer invocations** as baseline when considering **event buses**
+- **RDBMS** (something like PostgreSQL) as baseline when considering **NoSQL databases**
 
 Each of the above decisions has one or more expansion factors: these are the factors that make taking the decision potentially worthwhile. For example, if there was no need for future plugins to extend or add new functionality, there would be no need for a microkernel architecture; the number of future extensions is thus a expansion factor for this decision. If the list of components in a processing pipeline did not change at all, there would be no need of a pipe and filter pattern; the future configurability of components is the expansion factor for this decision.
 
 We have spoken about how value can be measured, uaing the income approach, the market approach, etc. However, the question still remains: how do we connect the decisions we make (at the code level, at the architecture level, etc.) to the actual economic value.
 
-At the business level, the closest connection to economic value is the feature of an application. Features are more or less atomic units of user-facing functionality (the user can be a human or another system) which can be (hopefully) deployed, enabled/disabled, and monetised independently.
+**At the business level, the closest connection to economic value is the feature of an application.** Features are more or less atomic units of user-facing functionality (the user can be a human or another system) which can be (hopefully) deployed, enabled/disabled, and monetised independently.
 
-Using features as units of economic value therefore seems plausible. The next question then arises: how do we verify that these features satisfy all the criteria to deliver this value? We propose a simple and natural answer: tests. Developers already use tests to validate every part of the system, at multiple levels of abstration, ranging from unit tests to integration tests to regression tests.
+Using **features as units of economic value** therefore seems plausible. The next question then arises: how do we verify that these features satisfy all the criteria to deliver this value? We propose a simple and natural answer: tests. Developers already use tests to validate every part of the system, at multiple levels of abstration, ranging from unit tests to integration tests to regression tests.
 
-We propose that economic value be attached to the tests which verify features function properly. Different aspects of the feature can be validated by different sorts of tests. For example, an e-commerce payment integration system could have the following requirements to actually deliver value:
+**We propose that economic value be attached to the tests which verify that features function properly.** Different aspects of the feature can be validated by different sorts of tests. For example, an e-commerce payment integration system could have the following requirements to actually deliver value:
 
 - It should be able to process Visa and Mastercard credit cards.
 - It should be able to process at least 100 transactions per second.
@@ -77,12 +77,18 @@ subgraph features[Features]
     feature2[Feature]
     feature3[Feature]
 end
-subgraph designs[Designs]
-    patterns
-    architecture
+subgraph patterns[Patterns]
+    pattern1[Pattern 1]
+    pattern2[Pattern 2]
+    pattern3[Pattern 3]
 end
-code[Code]-->patterns[Patterns]
-code-->architecture[Architecture]
+subgraph architecture[Architecture]
+    adr1[Architecture Decision 1]
+    adr2[Architecture Decision 2]
+    adr3[Architecture Decision 3]
+end
+code[Code]-->patterns
+code-->architecture
 patterns-->features
 architecture-->features
 feature1-->test1[Tests]
@@ -93,6 +99,7 @@ test2-->economic_value
 test3-->economic_value
 {% endmermaid %}
 
+Note that in the above diagram, patterns are treated as lower level abstractions than architectures, even though they appear at the same level. Thus, patterns are largely independent of the architectures they are applied in. Whether you are using a microservice architecture or not does not constrain you from either using or not using a factory pattern in any of those microservices.
 
 ## Articulating Value: Pair Programming
 
