@@ -32,3 +32,20 @@ section {
 }
 
 .mermaid svg { height: auto; }
+
+th, thead {
+  background-color: #222222;
+  color: white;
+}
+
+tr {
+  border: 1px solid black;
+}
+
+tbody tr:nth-child(odd) {
+  background-color: #fff;
+}
+
+tbody tr:nth-child(even) {
+  background-color: #eee;
+}

@@ -45,14 +45,52 @@ We thus propose the following baselines for some frequently occurring decisions:
 
 - **Monoliths** as baseline when considering **microservices**
 - **Hardcoded plugins** as baseline when considering **microkernel architectures**
-- **Peer-to-peer invocations** as baseline when considering **event-driven architectures**
+- **Peer-to-peer invocations** as baseline when considering **event-driven architectures** / **event buses**
 - **Hardcoded components** as baseline when considering **pipe and filter patterns**
-- **Peer-to-Peer invocations** as baseline when considering **event buses**
 - **RDBMS** (something like PostgreSQL) as baseline when considering **NoSQL databases**
 
 Each of the above decisions has one or more expansion factors: these are the factors that make taking the decision potentially worthwhile. For example, if there was no need for future plugins to extend or add new functionality, there would be no need for a microkernel architecture; the number of future extensions is thus a expansion factor for this decision. If the list of components in a processing pipeline did not change at all, there would be no need of a pipe and filter pattern; the future configurability of components is the expansion factor for this decision.
 
 It is also important to note that the above decisions are not exclusive. A microservice may encapsulate a microkernel, parts of a pipe-and-filter architecture might involve invoking microservices, and so on.
+
+| Dimension  | Microservices with Monolith Baseline                                                                                                                                                                                                                                                                                    |
+|------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Deployment | -What are the savings in development/deployment time when services are deployed independently?<br/>- What is the effort in building pipelines for separate deployments?<br/>- What is the cost of building reusable provisioning scripts?                                                                               |
+| Monitoring | - What are the costs of setting up dashboards, alerts, and monitors for one microservice? For N microservices?                                                                                                                                                                                                          |
+| Tracing    | - What are the costs of setting up standard tracing integrations across microservices?<br/>- What are the costs of maintaining traceability across a heterogenous chain, part of which might be legacy?<br/>- What time losses could occur when tracing issues across services if tracing is not uniformly implemented? |
+| Resources  | - What cloud compute and DB resources will be needed if each microservice needs to deploy and potentially scale independently?<br/>- Which services need to reserve capacity vs. which services have predictable load?                                                                                                  |
+| Downtime   | - What is the cost of building circuit breaker/throttling infrastructure for multiple services?<br/>- What is the cost of building caching layers across services if services need to be available?<br/>+ What are the benefits in terms of uptime when failures are localised to specific microservices?               |
+| Latency    | - What is the loss in profits (if applicable) if a certain latency threshold is not met?<br/>- What is the cost of reducing latency to acceptable levels so (caching, duplication of data, etc.) that latency is below this threshold?                                                                                  |
+| Scaling    | + What is the expected opportunity loss if the monolith cannot be scaled beyond a certain point?<br/>- What is the cost of having to scale X microservice along with corresponding components like databases, downstream microservices, etc.?                                                                           |
+
+| Dimension              | Microkernel with Hardcoded Components Baseline |
+|------------------------|------------------------------------------------|
+| Future Functionality   |                                                |
+| Static/Dynamic Binding |                                                |
+| Plugin Testing         |                                                |
+
+| Dimension         | Event-Driven with Peer-to-Peer Baseline |
+|-------------------|-----------------------------------------|
+| Future Consumers  |                                         |
+| Sync vs. Async    |                                         |
+| Tracing           |                                         |
+| Failure Scenarios |                                         |
+
+| Dimension                           | Pipe and Filter with Hardcoded Components Baseline |
+|-------------------------------------|----------------------------------------------------|
+| Future Reconfiguration Requirements |                                                    |
+| Future Component Substitutions      |                                                    |
+| Tracing                             |                                                    |
+| Failure Scenarios                   |                                                    |
+
+| Dimension    | NoSQL with RDBMS Baseline |
+|--------------|---------------------------|
+| Constraints  |                           |
+| Data Schema  |                           |
+| Consistency  |                           |
+| Availability |                           |
+| Redundancy   |                           |
+| Partitioning |                           |
 
 We have spoken about how value can be measured, uaing the income approach, the market approach, etc. However, the question still remains: how do we connect the decisions we make (at the code level, at the architecture level, etc.) to the actual economic value.
 
