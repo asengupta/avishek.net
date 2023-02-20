@@ -52,40 +52,32 @@ We thus propose the following baselines for some frequently occurring decisions:
 
 Each of the above decisions has one or more expansion factors: these are the factors that make taking the decision potentially worthwhile. For example, if there was no need for future plugins to extend or add new functionality, there would be no need for a microkernel architecture; the number of future extensions is thus a expansion factor for this decision. If the list of components in a processing pipeline did not change at all, there would be no need of a pipe and filter pattern; the future configurability of components is the expansion factor for this decision.
 
+It is also important to note that the above decisions are not exclusive. A microservice may encapsulate a microkernel, parts of a pipe-and-filter architecture might involve invoking microservices, and so on.
+
 We have spoken about how value can be measured, uaing the income approach, the market approach, etc. However, the question still remains: how do we connect the decisions we make (at the code level, at the architecture level, etc.) to the actual economic value.
 
 **At the business level, the closest connection to economic value is the feature of an application.** Features are more or less atomic units of user-facing functionality (the user can be a human or another system) which can be (hopefully) deployed, enabled/disabled, and monetised independently.
 
 Using **features as units of economic value** therefore seems plausible. The next question then arises: how do we verify that these features satisfy all the criteria to deliver this value? We propose a simple and natural answer: tests. Developers already use tests to validate every part of the system, at multiple levels of abstration, ranging from unit tests to integration tests to regression tests.
 
-**We propose that economic value be attached to the tests which verify that features function properly.** Different aspects of the feature can be validated by different sorts of tests. For example, an e-commerce payment integration system could have the following requirements to actually deliver value:
-
-- It should be able to process Visa and Mastercard credit cards.
-- It should be able to process at least 100 transactions per second.
-- It should be able to cancel an amount which has already been authorised if indicated.
-
-Each of the above requirements can be verified to a certain degree of rigour through tests. What would be the economic contribution of the above requirements?
-
-- For the **requirement of processing Visa/Mastercard credit cards**, the income streams arising from the expected number of users with these kinds of credit cards (based on demographic analysis) making purchases of amounts (determined from historical data) over some period could be a straightforward derivation of the financial value of this feature.
-- For the **requirement of processing at least 1000 transactions per second**, The income streams arising from 100 users per second performing financial transactions of some median amount over a sustained period of time could be a straightforward way to quantify the financial value of this feature.
-- For the **requirement to cancel an already-authorised amount**, the cost of having support staff available to respond to customer calls for cancellation, and perform this action manually, could be one way to quantify the value of this feature.
+**We propose that economic value be attached to the tests which verify that features function properly.** Different aspects of the feature can be validated by different sorts of tests.
 
 {% mermaid %}
 graph TD
 subgraph features[Features]
-    feature1[Feature]
-    feature2[Feature]
-    feature3[Feature]
+feature1[Feature]
+feature2[Feature]
+feature3[Feature]
 end
 subgraph patterns[Patterns]
-    pattern1[Pattern 1]
-    pattern2[Pattern 2]
-    pattern3[Pattern 3]
+pattern1[Pattern 1]
+pattern2[Pattern 2]
+pattern3[Pattern 3]
 end
 subgraph architecture[Architecture]
-    adr1[Architecture Decision 1]
-    adr2[Architecture Decision 2]
-    adr3[Architecture Decision 3]
+adr1[Architecture Decision 1]
+adr2[Architecture Decision 2]
+adr3[Architecture Decision 3]
 end
 code[Code]-->patterns
 code-->architecture
@@ -99,7 +91,19 @@ test2-->economic_value
 test3-->economic_value
 {% endmermaid %}
 
-Note that in the above diagram, patterns are treated as lower level abstractions than architectures, even though they appear at the same level. Thus, patterns are largely independent of the architectures they are applied in. Whether you are using a microservice architecture or not does not constrain you from either using or not using a factory pattern in any of those microservices.
+Code may be refactored into patterns; more macro-level organisational units are generally represented as architectural elements. For this discussion, patterns are treated as lower level abstractions than architectures, even though they appear at the same level in the fiagram above. Thus, patterns are largely independent of the architectures they are applied in. For example, whether you are using a microservice architecture or not does not constrain you from either using or not using a factory pattern in any of those microservices.
+
+As an example of how value flows through this chart, consider an e-commerce payment integration system: it could have requirements which deliver value. We'd like to derive these concrete, qualitative values from these features. A sampling of these features is listed below:
+
+- It should be able to process Visa and Mastercard credit cards.
+- It should be able to process at least 100 transactions per second.
+- It should be able to cancel an amount which has already been authorised if indicated.
+
+Each of the above requirements can be verified to a certain degree of rigour through tests. What would be the economic contribution of the above requirements?
+
+- For the **requirement of processing Visa/Mastercard credit cards**, the income streams arising from the expected number of users with these kinds of credit cards (based on demographic analysis) making purchases of amounts (determined from historical data) over some period could be a straightforward derivation of the financial value of this feature. If we expect a median of 100,000 users/month with Visa/Mastercard credit cards to buy things at the site for a median amount of $50, the projected value of this feature over 3 months would be: $$ $5000000 + \displaystyle\frac{$5000000}{(1+1.1)} + \frac{$5000000}{ {(1+1.1)}^2 } \approx $13677685 $$ (given the hypothetical discount rate is 10% per month).
+- For the **requirement of processing at least 1000 transactions per second**, if the processing capability is already at or above the 1000 TPS number, the value is already counted as part of the transaction processing feature (i.e., no extra work needs to be done). If the capability is less than 1000 TPS, say 800 TPS, then the value of the feature is the opportunity loss because of not processing those extra 1000-800=200 transactions per second. The income streams arising from those 200 transactions per second performing financial transactions of some median amount over a sustained period of time could be a straightforward way to quantify the financial value of this feature.
+- For the **requirement to cancel an already-authorised amount**, the cost of having support staff available to respond to customer calls for cancellation, and perform this action manually, could be one way to quantify the value of this feature. If 10 support staff personnel are paid about $4000/month, and deploying this feature could halve the support staff needs, then the value of this feature over 2 months would be $$ 5\times $4000 + \displaystyle\frac{5 \times $4000}{1+1.1} \approx $38182 $$ (obviously, we are simplifying this for the purposes of illustration).
 
 ## Articulating Value: Pair Programming
 
