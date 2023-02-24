@@ -8,7 +8,11 @@ draft: false
 
 **Background**: This post took me a while to write: much of this is motivated by problems that I've noticed teams facing day-to-day at work. To be clear, this post does not offer a solution; only some thoughts, and maybe a path forward in aligning developers' and architects' thinking more closely with the frameworks used by people controlling the purse-strings of software development projects.
 
-The sequel to this post, [Every Software Engineer is an Accountant]({% post_url 2023-02-04-every-engineer-is-an-accountant%}), is also out now.
+The posts in this series of **Software Engineering Economics** are, in order:
+
+- [Every Software Engineer is an Economist]({% post_url 2023-01-22-every-engineer-is-an-economist %}) (this one)
+- [Every Software Engineer is an Accountant]({% post_url 2023-02-04-every-engineer-is-an-accountant %})
+- [Economic Factors in Software Architectural Decisions]({% post_url 2023-02-20-economic-factors-in-software-architectural-decisions %})
 
 [WIP] Here is a [presentation version](/assets/presentations/value-articulation-guide-ppt.html) of this article.
 

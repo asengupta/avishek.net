@@ -8,6 +8,12 @@ draft: false
 
 This article continues from where [Every Software Engineer is an Economist]({% post_url 2023-01-22-every-engineer-is-an-economist %}) left off, and delves slightly deeper into some of the topics already introduced there, as well as several new ones. In the spirit of continuing the theme of "Every Software Engineer is an X", we've chosen accounting as the next profession.
 
+The posts in this series of **Software Engineering Economics** are, in order:
+
+- [Every Software Engineer is an Economist]({% post_url 2023-01-22-every-engineer-is-an-economist %})(this one)
+- [Every Software Engineer is an Accountant]({% post_url 2023-02-04-every-engineer-is-an-accountant %}) (this one)
+- [Economic Factors in Software Architectural Decisions]({% post_url 2023-02-20-economic-factors-in-software-architectural-decisions %})
+
 In this article, we cover the following:
 
 - [Waterfall Accounting: Capitalisable vs. Non-Capitalisable Costs](#waterfall-accounting-capitalisable-vs-non-capitalisable-costs)
