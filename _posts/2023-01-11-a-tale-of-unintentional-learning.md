@@ -43,7 +43,7 @@ Now, I will be the first to admit that there was no Matrix-like "I know kung-fu"
 
 Putting the two things together, the best analysis I can come up with is this: **I was in the state where anything that I came across, I could start picking it up without too much of kickstarting my brain to motivate itself to learn.**
 
-Am I a Vim ninja now? *Heck, no.* Do I still use arrow keys sometimes? *Oh yes.* Am I using Vim a lot? *Yes and no.* I'm still using **IntelliJ IDEA** or my work, but I've enabled Vim mode in its editor windows. For notes and stuff at work, I've switched to NeoVim full-time, having abandoned **Sublime Text**.
+Am I a Vim ninja now? *Heck, no.* Do I still use arrow keys sometimes? *Oh yes.* Am I using Vim a lot? *Yes and no.* I'm still using **IntelliJ IDEA** for my work, but I've enabled Vim mode in its editor windows. For notes and stuff at work, I've switched to NeoVim full-time, having abandoned **Sublime Text**.
 
 But I do try to put the Vim philosphy to use every day as part of my editing...whether it's text or code.
 
