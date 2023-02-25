@@ -361,7 +361,7 @@ of using options-thinking which represent anecdotic experiences of either agile 
 
 > "In both the literature review and the case study, we found that options are not expressed in quantitative terms. This finding makes us think that it may not be realistic at all to expect agile teams to reason about options quantitatively. Whether this is the case or not is a line for future research."
 
-**(I emphatically content that quantification of value in concrete economic terms should be one of the building blocks of articulating this value.)**
+**(I emphatically contend that quantification of value in concrete economic terms should be one of the building blocks of articulating this value.)**
 
 ## 4. Articulating Value: Deriving Value in Legacy Modernisation
 

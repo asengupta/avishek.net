@@ -151,7 +151,7 @@ These cover systems which are used to streamline operational processes inside th
 **4. Enterprise Modernisation initiatives**  
 **Use: Real Option Valuation, OpEx NPV Analysis**  
 Enterprise Modernisation can have multiple objectives. It can target any combination of the following:
-- Mitigation of risk (no one knows how the old code, and long-time maintainers are retiring)
+- Mitigation of risk (no one knows how the old code works, and long-time maintainers are retiring)
 - Expansion of service capacity (to meet higher traffic)
 - Decrease time to market for future features (it might take very long to add features to the current system)
 
