@@ -53,5 +53,5 @@ I'm reasonably sure this could constitute a learning hack for me: **to learn som
 
 Maybe, this was a one-off, a rare moment of inspiration. Who knows?
 
-But I sure intend to try it again, and see how it works :-)
+But I sure intend to try it again, and see how it works out :-)
 
