@@ -52,6 +52,9 @@ I've also added TMux shortcuts because I'm learning to use that too.
 
 ### TMux commands
 
+- ```<C-b>?```: View all keybindings
+- ```<C-b>%```: Horizontal split
+- ```<C-b>"```: Vertical split
 - ```<C-b><Arrow Keys>```: Moves across TMux panes
 - ```<C-b>d```: Detaches from current TMux session
 - ```<C-b>[```: Enables scroll mode
