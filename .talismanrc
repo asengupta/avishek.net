@@ -61,3 +61,5 @@ fileignoreconfig:
   checksum: 56c4d253daf92081d055699e28c6be5559a70b342147fc1006ebfb1619197288
 - filename: assets/javascript/mermaid.min.js
   checksum: 88ea23154f1f02cb1766741c02acbe7e482a97049222afe4e1529ae44d14427a
+- filename: assets/papers/economic-evaluation-of-information-security.pdf
+  checksum: 8de61d78bbc894b147371ff895515a327ba869b69f42d1b2cd97050e469fca4b
