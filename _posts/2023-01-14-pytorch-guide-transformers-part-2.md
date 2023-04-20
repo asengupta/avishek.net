@@ -35,13 +35,6 @@ The diagram below (you'll need to zoom in) shows the data flow for a single Enco
 The dimensions of the data at each stage are depicted to facilitate understanding.
 
 {% mermaid %}
-%%{init: {
-        'theme':'base',
-        'flowchart': {
-            'curve':'step'
-        }
-    }
-}%%
 graph LR;
     subgraph Encoder
         encoder_src[Source Text]--nx512-->pos_encoding[Positional Encoding];
