@@ -1,5 +1,8 @@
 heading: Code
 projects:
+  - name: Cobol REKT
+    description: An evolving toolkit of capabilities helpful for reverse engineering legacy Cobol code
+    link: https://github.com/avishek-sen-gupta/cobol-rekt
   - name: Plenoxels
     description: An implementation of Plenoxels in PyTorch, for 3D reconstruction using Neural Radiance Fields
     link: https://github.com/asengupta/plenoxels-pytorch
