@@ -138,7 +138,7 @@ Avishek has worked as a Data Analyst for the client. The work involved analysing
 - Statistics involving the distribution of data (Chi-Square Tests, etc.)
 - Visualisations like Box Plots, Parallel Coordinates, Probability Distributions
 
-**Client: Trusted advisor and counselor to many of the world's most influential businesses and institutions**
+**Client: Trusted advisor and consultant firm to many of the world's most influential businesses and institutions**
 
 Avishek has been involved in the development of a mobile dashboard app (for the iPad) for one of the clients serviced by the client. The app is responsible for displaying projections, profiles and other interactive statistical visualisations. The libraries/technologies used were:
 
@@ -315,7 +315,7 @@ He has also spoken in internal ThoughtWorks technical conferences.
 
 **Open Source**
 
-**Cobol-REKT** [https://github.com/avishek-sen-gupta/cobol-rekt] : An evolving toolkit of capabilities helpful for reverse engineering legacy Cobol code
+**Cobol-REKT** [https://github.com/avishek-sen-gupta/cobol-rekt](https://github.com/avishek-sen-gupta/cobol-rekt) : An evolving toolkit of capabilities helpful for reverse engineering legacy Cobol code
 
 **IRIS** [[https://github.com/asengupta/IRIS](https://github.com/asengupta/IRIS) ] : Machine Vision / Machine Learning Library written in C++
 
@@ -329,7 +329,8 @@ He has also spoken in internal ThoughtWorks technical conferences.
 
 **Technologies worked on**
 
-- **Programming languages: Java, Javascript, C, C++, C#, Ruby, R, JavaScript, Objective C**
+- **Programming languages: Java, Javascript, C, C++, C#, Ruby, R, Python, JavaScript, Objective C**
+- **Python: PyTorch, NetworkX**
 - **Java: Spring Boot, Swing, JavaServer Faces**
 - **.NET: .NET 3.5, WinForms, ASP.NET, Silverlight**
 - **Ruby: Ruby on Rails**
@@ -347,5 +348,5 @@ He has also spoken in internal ThoughtWorks technical conferences.
 
 **Education**
 
-- **Bachelor of Engineering, Electronics and Communications, PES Institute of Technology. (Vishveswaraiah Technological University)**
-
+- **Master of Science in Artificial Intelligence / Machine Learning, Liverpool John Moores University, UK**
+- **Bachelor of Engineering, Electronics and Communications, PES Institute of Technology. (Vishveswaraiah Technological University), India**
