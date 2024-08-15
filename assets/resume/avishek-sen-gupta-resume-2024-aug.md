@@ -1,10 +1,11 @@
 # Avishek Sen Gupta
 
-## Technical Principal, ThoughtWorks
+## Principal Consultant, ThoughtWorks
 
-__Avishek Sen Gupta__ works with ThoughtWorks as a __Lead Consultant__ with over 16 years of experience in the creation of large-scale distributed systems involving integration of disparate components, legacy and greenfield. He consults with clients on design, architecture, technical choices, patterns, testing techniques and development methodologies. He has worked with C#/. NET development, J2EE technologies, Ruby on Rails, NodeJS, R for statistical analysis, and Objective C for mobile (iOS) development.
+__Avishek Sen Gupta__ works with ThoughtWorks as a __Principal Consultant__ with over 20 years of experience in the creation of large-scale distributed systems involving integration of disparate components, legacy and greenfield. He consults with clients on design, architecture, technical choices, patterns, testing techniques and development methodologies. He has worked with C#/. NET development, J2EE technologies, Ruby on Rails, NodeJS, R for statistical analysis, Python for ML and Large Language Model-based solutions, and Objective C for mobile (iOS) development.
 
 ## Domains
+- Automotive
 - Payment Processing
 - Retail
 - Leasing
@@ -21,9 +22,56 @@ __Avishek Sen Gupta__ works with ThoughtWorks as a __Lead Consultant__ with over
 
 # **Experience**
 
+**AI-assisted Reverse Engineering of Legacy Systems at a leading German Automotive Manufacturer**
+
+Avishek Sen Gupta has worked as a Principal Engineer on a team building a Proof of Concept - and ultimately productionising said concept - for the client. The legacy system of this client consists of several million lines of legacy COBOL code. Avishek worked with the team in understanding the problem space, working hands-on on the techniques to enable the solution to take full advantage of the latent structure of the COBOL code, so as to generate more meaningful and accurate responses from Large Language Models.
+As part of this work, he has also released an open source library called [Cobol-REKT](https://github.com/avishek-sen-gupta/cobol-rekt), which is an evolving toolkit of capabilities helpful for reverse engineering COBOL source code, with optional integration with Large Language Models.
+
+The client intends to scale this solution to other departments across the organisation facing similar challenges in legacy modernisation.
+
+**EU Data Evangelist**
+
+Avishek Sen Gupta has worked as the Data Evangelist for the EU Region. His responsibilities during this time included;
+
+- Building a solid technical foundation of data and ML for the EU markets to tap into
+- Laying a solid consulting foundation that the EU markets can tap into for proposals
+- Making EU Data a training ground for Data/AI practitioners for proposals and projects
+- Growing Data capabilities as a core skill for the majority of developers in all regions of the EU
+- Work with business leaders to materialise bets in new areas / domains involving Data
+- Implement important ML papers as part of his technical learning journey in AI/ML. Examples include:
+  - [Transformers](https://github.com/asengupta/transformers-paper-implementation): An implementation of the original 2017 paper on Transformer architecture, which underlies Large Language Models
+  - [Plenoxels](https://github.com/asengupta/plenoxels-pytorch) : An implementation of the Plenoxels paper in the field of NERFs (Neural Radiance Fields), a research area in Computer Vision
+
+**Market Technical Principal**
+
+Avishek has worked as the Technical Principal for the UK region. His responsibilities included, but were not limited to:
+
+- Working with stakeholders on new business pursuits, and performing technical due diligence on responses to RFPs (Request for Proposal)
+- Working with multiple big-label accounts in the region to drive technical excellence, while maintaining technical standards in teams on said accounts through a combination of informal and formal channels of collaboration with associated technical leaders and the Head of Technology.
+- Intervening directly in a hands-on manner (both technical and non-technical) on any accounts which needed consultation in areas not readily available within their teams. These include working with client CTOs, Heads of Engineering, and architects to empower both client and ThoughtWorks teams. A few examples of collaboration include:
+  - Working with the CTO of Turkey's leading modest fashion platform to help rearchitect and modernise the existing legacy workflow of their warehouse processes to scale up to a multi-region warehouse strategy, as part of the company's growth plans.
+  - Consulting and working with software delivery leaders at one of UK's leading retail giants to improve their state of the art in truck load optimisation, which is crucial for maintaining the optimum consumption of transport resources when supplying stores from warehouses.
+  - Consulting with the Head of Technology and the CTO of one of UK's leading supplier of knowledge management systems for thousands of schools to support teams doing a rewrite and modernisation of their existing platform.
+- Mentoring future Technical Principals and Tech Leads
+- Working on Market Strategy
+  - New models of client engagement
+  - Identifying and growing current capabilities in the market to fit the needs of short-term and projected capabilities
+  - Internal initiatives to lead and sustain a thriving Tech Forum to afford technical leaders on accounts to showcase and share technical learnings at a regional level.
+  - Leading and sustaining a Tech Council on the market comprised of technical leads on accounts to promote and sustain technical excellence and assurance on accounts in a decentralised fashion.
+- Working on exploring and promoting ideas and techniques to articulate value to clients using grounded, well-established economics techniques. These are documented in:
+  - [Every Software Engineer is an Economist
+    ](https://avishek.net/2023/01/22/every-engineer-is-an-economist.html)
+  - [Every Software Engineer is an Accountant
+    ](https://avishek.net/2023/02/04/every-engineer-is-an-accountant.html)
+  - [Economic Factors in Software Architectural Decisions
+    ](https://avishek.net/2023/02/20/economic-factors-in-software-architectural-decisions.html)
+
 **Client: Leading Latin America-based Retail Giant**
 
-Avishek Sen Gupta has worked as Architect and Technical Lead for building out a Payment Processor Integration Platform for a large Latin America-based retail giant with businesses in Chile, Peru, Colombia and Argentina. The important business features of this Platform include:
+Avishek Sen Gupta has worked as one of the Account Technical Principals for a large Latin America-based retail giant with businesses in Chile, Peru, Colombia and Argentina.
+
+
+In addition, he has worked as Architect and Technical Lead for building out a Payment Processor Integration Platform for a large Latin America-based retail giant with businesses in Chile, Peru, Colombia and Argentina. The important business features of this Platform include:
 - __Payment as a Service__: Will provide standardised API’s for Business Units to integrate with multiple Payment Service Providers, and provide applicable payment options and workflows.
 - __Multiple Payment Options__: Payment Domain will support all the forms of payment, such as: CMR Card, External Credit/Debit card, Cash, Pay at store/agency, CMR points, Gift Cards, Transferencia, Sales Finance etc.
 - __Tenant-specific Configurations__: for Business Units to select and prioritise Payment modes and which Payment Service Providers they want to integrate with.
@@ -70,7 +118,7 @@ Avishek Sen Gupta worked as Technical Principal for the client for a broad retai
 
 **Client: Leading US Provider of Pharmacy Solutions**
 
-Avishek Sen Gupta has worked for the client as a Technical Lead and Architect on the Pharmacy team, as part of a broader retail platform initiative. The client owns various brands of stores and wants a web platform built that will allow for the brands to have their own flavor of a white-labelled front end. This platform, which resembles a CMS, will enable the sites to share common features as well as allow for customization specific to a site (w.r.t content, look and feel and such). The platform also integrates with legacy systems that are also used by the client's other legacy software systems.
+Avishek Sen Gupta has worked for the client as the Technical Principal, Technical Lead and Architect on the Pharmacy team, as part of a broader retail platform initiative. The client owns various brands of stores and wants a web platform built that will allow for the brands to have their own flavor of a white-labelled front end. This platform, which resembles a CMS, will enable the sites to share common features as well as allow for customization specific to a site (w.r.t content, look and feel and such). The platform also integrates with legacy systems that are also used by the client's other legacy software systems.
 
 The technologies used are:
 
@@ -267,19 +315,17 @@ He has also spoken in internal ThoughtWorks technical conferences.
 
 **Open Source**
 
+**Cobol-REKT** [https://github.com/avishek-sen-gupta/cobol-rekt] : An evolving toolkit of capabilities helpful for reverse engineering legacy Cobol code
+
 **IRIS** [[https://github.com/asengupta/IRIS](https://github.com/asengupta/IRIS) ] : Machine Vision / Machine Learning Library written in C++
+
+**Duck-**** Angular** [[https://github.com/asengupta/duck-angular](https://github.com/asengupta/duck-angular)]: A container for bootstrapping and testing AngularJS views and controllers in memory: no browser or external process needed.
 
 **Exo** [[https://github.com/asengupta/Exo](https://github.com/asengupta/Exo) ] : A lightweight AOP framework for .NET, with some bundled aspects for immediate use.
 
 **Basis-Processing** [[https://github.com/asengupta/Basis](https://github.com/asengupta/Basis) ] : A library for easily plotting and transforming arbitrary non-orthogonal coordinate systems in Ruby=Processing.
 
 **Jquery-Jenkins-Radiator** [[https://github.com/asengupta/jquery-jenkins-radiator](https://github.com/asengupta/jquery-jenkins-radiator) ] : A jQuery-based build radiator for Jenkins, with support for multiple radiators, independent refreshes and timeouts.
-
-**Snail-MapReduce** [[https://github.com/asengupta/Snail-MapReduce](https://github.com/asengupta/Snail-MapReduce) ]: A single-threaded, in-memory, barebones Map-Reduce library written in Ruby to quickly prototype and test MapReduce-compatible parallelised algorithms.
-
-**CefRuby** [[https://github.com/asengupta/cef-ruby](https://github.com/asengupta/cef-ruby)]: Ruby bindings for the Chromium Embedded Framework (CEF), using the C API (work in progress).
-
-**Duck-**** Angular** [[https://github.com/asengupta/duck-angular](https://github.com/asengupta/duck-angular)]: A container for bootstrapping and testing AngularJS views and controllers in memory: no browser or external process needed.
 
 **Technologies worked on**
 
