@@ -19,6 +19,8 @@ _This post has not been written or edited by AI._
 - Control Flow Analysis
   - What is reducibility?
   - Tests for reducibility
+  - Dominator analysis
+  - Strongly connected components analysis
   - Tests for irreducible regions
   - Future work: Controlled Node Splitting
 - Semantics-preserving tree transformations
@@ -148,6 +150,38 @@ flowchart TD
     T3 --> TS1_EXIT
     TS1_EXIT --> TJ_EXIT
 ```
+
+## Control Flow Analysis
+In compiler theory, control flow analysis is usually done for the purposes of enabling various code optimisations and transformations. One way this is done is by identifying control structures in code which are not immediately apparent. For example, loops made out of ```IF```s and ```GOTO```s can be identified and such apparently 'unstructured' code can be transformed into structured programming constructs.
+
+Such transformations are made easier when flowgraphs have a property called **reducibility**. There are several equivalent characterisations of flowgraphs. They are all explained in some depth [here](https://rgrig.blogspot.com/2009/10/dtfloatleftclearleft-summary-of-some.html), but I'll attempt to sim
+
+### The concept of a 'natural loop'
+
+```mermaid
+flowchart TD
+    T0["Instruction 0"]
+    T1["Instruction 1"]
+    T2["Instruction 2"]
+    T3["Instruction 3"]
+    T4["Instruction 4"]
+    T5["Instruction 5\nIf (SOME-CONDITION) JUMP(T1)"]
+    T6["Instruction 6"]
+    
+    T0 --> T1
+    T1 --> T2
+    T2 --> T3
+    T3 --> T4
+    T4 --> T5
+    T5 --> T1
+    T5 --> T6
+```
+
+Intuitively, we can see
+### Depth First Tree Ordering
+
+### Dominators and Immediate Dominators
+
 
 ## References
 
