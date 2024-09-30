@@ -15,7 +15,7 @@ _This post has not been written or edited by AI._
 - Control Flow Graph (early version)
 - [Intermediate representation](#intermediate-representation)
   - [Translation into Syntax Tree](#translation-into-syntax-tree)
-  - Translation into Control Flowgraph
+  - [Translation into Control Flowgraph](#translation-into-control-flowgraph)
 - Control Flow Analysis
   - What is reducibility?
   - Tests for reducibility
@@ -48,13 +48,15 @@ These nodes did not necessarily represent control flow very accurately, because 
 ### Translation into Syntax Tree
 A more language-agnostic way of representing control flows (as well as syntax), is to decompose all COBOL-specific constructs into some simple intermediate representation which is more or less well-supported in most structured programming languages. Examples of such constructs would be:
 
-- IF...THEN...ELSE
-- WHILE
-- DO...WHILE
-- SET
-- LOOP (basically, a specialised expression of a looping construct)
+- ```IF...THEN...ELSE```
+- ```SET```
+- ```LOOP``` (can represent normal loops, ```WHILE```, and ```DO...WHILE``` constructs)
 
-The ```LOOP``` semantic is technically not needed, but it does provide a nice way to encapsulate the semantics of a loop (initial value, termination condition, loop update), especially given COBOL has statements like ```PERFORM INLINE```.
+The ```LOOP``` semantic provides a nice way to encapsulate the semantics of different kinds of loops:
+
+- ```WHILE```-like constructs only have a termination condition and a ```ConditionTestTime``` attribute set to ```BEFORE```.
+- ```DO...WHILE```-like constructs only have a termination condition and a ```ConditionTestTime``` attribute set to ```AFTER```.
+- **Loop-like constructs** only have an initial value, a maximum value, a loop update expression, and a ```ConditionTestTime``` attribute set to ```BEFORE```.
 
 A couple of examples of this translation process are shown below.
 
@@ -117,8 +119,16 @@ loop[loopVariable=ref('SOME-PART-1'), initialValue=primitive(1.0), maxValue=NULL
 }
 ```
 
-The translation process results in a syntax tree expressed in this intermediate form. Note that ```GO TO``` statements carry over as ```JUMP``` statements; thus, the resulting intermediate program may still not be well-structured enough to be expressible in a modern progreamming language.
+The translation process results in the intermediate syntax tree expressed in this intermediate form. Everything is converted into **intermediate instructions**. Note that ```GO TO``` statements carry over as ```JUMP``` statements; thus, the resulting intermediate program may still not be well-structured enough to be expressible in a modern progreamming language.
 
+## Translation into Control Flowgraph
+
+The flowgraph is created from the intermediate syntax tree with a few salient points to note:
+
+- Every instruction is represented by 3 separate sentinel instructions: ```ENTER```, ```EXIT```, and ```BODY```. These are useful when dealing with branching statements  or when delineating sections of code which are COBOL sections or paragraphs.
+- Control flow edges are added only as needed, and not indiscriminately as in the earlier version of the flowgraph.
+- Subroutine calls result in one outgoing edge from the call instruction ```BODY``` to the ```ENTER``` instruction of the start routine, and one incoming edge from the ```EXIT``` instruction of the end routine (which can be the start routine itself) to the ```EXIT``` instruction of the call instruction. TODO: Diagram
+- 
 
 
 ## References
