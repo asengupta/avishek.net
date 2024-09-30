@@ -127,9 +127,27 @@ The flowgraph is created from the intermediate syntax tree with a few salient po
 
 - Every instruction is represented by 3 separate sentinel instructions: ```ENTER```, ```EXIT```, and ```BODY```. These are useful when dealing with branching statements  or when delineating sections of code which are COBOL sections or paragraphs.
 - Control flow edges are added only as needed, and not indiscriminately as in the earlier version of the flowgraph.
-- Subroutine calls result in one outgoing edge from the call instruction ```BODY``` to the ```ENTER``` instruction of the start routine, and one incoming edge from the ```EXIT``` instruction of the end routine (which can be the start routine itself) to the ```EXIT``` instruction of the call instruction. TODO: Diagram
-- 
+- Subroutine calls result in one outgoing edge from the call instruction ```BODY``` to the ```ENTER``` instruction of the start routine, and one incoming edge from the ```EXIT``` instruction of the end routine (which can be the start routine itself) to the ```EXIT``` instruction of the call instruction. The diagram below shows this scheme (the dotted arrow doesn't actually exist).
 
+```mermaid
+flowchart TD
+    TJ_ENTRY["[ENTER] jump(subroutine-1)"]
+    TJ_BODY["[BODY] jump(subroutine-1)"]
+    TJ_EXIT["[EXIT] jump(subroutine-1)"]
+    T2["..."]
+    TS1_ENTRY["[ENTER] subroutine-1"]
+    TS1_BODY["[BODY] subroutine-1"]
+    T3["..."]
+    TS1_EXIT["[EXIT] subroutine-1"]
+    TJ_ENTRY --> TJ_BODY
+    TJ_BODY -.-> TJ_EXIT
+    TJ_EXIT --> T2
+    TJ_BODY --> TS1_ENTRY
+    TS1_ENTRY --> TS1_BODY
+    TS1_BODY --> T3
+    T3 --> TS1_EXIT
+    TS1_EXIT --> TJ_EXIT
+```
 
 ## References
 
