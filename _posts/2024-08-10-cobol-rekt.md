@@ -2,7 +2,7 @@
 title: "Experiments in COBOL Transpilation"
 author: avishek
 usemathjax: true
-tags: ["Software Engineering", "Reverse Engineering", "COBOL"]
+tags: ["Software Engineering", "Reverse Engineering", "COBOL", "Transpilation"]
 draft: true
 ---
 
@@ -25,6 +25,7 @@ _This post has not been written or edited by AI._
   - Future work: Controlled Node Splitting
 - Semantics-preserving tree transformations
   - Eliminating GOTOs
+- Replicating COBOL's record-based layout system
 - [References](#references)
 
 ## Introduction
@@ -182,6 +183,118 @@ Intuitively, we can see
 
 ### Dominators and Immediate Dominators
 
+### Strongly Connected Components
+
+Take the following Cobol program as an example.
+
+```
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. HELLO-WORLD.
+       DATA DIVISION.
+           WORKING-STORAGE SECTION.
+               01  CONDI         PIC X VALUE "E".
+                    88 V1      VALUE "E".
+                    88 V2      VALUE "F".
+       PROCEDURE DIVISION.
+       SECTION-0 SECTION.
+        P1.
+            DISPLAY "Node 1".
+        P2.
+            IF V1
+                DISPLAY "V1 IS TRUE, GOING TO Node 3"
+                GO TO P3
+            ELSE
+                DISPLAY "V1 IS TRUE, GOING TO Node 4"
+                GO TO P4.
+        P3.
+            IF V1
+                DISPLAY "V1 IS TRUE, GOING TO Node 2"
+                GO TO P2
+            ELSE
+                DISPLAY "V1 IS TRUE, GOING TO Node 4"
+                GO TO P4.
+        P4.
+            IF V1
+                DISPLAY "V1 IS TRUE, GOING TO Node 2"
+                GO TO P2
+            ELSE
+                DISPLAY "V1 IS TRUE, GOING TO Node 3"
+                GO TO P3.
+        P5.
+           DISPLAY "EXITING..."
+           STOP RUN.
+```
+
+The above program, after conversion to Basic Blocks, gives a flowgraph which contains no improper Strongly Connected Components, but is still irreducible.
+
+![Irreducible Flowgraph with no improper SCCs](/assets/images/irreducible-flowgraph-no-improper-scc.png)
+
+When this flowgraph is reduced via T1-T2 transformations, the limit flowgraph looks like the one below.
+
+![Irreducible Flowgraph with no improper SCCs after T1-T2 reductions](/assets/images/irreducible-flowgraph-no-improper-sccs-t1-t2-reduction.png)
+
+This is because the entire graph is a Strongly Connected Component (you can reach any node from any other node), but there are (non-maximal) strongly connected subgraphs which have multiple entry points. For example, T6 and T11 are strongly connected (and thus a loop), but have multiple entry points from T1, which is outside of this strongly connected subgraph (T6 is entered via T1, and T11 is entered via T1).
+
+Moral of the story: No improper Strongly Connected Components do not guarantee a reducible flowgraph.
+
+## How does GNU COBOL handle ```PERFORM```?
+
+Take the following simple program.
+
+```
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID.    STOPRUN.
+       AUTHOR.        MOJO
+       DATE-WRITTEN.  SEP 2024.
+       ENVIRONMENT DIVISION.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+
+       PROCEDURE DIVISION.
+       S SECTION.
+       SA1.
+           DISPLAY "SA1".
+           PERFORM SZ1.
+       SE1.
+           DISPLAY "SE1".
+           STOP RUN.
+       SZ1.
+           DISPLAY "SZ1".
+       SZ2.
+           EXIT.
+```
+
+When compiled to produce the C source (run ```cobc -C stop-run.cbl```), you can inspect the (generously annotated) file to find this gem:
+
+```c
+  /* Line: 13        : PERFORM            : stop-run.cbl */
+  /* PERFORM SZ1 */
+  frame_ptr++;
+  frame_ptr->perform_through = 6;
+  frame_ptr->return_address_ptr = &&l_8;
+  goto l_6;
+  l_8:
+  frame_ptr--;
+```
+
+That's right, it compiles it to a ```goto``` with some context information (return label, for example) in the ```frame_ptr``` which is used at the end of ```SZ1``` label like so:
+
+```c
+  /* Line: 17        : Paragraph SZ1                     : stop-run.cbl */
+  l_6:;
+
+  /* Line: 18        : DISPLAY            : stop-run.cbl */
+  cob_display (0, 1, 1, &c_3);
+
+  /* Implicit PERFORM return */
+  if (frame_ptr->perform_through == 6)
+    goto *frame_ptr->return_address_ptr;
+```
+
+## Unordered Notes
+
+- GraalVM duplicates loop bodies. See [here](https://chrisseaton.com/truffleruby/basic-graal-graphs/#loops).
+- 
 
 ## References
 
