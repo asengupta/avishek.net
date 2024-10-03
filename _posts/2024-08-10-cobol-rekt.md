@@ -187,7 +187,7 @@ Intuitively, we can see
 
 Take the following Cobol program as an example.
 
-```
+```cobol
        IDENTIFICATION DIVISION.
        PROGRAM-ID. HELLO-WORLD.
        DATA DIVISION.
@@ -239,9 +239,9 @@ Moral of the story: No improper Strongly Connected Components do not guarantee a
 
 ## How does GNU COBOL handle ```PERFORM```?
 
-Take the following simple program.
+Take the following simple program ```stop-run.cbl```.
 
-```
+```cobol
        IDENTIFICATION DIVISION.
        PROGRAM-ID.    STOPRUN.
        AUTHOR.        MOJO
