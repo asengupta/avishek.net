@@ -20,8 +20,9 @@ _This post has not been written or edited by AI._
   - What is reducibility?
   - Tests for reducibility
   - Dominator analysis
-  - Strongly connected components analysis
-  - Tests for irreducible regions
+  - Identifying irreducible regions
+    - Strongly connected components analysis
+    - DJ Graphs
   - Future work: Controlled Node Splitting
 - Semantics-preserving tree transformations
   - Eliminating GOTOs
@@ -157,6 +158,10 @@ In compiler theory, control flow analysis is usually done for the purposes of en
 
 Such transformations are made easier when flowgraphs have a property called **reducibility**. There are several equivalent characterisations of flowgraphs. They are all explained in some depth [here](https://rgrig.blogspot.com/2009/10/dtfloatleftclearleft-summary-of-some.html), but I'll attempt to sim
 
+### Basic Blocks
+
+**Basic Blocks** are useful for analysing flow of the code without worrying about the specific computational details of the code. They are also useful (and the more pertinent use-case in our case) for rewriting / transpiling potential unstructured COBOL code (code with possibly arbitrary GOTOs) into a structured form / language (i.e., without GOTOs).
+
 ### The concept of a 'natural loop'
 
 {% mermaid %}
@@ -184,6 +189,24 @@ Intuitively, we can see
 ### Dominators and Immediate Dominators
 
 ### Strongly Connected Components
+
+### Improper Loop Heuristic using Strongly Connected Components
+
+**Strongly Connected Components** in a flowgraph represent the most general representation of looping constructs. Proper SCC's have only one node in them that can be the entry point for any incoming edge from outside the SCC. These are **natural loops**. Having multiple entry points implies that there are arbitrary jumps into the body of the loop from outside the loop, which makes the loop improper, and consequently the graph, irreducible.
+
+It is important to note that even if no improper SCC's are detected, it does not imply that the flowgraph is reducible. See the flowgraph built in ```counterExample()``` in ```ReducibleFlowgraphTest``` for an example of such pathological graphs.
+
+Proper SCC's are a necessary condition for a reducible flowgraph, but not a sufficient condition. The sufficient condition is that no **strongly connected subgraph** be improper. However, SCC's are **maximal strongly connected subgraphs**, which means they can contain improper strongly connected subgraphs _inside_ them, which is why the distinction is important.
+
+This is, however, a good test which can surface loop-specific reducibility problems. The test is done using the ```IrreducibleStronglyConnectedComponentsTask``` task.
+
+Strongly Connected Components are detected using JGraphT's built-in [Kosarajau's algorithm for finding SCC's](https://jgrapht.org/javadoc/org.jgrapht.core/org/jgrapht/alg/connectivity/KosarajuStrongConnectivityInspector.html).
+
+### Improper Loop Body Detection
+
+[TODO]
+
+## Reducibility
 
 Take the following Cobol program as an example.
 
@@ -237,7 +260,7 @@ This is because the entire graph is a Strongly Connected Component (you can reac
 
 Moral of the story: No improper Strongly Connected Components do not guarantee a reducible flowgraph.
 
-## How does GNU COBOL handle ```PERFORM```?
+## How does GnuCOBOL handle ```PERFORM```?
 
 Take the following simple program ```stop-run.cbl```.
 
@@ -312,14 +335,14 @@ That's right, it compiles it to a ```goto``` with some context information (retu
     - [A Fast Algorithm for Finding Dominators in a Flowgraph - Lengauer and Tarjan](https://www.cs.princeton.edu/courses/archive/fall03/cs528/handouts/a%20fast%20algorithm%20for%20finding.pdf)
     - [A very readable explanation of the Lengauer-Tarjan algorithm](https://fileadmin.cs.lth.se/cs/education/edan75/F02.pdf)
     - [Algorithms for Finding Dominators in Directed Graphs](https://users-cs.au.dk/gerth/advising/thesis/henrik-knakkegaard-christensen.pdf)
+    - [Dominator Tree Certification and Independent Spanning Trees](https://arxiv.org/pdf/1210.8303)
 - Reducibility
     - [Making Graphs Reducible with Controlled Node Splitting](https://dl.acm.org/doi/pdf/10.1145/267959.269971)
     - [Eliminating go to’s while Preserving Program Structure](https://dl.acm.org/doi/pdf/10.1145/48014.48021)
     - [No More Gotos: Decompilation Using Pattern-Independent Control-Flow Structuring and Semantics-Preserving Transformations](https://github.com/lifting-bits/rellic/blob/master/docs/NoMoreGotos.pdf)
     - [Identifying Loops Using DJ Graphs](https://dl.acm.org/doi/pdf/10.1145/236114.236115)
-    - [Proper Strongly Connected Components do not imply Reducibility](https://stackoverflow.com/questions/79036830/if-every-strongly-connected-component-has-only-one-incoming-edge-each-from-outsi)
+    - [No improper Strongly Connected Components does not imply Reducibility](https://stackoverflow.com/questions/79036830/if-every-strongly-connected-component-has-only-one-incoming-edge-each-from-outsi)
 - COBOL References
     - [Examples: numeric data and internal representation](https://www.ibm.com/docs/sk/cobol-zos/6.3?topic=data-examples-numeric-internal-representation)
     - [Enterprise Cobol for Z/OS 6.4 - Language Reference](https://publibfp.dhe.ibm.com/epubs/pdf/igy6lr40.pdf)
     - [GnuCOBOL Manual](https://gnucobol.sourceforge.io/doc/gnucobol.html)
-
