@@ -1,6 +1,7 @@
-- Make sure you have Ruby and Node installed (using RVM/NVM).
+- Make sure you have Node installed (using NVM).
 - Install Python if you wish to run all the example code (using pyenv).
-- bundle install
+- Make sure your Ruby is up-to-date (3.4.4 as of this writing) using ```rbenv```
+- Run ```bundle install```
 - npm install -g vega-cli vega-lite
 - npm install -g mermaid.cli
 - To render presentation, start server with ```marp --watch assets/presentations/value-articulation-guide.md assets/presentations/value-articulation-guide-ppt.html```.
