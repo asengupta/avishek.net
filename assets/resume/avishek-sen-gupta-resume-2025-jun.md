@@ -343,20 +343,19 @@ He has also spoken in internal ThoughtWorks technical conferences.
 **Technologies worked on**
 
 - **Programming languages: Java, Javascript, C, C++, C#, Ruby, R, Python, JavaScript, OCaml, Prolog, Objective C**
-- **Python: PyTorch, NetworkX**
+- **Python: PyTorch, NetworkX, Langchain, Langgraph**
 - **Java: Spring Boot, Swing, JavaServer Faces**
 - **.NET: .NET 3.5, WinForms, ASP.NET, Silverlight**
 - **Ruby: Ruby on Rails**
 - **JavaScript: Node.js, AngularJS**
 - **Databases: MS SQL Server, Oracle, MySQL, PostgreSQL**
 - **Testing: JUnit, NUnit, FIT, Selenium/RC, Mocha, Jest, Tap**
-- **Build tools: Ant, NAnt, Rake, Grunt**
+- **Build tools: Ant, NAnt, Rake, Grunt, Maven, Gradle, Poetry**
 - **Infrastructure: Kubernetes**
-- **IDE: Eclipse, Visual Studio.NET, IntelliJ IDEA, Arachno Ruby IDE, XCode**
 - **Source control systems: CVS, Subversion, Perforce, ClearCase, Git**
 - **GUI libraries: AngularJS, FLTK (C++), Swing, WinForms (.NET), GTKmm (C++), FOX, SDL (Simple Directmedia Layer), iOS Core Foundation**
 - **ORM Tools: Hibernate, NHibernate, iBatis, Sequelize, Knex**
-- **Continuous Integration: CruiseControl.NET, CruiseControl.rb, Cruise Enterprise, Gitlab, Jenkins**
+- **Continuous Integration: CruiseControl.NET, CruiseControl.rb, Cruise Enterprise, Gitlab, Jenkins, Github Actions**
 - **Business Workflow: Microsoft BizTalk 2006**
 
 **Education**
