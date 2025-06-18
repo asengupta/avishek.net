@@ -31,7 +31,7 @@ Engineers can pick components from this library to incorporate into their revers
 
 **IRIS** [[https://github.com/asengupta/IRIS](https://github.com/asengupta/IRIS) ] : Machine Vision / Machine Learning Library written in C++
 
-**Duck-**** Angular** [[https://github.com/asengupta/duck-angular](https://github.com/asengupta/duck-angular)]: A container for bootstrapping and testing AngularJS views and controllers in memory: no browser or external process needed.
+**Duck-Angular** [[https://github.com/asengupta/duck-angular](https://github.com/asengupta/duck-angular)]: A container for bootstrapping and testing AngularJS views and controllers in memory: no browser or external process needed.
 
 **Exo** [[https://github.com/asengupta/Exo](https://github.com/asengupta/Exo) ] : A lightweight AOP framework for .NET, with some bundled aspects for immediate use.
 
