@@ -1,5 +1,5 @@
 ---
-title: "Experiments in Reverse Engineering COBOL codebases"
+title: "Cobol-REKT: Experiments in Reverse Engineering COBOL codebases"
 author: avishek
 usemathjax: true
 tags: ["Software Engineering", "Reverse Engineering", "COBOL", "Transpilation"]

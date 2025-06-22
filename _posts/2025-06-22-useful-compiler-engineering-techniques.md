@@ -12,6 +12,28 @@ _This post has not been written or edited by AI._
 We look at the criteria for determining whether a program written in a language which supports unstructured programming constructs (like ```GOTO``` in COBOL), can be translated into structured programming representations. To this end, we will talk of the concept of reducibility.
 Beyond that, we look at some of the ways of identifying structures which make a program irreducible. As part of that, we will look at how to identify latent structures like loops in COBOL programs, both reducible and irreducible.
 
+## Control Flow Graph
+
+## Basic Blocks
+
+## Reducibility
+
+## T1-T2 Test for Reducibile Flowgraphs
+
+## Strongly Connected Components
+
+## Dominator Analysis
+
+## Loop Characterisation
+
+## Reducible and Irreducible Loops
+
+## Detecting reducible and irreducible loops
+
+### DJ Trees
+
+## Detecting well-behaved procedures
+
 ## References
 - [Cobol-REKT](https://github.com/avishek-sen-gupta/cobol-rekt)
 - Reducibility
