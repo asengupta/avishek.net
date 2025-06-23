@@ -19,6 +19,8 @@ This post talks about the technique to build an ANTLR grammar for HLASM (mainfra
 
 ## The HLASM grammar generator
 
+![HLASM Parser/Meta-Parser](/assets/images/tapez-hlasm-parser-metaparser.png)
+
 ## Current Limitations
 
 ## References
