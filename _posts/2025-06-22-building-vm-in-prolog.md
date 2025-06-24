@@ -141,7 +141,7 @@ The first argument is the list being passed in (and gradually getting decomposed
 
 Predicates may look like functions, but they are only ever true or false. The results of any computation are always bound to any unresolved variables that you specify when invoking them. In this case, `Result` is the unresolved variable.
 
-- The first rule is the simple one: if the list is empty, it binds the third parameter (the result) to whatever the accumulator is at that point.
+- The first rule is the simple one: if the list is empty, it binds the third parameter (the result) to whatever the accumulator is at that point. This is an example of unification: very simplistically, you don't explicitly assign values to variable, specifying the value in the slot where a variable sits, is enough to bind it to the variable.
 - The second rule once again keeps recursively decomposing the original list, but at the point of recursion, it adds the head to whatever the accumulator is (remember, appending in this case happens at the front of the list). The `!` is called a cut operator, and in this case is not strictly needed for forward inference, but I have it there to demonstrate backward inference, so you can technically ignore it for the moment.
 
 Thus, if we pass in a list `[1,2,3,4,5]`, the accumulator will be appended to (in the front) with `[1]`, `[2,1]`, `[3,2,1]`, `[4,3,2,1]`, and `[5,4,3,2,1]`. Also note that I use the term "append" rather loosely, since there is no mutation: values in Prolog are always immutable.
