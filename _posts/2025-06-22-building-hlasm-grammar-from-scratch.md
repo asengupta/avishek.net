@@ -1,7 +1,7 @@
 ---
 title: "Building an HLASM grammar from scratch"
 author: avishek
-usemathjax: true
+usemathjax: false
 tags: ["Software Engineering", "Reverse Engineering", "HLASM", "ANTLR"]
 draft: true
 ---

@@ -1,7 +1,7 @@
 ---
 title: "Experiments in Reverse Engineering COBOL codebases"
 author: avishek
-usemathjax: true
+usemathjax: false
 tags: ["Software Engineering", "Reverse Engineering", "COBOL", "Transpilation"]
 draft: true
 ---

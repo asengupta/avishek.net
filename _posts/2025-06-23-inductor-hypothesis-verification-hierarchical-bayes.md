@@ -1,7 +1,7 @@
 ---
 title: "Automated Hypothesis Verification using LLMs and Hierarchical Bayes Models"
 author: avishek
-usemathjax: true
+usemathjax: false
 tags: ["Hierarchical Bayes", "Large Language Models", "Reasoning"]
 draft: true
 ---

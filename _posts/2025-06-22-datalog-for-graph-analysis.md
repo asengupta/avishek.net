@@ -1,7 +1,7 @@
 ---
 title: "Datalog for CFG analysis: How and Why"
 author: avishek
-usemathjax: true
+usemathjax: false
 tags: ["Datalog", "Logic Programming", "Graph"]
 draft: true
 ---

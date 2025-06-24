@@ -1,7 +1,7 @@
 ---
 title: "Techniques of Reverse Engineering: Eliminating GOTOs"
 author: avishek
-usemathjax: true
+usemathjax: false
 tags: ["Reverse Engineering", "GOTO"]
 draft: true
 ---
