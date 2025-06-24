@@ -27,21 +27,26 @@ Most of the time, we (I?) look for **signals** which strengthen or weaken my bel
 
 This seems to be a good fit for Bayesian reasoning.
 
+Let's talk of decomposition. Whenever I have a hypothesis, I'm subconsciously breaking it down into smaller hypotheses that I can prove/disprove. Then, I would go and gather evidence for/against these smaller hypotheses, and go back and assess my confidence in my original hypothesis. Essentially, we can think of this as building an **inference tree**, like so:
+
+![Hypothesis Decomposition](/assets/images/inductor-hypothesis-decomposition.png)
+
+The question is: is this something reproducible through LLMs and Bayesian techniques?
+This sort of hierarchical modelling is something found in **Hierarchical Bayes Models**.
+
+
 ## How do we validate a hypothesis?
 
 - Propose a hypothesis (User / LLM)
 - Decompose the hypothesis with initial levels of belief (LLM)
 - Gather evidence for sub-hypotheses (LLM tool use - tools are deterministic)
-- Propagate beliefs based on evidence to original hypothesis (Deterministic)
-- Inspired by me trying to replicate parts of my own mental process when attempting to reverse engineer unfamiliar code :-)
+- Propagate beliefs upward based on evidence to original hypothesis (Deterministic)
 
-## Decomposing hypotheses into inference trees
-
-![Hypothesis Decomposition](/assets/images/inductor-hypothesis-decomposition.png)
-
-## Aggregating beliefs: the Beta-Bernoulli conjugate
+The flow would look something like the following:
 
 ![Hypothesis Belief Aggregation](/assets/images/inductor-belief-aggregation.png)
+
+## Aggregating beliefs: the Beta-Bernoulli conjugate
 
 ## Gathering evidence: MCP tools
 
@@ -50,10 +55,8 @@ This seems to be a good fit for Bayesian reasoning.
 ![Inductor Step 1](/assets/images/inductor-step-01.png)
 ![Inductor Step 2](/assets/images/inductor-step-02.png)
 ![Inductor Step 3](/assets/images/inductor-step-03.png)
-![Inductor Step 4](/assets/images/inductor-step-04.png)
-![Inductor Step 5](/assets/images/inductor-step-05.png)
-![Inductor Step 6](/assets/images/inductor-step-06.png)
-![Inductor Step 7](/assets/images/inductor-step-07.png)
+...and so on, until the leaves are reached.
+
 ![Inductor Step 8](/assets/images/inductor-step-08.png)
 ![Inductor Step 9](/assets/images/inductor-step-09.png)
 ![Inductor Prior and Posterior](/assets/images/inductor-before-after.png)
