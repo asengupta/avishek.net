@@ -1,5 +1,5 @@
 ---
-title: "Automated Hypothesis Verification using LLMs and Hierarchical Bayes Models"
+title: "Inductor: Automated Hypothesis Verification using LLMs and Hierarchical Bayes-like models"
 author: avishek
 usemathjax: true
 tags: ["Hierarchical Bayes", "Large Language Models", "Reasoning"]
@@ -62,9 +62,10 @@ Here, I took a simple HLASM program, ran it through Tape/Z to parse its structur
 - ...etc.
 
 The hypothesis that I asked it to verify was that the program uses a lot of registers. This is shown in the screenshot below.
+
 ![Inductor Step 1](/assets/images/inductor-step-01.png)
 
-Beyond this point, the **Hypothesis Decomposer** component of Inductor started recursively decomposing this hypothesis into an inference tree, as show by the progression of screenshots below (I intentionally limited the number of branches at each step to 2 for speed of demonstration):
+Beyond this point, the **Hypothesis Decomposer** component of Inductor starts recursively decomposing this hypothesis into an inference tree, as show by the progression of screenshots below (I intentionally limited the number of branches at each step to 2 for speed of demonstration):
 
 ![Inductor Step 2](/assets/images/inductor-step-02.png)
 ![Inductor Step 3](/assets/images/inductor-step-03.png)
@@ -80,12 +81,39 @@ At this point, the inference tree has been built, and the **Hypothesis Validator
 
 ## Architecture
 
+The overall architecture consists of several parts, some of them more experimental than others at this point. They reflect my early attempts to build a CLI for explore a system for the purposes of reverse engineering using MCP tools. The whole thing is probably meant to be plugged into a larger system. It is essentially a medium-sized Langgraph graph, with the following components:
+
+- **Executive Agent:** Guides the overall exploration process
+- **Hypothesis Decomposer:** Validates hypotheses through structured inference
+- **Hypothesis Validator:** Explores evidence related to hypotheses and propagates beliefs upwards
+- **Hypothesizer:** Generates hypotheses about code functionality
+- **Free Explorer:** Allows for free exploration of the codebase using MCP tools
+- **System Query:** Answers questions about the MCP tools themselves
+
 ![Overall Architecture](/assets/images/inductor-macro-structure.png)
+
+### Hypothesis Decomposer: Design
+
+The Hypothesis Decomposer component builds the inference tree recursively. There were a couple of  options for designing this.
+
+- Build a smaller independent Langgraph graph where each task node corresponds to either aggregation from its child nodes or evidence gathering using MCP tools.
+- Build an iterative graph loop and keep track of the recursion state in the agent context. This requires more bookkeeping (like storing current recursion information in a stack), and nodes with dedicated logic to decide when to unroll the recursive call.
+
+In the end, I decided to go with the second option, because it seemed more straightforward; however, I may try out the first approach at some point. The subgraph which implements this component is showb below.
+
 ![Hypothesis Decomposer](/assets/images/inductor-hypothesis-decomposer-langgraph.png)
+
+### Hypothesis Validator: Design
+
+I followed a very similar approach to the [Hypothesis Decomposer](#hypothesis-decomposer-design) component, except this time, we are traversing the inference tree instead of building it. Similar stack-based bookkeeping of the recursion state applies here.
+
+The subgraph which implements this component is showb below.
+
 ![Hypothesis Validator](/assets/images/inductor-hypothesis-validator-langgraph.png)
 
 ## Current Limitations
 
+- I use the term "belief" pretty loosely. It is intentionally constrained to be between 0 and 1 to reflect a possible Bayesian probability. That more formal interpretation will probably require a more refined modelling. I discuss this in [Analogy with Hierarchical Bayes](#analogy-with-hierarchical-bayes-the-beta-bernoulli-conjugate).
 - All sub-hypotheses are assumed to be independent of each other. This is often not true. Overlapping, dependent sub-hypotheses need causal connections between them which would normally affect belief propagation.
 - The Beta-Bernoulli conjugate calculations have been chosen for their simplicity, and aren't necessarily the best fit to represent the prior and posterior. More sophisticated probability distribution modelling using MCMC, etc. should ideally be done.
 
