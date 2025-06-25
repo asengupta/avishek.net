@@ -49,3 +49,90 @@ tbody tr:nth-child(odd) {
 tbody tr:nth-child(even) {
   background-color: #eee;
 }
+
+/* Buttondown newsletter form styling */
+.embeddable-buttondown-form {
+  margin: 15px 0;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  max-height: 180px; /* Limit vertical size */
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.embeddable-buttondown-form label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: bold;
+  font-size: 13px;
+  color: #444;
+}
+
+.embeddable-buttondown-form input[type="email"] {
+  width: calc(100% - 16px);
+  padding: 6px 8px;
+  margin-bottom: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 13px;
+  height: 30px;
+}
+
+.embeddable-buttondown-form input[type="submit"] {
+  background-color: #267CB9;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: bold;
+  transition: background-color 0.3s;
+  height: 30px;
+}
+
+.embeddable-buttondown-form input[type="submit"]:hover {
+  background-color: #1c5a85;
+}
+
+.newsletter-container {
+  margin: 15px 0;
+  padding: 0;
+}
+
+.newsletter-container h3 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  color: #267CB9;
+  font-size: 16px;
+}
+
+/* Two-column layout for reading list and newsletter */
+.content-layout {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.reading-list-container {
+  flex: 3;
+}
+
+.newsletter-sidebar {
+  flex: 1;
+  align-self: flex-start;
+}
+
+/* Make newsletter container in sidebar more compact */
+.newsletter-sidebar .newsletter-container {
+  margin: 0;
+  padding: 0;
+}
+
+.newsletter-sidebar .embeddable-buttondown-form {
+  margin: 0;
+  padding: 10px;
+  max-height: 150px; /* Even more limited height in sidebar */
+}

@@ -44,18 +44,19 @@
 
         <p>{{ site.description | default: site.github.project_tagline }}</p>
 
-        <form
+        <div class="newsletter-container">
+          <form
                 action="https://buttondown.com/api/emails/embed-subscribe/ettenmoor"
                 method="post"
                 target="popupwindow"
                 onsubmit="window.open('https://buttondown.com/ettenmoor', 'popupwindow')"
                 class="embeddable-buttondown-form"
-        >
-          <label for="bd-email">Enter your email</label>
-          <input type="email" name="email" id="bd-email" />
-
-          <input type="submit" value="Subscribe" />
-        </form>
+          >
+            <label for="bd-email">Enter your email to receive updates</label>
+            <input type="email" name="email" id="bd-email" placeholder="your@email.com" />
+            <input type="submit" value="Subscribe" />
+          </form>
+        </div>
       <hr/>
 	    {% include navigation.html %}
       <hr/>

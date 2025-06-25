@@ -11,3 +11,4 @@
 **/**.ipynb
 **/*.pt
 **/pytorch-learn/plenoxels/output/reconstruction/*
+.idea/
