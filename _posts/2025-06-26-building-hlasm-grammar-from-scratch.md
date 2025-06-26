@@ -1,15 +1,15 @@
 ---
-title: "Building an HLASM grammar from scratch"
+title: "Building an HLASM grammar for reverse engineering, from scratch"
 author: avishek
 usemathjax: false
-tags: ["Software Engineering", "Reverse Engineering", "HLASM", "ANTLR"]
-draft: true
+tags: ["Parsers", "Reverse Engineering", "HLASM", "ANTLR"]
+draft: false
 ---
 
 _This post has not been written or edited by AI._
 
 ## Abstract
-This post talks about a technique to build an ANTLR grammar for HLASM (mainframe assembler) from scratch, without handwriting the entire instruction set. The technique creates a parser which reads a table of instruction formats from IBM's official documentation, and automates the creation of the actual HLASM grammar based on these instruction formats.
+This post talks about a technique to build an **ANTLR grammar for HLASM** (mainframe assembler) from scratch, without handwriting the entire instruction set. The technique creates a parser which reads a table of instruction formats from IBM's official documentation, and automates the creation of the actual HLASM grammar based on these instruction formats. The parser is use
 
 ## Existing parsers
 I needed a grammar for mainframe assembler for working on some of my reverse engineering experiments, while building [Tape/Z](https://github.com/avishek-sen-gupta/tape-z). The only requirement I had was that the grammar needed to be declarative, since I needed to generate parsers from it, potentially in multiple languages. It could be ANTLR, Treesitter, etc.
@@ -23,17 +23,17 @@ Given that none of the above fit my requirement, I considered what it would take
 
 ## Practical difficulties of hand-writing a large grammar
 
-Now, HLASM by itself is not complicated. It's simple opcodes, registers, and offsets. The problem is one of scale. z/OS assembly has well over 2000 instructions, being a CISC instruction set. They are all well-documented, but writing all of them by hand was not practical for the timelines I was looking at.
+Now, HLASM by itself is not complicated. It's simple opcodes, registers, and offsets. The problem is one of scale. z/OS assembly has well **over 2000 instructions**, being a CISC instruction set. They are all well-documented, but writing all of them by hand was not practical within the timelines I was looking at.
 
 Thankfully, the formats for these instructions are documented very precisely [here](https://www.ibm.com/docs/en/hla-and-tf/1.6.0?topic=instructions-table-all-supported). Looking at that, I considered what it might take to automate the creation of this grammar.
 
 ## The instruction format Meta-Parser
 
-The table specifies the operand formats in a very formal manner. Take for example the operand format for the `A` opcode.
+The table in the HLASM spec formally specifies the operand formats. Take for example the operand format for the `A` opcode.
 
 ![Example opcode format](/assets/images/example-opcode-format.png)
 
-The idea is: what if we could parse this format and generate the actual desired grammar from the format parse tree. The "meta-parser" (for lack of a better term to describe its role) is less than 40 lines, and looks like so (the full grammar is documented [here](https://github.com/avishek-sen-gupta/tape-z/blob/main/hlasm-parser/grammar/HlasmFormatParser.g4)):
+The idea is: **what if we could parse this format and generate the actual desired grammar from the format parse tree?** The "meta-parser" (for lack of a better term to describe its role) is less than 40 lines, and looks like so (the full grammar is documented [here](https://github.com/avishek-sen-gupta/tape-z/blob/main/hlasm-parser/grammar/HlasmFormatParser.g4)):
 
 ```antlrv4
 control_register: CONTROL_REGISTER;
@@ -56,11 +56,11 @@ operand: displacement | floating_point_register_pair | floating_point_register |
 
 The steps are pretty simple in and of themselves:
 
-- Copy the HTML table into Google Sheets, and export that into a CSV. This gives us the formats ready for ingestion into the format parser.
-- Parse the operand formats for each instruction.
-- Make a visitor (`HLASMParseRuleBuilderVisitor`) visit the operand format's `ParseTree` and build object representations of the final grammar elements we wish to emit.
-- Add extra rules that might not have listed in the base instruction table.
-- Emit the string representation of the resulting rule objects into a `.g4` file.
+- **Copy the HTML table** into Google Sheets, and **export that into a CSV**. This gives us the formats ready for ingestion into the format parser.
+- **Parse the operand formats** for each instruction.
+- Make a **visitor** (`HLASMParseRuleBuilderVisitor`) visit the operand format's `ParseTree` and **build object representations** of the final grammar elements we wish to emit.
+- **Add extra rules** that might not have listed in the base instruction table.
+- **Emit the string representation** of the resulting rule objects into a `.g4` file.
 - ...err, profit? :-)
 
 ![HLASM Parser/Meta-Parser](/assets/images/tapez-hlasm-parser-metaparser.png)
@@ -82,11 +82,15 @@ adr_rule_8: 'ADR' ((operand_1_floatingPointRegister) (COMMA operand_2_floatingPo
 ...
 ```
 
+and an example parse tree:
+
+![Example HLASM parse tree](/assets/images/example-hlasm-parse-tree.png)
+
 The full grammar is [here](https://github.com/avishek-sen-gupta/tape-z/blob/main/hlasm-parser/grammar/HlasmParser.g4).
 
 ## Current Limitations
 
-The instruction formats in the reference are for the base instructions. In practice, most HLASM programs have some higher level addressing formats which allow them to use symbols, expressions, etc. which are then lowered by the assembler/macro processor to the form which will ultimately be translated into machine code.
+The instruction formats in the reference are for the base instructions. In practice, most HLASM programs have some higher-abstraction level addressing formats which allow them to use symbols, expressions, etc. which are then lowered by the assembler/macro processor to the form which will ultimately be translated into machine code.
 
 Thus, I had to add some extra operand forms to accomodate this. However, this list is not exhaustive. For example, this parser will not parse operands with the length operator (`L'<symbol-or-literal>`).
 
