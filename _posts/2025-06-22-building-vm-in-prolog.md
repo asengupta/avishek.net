@@ -24,10 +24,13 @@ From my reading, there are several kinds of reasoning, and the categorisation de
 - **Non-monotonic:** Facts are tentative, and can be invalidated in the face of new facts. ILASP, etc. support non-monotonic reasoning.
 - **Probabilistic Logic:** Facts are assigned probabilities, conclusions are probabilistic in nature. Probabilistic Graphical Models embody such logic.
 
+For the purposes of this post, I will be using [SWI-Prolog](https://www.swi-prolog.org/, though you can also use other implementations like [Ciao](https://ciao-lang.org/), [GNU Prolog](http://www.gprolog.org/), and others.
+
 ## A very brief introduction to Prolog
 
-Prolog's way of thinking is close to - but not the same as - functional programming. Briefly, these are some of the salient points.
+The way of thinking abou logic programming is close to - but not the same as - functional programming. Briefly, these are some of the salient points.
 
+- Data is immutable. In this it is similar to functional programming.
 - You don't write statements. You write **facts** and **predicates**. These relate _things_ to other _things_.
 - Facts hold unconditionally, i.e., they are _true_.
 - Any fact not defined as treated as _false_.
@@ -161,6 +164,81 @@ The amazing part is that you can **reverse** this operation, i.e., ask Prolog: i
 ?- reverse2(Original,[],[5,4,3,2,1]).
 Original = [1, 2, 3, 4, 5].
 ```
+
+## Compound Terms: The same thing
+
+Predicates can be pattern-matched too. Write:
+
+```prolog
+recognise_letters(some_fn(a)) :- writeln('a was first parameter'),!.
+recognise_letters(some_fn(b)) :- writeln('b was first parameter'),!.
+recognise_letters(some_fn(_)) :- writeln('Something other than a or b').
+```
+
+You will trigger one of the rules above as long as the arity of the given `some_fn` matches, as shown in the examples below. This structural matching of compound terms is extremely powerful and can be as arbitrary as you like.
+
+```
+?- recognise_letters(some_fn(a)).
+a was first parameter
+true.
+
+?- recognise_letters(some_fn(b)).
+b was first parameter
+true.
+
+?- recognise_letters(some_fn(c)).
+Something other than a or b
+true.
+
+?- recognise_letters(some_fn(c,12)).
+false.
+```
+
+## Evaluation does not happen by default
+
+If you write the following, you will see that Prolog doesn't actually evaluate `1+2=3`. This is because `1+2` is actually a compound term `+(1,2)`, and not (yet) an arithmetic expression.
+
+```
+?- X=1+2,writeln(X).
+1+2
+X = 1+2.
+```
+
+If you want to actually evaluate, you'd use the `is` operator.
+
+```prolog
+?- Y is 1+2.
+Y = 3.
+```
+
+This allows us to do pass predicates around and write higher-order functions. Here is a (slightly-contrived) example:
+
+```prolog
+print_mapped_number(Number,Pred) :- call(Pred, Number, Result),format('Result is: ~w', Result).
+add_one(Number, Result) :- Result is Number+1.
+```
+
+Now if you write:
+```
+?- print_mapped_number(2,add_one).
+Result is: 3
+true.
+```
+
+Effectively, `add_one` is a predicate which isn't evaluated until `call` is used on it.
+
+You can also perform structural construction and deconstruction of compound terms very easily:
+
+```
+?- a(1,2)=..X.
+X = [a, 1, 2].
+
+?- X=..[a, 1, 2].
+X = a(1, 2).
+```
+
+This opens up a world of possibilities for metaprogramming, term rewriting, and other applications.
+
 
 ## Atomic Operations from the ground-up
 
