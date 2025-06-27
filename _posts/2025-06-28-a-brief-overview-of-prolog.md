@@ -290,6 +290,12 @@ false.
 
 Here. you're literally asking whether this relation holds given the prefix, the suffix, and the end result: effectively you are performing pattern matching. Note how you did not have to extract out elements manually and do tedious equality checking. You just specified how a list conforming to the structural pattern you are looking for, might be built, and you just run it backwards. This is a very strong motivating example of you instructing the machine WHAT to do, but NOT how to do it.
 
+## Prolog Concepts: Unification
+
+## Prolog Concepts: Backtracking
+
+## My Personal Thoughts on Prolog
+
 ## Footnote: How I learned Prolog
 
 This is the first language I've learned for the most part by working with an LLM to design exercises and evaluate my submissions.
