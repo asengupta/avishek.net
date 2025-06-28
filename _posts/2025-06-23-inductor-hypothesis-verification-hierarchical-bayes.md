@@ -6,8 +6,9 @@ tags: ["Hierarchical Bayes", "Large Language Models", "Reasoning"]
 draft: false
 ---
 
-## Abstract
-We look at how a **Hierarchical Bayes**-like model can be used to recursively decompose a hypothesis into sub-hypotheses to form an **inference tree**. The beliefs of these sub-hypotheses are updated based on the strength of the evidence gathered using **MCP tools**. These beliefs are propagated upwards through the inference to indicate the aggregate confidence of the original root hypothesis. This concept is demonstrated in a library called [Inductor](https://github.com/asengupta/inductor).
+We look at how a **Hierarchical Bayes**-like model can be used to recursively decompose a hypothesis into sub-hypotheses to form an **inference tree**. The beliefs of these sub-hypotheses are updated based on the strength of the evidence gathered using **MCP tools**.
+
+These beliefs are propagated upwards through the inference to indicate the aggregate confidence of the original root hypothesis. This concept is demonstrated in a library called [Inductor](https://github.com/asengupta/inductor).
 
 _This post has not been written or edited by AI._
 

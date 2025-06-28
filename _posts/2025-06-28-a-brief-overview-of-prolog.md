@@ -6,7 +6,6 @@ tags: ["Prolog", "Logic Programming"]
 draft: false
 ---
 
-## Abstract
 In this post, I'll give a brief overview of **Prolog** and the paradigm of **Logic Programming**. I'll discuss why I think it makes for such a powerful domain modelling language, and a gateway into the techniques of automated symbolic reasoning.
 
 _This post has not been written or edited by AI._
