@@ -13,7 +13,7 @@ _This post has not been written or edited by AI._
 ## Why Prolog?
 I've always been interested in the evolution of AI, and the potential for a synthesis of older techniques (formal and otherwise) and newer ones (deep learning) in my current area of focus (reverse engineering). My intuition tells me that combining many of these approaches will only serve to make application of AI more "robust". I use that term in a rather loose sense for the moment. One interpretation might be that to make something robust is to make it more "deterministic" or "reproducible", but this can only cover a subset of qualities of such a system. However, automated reasoning is a principled, methodical way of exploring a subspace of a larger, more ill-defined problem space: hence my interest in this space. After all, this early AI research did give us Lisp :-)
 
-**Prolog** was the European answer to automating the reasoning process in the 1960's (the American one was Lisp). It belongs to the family of logic programming languages, which is a paradigm distinct from the well-known imperative/functional/object-oriented ones. There are several ideas in here that appealed to me. Not surprisingly, Prolog and its other subsets and derivative approaches (Datalog, Answer Set Programming, etc.) have been used in applications involving different types of reasoning tasks.
+**Prolog** was the European answer to automating the reasoning process in the 1960's (the American one was Lisp). It belongs to the family of logic programming languages, which is a paradigm distinct from the well-known imperative/functional/object-oriented ones. There are several ideas in here that appealed to me. Not surprisingly, Prolog and its other subsets and derivative approaches (Datalog, Answer Set Programming, etc.) have been used in applications involving different types of reasoning tasks. There is a treasure trove of papers surveying the history of Prolog [here](https://github.com/dtonhofer/prolog_notes/tree/master/other_notes/about_papers_of_interest) if you are interested.
 
 From my reading, there are several kinds of reasoning, and the categorisation depends upon different parameters. I only list the types of reasoning which interest me.
 
@@ -23,7 +23,11 @@ From my reading, there are several kinds of reasoning, and the categorisation de
 - **Non-monotonic:** Facts are tentative, and can be invalidated in the face of new facts. ILASP, etc. support non-monotonic reasoning.
 - **Probabilistic Logic:** Facts are assigned probabilities, conclusions are probabilistic in nature. **Probabilistic Graphical Models** embody such logic.
 
-For the purposes of this post, I will be using [SWI-Prolog](https://www.swi-prolog.org/), though you can also use other implementations like [Ciao](https://ciao-lang.org/), [GNU Prolog](http://www.gprolog.org/), etc.. In an upcoming post, I will go through the design of a simple-but-nontrivial Virtual Machine using Prolog.
+Here's a very informative diagram of the logic programming landscape, borrowed from [David Tonhofer's extensive notes on Prolog](https://github.com/dtonhofer/prolog_notes):
+
+![LP Landscape](/assets/images/quick_map_of_lp_landscape.svg)
+
+For the purposes of this post, I will be using [SWI-Prolog](https://www.swi-prolog.org/), though you can also use other implementations like [Ciao](https://ciao-lang.org/), [GNU Prolog](http://www.gprolog.org/), etc.. In an upcoming post, I will go through the design of a simple-but-nontrivial **Virtual Machine** together with **symbolic execution** with using Prolog in about **200 lines of code**.
 
 ## A very brief introduction to Prolog
 
@@ -158,7 +162,14 @@ reverse2([],Acc,Acc).
 reverse2([H|T],Acc,Result) :- reverse2(T,[H|Acc],Result),!.
 ```
 
-The first argument is the list being passed in (and gradually getting decomposed into successive heads and tails). The second one is the accumulator which keeps getting built up with the result (it always `[]` initially). The final argument is the actual result to which the reversed list will be bound to.
+The first argument is the list being passed in (and gradually getting decomposed into successive heads and tails). The second one is the accumulator which keeps getting built up with the result (it always `[]` initially). The final argument is the actual result to which the reversed list will be bound to. You can run this like so:
+
+```
+?- reverse2([1,2,3],[],R).
+R = [3, 2, 1].
+```
+
+A list of common list processing idioms may be found [here](https://github.com/dtonhofer/prolog_notes/tree/master/other_notes/about_list_processing).
 
 Predicates may look like functions, but they are only ever `true` or `false`. The results of any computation are always bound to any unresolved variables that you specify when invoking them. In this case, `Result` is the unresolved variable.
 
@@ -306,9 +317,81 @@ true.
 false.
 ```
 
-Here. you're literally asking whether this relation holds given the prefix, the suffix, and the end result: effectively you are performing pattern matching. Note how you did not have to extract out elements manually and do tedious equality checking. You just specified how a list conforming to the structural pattern you are looking for, might be built, and you just run it backwards. This is a very strong motivating example of you instructing the machine WHAT to do, but NOT how to do it.
+Here, **you're literally asking whether this relation holds given the prefix, the suffix, and the end result**: effectively you are performing **pattern matching**. Note how you did not have to extract out elements manually and do tedious equality checking. **You just specified how a list conforming to the structural pattern you are looking for, might be built, and you just run it backwards.** This is a very strong motivating example of you instructing the machine **WHAT to do, but NOT how** to do it.
 
 ## Prolog Concepts: Unification
+
+In automated reasoning, unification is a technique used to solve equations where the left and right hand sides of the equation are symbolic expressions. For example, the following are examples of such equations:
+
+```prolog
+% The free variable is X and the solution is X=c
+f(a,b,X) :- f(a,b,c).
+
+% The free variables are X and Y and the solution is {X=c, Y=a}
+f(a,b,X) :- f(Y,b,c).
+
+```
+
+If the right hand side has no free variables, it is basically the same as pattern matching. Consider the earlier example of reversing a list:
+
+```prolog
+reverse2([],Acc,Acc).
+reverse2([H|T],Acc,Result) :- reverse2(T,[H|Acc],Result),!.
+```
+
+Let's trace the process of reversing a small list `[1,2]` and see how unification works. 
+
+### Step 1: General Rule fires but is unresolved
+When we run `reverse2([1,2])`, the general rule triggers with the following unifications.
+
+- `Acc` is unified with []
+- `H` is unified with 1
+- `T` is unified with `[2]`
+
+`
+reverse2([1|[2]],[],Result) :- reverse2([2],[1|[]],Result).
+`
+At this point, this equation cannot be fully solved since `Result` is still unbound. However, this triggers the general rule again when trying to determine the truth of the right hand side.
+
+### Step 2: General Rule fires but is unresolved
+
+A similar situation occurs here too, with the following unifications.
+
+- `Acc` is unified with `[1|[]]`
+` `H` is unified with 2
+- `T` is unified with `[]`
+
+`
+reverse2([2|[]],[1|[]],Result) :- reverse2([],[2|[1|[]]],Result).
+`
+
+As in [Step 1](#step-1-general-rule), this equation is also unsolved because of the unbound `Result` variable. To determine the truth of the right hand side this time though, it is the base case which fires.
+
+### Step 3: Base Rule fires and is resolved
+The base case is triggered, and here the third parameter (`Result`) is finally unified with the value of `Acc` (which is `[2|[1|[]]]`), since the same `Acc` variable appears in the second and third place.
+`
+reverse2([],[2|[1|[]]],[2|[1|[]]]).
+`
+Now that this fact has been determined to be true, it is time to unroll and determine the truth values of the preceding rules in the stack.
+
+### Step 4: General Rule Resolution is resolved
+Now the [unresolved rule in Step 2](#step-2-general-rule-fires-but-is-unresolved) can be solved, since `Result` is also known, thus `Result` is unified here with the value `[2|[1|[]]]`.
+
+`
+reverse2([2|[]],[1|[]],[2|[1|[]]]) :- reverse2([],[2|[1|[]]],[2|[1|[]]]).
+`
+
+Now the left hand side is fully determined (and thus true); this means that the preceding rule in the stack is ready to be resolved.
+
+### Step 5: General Rule Resolution is resolved
+
+Solving the [previously-unresolved rule in Step 1](#step-1-general-rule-fires-but-is-unresolved) with the `Result` variable from [Step 2](#step-4-general-rule-resolution-is-resolved) unifies the `Result` variable on both sides with `[2|[1|[]]]`:
+
+`
+reverse2([1|[2]],[],[2|[1|[]]]) :- reverse2([2],[1|[]],[2|[1|[]]]).
+`
+
+This final result `[2|[1|[]]]` is bound to our query variable and shown with syntactic sugar as `[2,1]`.
 
 ## Prolog Concepts: Backtracking
 
@@ -317,3 +400,8 @@ Here. you're literally asking whether this relation holds given the prefix, the 
 ## Footnote: How I learned Prolog
 
 This is the first language I've learned for the most part by working with an LLM to design exercises and evaluate my submissions.
+
+## References
+
+- [David Tonhofer's Notes on Prolog](https://github.com/dtonhofer/prolog_notes)
+- [Programming Paradigms for Dummies: What Every Programmer Should Know - Peter Van Roy (2012)](https://www.researchgate.net/publication/241111987_Programming_Paradigms_for_Dummies_What_Every_Programmer_Should_Know)

@@ -63,3 +63,5 @@ fileignoreconfig:
   checksum: 88ea23154f1f02cb1766741c02acbe7e482a97049222afe4e1529ae44d14427a
 - filename: assets/papers/economic-evaluation-of-information-security.pdf
   checksum: 8de61d78bbc894b147371ff895515a327ba869b69f42d1b2cd97050e469fca4b
+- filename: assets/papers/programming/Programming_Paradigms_for_Dummies_What_Every_Progr.pdf
+  checksum: 2eb4e4da46a441b8fbfdc19effee9fc14fd8fd0c809c4a78d07889e6b1f6f9a9
