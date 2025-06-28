@@ -2,7 +2,7 @@
 title: "A brief overview of Prolog"
 author: avishek
 usemathjax: false
-tags: ["Prolog", "Logic Programming"]
+tags: ["Logic Programming", "Automated Reasoning", "Prolog"]
 draft: false
 ---
 
@@ -27,11 +27,11 @@ Here's a very informative diagram of the logic programming landscape, borrowed f
 
 ![LP Landscape](/assets/images/quick_map_of_lp_landscape.svg)
 
-For the purposes of this post, I will be using [SWI-Prolog](https://www.swi-prolog.org/), though you can also use other implementations like [Ciao](https://ciao-lang.org/), [GNU Prolog](http://www.gprolog.org/), etc.. In an upcoming post, I will go through the design of a simple-but-nontrivial **Virtual Machine** together with **symbolic execution** with using Prolog in about **200 lines of code**.
+For the purposes of this post, I will be using [SWI-Prolog](https://www.swi-prolog.org/), though you can also use other implementations like [Ciao](https://ciao-lang.org/), [GNU Prolog](http://www.gprolog.org/), etc. In an upcoming post, I will go through the design of a simple-but-nontrivial **Virtual Machine** together with **symbolic execution** with using Prolog in about **200 lines of code**.
 
 ## A very brief introduction to Prolog
 
-The way of thinking abou **logic programming** is close to - but not the same as - **functional programming**. Briefly, these are some of the salient points.
+The way of thinking about **logic programming** is close to - but not the same as - **functional programming**. Briefly, these are some of the salient points.
 
 - **Data is immutable.** In this it is similar to functional programming.
 - You don't write statements. You write **facts** and **predicates**. These relate _things_ to other _things_.
@@ -150,7 +150,7 @@ We can perform more meaningful semantic reasoning though. Suppose, we are intere
 
 ```prolog
 can_reach(From, To) :- edge(From, To), !.
-can_reach(From, To) :- edge(From, Z), can_reach(Z, To), !.
+can_reach(From, To) :- edge(From, Z), can_reach(Z, To).
 ```
 
 The base case is simply that a node can reach another if there is an edge between them.
@@ -161,7 +161,7 @@ Thus for example, if we run `can_reach(a,c)`, we conceptually reason in the foll
 - Can `a` reach `c`? This can be answered if we can answer if `a` has an edge to some node Z, and Z can reach `c`.
 - The only node that `a` has an edge to is `b`, so we want to answer the question of whether `b` can reach `c`.
 - This triggers the base case because `b` has a direct `edge` to `c`.
-- Thus there is an arbitrary node Z (in this case `b`) to which `a` has an edge to, and which can reach `c`.
+- Therefore, there is an arbitrary node Z (in this case `b`) to which `a` has an edge to, and which can reach `c`.
 
 Here are the last two examples, before we talk about **structural matching**. The first one prints all the elements of a list. Like in functional programming languages, lists are a core supported data structure in Prolog and their heads and tails is the canonical way of representing them. So, we will be using recursive rules.
 
@@ -382,7 +382,7 @@ A similar situation occurs here too, with the following unifications.
 reverse2([2|[]],[1|[]],Result) :- reverse2([],[2|[1|[]]],Result).
 ```
 
-As in [Step 1](#step-1-general-rule), this equation is also unsolved because of the unbound `Result` variable. To determine the truth of the right hand side this time though, it is the base case which fires.
+As in [Step 1](#step-1-general-rule-fires-but-is-unresolved), this equation is also unsolved because of the unbound `Result` variable. To determine the truth of the right hand side this time though, it is the base case which fires.
 
 ### Step 3: Base Rule fires and is resolved
 The base case is triggered, and here the third parameter (`Result`) is finally unified with the value of `Acc` (which is `[2|[1|[]]]`), since the same `Acc` variable appears in the second and third place.
@@ -416,8 +416,88 @@ This final result `[2|[1|[]]]` is bound to our query variable and shown with syn
 
 Prolog programs essentially form execution trees with nodes being either terminal leaves (facts), or dependent predicates with child predicates arranged in a logical expression comprised of AND, OR, and NOT.
 
+Let's revisit our graph reachability example. We had written:
+
+```prolog
+can_reach(From, To) :- edge(From, To), !.
+can_reach(From, To) :- edge(From, Z), can_reach(Z, To).
+```
+
+Let us ask `can_reach(b,e).`. Note that in the graph, `b` has 2 paths from `e`, via `c` and `d`.
+
+```
+?- can_reach(b,e).
+true ;
+true.
+```
+
+You will notice that it returns two truth values. Each of these correspond to one of these viable paths. Conceptually, Prolog constructs the following abstract execution tree.
+
+{% mermaid %}
+graph TD;
+can_reach_be["can_reach(b,e)"]-->chol[AND];
+chol[AND] --> edge_bZ["edge(b,Z)"];
+chol[AND] --> can_reach_Ze["can_reach(Z,e)"];
+style chol fill:#006f00,stroke:#000,stroke-width:2px,color:#fff
+{% endmermaid %}
+
+This abstract execution tree gets concretised and constrained by the space of available solutions. In this case, the two values that `Z` can take are `c` and `d`. Thus, the execution tree runs for each of these paths.
+
+{% mermaid %}
+graph TD;
+can_reach_bc["can_reach(b,e)"]-->path_Z_is_c;
+can_reach_bc["can_reach(b,e)"]-->path_Z_is_d;
+path_Z_is_c["Z=c"];
+path_Z_is_d["Z=d"];
+path_Z_is_c --> and_Zc[AND];
+and_Zc[AND] --> edge_bc_Zc["edge(b,c)"];
+and_Zc[AND] --> can_reach_Ze["can_reach(c,e)"];
+path_Z_is_d --> and_Zd[AND];
+and_Zd[AND] --> edge_bc_Zd["edge(b,c)"];
+and_Zd[AND] --> can_reach_de["can_reach(d,e)"];
+style and_Zc fill:#006f00,stroke:#000,stroke-width:2px,color:#fff
+style and_Zd fill:#006f00,stroke:#000,stroke-width:2px,color:#fff
+{% endmermaid %}
+
+Once a solution is found, Prolog **walks back up the tree**. At each preceding level, it attempts to find more viable paths to exhaust the space of all possible solutions. In this case, both paths `Z=c` and `Z=d` are viable, `true` is returned twice, corresponding to each of those paths.
+
+### Notes on Logical Operator Syntax
+
+- `,` represents **AND**. All the predicates we have seen so far use this operator. `p :- a,b.` means **"`p` is true if both `a` and `b` are true"**.
+- `;` represents **OR**. `p :- a;b.` means "`p` is true if either `a` or `b` is true".
+- `\+` represents **NOT**. `p :- \+a.` means "`p` is true if `a` is false".
+
+The usual operator precedence rules apply, thus you need parentheses to override precedence, for example: `p :- (a;b),c.`
+
+Relational operators are a little different from "conventional" programming languages.
+
+- `=` checks for **structural equality**. `f(a,b) = f(a,b)`. It also does double duty as assignment. To be honest, this is one and the same since unification applies to both sides.
+- `=<` represents **"less than or equal to"**. `<` is **"less than"**.
+- `>=` represents **"greater than or equal to"**. `>` is **"greater than"**.
+
+There is a **ternary operator syntax**. We write it as `a -> b; c` which is read as **"if `a` is true, then `b`, else `c`"**. Note that since `;` is being used as a separator, any logical expressions you write must be suitably bracketed.
 
 ## My Personal Thoughts on Prolog
+
+### Strengths
+Prolog is an extremely powerful **declarative modelling** tool, in my opinion. Extremely low overhead in defining concepts and relations is one of the key draws for me, especially when **rapidly prototyping** concepts and relations. Unification plays a large part in allowing this level of brevity. In addition, being able to **run logic backwards and forwards** has given me a completely different way of looking at programming. The deductive reasoning semantics allow us to **declaratively perform pattern matching** with a naturalness I've not seen in other languages.
+
+I will write about examples of doing static analysis on programs using Datalog, a widely-used subset of Prolog, in an upcoming post.
+
+Many other forms of reasoning libraries (inductive, abductive, etc.) use Prolog (or a variant of it) as a base. Thus, it is emphatically a gateway to all work on **automated reasoning**, **theorem proving**, etc.
+
+### Usage
+Prolog is best used as an **embedded component** in a larger codebase written in a more conventional language, in order to play to its strengths. It has **interfaces for Java, Python**, and other more conventional programming languages.
+
+### Performance and Scaling
+Prolog's performance used to be one of the sticking points, but there are fast implementations available, and **Datalog** (a non-Turing complete subset of Prolog) comfortably scales to **millions of facts**.
+
+## Applications
+
+- [Datomic](https://docs.datomic.com/query/query-data-reference.html) uses Datalog as its query language (effectively, a much more expressive SQL).
+- Prolog is used for pattern matching in the IBM Watson question answering system.
+- [Clarissa](https://www.newscientist.com/article/dn7584-space-station-gets-hal-like-computer/), a voice operated procedure browser aboard the International Space Station uses Prolog (https://sicstus.sics.se/customers.html).
+- Prolog has been used as a bytecode verifier in Java (see [here](https://openjdk.org/jeps/8267650)).
 
 ## Footnote: How I learned Prolog
 
@@ -427,3 +507,4 @@ This is the first language I've learned for the most part by working with an LLM
 
 - [David Tonhofer's Notes on Prolog](https://github.com/dtonhofer/prolog_notes)
 - [Programming Paradigms for Dummies: What Every Programmer Should Know - Peter Van Roy (2012)](https://www.researchgate.net/publication/241111987_Programming_Paradigms_for_Dummies_What_Every_Programmer_Should_Know)
+- [Byrd Box Model and Ports](https://eu.swi-prolog.org/pldoc/man?section=byrd-box-model)
