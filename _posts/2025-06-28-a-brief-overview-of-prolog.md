@@ -1,5 +1,5 @@
 ---
-title: "A brief overview of Prolog"
+title: "Automated Reasoning: A brief overview of Prolog"
 author: avishek
 usemathjax: false
 tags: ["Logic Programming", "Automated Reasoning", "Prolog"]
