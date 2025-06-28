@@ -9,34 +9,34 @@ draft: true
 _This post has not been written or edited by AI._
 
 ## Abstract
-In this post, I'll give a brief overview of Prolog and the paradigm of Logic Programming. I'll discuss why I think it makes for such a powerful domain modelling language, and a gateway into the techniques of automated symbolic reasoning.
+In this post, I'll give a brief overview of **Prolog** and the paradigm of **Logic Programming**. I'll discuss why I think it makes for such a powerful domain modelling language, and a gateway into the techniques of automated symbolic reasoning.
 
 ## Why Prolog?
-I've always been interested in the evolution of AI, and the potential for a synthesis of older techniques (formal and otherwise) and newer ones (deep learning). My sense tells me that combining many of these approaches will only serve to make application of AI more "robust". I use that term in a rather loose sense for the moment. One interpretation might be that to make something robust is to make it more "deterministic" or "reproducible", but this can only cover a subset of qualities of such a system. However, automated reasoning is a principled, methodical way of exploring a subspace of a larger, more ill-defined problem space: hence my interest in this space. After all, this early AI research did give us Lisp :-)
+I've always been interested in the evolution of AI, and the potential for a synthesis of older techniques (formal and otherwise) and newer ones (deep learning) in my current area of focus (reverse engineering). My intuition tells me that combining many of these approaches will only serve to make application of AI more "robust". I use that term in a rather loose sense for the moment. One interpretation might be that to make something robust is to make it more "deterministic" or "reproducible", but this can only cover a subset of qualities of such a system. However, automated reasoning is a principled, methodical way of exploring a subspace of a larger, more ill-defined problem space: hence my interest in this space. After all, this early AI research did give us Lisp :-)
 
-Prolog was the European answer to automating the reasoning process in the 1960's (the American one was Lisp). It belongs to the family of logic programming languages, which is a paradigm distinct from the well-known imperative/functional/object-oriented ones. There are several ideas in here that appealed to me. Not surprisingly, Prolog and its other subsets and derivative approaches (Datalog, Answer Set Programming, etc.) have been used in applications involving different types of reasoning tasks.
+**Prolog** was the European answer to automating the reasoning process in the 1960's (the American one was Lisp). It belongs to the family of logic programming languages, which is a paradigm distinct from the well-known imperative/functional/object-oriented ones. There are several ideas in here that appealed to me. Not surprisingly, Prolog and its other subsets and derivative approaches (Datalog, Answer Set Programming, etc.) have been used in applications involving different types of reasoning tasks.
 
 From my reading, there are several kinds of reasoning, and the categorisation depends upon different parameters. I only list the types of reasoning which interest me.
 
 - **Deductive:** Incontrovertible conclusions from facts. This is what base Prolog does.
-- **Inductive:** Plausible "general" facts from observed facts. Inductive Logic Programming (ILP) systems like Popper build on top of Prolog to provide such capabilities.
-- **Abductive:** Generalised "probable" rules from facts. Libraries like ILASP and Potassco's `clingo` provide capabilities like Answer Set Programming.
+- **Inductive:** Plausible "general" facts from observed facts. **Inductive Logic Programming (ILP)** systems like Popper build on top of Prolog to provide such capabilities.
+- **Abductive:** Generalised "probable" rules from facts. Libraries like ILASP and Potassco's **clingo** provide capabilities like Answer Set Programming.
 - **Non-monotonic:** Facts are tentative, and can be invalidated in the face of new facts. ILASP, etc. support non-monotonic reasoning.
-- **Probabilistic Logic:** Facts are assigned probabilities, conclusions are probabilistic in nature. Probabilistic Graphical Models embody such logic.
+- **Probabilistic Logic:** Facts are assigned probabilities, conclusions are probabilistic in nature. **Probabilistic Graphical Models** embody such logic.
 
-For the purposes of this post, I will be using [SWI-Prolog](https://www.swi-prolog.org/, though you can also use other implementations like [Ciao](https://ciao-lang.org/), [GNU Prolog](http://www.gprolog.org/), and others. In an upcoming post, I will go through the design of a simple-but-nontrivial Virtual Machine using Prolog.
+For the purposes of this post, I will be using [SWI-Prolog](https://www.swi-prolog.org/), though you can also use other implementations like [Ciao](https://ciao-lang.org/), [GNU Prolog](http://www.gprolog.org/), etc.. In an upcoming post, I will go through the design of a simple-but-nontrivial Virtual Machine using Prolog.
 
 ## A very brief introduction to Prolog
 
-The way of thinking abou logic programming is close to - but not the same as - functional programming. Briefly, these are some of the salient points.
+The way of thinking abou **logic programming** is close to - but not the same as - **functional programming**. Briefly, these are some of the salient points.
 
-- Data is immutable. In this it is similar to functional programming.
+- **Data is immutable.** In this it is similar to functional programming.
 - You don't write statements. You write **facts** and **predicates**. These relate _things_ to other _things_.
 - Facts hold unconditionally, i.e., they are _true_.
 - Any fact not defined as treated as _false_.
-- Predicates hold conditionally, based on whether other predicates or facts hold or not.
-- The actual act of computation happens when asserting the truth of these predicates.
-- Prolog is superb at pattern matching and symbolic manipulation. This comes partly from the unification mechanism. Personally, I have not seen this level of capability at a language level in any other language I have seen (including OCaml, which is another language I'm currently learning).
+- **Predicates hold conditionally**, based on whether other predicates or facts hold or not.
+- The actual act of **computation happens when asserting the truth** of these predicates.
+- Prolog is superb at **pattern matching** and **symbolic manipulation**. This comes partly from its unification mechanism (I discuss it in [here](#prolog-concepts-unification)). Personally, I have not seen this level of capability at a language level in any other language I have seen (including OCaml, which is another language I'm currently learning).
 
 So, here's a simple directed graph in Prolog.
 
@@ -59,6 +59,23 @@ edge(d,e).
 
 Also note that there were no quotes around `a`, `b`, `c`, etc. They are **atoms**, which are basically freeform symbols, that you can use in lieu of string (strings are a different type).
 
+The simplest thing you can do with the above facts is query them. For example:
+
+```
+?- edge(a,b).
+true.
+```
+
+The first query simply checks whether there is an edge from `a` to `b`. This is forward inference; but we can also do reverse inference. We can turn a question about our facts on its head: suppose we want to know which are the outgoing edges of `b`. In any other programming language, you'd want to check the list of outgoing edges from `b`, and so on. In Prolog, you can simply ask for this information.
+
+```
+?- edge(b,N).
+N = c ;
+N = d.
+```
+
+No extra programming needed. This is because Prolog leverages the concepts of unification, backtracking and goal resolution. **Effectively, you can run your program both forwards and backwards.** This is extremely powerful, and I talk of another example [later](#declarative-structural-matching).
+
 Let's write a simple predicate. This predicate will hold true if `a` is a node.
 
 ```prolog
@@ -74,10 +91,22 @@ node_exists(N) :- node(N).
 
 Here, note that `N` is a variable which we bind to a 'thing' when asking the question. You can also not bind it, but that's a different kind of question, which we will get to in a bit.
 
+Now you can ask the Prolog interpreter:
+
+```
+?- node_exists(a).
+true.
+
+?- node_exists(efgh).
+false.
+```
+
+Note that we have replaced the `a` with `N` which is a variable, which implies that `node_exists` takes in a **thing**. It is important to note that thing can really be anything: an atom, a string, another predicate, etc. As long as Prolog can find a rule which matches the sort of thing we inject into `node_exists`, it will consider this rule for further evaluation.
+
 Suppose we wish to check if a node has multiple outgoing edges. We can write:
 
 ```prolog
-has_multiple_outgoing_edges(N) :- edge(N,A), edge(N,B), A \= B.
+has_multiple_outgoing_edges(N) :- edge(N,A), edge(N,B), A \= B, !.
 ```
 
 The `,` in this case represents the logical AND. This means that `has_multiple_outgoing_edges(N)` is true if:
@@ -86,15 +115,13 @@ The `,` in this case represents the logical AND. This means that `has_multiple_o
 - There is an edge from `N` to `B`
 - `A` is not the same as `B`. `\=` represents **"not equal to"**.
 
-Note that we have replaced the `a` with `N` which is a variable, which implies that `node_exists` takes in a **thing**. It is important to note that thing can really be anything: an atom, a string, another predicate, etc. As long as Prolog can find a rule which matches the sort of thing we inject into `node_exists`, it will consider this rule for further evaluation.
-
-Now you can ask the Prolog interpreter:
+We can check whether this works:
 
 ```
-?- node_exists(a).
+?- has_multiple_outgoing_edges(b).
 true.
 
-?- node_exists(efgh).
+?- has_multiple_outgoing_edges(a).
 false.
 ```
 
@@ -115,16 +142,6 @@ true.
 ?- is_unconnected(a).
 false.
 ```
-
-So far, we have been doing forward inference. But we can also ask other questions of our facts. Suppose we want to know which are the outgoing edges of `b`. In any other programming language, you'd want to check the list of outgoing edges from `b`, and so on. In Prolog, you can simply ask for this information.
-
-```
-?- edge(b,N).
-N = c ;
-N = d.
-```
-
-No extra programming needed. This is because Prolog leverages the concepts of unification, backtracking and goal resolution.
 
 Here are the last two examples, before we talk about **structural matching**. The first one prints all the elements of a list. Like in functional programming languages, lists are a core supported data structure in Prolog and their heads and tails is the canonical way of representing them. So, we will be using recursive rules.
 
@@ -263,7 +280,9 @@ First name:John, Last name: Doe, Age: 30, AddressLine1: 1 Some Street, AddressLn
 true.
 ```
 
-Let's talk about how you can do things declaratively. For example, suppose you have an array, and you want to check whether it start with the elements `1`, `2`, and ends with `5`, `6`, irrespective of what exists in the middle. In most other languages, you'd want to extract the first 2 elements and the last 2 elements (after some boundary checking), and then check those against the patterns you are looking for. In Prolog, since you can (sort of) run programs both backwards and forwards, you can declare how you would construct a program which shows the desired pattern, and run it backwards.
+## Declarative Structural Matching
+
+Let's talk about how you can do non-trivial pattern matching declaratively, and in the process, we will concretise the idea of being able to run Prolog programs backwards and forwards. For example, suppose you have an array, and you want to check whether it start with the elements `1`, `2`, and ends with `5`, `6`, irrespective of what exists in the middle. In most other languages, you'd want to extract the first 2 elements and the last 2 elements (after some boundary checking), and then check those against the patterns you are looking for. In Prolog, since you can (sort of) run programs both backwards and forwards, you can declare how you would construct a program which shows the desired pattern, and run it backwards.
 
 So, let's say you have three lists `Prefix`, `Middle`, and `Suffix`. How would you construct a list containing all of them?
 
