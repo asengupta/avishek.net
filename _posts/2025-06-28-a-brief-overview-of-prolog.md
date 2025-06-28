@@ -146,6 +146,23 @@ true.
 false.
 ```
 
+We can perform more meaningful semantic reasoning though. Suppose, we are interested in knowing whether a node is reachable from another node. We can define a predicate `can_reach` like so:
+
+```prolog
+can_reach(From, To) :- edge(From, To), !.
+can_reach(From, To) :- edge(From, Z), can_reach(Z, To), !.
+```
+
+The base case is simply that a node can reach another if there is an edge between them.
+The general case is a recursive definition: it says that A can reach B, if A has an edge to Z (some undefined node), and if Z in turn can reach B.
+
+Thus for example, if we run `can_reach(a,c)`, we conceptually reason in the following manner:
+
+- Can `a` reach `c`? This can be answered if we can answer if `a` has an edge to some node Z, and Z can reach `c`.
+- The only node that `a` has an edge to is `b`, so we want to answer the question of whether `b` can reach `c`.
+- This triggers the base case because `b` has a direct `edge` to `c`.
+- Thus there is an arbitrary node Z (in this case `b`) to which `a` has an edge to, and which can reach `c`.
+
 Here are the last two examples, before we talk about **structural matching**. The first one prints all the elements of a list. Like in functional programming languages, lists are a core supported data structure in Prolog and their heads and tails is the canonical way of representing them. So, we will be using recursive rules.
 
 ```prolog
@@ -348,9 +365,9 @@ When we run `reverse2([1,2])`, the general rule triggers with the following unif
 - `H` is unified with 1
 - `T` is unified with `[2]`
 
-`
+```prolog
 reverse2([1|[2]],[],Result) :- reverse2([2],[1|[]],Result).
-`
+```
 At this point, this equation cannot be fully solved since `Result` is still unbound. However, this triggers the general rule again when trying to determine the truth of the right hand side.
 
 ### Step 2: General Rule fires but is unresolved
@@ -361,25 +378,27 @@ A similar situation occurs here too, with the following unifications.
 ` `H` is unified with 2
 - `T` is unified with `[]`
 
-`
+```prolog
 reverse2([2|[]],[1|[]],Result) :- reverse2([],[2|[1|[]]],Result).
-`
+```
 
 As in [Step 1](#step-1-general-rule), this equation is also unsolved because of the unbound `Result` variable. To determine the truth of the right hand side this time though, it is the base case which fires.
 
 ### Step 3: Base Rule fires and is resolved
 The base case is triggered, and here the third parameter (`Result`) is finally unified with the value of `Acc` (which is `[2|[1|[]]]`), since the same `Acc` variable appears in the second and third place.
-`
+
+```prolog
 reverse2([],[2|[1|[]]],[2|[1|[]]]).
-`
+```
+
 Now that this fact has been determined to be true, it is time to unroll and determine the truth values of the preceding rules in the stack.
 
 ### Step 4: General Rule Resolution is resolved
 Now the [unresolved rule in Step 2](#step-2-general-rule-fires-but-is-unresolved) can be solved, since `Result` is also known, thus `Result` is unified here with the value `[2|[1|[]]]`.
 
-`
+```prolog
 reverse2([2|[]],[1|[]],[2|[1|[]]]) :- reverse2([],[2|[1|[]]],[2|[1|[]]]).
-`
+```
 
 Now the left hand side is fully determined (and thus true); this means that the preceding rule in the stack is ready to be resolved.
 
@@ -387,13 +406,16 @@ Now the left hand side is fully determined (and thus true); this means that the 
 
 Solving the [previously-unresolved rule in Step 1](#step-1-general-rule-fires-but-is-unresolved) with the `Result` variable from [Step 2](#step-4-general-rule-resolution-is-resolved) unifies the `Result` variable on both sides with `[2|[1|[]]]`:
 
-`
+```prolog
 reverse2([1|[2]],[],[2|[1|[]]]) :- reverse2([2],[1|[]],[2|[1|[]]]).
-`
+```
 
 This final result `[2|[1|[]]]` is bound to our query variable and shown with syntactic sugar as `[2,1]`.
 
 ## Prolog Concepts: Backtracking
+
+Prolog programs essentially form execution trees with nodes being either terminal leaves (facts), or dependent predicates with child predicates arranged in a logical expression comprised of AND, OR, and NOT.
+
 
 ## My Personal Thoughts on Prolog
 
