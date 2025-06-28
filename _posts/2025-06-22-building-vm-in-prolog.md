@@ -14,7 +14,7 @@ _This post has not been written or edited by AI._
 ## Building a simple Virtual Machine
 
 
-## Atomic Operations from the ground-up
+## Foundational Operations from the ground-up
 
 We need a map implementation. SWI-Prolog has the dictionaries, but since we are building everything from scratch, we will write a very naive implementation using only lists. Granted, there are some semantics of a dictionary that can be violated for now - for example, you can start off with duplicate keys, but let's assume the happy path.
 
@@ -30,7 +30,7 @@ put2_(-(K,V),[H|T],Replaced,[H|RX]) :- put2_(-(K,V),T,Replaced,RX).
 put2(-(K,V),Map,R) :- put2_(-(K,V),Map,false,R).
 ```
 
-To represent entries in a dictionary, we use the `K-V` compound term, which is basically syntax sugar for `-(K,V)`. These entries live inside a list. Both `get2` and `put2` behave in predictable ways, except when the dictionary has duplicate keys. In that case:
+To represent entries in a dictionary, we use the `K-V` compound term, which is basically syntactic sugar for `-(K,V)`. These entries live inside a list. Both `get2` and `put2` behave in predictable ways, except when the dictionary has duplicate keys. In that case:
 
 - `get2(K,V)` returns the value of the first matching key.
 - `put2(-(K,V),InputMap,OutputMap)` modifies all matching keys with the value `V`.
@@ -45,8 +45,27 @@ pop_([],empty,[]).
 pop_([H|Rest],H,Rest).
 ```
 
-
 ## Minimal instruction set
+
+The minimal instruction is comprised of the following:
+
+- mvc(reg,reg|constant)
+- cmp(reg,reg|constant)
+- label(name)
+- j(label)
+- jz(label|address)
+- jnz(label|address)
+- push(reg|constant)
+- pop(reg)
+- call(label)
+- ret
+- hlt
+- term(string)
+- nop
+- inc(reg)
+- dec(reg)
+- mul(reg,reg|constant)
+
 
 ## Registers, Flags, and Pointers
 

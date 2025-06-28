@@ -1,3 +1,6 @@
+baseurl: ""
+url: "https://avishek.net"
+
 collections:
   authors:
     output: true
