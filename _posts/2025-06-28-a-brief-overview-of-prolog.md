@@ -3,13 +3,13 @@ title: "A brief overview of Prolog"
 author: avishek
 usemathjax: false
 tags: ["Prolog", "Logic Programming"]
-draft: true
+draft: false
 ---
-
-_This post has not been written or edited by AI._
 
 ## Abstract
 In this post, I'll give a brief overview of **Prolog** and the paradigm of **Logic Programming**. I'll discuss why I think it makes for such a powerful domain modelling language, and a gateway into the techniques of automated symbolic reasoning.
+
+_This post has not been written or edited by AI._
 
 ## Why Prolog?
 I've always been interested in the evolution of AI, and the potential for a synthesis of older techniques (formal and otherwise) and newer ones (deep learning) in my current area of focus (reverse engineering). My intuition tells me that combining many of these approaches will only serve to make application of AI more "robust". I use that term in a rather loose sense for the moment. One interpretation might be that to make something robust is to make it more "deterministic" or "reproducible", but this can only cover a subset of qualities of such a system. However, automated reasoning is a principled, methodical way of exploring a subspace of a larger, more ill-defined problem space: hence my interest in this space. After all, this early AI research did give us Lisp :-)

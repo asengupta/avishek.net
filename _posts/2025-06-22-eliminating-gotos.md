@@ -6,10 +6,10 @@ tags: ["Reverse Engineering", "GOTO"]
 draft: true
 ---
 
-_This post has not been written or edited by AI._
-
 ## Abstract
 In this post, we talk of how to eliminate unconditional arbitrary jumps (aka GOTOs) by manipulating the Abstract Syntax Tree of a program, in a way that preserves the semantic flow of the program, while making it amenable to structured programming representations (i.e., using control flow constructs like ```while```, ```do...while```). The aim is to transform the program into a form which can make it easier to represent in modern programming languages which use only structured programming constructs.
+
+_This post has not been written or edited by AI._
 
 ## The basic principle
 

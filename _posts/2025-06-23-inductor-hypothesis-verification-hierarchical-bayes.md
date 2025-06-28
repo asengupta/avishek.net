@@ -6,10 +6,10 @@ tags: ["Hierarchical Bayes", "Large Language Models", "Reasoning"]
 draft: false
 ---
 
-_This post has not been written or edited by AI._
-
 ## Abstract
 We look at how a **Hierarchical Bayes**-like model can be used to recursively decompose a hypothesis into sub-hypotheses to form an **inference tree**. The beliefs of these sub-hypotheses are updated based on the strength of the evidence gathered using **MCP tools**. These beliefs are propagated upwards through the inference to indicate the aggregate confidence of the original root hypothesis. This concept is demonstrated in a library called [Inductor](https://github.com/asengupta/inductor).
+
+_This post has not been written or edited by AI._
 
 ## Motivation
 For the last year or so, I've been heavily involved in building **reverse engineering** tooling dealing with legacy code. This legacy code includes the usual suspects (COBOL, HLASM), but can also include code written in more "modern" stacks, like Java, C#, etc. Much of this tooling is driven through LLMs (isn't everything these days :-) ?).

@@ -6,10 +6,10 @@ tags: ["Prolog", "Logic Programming", "Virtual Machine", "Symbolic Execution"]
 draft: true
 ---
 
-_This post has not been written or edited by AI._
-
 ## Abstract
 In this post, I'll talk about how I wrote a small Virtual Machine in Prolog which can both interpret concrete assembly language-like programs, and run symbolic executions, which is useful in data flow analysis of programs.
+
+_This post has not been written or edited by AI._
 
 ## Building a simple Virtual Machine
 

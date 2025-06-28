@@ -6,10 +6,10 @@ tags: ["Parsers", "Reverse Engineering", "HLASM", "ANTLR"]
 draft: false
 ---
 
-_This post has not been written or edited by AI._
-
 ## Abstract
 This post talks about a technique to build an **ANTLR grammar for HLASM** (mainframe assembler) from scratch, without writing the grammar of the entire instruction set by hand. The technique creates a parser which reads a table of instruction formats from IBM's official documentation, and automates the creation of the actual HLASM grammar based on these instruction formats. The parser is used in [Tape/Z](https://github.com/avishek-sen-gupta/tape-z).
+
+_This post has not been written or edited by AI._
 
 ## Existing parsers
 I needed a grammar for mainframe assembler for working on some of my reverse engineering experiments, while building [Tape/Z](https://github.com/avishek-sen-gupta/tape-z). The only requirement I had was that the grammar needed to be declarative, since I needed to generate parsers from it, potentially in multiple languages. It could be ANTLR, Treesitter, etc.
