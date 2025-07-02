@@ -141,3 +141,5 @@ The shapes of the Beta distribution for different values of $$\alpha$$ and $$\be
 ## References
 - [Inductor](https://github.com/asengupta/inductor)
 - [Tape/Z](https://github.com/avishek-sen-gupta/tape-z)
+- [Cognitive Models of Program Comprehension](https://sites.cc.gatech.edu/reverse/repository/cogmodels.pdf)
+- 

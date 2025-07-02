@@ -24,7 +24,7 @@ We will demonstrate a couple of examples to demonstrate the effectiveness of Dat
 
 ## Basic Block Analysis
 
-## Dominators
+## Dominator Identification
 
 ## References
 - [Basic Block construction](https://github.com/asengupta/prolog-exercises/blob/main/datalog_exercises/reverse_engineering.dl)

@@ -6,7 +6,6 @@ tags: ["Prolog", "Logic Programming", "Virtual Machine", "Symbolic Execution"]
 draft: true
 ---
 
-## Abstract
 In this post, I'll talk about how I wrote a small Virtual Machine in Prolog which can both interpret concrete assembly language-like programs, and run symbolic executions, which is useful in data flow analysis of programs.
 
 _This post has not been written or edited by AI._
@@ -45,29 +44,62 @@ pop_([],empty,[]).
 pop_([H|Rest],H,Rest).
 ```
 
+## Logging
+
+We will be logging quite a bit inside the rules. Thus it is important to have a structured way of logging different levels, like `DEBUG`, `INFO`, `WARNING`, etc. This is what a basic logging setup looks like:
+
+```prolog
+log_with_level(LogLevel,FormatString,Args) :- format(string(Message),FormatString,Args),format('[~w]: ~w~n',[LogLevel,Message]).
+
+debug(Message) :- log_with_level('DEBUG',Message,[]).
+debug(FormatString,Args) :- log_with_level('DEBUG',FormatString,Args).
+
+info(Message) :- log_with_level('INFO',Message,[]).
+info(FormatString,Args) :- log_with_level('INFO',FormatString,Args).
+
+warning(Message) :- log_with_level('WARN',Message,[]).
+warning(FormatString,Args) :- log_with_level('WARN',FormatString,Args).
+
+error(Message) :- log_with_level('ERROR',Message,[]).
+error(FormatString,Args) :- log_with_level('ERROR',FormatString,Args).
+
+dont_log(_).
+dont_log(_,_).
+```
+
 ## Minimal instruction set
 
 The minimal instruction is comprised of the following:
 
-- mvc(reg,reg|constant)
-- cmp(reg,reg|constant)
-- label(name)
-- j(label)
-- jz(label|address)
-- jnz(label|address)
-- push(reg|constant)
-- pop(reg)
-- call(label)
-- ret
-- hlt
-- term(string)
-- nop
-- inc(reg)
-- dec(reg)
-- mul(reg,reg|constant)
+- `mov(reg,reg|constant)`
+- `cmp(reg,reg|constant)`
+- `label(name)`
+- `j(label)`
+- `jz(label|address)`
+- `jnz(label|address)`
+- `push(reg|constant)`
+- `pop(reg)`
+- `call(label)`
+- `ret`
+- `hlt`
+- `term(string)`
+- `nop`
+- `inc(reg)`
+- `dec(reg)`
+- `mul(reg,reg|constant)`
 
+## Registers, Flags, and other Data Structures
 
-## Registers, Flags, and Pointers
+We will not have a fixed number of registers for convenience, and thus you can use any symbol as a register. In this respect, we will be treating registers more akin to conventional variables.
+
+There will be one special register called the Instruction Pointer (IP). This will point to the next instruction to be executed. Jump instructions like `j`, `jnz`, and `jz` can can modify the IP to change the flow of the program.
+
+The other useful data structure will be the stack, which is operated by `push`, `pop`, `call`, and `ret` (the last two use it to keep track of the stack when entering and leaving procedures).
+
+There will be one flag called the Zero Flag. This should probably be better named to Equals Flag, because it is set to zero if the two sides of a `cmp` are equal, otherwise -1/+1 depending upon their relative ordering.
+
+## Building the navigation maps
+
 
 ## The concrete interpreter
 
