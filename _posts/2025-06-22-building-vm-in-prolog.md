@@ -90,7 +90,7 @@ The minimal instruction is comprised of the following:
 
 ## Registers, Flags, and other Data Structures
 
-We will not have a fixed number of registers for convenience, and thus you can use any symbol as a register. In this respect, we will be treating registers more akin to conventional variables.
+For convenience, I chose to not have a fixed number of registers for convenience; thus, you can use any symbol as a register. In this respect, we will be treating registers more akin to conventional variables.
 
 There will be one special register called the Instruction Pointer (IP). This will point to the next instruction to be executed. Jump instructions like `j`, `jnz`, and `jz` can can modify the IP to change the flow of the program.
 
@@ -98,18 +98,209 @@ The other useful data structure will be the stack, which is operated by `push`, 
 
 There will be one flag called the Zero Flag. This should probably be better named to Equals Flag, because it is set to zero if the two sides of a `cmp` are equal, otherwise -1/+1 depending upon their relative ordering.
 
+Data can be of two types:
+
+- Concrete data, like numbers, which would be represented like `const(5)`
+- Symbols, which stand in for data, and are used for symbolic execuction. These are represented as `sym(x)`, `sym(abcd)`, etc.
+
+## Memory Model
+
+For the purposes of this simple VM, I chose not to have any memory. I may add it later, and then I will update this post accordingly.
+
+## Execution Model
+
+The execution model is simple and similar to what we'd expect a very simple single-threaded VM to behave. Every instruction is sequentially mapped to a specific memory address (simple incrementing integers for our purposes). The Instruction Pointer starts at 0. At every instruction, something can happen. Actions include:
+
+- Moving data between registers
+- Loading constants into registers
+- Incrementing / Decrementing registers
+- Push / pop values to / from the stack
+- Unconditional / Conditional jumps to another address
+- Compare registers to other registers or constants
+- Halt (effectively exit the program)
+- Describe a label
+- Call a procedure (defined as a label)
+- Return from a procedure
+
+Jumps work by modifying the value of the Instruction Pointer to the destination address. Procedure calls work similarly, but with an added side effect: the address of the instruction after the `call` is pushed onto the stack: when a `ret` is encountered, the topmost value is popped off the stack and is assigned back to the Instruction Pointer. This simulates the return from the procedure.
+
 ## Building the navigation maps
 
+There are a couple of mappings we need to build to be able to jump to arbitrary locations because of changes to the IP.
 
-## The concrete interpreter
+- Mapping between labels to memory addresses
+- Mapping between instructions to memory addresses
 
-## Aside: Logging
+These mappings are done in the following code:
+
+```prolog
+instruction_pointer_map([],IPMap,_,IPMap).
+instruction_pointer_map([Instr|T],IPMap,IPCounter,FinalIPMap) :- put2(-(IPCounter,Instr),IPMap,UpdatedIPMap),
+                                                                 plusOne(IPCounter,UpdatedIPCounter),
+                                                                 instruction_pointer_map(T,UpdatedIPMap,UpdatedIPCounter,FinalIPMap).
+label_map([],LabelMap,_,LabelMap).
+label_map([label(Label)|T],LabelMap,IPCounter,FinalLabelMap) :- put2(-(label(Label),IPCounter),LabelMap,UpdatedLabelMap),
+                                                                 plusOne(IPCounter,UpdatedIPCounter),
+                                                                 label_map(T,UpdatedLabelMap,UpdatedIPCounter,FinalLabelMap),
+                                                                 !.
+label_map([_|T],LabelMap,IPCounter,FinalLabelMap) :- plusOne(IPCounter,UpdatedIPCounter),
+                                                     label_map(T,LabelMap,UpdatedIPCounter,FinalLabelMap).
+```
+
+The `label_map` predicate simply step through the full list of instructions, adding a label mapping to the current address (incremented each time through `plusOne`) when it encounters a `label` fact.
+
+The `instruction_map` predicate simply assigns every instruction that it finds to an incrementing counter.
 
 ## Symbolic Execution and World Splits
 
-## Prolog as a Modelling Language
+Symbolic execution is a technique used to determine the provenance of data in a piece of code. Assume, you have a very simplified code segment, like so:
 
-## Unification is so powerful
+```prolog
+Code=[
+    mvc(reg(hl),const(10)), % load 10 into register HL
+    mvc(reg(bc),const(5)),  % load 5 into register BC
+    inc(reg(hl)),           % increment HL by one
+    mul(reg(hl),reg(bc))    % multiply contents of HL with that of BC, store the result in HL
+].
+```
+
+Now, suppose you wished to determine what sort of data transformations were taking place in this code. You might want to do this for different reasons:
+
+- Determine if there are any optimisations that can be made, eg: an addition of zero can be eliminated, since it does not change the answer.
+- Understand the data transformation for reverse engineering the business logic of this code
+
+Now, you can run this piece of code on concrete numbers and generate lots of test cases for different values in `hl`, `bc`, etc. However, as a human, you may be able to induce a generic rule which explains the behaviour of this piece of code, which is:
+
+`hl=(hl+1)*bc`
+
+To deduce this rule, note that you didn't use a concrete number, you used symbols like `hl` and `bc` to represent the values that these registers could store. Symbolic execution does exactly this: instead of storing concrete numbers in registers, we store symbols. When we "execute" the program, all operations which modify these symbols essentially store the log of operations on these symbols. So for example:
+
+```prolog
+Code=[
+mvc(reg(hl),sym(a)), % load symbol a into register HL
+mvc(reg(bc),sym(b)),  % load symbol b into register BC
+inc(reg(hl)),           % increment HL by one, HL now holds inc(sym(a))
+mul(reg(hl),reg(bc))    %  HL now holds mul(inc(sym(a)),sym(b))
+].
+```
+
+Thus at the end `hl`'s contents are `mul(inc(sym(a)),sym(b))`, which is interpreted as `hl=(hl+1)*bc`.
+
+Symbolic execution is a powerful technique for program analysis. There is however one wrinkle we need to take care of when building a symbolic interpreter: branching.
+
+Consider the instruction `jz(label(some_label))`. During concrete execution, we can look at the value of the Zero Flag, and then determine whether we want to jump to `some_label` or continue with the normal execution flow. However, the Zero Flag is set based on comparison between two concrete values: what if those values are symbols? You cannot meaningfully compare `sym(a)` and `sym(b)` numerically: they represent a range of values.
+
+So, then the question becomes: which path do we take?
+
+The answer is that we take both paths. Effectively, we split our execution world into two branches: one which makes the jump, and the other one which contains normal execution. These two branches then continue on as individual threads to completion. Of course, if these branches encounter more conditional jump instructions, more sub-worlds split out of these as well, and so on.
+
+Symbolic execution thus explores all possibilities of a program.
+
+One issue is that this can easily result in a combinatorial explosion of paths, and symbolic execution engines tackle this in various ways. However, for our simple VM, we will simply keep splitting our world into new branches whenever we encounter conditional jumps.
+
+
+## Arithmetic operations
+
+```prolog
+plusOne(sym(X),sym(inc(sym(X)))).
+plusOne(const(X),const(PlusOne)) :- PlusOne is X+1.
+
+minusOne(sym(X),sym(dec(sym(X)))).
+minusOne(const(X),const(MinusOne)) :- MinusOne is X-1.
+
+product(const(LHS),const(RHS),const(Product)) :- Product is LHS*RHS.
+product(sym(LHS),sym(RHS),sym(product(sym(LHS),sym(RHS)))).
+product(sym(LHS),const(RHS),sym(product(sym(LHS),const(RHS)))).
+product(const(LHS),sym(RHS),sym(product(const(LHS),sym(RHS)))).
+```
+
+## Comparison
+
+```prolog
+equate(LHS,LHS,const(0)).
+equate(sym(LHS),sym(RHS),sym(cmp(sym(LHS)),sym(RHS))).
+equate(sym(LHS),const(RHS),sym(cmp(sym(LHS)),const(RHS))).
+equate(const(LHS),sym(RHS),sym(cmp(const(LHS)),sym(RHS))).
+equate(const(LHS),const(RHS),const(1)) :- LHS < RHS.
+equate(const(LHS),const(RHS),const(-1)) :- LHS > RHS.
+```
+
+## Virtual Machine state
+
+`vmState(IP,Stack,CallStack,Registers,flags(zero(v1),hlt(v2),branch(v3))`
+
+## Inner single world loop
+
+```prolog
+vm(Program,ExecutionMode,StateIn,vmMaps(IPMap,LabelMap),world(StateIn,TraceOut,ChildWorlds)) :-
+                              exec_(vmMaps(IPMap,LabelMap),
+                                  StateIn,[],
+                                  traceOut(FinalTrace,VmStateOut),
+                                  env(log(debug,info,warning,error),ExecutionMode)),
+                              VmStateOut=vmState(FinalIP,FinalStack,FinalCallStack,FinalRegisters,FinalVmFlags),
+                              minusOne(FinalIP,LastInstrIP),
+                              TraceOut=traceOut(FinalTrace,vmState(LastInstrIP,FinalStack,FinalCallStack,FinalRegisters,FinalVmFlags)),
+                              (shouldTerminateWorld(FinalVmFlags)->(ChildWorlds=[]);
+                                (
+                                  NewStartIP_One=FinalIP,
+                                  branchDestination(LastInstrIP,LabelMap,IPMap,NewStartIP_Two),
+                                  Branches=[NewStartIP_One,NewStartIP_Two],
+                                  info("Branches are: ~w",[Branches]),
+                                  explore(Program,ExecutionMode,VmStateOut,vmMaps(IPMap,LabelMap),Branches,[],ChildWorlds)
+                                )
+                              ).
+```
+
+```prolog
+exec_(_,vmState(IP,Stack,CallStack,Registers,flags(ZeroFlag,hlt(true),BranchFlag)),
+                  TraceAcc,
+                  traceOut(TraceAcc,vmState(IP,Stack,CallStack,Registers,flags(ZeroFlag,hlt(true),BranchFlag))),
+                  env(log(_,Info,_,_),_)) :- call(Info,'EXITING PROGRAM LOOP!!!').
+
+exec_(vmMaps(IPMap,LabelMap),vmState(IP,Stack,CallStack,Registers,VmFlags),TraceAcc,StateOut,Env) :-
+                                                    get2(IP,IPMap,Instr),
+                                                    exec_helper(Instr,vmMaps(IPMap,LabelMap),
+                                                        vmState(IP,Stack,CallStack,Registers,VmFlags),TraceAcc,StateOut,Env).
+
+exec_helper(empty,VmMaps,vmState(IP,Stack,CallStack,Registers,flags(ZeroFlag,_,BranchFlag)),
+                    TraceAcc,
+                    traceOut(TraceAcc,ExitState),
+                    env(log(Debug,Info,Warn,Error),ExecutionMode)) :-
+                            ExitState=vmState(IP,Stack,CallStack,Registers,flags(ZeroFlag,hlt(true),BranchFlag)),
+                            call(Warn,'No other instruction found, but no HLT is present. Halting program.'),
+                            exec_(VmMaps,ExitState,TraceAcc,traceOut(TraceAcc,ExitState),env(log(Debug,Info,Warn,Error),ExecutionMode)).
+
+exec_helper(Instr,VmMaps,vmState(IP,Stack,CallStack,Registers,VmFlags),TraceAcc,traceOut(FinalTrace,vmState(FinalIP,FinalStack,FinalCallStack,FinalRegisters,FinalVmFlags)),env(log(Debug,Info,Warning,Error),ExecutionMode)) :-
+                                                        call(Debug,'Interpreting ~w and StateIn is ~w', [Instr, vmState(IP,Stack,CallStack,Registers,VmFlags)]),
+                                                        plusOne(IP,NextIP),
+                                                        interpret(Instr,VmMaps,vmState(NextIP,Stack,CallStack,Registers,VmFlags),vmState(UpdatedIP,UpdatedStack,UpdatedCallStack,UpdatedRegisters,UpdatedVmFlags),env(log(Debug,Info,Warning,Error),ExecutionMode)),
+                                                        (shouldBranch(UpdatedVmFlags)->
+                                                            (
+                                                                terminateForBranch(vmState(UpdatedIP,UpdatedStack,UpdatedCallStack,UpdatedRegisters,UpdatedVmFlags),vmState(FinalIP,FinalStack,FinalCallStack,FinalRegisters,FinalVmFlags)),
+                                                                FinalTrace=TraceAcc
+                                                            );
+                                                            (
+                                                                call(Debug,'Next IP is ~w',[UpdatedIP]),
+                                                                exec_(VmMaps,vmState(UpdatedIP,UpdatedStack,UpdatedCallStack,UpdatedRegisters,UpdatedVmFlags),TraceAcc,traceOut(RemainingTrace,vmState(FinalIP,FinalStack,FinalCallStack,FinalRegisters,FinalVmFlags)),env(log(Debug,Info,Warning,Error),ExecutionMode)),
+                                                                FinalTrace=[traceEntry(Instr,vmState(UpdatedIP,UpdatedStack,UpdatedCallStack,UpdatedRegisters,UpdatedVmFlags))|RemainingTrace]
+                                                            )
+                                                        ),
+                                                        !.
+```
+
+## World splitting: the outer loop
+
+```prolog
+explore(_,_,_,_,[],WorldAcc,WorldAcc).
+explore(Program,ExecutionMode,VmState,VmMaps,[IP|OtherIPs],WorldAcc,[WorldOut|OtherWorldOuts]) :-
+                                                    VmState=vmState(_,Stack,CallStack,Registers,flags(ZeroFlag,_,_)),
+                                                    FreshState=vmState(IP,Stack,CallStack,Registers,flags(ZeroFlag,hlt(false),branch(false))),
+                                                    vm(Program,ExecutionMode,FreshState,VmMaps,WorldOut),
+                                                    explore(Program,ExecutionMode,VmState,VmMaps,OtherIPs,WorldAcc,OtherWorldOuts),
+                                                    !.
+```
+
+## Prolog as a Modelling Language
 
 ## References
 - [Symbolic Interpreter](https://github.com/asengupta/prolog-exercises/blob/main/ilp/prolog_examples/symbolic_executor.pl)
