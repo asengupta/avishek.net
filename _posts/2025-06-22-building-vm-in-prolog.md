@@ -337,8 +337,68 @@ exec_helper(Instr,VmMaps,vmState(IP,Stack,CallStack,Registers,VmFlags),TraceAcc,
 
 ## Instruction Interpretation
 
+
+
 ## World splitting: the outer loop
 
+Let's talk about symbolic execution. The symbolic execution mode is controlled by two variables:
+
+- The `ExecutionMode` variable which can either be `symbolic` or `concrete`.
+- The `branch` flag which is explicitly set to true by conditional jump instructions, only when the `ExecutionMode` is `symbolic`. To see this link, look at the two cases for the `JZ` (Jump if Zero) instruction.
+
+```prolog
+interpret(jz(JumpIP),_,vmState(OldNextIP,Stack,CallStack,Registers,VmFlags),vmState(UpdatedIP,Stack,CallStack,Registers,UpdatedVmFlags),env(_,mode(symbolic))) :- interpret_symbolic_condition(OldNextIP,JumpIP,VmFlags,isZero,UpdatedVmFlags,UpdatedIP).
+interpret(jz(JumpIP),_,vmState(OldNextIP,Stack,CallStack,Registers,VmFlags),vmState(UpdatedIP,Stack,CallStack,Registers,UpdatedVmFlags),env(_,mode(concrete))) :- interpret_condition(OldNextIP,JumpIP,VmFlags,isZero,UpdatedVmFlags,UpdatedIP).
+```
+
+The first case triggers when the mode is `symbolic`, and calls the `interpret_symbolic_condition` predicate. This predicate is a single predicate which directly sets `branch(true)`:
+
+```prolog
+interpret_symbolic_condition(OldNextIP,_,flags(ZeroFlag,HltFlag,_),_,flags(ZeroFlag,HltFlag,branch(true)),OldNextIP).
+```
+
+The second case triggers when the mode is `concrete` and calls the `interpret_condition` predicate which is described in [Instruction Interpretation](#instruction-interpretation).
+
+Where is `branch(true)` actually used? This is in the `exec_helper` predicate, reproduced here with the pertinent code:
+
+```prolog
+exec_helper(...)) :-
+    ...,
+    (shouldBranch(UpdatedVmFlags)->
+        (
+            terminateForBranch(vmState(UpdatedIP,UpdatedStack,UpdatedCallStack,UpdatedRegisters,UpdatedVmFlags),vmState(FinalIP,FinalStack,FinalCallStack,FinalRegisters,FinalVmFlags)),
+            FinalTrace=TraceAcc
+        );
+        (
+            ...
+        )
+    ),
+    !.
+
+```
+
+The `shouldBranch()` term is only true when `branch(true)` is true. At this point, it simply returns the entire trace and the VM state as-is, effectively ending the execution of this thread. This is because, beyond this, two new world threads need to be created and run interpreted as their own worlds with identical starting points.
+
+Where does this world splitting take place?
+This happens in the `vm()` predicate, reproduced here with the relevant code
+
+```prolog
+vm(...) :-
+      ...,
+      (shouldTerminateWorld(FinalVmFlags)->(...);
+        (
+          NewStartIP_One=FinalIP,
+          branchDestination(LastInstrIP,LabelMap,IPMap,NewStartIP_Two),
+          Branches=[NewStartIP_One,NewStartIP_Two],
+          info("Branches are: ~w",[Branches]),
+          explore(Program,ExecutionMode,VmStateOut,vmMaps(IPMap,LabelMap),Branches,[],ChildWorlds)
+        )
+      ).
+```
+
+At this point, we are back at the top, but we also know that we aren't in a HALT condition (an explicit `HALT` instruction or execution flow falling off the end), therefore we must be at a branch point. Therefore, we extract two IP values, `NewStartIP_One` (the default execution flow IP value) and `NewStartIP_Two` (the jump IP value). Now, we recursively call the `explore` predicate, which is the top-level entry predicate for our VM.
+
+Let's look at the `explore`
 ```prolog
 explore(_,_,_,_,[],WorldAcc,WorldAcc).
 explore(Program,ExecutionMode,VmState,VmMaps,[IP|OtherIPs],WorldAcc,[WorldOut|OtherWorldOuts]) :-
