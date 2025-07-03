@@ -214,7 +214,12 @@ product(sym(LHS),const(RHS),sym(product(sym(LHS),const(RHS)))).
 product(const(LHS),sym(RHS),sym(product(const(LHS),sym(RHS)))).
 ```
 
+The predicate definitions take into account meaningful combinations of constants and symbols. As a rule of thumb, any expression containing even one symbol cannot be simplified (save degenerate cases like adding / subtracting 0, multiplying by 1 or 0, subtracting an expression from itself, etc., but we leave those aside for now for simplicity). Thus the only arithmetic simplification we do is when everything in an expression is a constant. For all the others, it creates a new compound term which reflects the operation being performed, which will ultimately be inspected at the end of a run as part of the value of a register.
+
+
 ## Comparison
+
+Comparison also works similar to arithmetic operations, in that actual comparison is only performed when both sides are constants. Otherwise a new compound term logging the comparison operator (wrapped in a symbol itself) is returned.
 
 ```prolog
 equate(LHS,LHS,const(0)).
@@ -227,9 +232,31 @@ equate(const(LHS),const(RHS),const(-1)) :- LHS > RHS.
 
 ## Virtual Machine state
 
+The virtual machine state must reflect the exact configuration of registers, flags, stack, etc. These are represented as:
+
 `vmState(IP,Stack,CallStack,Registers,flags(zero(v1),hlt(v2),branch(v3))`
 
+- IP: Instruction Pointer, represented as a `const()`
+- Stack: The program writer's stack
+- CallStack: We need a stack to store return addresses when performing procedure calls. However, using the program writer's stack would mess with expectations of the programmer of what should be at the top of the stack. Therefore, a separate call stack is maintained.
+- Registers: A map of the registers with their values
+- Flags: The only flag that a user can set and access (indirectly) is the Zero Flag. However, there are two other (hidden flags) which indicate whether the program is about to halt or branch. The `branch()` compound term is useful to keep track of when to split worlds during symbolic execution. The `hlt()` compound term is to keep track of a halt condition (which can be an explicit `HLT` instruction, or the flow falling off the end of a program without a `HLT` instruction).
+
+This `vmState` compound term is passed around everywhere and essentially is equivalent to a `struct` in C (SWI-Prolog has dedicated facilities for representing structures, but I've deliberately kept the code as implementation-neutral as possible).
+
+Accessing data inside this structure is very easy, thanks to unification and pattern matching; for example, if we wished to only extract the value of the Zero Flag, and not care about the other values, we can simply write:
+
+`vmState(_,_,_,_,flags(zero(ZeroFlagValue),_,_)`
+
 ## Inner single world loop
+
+Before looking at how branches in symbolic execution are handled, it is instructive to understand how a single world, concrete execution flow works. The inner loop which evaluates a world, starts with:
+
+- The original program, which simply a list of instructions
+- The execution mode is either symbolic or concrete. For the purposes of this explanation, let us assume that it is concrete.
+- The `StateIn` is simply the initial VM state which is described in [Virtual Machine state](#virtual-machine-state)
+- The `vmMaps` is a tuple of the IP Map and the label map, as described in [Building the navigation maps](#building-the-navigation-maps)
+- The last variable represents the final output of evaluating this particular world. In particular, the `TraceOut` contains the program trace for this execution. Since we are only doing a concrete flow, there will be no `ChildWorlds`. The code below represents the part of the `vm` predicate which is pertinent to this discussion.
 
 ```prolog
 vm(Program,ExecutionMode,StateIn,vmMaps(IPMap,LabelMap),world(StateIn,TraceOut,ChildWorlds)) :-
@@ -240,28 +267,37 @@ vm(Program,ExecutionMode,StateIn,vmMaps(IPMap,LabelMap),world(StateIn,TraceOut,C
                               VmStateOut=vmState(FinalIP,FinalStack,FinalCallStack,FinalRegisters,FinalVmFlags),
                               minusOne(FinalIP,LastInstrIP),
                               TraceOut=traceOut(FinalTrace,vmState(LastInstrIP,FinalStack,FinalCallStack,FinalRegisters,FinalVmFlags)),
-                              (shouldTerminateWorld(FinalVmFlags)->(ChildWorlds=[]);
-                                (
-                                  NewStartIP_One=FinalIP,
-                                  branchDestination(LastInstrIP,LabelMap,IPMap,NewStartIP_Two),
-                                  Branches=[NewStartIP_One,NewStartIP_Two],
-                                  info("Branches are: ~w",[Branches]),
-                                  explore(Program,ExecutionMode,VmStateOut,vmMaps(IPMap,LabelMap),Branches,[],ChildWorlds)
-                                )
-                              ).
+                              ...
+                              .
 ```
+
+The core interpretation is triggered by the `exec_` predicate. The remaining lines involves taking the output VM state, adjusting its final IP value (which is one address beyond the last executed instruction) to point to the last executed instruction, and repackaging it to bind it to the output variable `TraceOut`.
+
+Let's look at the internal `exec_` loop.
+The `exec_` has two cases:
+
+- The base case is if the `hlt` flag is set to true (`hlt(true)`). This indicates that a `HLT` instruction has been encountered in the execution of the previous instruction. At this point, the `TraceOut` variable is bound to the accumulated program trace and the current VM trace, and returned back to the `vm_` predicate.
 
 ```prolog
 exec_(_,vmState(IP,Stack,CallStack,Registers,flags(ZeroFlag,hlt(true),BranchFlag)),
                   TraceAcc,
                   traceOut(TraceAcc,vmState(IP,Stack,CallStack,Registers,flags(ZeroFlag,hlt(true),BranchFlag))),
                   env(log(_,Info,_,_),_)) :- call(Info,'EXITING PROGRAM LOOP!!!').
+```
+- For the general case (when the last instruction was not `HLT`), we first get the instruction corresponding to the current IP value from the `IPMap` structure. This is then passed to `exec_helper` with all the associated context.
 
+```prolog
 exec_(vmMaps(IPMap,LabelMap),vmState(IP,Stack,CallStack,Registers,VmFlags),TraceAcc,StateOut,Env) :-
                                                     get2(IP,IPMap,Instr),
                                                     exec_helper(Instr,vmMaps(IPMap,LabelMap),
                                                         vmState(IP,Stack,CallStack,Registers,VmFlags),TraceAcc,StateOut,Env).
+```
 
+The `exec_helper` predicate is where the interpretation actually happens. This also has two cases.
+
+- The base case is when an empty instruction is encountered. This can happen if the program does not contain a `HLT` instruction, and execution falls off the end of the program. This is treated equivalent to an implicit `HLT` instruction. Thus, the `TraceOut` variable is bound to whatever context is already present. The only explicit modification is the `hlt` flag which is explicitly set to true.
+
+```prolog
 exec_helper(empty,VmMaps,vmState(IP,Stack,CallStack,Registers,flags(ZeroFlag,_,BranchFlag)),
                     TraceAcc,
                     traceOut(TraceAcc,ExitState),
@@ -269,15 +305,24 @@ exec_helper(empty,VmMaps,vmState(IP,Stack,CallStack,Registers,flags(ZeroFlag,_,B
                             ExitState=vmState(IP,Stack,CallStack,Registers,flags(ZeroFlag,hlt(true),BranchFlag)),
                             call(Warn,'No other instruction found, but no HLT is present. Halting program.'),
                             exec_(VmMaps,ExitState,TraceAcc,traceOut(TraceAcc,ExitState),env(log(Debug,Info,Warn,Error),ExecutionMode)).
+```
 
+- The general case is the actual interpretation of the instruction. Before the `interpret` predicate is called, a `NextIP` variable is initialised to the current IP  incremented by one, to indicate the next instruction that will be executed, **assuming there are no jumps**. This is so that a conditional jump can either return the same `NextIP` (i.e., no jump), or can return a different IP (indicating a jump).
+
+The `interpret` predicate is then called, which has different cases, depending upon the instruction encountered. The various cases are described in [Instruction Interpretation](#instruction-interpretation).
+
+The `shouldBranch()` ternary operator's true condition is only triggered during symbolic execution, so we'll not worry about that for the moment. The negative condition is the concrete execution flow. This part is straightforward. It simply calls the `exec_` predicate recursively with the updated IP.
+
+This mutual recursive call between `exec_` and `exec_helper` continues until a halt condition is reached.
+
+```prolog
 exec_helper(Instr,VmMaps,vmState(IP,Stack,CallStack,Registers,VmFlags),TraceAcc,traceOut(FinalTrace,vmState(FinalIP,FinalStack,FinalCallStack,FinalRegisters,FinalVmFlags)),env(log(Debug,Info,Warning,Error),ExecutionMode)) :-
                                                         call(Debug,'Interpreting ~w and StateIn is ~w', [Instr, vmState(IP,Stack,CallStack,Registers,VmFlags)]),
                                                         plusOne(IP,NextIP),
                                                         interpret(Instr,VmMaps,vmState(NextIP,Stack,CallStack,Registers,VmFlags),vmState(UpdatedIP,UpdatedStack,UpdatedCallStack,UpdatedRegisters,UpdatedVmFlags),env(log(Debug,Info,Warning,Error),ExecutionMode)),
                                                         (shouldBranch(UpdatedVmFlags)->
                                                             (
-                                                                terminateForBranch(vmState(UpdatedIP,UpdatedStack,UpdatedCallStack,UpdatedRegisters,UpdatedVmFlags),vmState(FinalIP,FinalStack,FinalCallStack,FinalRegisters,FinalVmFlags)),
-                                                                FinalTrace=TraceAcc
+                                                                ...
                                                             );
                                                             (
                                                                 call(Debug,'Next IP is ~w',[UpdatedIP]),
@@ -287,6 +332,10 @@ exec_helper(Instr,VmMaps,vmState(IP,Stack,CallStack,Registers,VmFlags),TraceAcc,
                                                         ),
                                                         !.
 ```
+
+![SWI-Prolog Graphical Debugger](/assets/images/swi-prolog-graphical-debugger.png)
+
+## Instruction Interpretation
 
 ## World splitting: the outer loop
 
