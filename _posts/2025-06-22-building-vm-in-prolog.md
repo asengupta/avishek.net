@@ -310,7 +310,7 @@ exec_helper(empty,VmMaps,vmState(IP,Stack,CallStack,Registers,flags(ZeroFlag,_,B
 
 - The general case is the actual interpretation of the instruction. Before the `interpret` predicate is called, a `NextIP` variable is initialised to the current IP  incremented by one, to indicate the next instruction that will be executed, **assuming there are no jumps**. This is so that a conditional jump can either return the same `NextIP` (i.e., no jump), or can return a different IP (indicating a jump).
 
-The `interpret` predicate is then called, which has different cases, depending upon the instruction encountered. The various cases are described in [Instruction Interpretation](#instruction-interpretation).
+The `interpret` predicate is then called, which has different cases, depending upon the instruction encountered. The various cases are described in [Instruction Interpretation](#some-notes-on-instruction-interpretation).
 
 The `shouldBranch()` ternary operator's true condition is only triggered during symbolic execution, so we'll not worry about that for the moment. The negative condition is the concrete execution flow. This part is straightforward. It simply calls the `exec_` predicate recursively with the updated IP.
 
@@ -336,9 +336,24 @@ exec_helper(...) :-
 
 ![SWI-Prolog Graphical Debugger](/assets/images/swi-prolog-graphical-debugger.png)
 
-## Instruction Interpretation
+## Some notes on Instruction Interpretation
 
+Many of the cases for the `interpret` predicate are about retrieving the values of (one or two) registers, performing some manipulation on them (symbolic or arithmetic) and storing the result in the register, as in this example for the `MUL` instruction.
 
+```prolog
+interpret(mul(reg(LHSRegister),reg(RHSRegister)),_,vmState(NextIP,Stack,CallStack,Registers,VmFlags),vmState(NextIP,Stack,CallStack,UpdatedRegisters,VmFlags),env(log(Debug,_,_,_),_)) :-
+                get2(LHSRegister,Registers,LHSValue),
+                get2(RHSRegister,Registers,RHSValue),
+                call(Debug,'LHS is ~w,~w',[LHSRegister,LHSValue]),
+                call(Debug,'RHS is ~w,~w',[RHSRegister,RHSValue]),
+                product(LHSValue,RHSValue,Product),
+                call(Debug,'And result is ~w',[Product]),
+                update_reg(-(reg(LHSRegister),Product),Registers,UpdatedRegisters).
+```
+
+The two `get2` calls retrieve the values of `LHSRegister` and `RHSRegister`. `product` calculates their (symbolic or arithmetic) product. `update_reg` updates the `LHSRegister` with the product.
+
+The two instructions that modify the VM state differently are the `JZ` and `JNZ` instructions, which we have discussed depend upon whether the `ExecutionMode` is `symbolic` or `concrete`.
 
 ## World splitting: the outer loop
 
@@ -358,12 +373,12 @@ The first case triggers when the mode is `symbolic`, and calls the `interpret_sy
 interpret_symbolic_condition(OldNextIP,_,flags(ZeroFlag,HltFlag,_),_,flags(ZeroFlag,HltFlag,branch(true)),OldNextIP).
 ```
 
-The second case triggers when the mode is `concrete` and calls the `interpret_condition` predicate which is described in [Instruction Interpretation](#instruction-interpretation).
+The second case triggers when the mode is `concrete` and calls the `interpret_condition` predicate which is described in [Instruction Interpretation](#some-notes-on-instruction-interpretation).
 
 Where is `branch(true)` actually used? This is in the `exec_helper` predicate, reproduced here with the pertinent code:
 
 ```prolog
-exec_helper(...)) :-
+exec_helper(...) :-
     ...,
     (shouldBranch(UpdatedVmFlags)->
         (
