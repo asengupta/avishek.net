@@ -3,22 +3,22 @@ title: "Building a simple Virtual Machine in Prolog"
 author: avishek
 usemathjax: false
 tags: ["Prolog", "Logic Programming", "Virtual Machine", "Symbolic Execution"]
-draft: true
+draft: false
 ---
 
-In this post, I'll talk about how I wrote a small Virtual Machine in Prolog which can both interpret concrete assembly language-like programs, and run symbolic executions, which is useful in data flow analysis of programs.
+In this post, I'll talk about how I wrote a small **Virtual Machine** in **Prolog** which can both interpret concrete assembly language-like programs, and run basic symbolic executions, which are useful in data flow analyses of programs. The full code is available in this [repository](https://github.com/asengupta/prolog-exercises/blob/main/prolog_examples/symbolic_executor.pl).
 
 _This post has not been written or edited by AI._
 
 ## Building a simple Virtual Machine
 
-One of my favourite exercises to do when learning a new language is to build something which exercises non-trivial capabilities of the language like pattern matching, flexibility of data structures, or exposes the brevity of expressing ideas in the langauge. Building a simple virtual machine forces one to reckon with ideas like expression trees, recursive traversals, term rewriting, etc.
+One of my favourite exercises to do when learning a new language is to build something which exercises non-trivial capabilities of the language like **pattern matching**, flexibility of **data structures**, or exposes the **brevity** of expressing ideas in the langauge. Building a simple virtual machine forces one to reckon with ideas like expression trees, recursive traversals, term rewriting, etc.
 
-I've been reading about symbolic execution as a way to perform dataflow analysis recently as well. As an added challenge, I chose to enhance the concrete interpretation of a program with symbolic execution capabilities.
+I've also been reading about **symbolic execution** as a way to perform dataflow analysis recently as well. As an added challenge, I chose to enhance the concrete interpretation of a program with symbolic execution capabilities.
 
 ## Foundational Operations from the ground-up
 
-We need a map implementation. SWI-Prolog has the dictionaries, but since we are building everything from scratch, we will write a very naive implementation using only lists. Granted, there are some semantics of a dictionary that can be violated for now - for example, you can start off with duplicate keys, but let's assume the happy path.
+We need a **dictionary** implementation. SWI-Prolog has the dictionaries, but since we are building everything from scratch, we will write a very naive implementation using only lists. Granted, there are some semantics of a dictionary that can be violated for now - for example, you can start off with duplicate keys, but let's assume the happy path.
 
 ```prolog
 get2(_,[],empty).
@@ -49,7 +49,7 @@ pop_([H|Rest],H,Rest).
 
 ## Logging
 
-We will be logging quite a bit inside the rules. Thus it is important to have a structured way of logging different levels, like `DEBUG`, `INFO`, `WARNING`, etc. This is what a basic logging setup looks like:
+We will be **logging** quite a bit inside the rules. Thus it is important to have a structured way of logging different levels, like `DEBUG`, `INFO`, `WARNING`, etc. This is what a basic logging setup looks like:
 
 ```prolog
 log_with_level(LogLevel,FormatString,Args) :- format(string(Message),FormatString,Args),format('[~w]: ~w~n',[LogLevel,Message]).
@@ -104,8 +104,8 @@ There will be one flag called the Zero Flag. This should probably be better name
 
 Data can be of two types:
 
-- Concrete data, like numbers, which would be represented like `const(5)`
-- Symbols, which stand in for data, and are used for symbolic execuction. These are represented as `sym(x)`, `sym(abcd)`, etc.
+- **Concrete data**, like numbers, which would be represented like `const(5)`
+- **Symbolic data**, which stand in for concrete data, and are used for **symbolic execuction**, which we'll introduce in [Symbolic Execution and World Splits](#symbolic-execution-and-world-splits). These are represented as `sym(x)`, `sym(abcd)`, etc.
 
 ## Memory Model
 
@@ -115,25 +115,24 @@ For the purposes of this simple VM, I chose not to have any memory. I may add it
 
 The execution model is simple and similar to what we'd expect a very simple single-threaded VM to behave. Every instruction is sequentially mapped to a specific memory address (simple incrementing integers for our purposes). The Instruction Pointer starts at 0. At every instruction, something can happen. Actions include:
 
-- Moving data between registers
-- Loading constants into registers
-- Incrementing / Decrementing registers
-- Push / pop values to / from the stack
-- Unconditional / Conditional jumps to another address
-- Compare registers to other registers or constants
-- Halt (effectively exit the program)
-- Describe a label
-- Call a procedure (defined as a label)
-- Return from a procedure
+- **Moving data** between registers
+- **Loading constants** into registers
+- **Incrementing / Decrementing** registers
+- **Push / pop** values to / from the stack
+- **Unconditional / Conditional jumps** to another address
+- **Compare** registers to other registers or constants
+- **Halt** (effectively exit the program)
+- Declare a **label**
+- **Call** and **return** from a **procedure** (defined as a label)
 
-Jumps work by modifying the value of the Instruction Pointer to the destination address. Procedure calls work similarly, but with an added side effect: the address of the instruction after the `call` is pushed onto the stack: when a `ret` is encountered, the topmost value is popped off the stack and is assigned back to the Instruction Pointer. This simulates the return from the procedure.
+**Jumps work by modifying the value of the Instruction Pointer to the destination address.** Procedure calls work similarly, but with an added side effect: the address of the instruction after the `call` is pushed onto the stack: when a `ret` is encountered, the topmost value is popped off the stack and is assigned back to the Instruction Pointer. This simulates the return from the procedure.
 
 ## Building the navigation maps
 
 There are a couple of mappings we need to build to be able to jump to arbitrary locations because of changes to the IP.
 
-- Mapping between labels to memory addresses
-- Mapping between instructions to memory addresses
+- Mapping **labels to memory addresses**
+- Mapping **memory addresses to instructions**
 
 These mappings are done in the following code:
 
@@ -157,7 +156,7 @@ The `instruction_map` predicate simply assigns every instruction that it finds t
 
 ## Symbolic Execution and World Splits
 
-Symbolic execution is a technique used to determine the provenance of data in a piece of code. Assume, you have a very simplified code segment, like so:
+**Symbolic execution** is a technique used to determine the provenance of data in a piece of code. Assume, you have a very simplified code segment, like so:
 
 ```prolog
 Code=[
@@ -190,7 +189,7 @@ mul(reg(hl),reg(bc))    %  HL now holds mul(inc(sym(a)),sym(b))
 
 Thus at the end `hl`'s contents are `mul(inc(sym(a)),sym(b))`, which is interpreted as `hl=(hl+1)*bc`.
 
-Symbolic execution is a powerful technique for program analysis. There is however one wrinkle we need to take care of when building a symbolic interpreter: branching.
+**Symbolic execution is a powerful technique for program analysis.** There is however one wrinkle we need to take care of when building a symbolic interpreter: **branching**.
 
 Consider the instruction `jz(label(some_label))`. During concrete execution, we can look at the value of the Zero Flag, and then determine whether we want to jump to `some_label` or continue with the normal execution flow. However, the Zero Flag is set based on comparison between two concrete values: what if those values are symbols? You cannot meaningfully compare `sym(a)` and `sym(b)` numerically: they represent a range of values.
 
@@ -200,12 +199,11 @@ The image below is an example of the sort of situation you might encounter at a 
 
 ![Symbolic Execution World Splitting](/assets/images/symbolic-execution-worlds.png)
 
-The answer is that we take both paths. Effectively, we split our execution world into two branches: one which makes the jump, and the other one which contains normal execution. These two branches then continue on as individual threads to completion. Of course, if these branches encounter more conditional jump instructions, more sub-worlds split out of these as well, and so on.
+**The answer is that we take both paths.** Effectively, we split our execution world into two branches: one which makes the jump, and the other one which contains normal execution. These two branches then continue on as individual threads to completion. Of course, if these branches encounter more conditional jump instructions, more sub-worlds split out of these as well, and so on.
 
 **Symbolic execution thus explores all possibilities of a program.**
 
-One issue is that this can easily result in a combinatorial explosion of paths, and symbolic execution engines tackle this in various ways. However, for our simple VM, we will simply keep splitting our world into new branches whenever we encounter conditional jumps.
-
+One issue is that this can easily result in a **combinatorial explosion of paths**, as each binary branch doubles the number of effective worlds. Symbolic execution engines tackle this in various ways. However, for our simple VM, we will simply keep splitting our world into new branches whenever we encounter conditional jumps.
 
 ## Arithmetic operations
 
@@ -243,11 +241,11 @@ The virtual machine state must reflect the exact configuration of registers, fla
 
 `vmState(IP,Stack,CallStack,Registers,flags(zero(v1),hlt(v2),branch(v3))`
 
-- IP: Instruction Pointer, represented as a `const()`
-- Stack: The program writer's stack
-- CallStack: We need a stack to store return addresses when performing procedure calls. However, using the program writer's stack would mess with expectations of the programmer of what should be at the top of the stack. Therefore, a separate call stack is maintained.
-- Registers: A map of the registers with their values
-- Flags: The only flag that a user can set and access (indirectly) is the Zero Flag. However, there are two other (hidden flags) which indicate whether the program is about to halt or branch. The `branch()` compound term is useful to keep track of when to split worlds during symbolic execution. The `hlt()` compound term is to keep track of a halt condition (which can be an explicit `HLT` instruction, or the flow falling off the end of a program without a `HLT` instruction).
+- **IP:** **Instruction Pointer**, represented as a `const()`
+- **Stack:** The program writer's **stack**
+- **CallStack:** We need a stack to store return addresses when performing procedure calls. However, using the program writer's stack would mess with expectations of the programmer of what should be at the top of the stack. Therefore, a separate call stack is maintained.
+- **Registers:** A map of the registers with their values
+- **Flags:** The only flag that a user can set and access (indirectly) is the **Zero Flag**. However, there are two other (hidden flags) which indicate whether the program is about to halt or branch. The `branch()` compound term is useful to keep track of when to split worlds during symbolic execution. The `hlt()` compound term is to keep track of a halt condition (which can be an explicit `HLT` instruction, or the flow falling off the end of a program without a `HLT` instruction).
 
 This `vmState` compound term is passed around everywhere and essentially is equivalent to a `struct` in C (SWI-Prolog has dedicated facilities for representing structures, but I've deliberately kept the code as implementation-neutral as possible).
 
@@ -257,10 +255,14 @@ Accessing data inside this structure is very easy, thanks to unification and pat
 
 ## Inner single world loop
 
+For reference, this is the high level predicate flow that we will be referencing in the explanation of the predicates.
+
+![Symbolic Interpreter Flow](/assets/images/symbolic-interpreter-predicate-flow.png)
+
 Before looking at how branches in symbolic execution are handled, it is instructive to understand how a single world, concrete execution flow works. The inner loop which evaluates a world, starts with:
 
-- The original program, which simply a list of instructions
-- The execution mode is either symbolic or concrete. For the purposes of this explanation, let us assume that it is concrete.
+- The **original program**, which simply a list of instructions
+- The `ExecutionMode` is either `symbolic` or `concrete`. For the purposes of this explanation, let us assume that it is concrete.
 - The `StateIn` is simply the initial VM state which is described in [Virtual Machine state](#virtual-machine-state)
 - The `vmMaps` is a tuple of the IP Map and the label map, as described in [Building the navigation maps](#building-the-navigation-maps)
 - The last variable represents the final output of evaluating this particular world. In particular, the `TraceOut` contains the program trace for this execution. Since we are only doing a concrete flow, there will be no `ChildWorlds`. The code below represents the part of the `vm` predicate which is pertinent to this discussion.
@@ -340,8 +342,6 @@ exec_helper(...) :-
         !.
 ```
 
-![SWI-Prolog Graphical Debugger](/assets/images/swi-prolog-graphical-debugger.png)
-
 ## Some notes on Instruction Interpretation
 
 Many of the cases for the `interpret` predicate are about retrieving the values of (one or two) registers, performing some manipulation on them (symbolic or arithmetic) and storing the result in the register, as in this example for the `MUL` instruction.
@@ -361,9 +361,9 @@ The two `get2` calls retrieve the values of `LHSRegister` and `RHSRegister`. `pr
 
 The two instructions that modify the VM state differently are the `JZ` and `JNZ` instructions, which we have discussed depend upon whether the `ExecutionMode` is `symbolic` or `concrete`.
 
-## Symbolic Execution and World splitting: the outer loop
+## Symbolic Execution and World splitting: The outer loop
 
-Let's talk about symbolic execution. The symbolic execution mode is controlled by two variables:
+Let's talk about how symbolic execution works. The symbolic execution mode is controlled by two variables:
 
 - The `ExecutionMode` variable which can either be `symbolic` or `concrete`.
 - The `branch` flag which is explicitly set to true by conditional jump instructions, only when the `ExecutionMode` is `symbolic`. To see this link, look at the two cases for the `JZ` (Jump if Zero) instruction.
@@ -418,12 +418,14 @@ vm(...) :-
       ).
 ```
 
-At this point, we are back at the top, but we also know that we aren't in a HALT condition (an explicit `HALT` instruction or execution flow falling off the end), therefore we must be at a branch point. Therefore, we extract two IP values, `NewStartIP_One` (the default execution flow IP value) and `NewStartIP_Two` (the jump IP value). Now, we recursively call the `explore` predicate, which is the top-level entry predicate for our VM.
+At this point, we are back at the top, and we need to decide whether to halt the execution entirely, or whether to branch out into different worlds. **How do we determine this?**
+
+**Answer: We know we are back at the top, but we also know that we aren't in a HALT condition (an explicit `HALT` instruction or execution flow falling off the end), therefore we must be at a branch point.** Therefore, we extract two IP values, `NewStartIP_One` (the default execution flow IP value) and `NewStartIP_Two` (the jump IP value). Now, we recursively call the `explore` predicate, which is the top-level entry predicate for our VM.
 
 ## Execution entry point
 
 Let's look at the `explore` predicate.
-The important variable in this predicate is the list of Instruction Pointers. If there is only one IP value (which is what happens when this predicate is first invoked), that means there is only one branch / world. If there are two (or more, though that is not a situation that happens with this VM), it means that there are multiple branches which need to be symbolically interpreted independently, starting from the same set of initial conditions (the VM state, etc.). `explore` is thus called recursively for every conditional branch, until there are none left, thus signalling the end of the symbolic execution tree.
+The important variable in this predicate is the **list of Instruction Pointers**. If there is only one IP value (which is what happens when this predicate is first invoked), that means there is only one branch / world. If there are two (or more, though that is not a situation that happens with this VM), it means that there are multiple branches which need to be symbolically interpreted independently, starting from the same set of initial conditions (the VM state, etc.). `explore` is thus called recursively for every conditional branch, until there are none left, thus signalling the end of the symbolic execution tree.
 
 ```prolog
 explore(_,_,_,_,[],WorldAcc,WorldAcc).
@@ -434,6 +436,10 @@ explore(Program,ExecutionMode,VmState,VmMaps,[IP|OtherIPs],WorldAcc,[WorldOut|Ot
         explore(Program,ExecutionMode,VmState,VmMaps,OtherIPs,WorldAcc,OtherWorldOuts),
         !.
 ```
+
+If you wish to trace the flow yourself and are using **SWI-Prolog**, I'd highly recommend using the **graphical debugger**. It has full support for breakpoints, **step over/step into**, **forcing predicates to fail**, **on-the-fly edit-and-recompile**, and more.
+
+![SWI-Prolog Graphical Debugger](/assets/images/swi-prolog-graphical-debugger.png)
 
 ## Example Programs
 
@@ -485,9 +491,11 @@ execute_symbolic([
 mode(symbolic),AllWorlds),print_worlds(AllWorlds,0).
 ```
 
-## Prolog as a Modelling Language
+## Program statistics
 
-~ 50 lines
-~ 200 lines
+- The first observation I had about the code is that it is **dense**. There is **minimal syntactic overhead**, associated with imperative or object oriented programming. Unification ensures that there are **no verbose assignment statements**, no special syntax to pack and unpack structures. There are a couple of places assignment is used, but it is mostly to improve readability.
+- To get a sense of the expressiveness of the language due to its unification and pattern matching features, the original concrete interpreter (without the symbolic interpretation) was **less than 50 lines of code**.
+- The current version of the  symbolic interpreter, excluding the data structures built from the ground up, takes up around **120 lines of code**.
+
 ## References
 - [Symbolic Interpreter](https://github.com/asengupta/prolog-exercises/blob/main/ilp/prolog_examples/symbolic_executor.pl)

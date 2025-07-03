@@ -8,3 +8,16 @@
 - To start server locally, run ```bundle exec jekyll serve```.
 - To build, run ```bundle exec jekyll build```
 - To regenerate resume, run ```pandoc avishek.net/assets/resume/avishek-sen-gupta-resume-2025-jun.md -s -o avishek.net/assets/resume/avishek-sen-gupta-resume-2025-jun.pdf```
+
+To run Excalidraw locally, run the following:
+
+```
+nvm install --lts
+git clone https://github.com/excalidraw/excalidraw.git
+yarn
+
+docker build -t excalidraw/excalidraw .
+docker run --rm -dit --name excalidraw -p 5000:80 excalidraw/excalidraw:latest
+```
+
+Full instructions [here](https://docs.excalidraw.com/docs/introduction/development)
