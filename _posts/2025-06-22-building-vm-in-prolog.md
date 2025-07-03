@@ -87,6 +87,7 @@ The minimal instruction is comprised of the following:
 - `inc(reg)`
 - `dec(reg)`
 - `mul(reg,reg|constant)`
+- `term(string)`
 
 ## Registers, Flags, and other Data Structures
 
@@ -316,21 +317,21 @@ The `shouldBranch()` ternary operator's true condition is only triggered during 
 This mutual recursive call between `exec_` and `exec_helper` continues until a halt condition is reached.
 
 ```prolog
-exec_helper(Instr,VmMaps,vmState(IP,Stack,CallStack,Registers,VmFlags),TraceAcc,traceOut(FinalTrace,vmState(FinalIP,FinalStack,FinalCallStack,FinalRegisters,FinalVmFlags)),env(log(Debug,Info,Warning,Error),ExecutionMode)) :-
-                                                        call(Debug,'Interpreting ~w and StateIn is ~w', [Instr, vmState(IP,Stack,CallStack,Registers,VmFlags)]),
-                                                        plusOne(IP,NextIP),
-                                                        interpret(Instr,VmMaps,vmState(NextIP,Stack,CallStack,Registers,VmFlags),vmState(UpdatedIP,UpdatedStack,UpdatedCallStack,UpdatedRegisters,UpdatedVmFlags),env(log(Debug,Info,Warning,Error),ExecutionMode)),
-                                                        (shouldBranch(UpdatedVmFlags)->
-                                                            (
-                                                                ...
-                                                            );
-                                                            (
-                                                                call(Debug,'Next IP is ~w',[UpdatedIP]),
-                                                                exec_(VmMaps,vmState(UpdatedIP,UpdatedStack,UpdatedCallStack,UpdatedRegisters,UpdatedVmFlags),TraceAcc,traceOut(RemainingTrace,vmState(FinalIP,FinalStack,FinalCallStack,FinalRegisters,FinalVmFlags)),env(log(Debug,Info,Warning,Error),ExecutionMode)),
-                                                                FinalTrace=[traceEntry(Instr,vmState(UpdatedIP,UpdatedStack,UpdatedCallStack,UpdatedRegisters,UpdatedVmFlags))|RemainingTrace]
-                                                            )
-                                                        ),
-                                                        !.
+exec_helper(...) :-
+        ...,
+        plusOne(IP,NextIP),
+        interpret(Instr,VmMaps,vmState(NextIP,Stack,CallStack,Registers,VmFlags),vmState(UpdatedIP,UpdatedStack,UpdatedCallStack,UpdatedRegisters,UpdatedVmFlags),env(log(Debug,Info,Warning,Error),ExecutionMode)),
+        (shouldBranch(UpdatedVmFlags)->
+            (
+                ...
+            );
+            (
+                call(Debug,'Next IP is ~w',[UpdatedIP]),
+                exec_(VmMaps,vmState(UpdatedIP,UpdatedStack,UpdatedCallStack,UpdatedRegisters,UpdatedVmFlags),TraceAcc,traceOut(RemainingTrace,vmState(FinalIP,FinalStack,FinalCallStack,FinalRegisters,FinalVmFlags)),env(log(Debug,Info,Warning,Error),ExecutionMode)),
+                FinalTrace=[traceEntry(Instr,vmState(UpdatedIP,UpdatedStack,UpdatedCallStack,UpdatedRegisters,UpdatedVmFlags))|RemainingTrace]
+            )
+        ),
+        !.
 ```
 
 ![SWI-Prolog Graphical Debugger](/assets/images/swi-prolog-graphical-debugger.png)
@@ -398,15 +399,19 @@ vm(...) :-
 
 At this point, we are back at the top, but we also know that we aren't in a HALT condition (an explicit `HALT` instruction or execution flow falling off the end), therefore we must be at a branch point. Therefore, we extract two IP values, `NewStartIP_One` (the default execution flow IP value) and `NewStartIP_Two` (the jump IP value). Now, we recursively call the `explore` predicate, which is the top-level entry predicate for our VM.
 
-Let's look at the `explore`
+## Execution entry point
+
+Let's look at the `explore` predicate.
+The important variable in this predicate is the list of Instruction Pointers. If there is only one IP value (which is what happens when this predicate is first invoked), that means there is only one branch / world. If there are two (or more, though that is not a situation that happens with this VM), it means that there are multiple branches which need to be symbolically interpreted independently, starting from the same set of initial conditions (the VM state, etc.). `explore` is thus called recursively for every conditional branch, until there are none left, thus signalling the end of the symbolic execution tree.
+
 ```prolog
 explore(_,_,_,_,[],WorldAcc,WorldAcc).
 explore(Program,ExecutionMode,VmState,VmMaps,[IP|OtherIPs],WorldAcc,[WorldOut|OtherWorldOuts]) :-
-                                                    VmState=vmState(_,Stack,CallStack,Registers,flags(ZeroFlag,_,_)),
-                                                    FreshState=vmState(IP,Stack,CallStack,Registers,flags(ZeroFlag,hlt(false),branch(false))),
-                                                    vm(Program,ExecutionMode,FreshState,VmMaps,WorldOut),
-                                                    explore(Program,ExecutionMode,VmState,VmMaps,OtherIPs,WorldAcc,OtherWorldOuts),
-                                                    !.
+        VmState=vmState(_,Stack,CallStack,Registers,flags(ZeroFlag,_,_)),
+        FreshState=vmState(IP,Stack,CallStack,Registers,flags(ZeroFlag,hlt(false),branch(false))),
+        vm(Program,ExecutionMode,FreshState,VmMaps,WorldOut),
+        explore(Program,ExecutionMode,VmState,VmMaps,OtherIPs,WorldAcc,OtherWorldOuts),
+        !.
 ```
 
 ## Prolog as a Modelling Language
