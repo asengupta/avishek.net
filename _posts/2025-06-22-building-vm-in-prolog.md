@@ -194,7 +194,7 @@ Symbolic execution is a powerful technique for program analysis. There is howeve
 
 Consider the instruction `jz(label(some_label))`. During concrete execution, we can look at the value of the Zero Flag, and then determine whether we want to jump to `some_label` or continue with the normal execution flow. However, the Zero Flag is set based on comparison between two concrete values: what if those values are symbols? You cannot meaningfully compare `sym(a)` and `sym(b)` numerically: they represent a range of values.
 
-So, then the question becomes: which path do we take?
+**So, then the question becomes: which path do we take?**
 
 The answer is that we take both paths. Effectively, we split our execution world into two branches: one which makes the jump, and the other one which contains normal execution. These two branches then continue on as individual threads to completion. Of course, if these branches encounter more conditional jump instructions, more sub-worlds split out of these as well, and so on.
 
@@ -219,7 +219,6 @@ product(const(LHS),sym(RHS),sym(product(const(LHS),sym(RHS)))).
 ```
 
 The predicate definitions take into account meaningful combinations of constants and symbols. As a rule of thumb, any expression containing even one symbol cannot be simplified (save degenerate cases like adding / subtracting 0, multiplying by 1 or 0, subtracting an expression from itself, etc., but we leave those aside for now for simplicity). Thus the only arithmetic simplification we do is when everything in an expression is a constant. For all the others, it creates a new compound term which reflects the operation being performed, which will ultimately be inspected at the end of a run as part of the value of a register.
-
 
 ## Comparison
 
@@ -398,7 +397,7 @@ exec_helper(...) :-
 
 The `shouldBranch()` term is only true when `branch(true)` is true. At this point, it simply returns the entire trace and the VM state as-is, effectively ending the execution of this thread. This is because, beyond this, two new world threads need to be created and run interpreted as their own worlds with identical starting points.
 
-Where does this world splitting take place?
+**Where does this world splitting take place?**
 This happens in the `vm()` predicate, reproduced here with the relevant code
 
 ```prolog
