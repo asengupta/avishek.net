@@ -65,3 +65,5 @@ fileignoreconfig:
   checksum: 8de61d78bbc894b147371ff895515a327ba869b69f42d1b2cd97050e469fca4b
 - filename: assets/papers/programming/Programming_Paradigms_for_Dummies_What_Every_Progr.pdf
   checksum: 2eb4e4da46a441b8fbfdc19effee9fc14fd8fd0c809c4a78d07889e6b1f6f9a9
+- filename: assets/images/symbolic-execution.excalidraw
+  checksum: 7ab33dd791937a8024a0617562f31a7c49e3c73c9fdb363810661320c5a06baf

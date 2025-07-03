@@ -196,9 +196,13 @@ Consider the instruction `jz(label(some_label))`. During concrete execution, we 
 
 **So, then the question becomes: which path do we take?**
 
+The image below is an example of the sort of situation you might encounter at a branch point.
+
+![Symbolic Execution World Splitting](/assets/images/symbolic-execution-worlds.png)
+
 The answer is that we take both paths. Effectively, we split our execution world into two branches: one which makes the jump, and the other one which contains normal execution. These two branches then continue on as individual threads to completion. Of course, if these branches encounter more conditional jump instructions, more sub-worlds split out of these as well, and so on.
 
-Symbolic execution thus explores all possibilities of a program.
+**Symbolic execution thus explores all possibilities of a program.**
 
 One issue is that this can easily result in a combinatorial explosion of paths, and symbolic execution engines tackle this in various ways. However, for our simple VM, we will simply keep splitting our world into new branches whenever we encounter conditional jumps.
 
@@ -222,7 +226,7 @@ The predicate definitions take into account meaningful combinations of constants
 
 ## Comparison
 
-Comparison also works similar to arithmetic operations, in that actual comparison is only performed when both sides are constants. Otherwise a new compound term logging the comparison operator (wrapped in a symbol itself) is returned.
+Comparison also works similar to arithmetic operations, in that actual comparison is _usually_ only performed when both sides are constants. The special case is that if both sides are symbolic expressions with the same structure, that also counts for equality. Otherwise a new compound term logging the comparison operator (wrapped in a symbol itself) is returned.
 
 ```prolog
 equate(LHS,LHS,const(0)).
@@ -357,7 +361,7 @@ The two `get2` calls retrieve the values of `LHSRegister` and `RHSRegister`. `pr
 
 The two instructions that modify the VM state differently are the `JZ` and `JNZ` instructions, which we have discussed depend upon whether the `ExecutionMode` is `symbolic` or `concrete`.
 
-## World splitting: the outer loop
+## Symbolic Execution and World splitting: the outer loop
 
 Let's talk about symbolic execution. The symbolic execution mode is controlled by two variables:
 
