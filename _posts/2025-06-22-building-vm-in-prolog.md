@@ -12,6 +12,9 @@ _This post has not been written or edited by AI._
 
 ## Building a simple Virtual Machine
 
+One of my favourite exercises to do when learning a new language is to build something which exercises non-trivial capabilities of the language like pattern matching, flexibility of data structures, or exposes the brevity of expressing ideas in the langauge. Building a simple virtual machine forces one to reckon with ideas like expression trees, recursive traversals, term rewriting, etc.
+
+I've been reading about symbolic execution as a way to perform dataflow analysis recently as well. As an added challenge, I chose to enhance the concrete interpretation of a program with symbolic execution capabilities.
 
 ## Foundational Operations from the ground-up
 
@@ -429,7 +432,59 @@ explore(Program,ExecutionMode,VmState,VmMaps,[IP|OtherIPs],WorldAcc,[WorldOut|Ot
         !.
 ```
 
+## Example Programs
+
+These are a couple of example programs you can run with this VM.
+
+### Factorial
+
+```prolog
+execute_symbolic([
+     mov(reg(r0),const(5)),
+     mov(reg(r1),const(1)),
+     call(label(factorial)),
+     push(const(30)),
+     cmp(reg(r1),const(121)),
+     hlt,
+     label(factorial),
+     cmp(reg(r0),const(0)),
+     jz(label(base)),
+     push(reg(r0)),
+     dec(reg(r0)),
+     call(label(factorial)),
+     pop(reg(r0)),
+     mul(reg(r1),reg(r0)),
+     ret,
+
+     label(base),
+     mov(reg(r1),const(1)),
+     ret
+],
+mode(concrete),AllWorlds),print_worlds(AllWorlds,0).
+```
+
+### Symbolic execution example
+
+```prolog
+execute_symbolic([
+    mov(reg(r1),const(10)),inc(reg(r1)),
+    mov(reg(r2),const(20)),
+    cmp(reg(r1), const(0)),
+    jnz(const(7)),
+    cmp(reg(r2), const(1)),
+    mov(reg(r1),const(30)),
+    jz(const(10)),
+    mov(reg(r3), const(40)),
+    hlt,
+    mov(reg(r3), const(50)),
+    hlt
+],
+mode(symbolic),AllWorlds),print_worlds(AllWorlds,0).
+```
+
 ## Prolog as a Modelling Language
 
+~ 50 lines
+~ 200 lines
 ## References
 - [Symbolic Interpreter](https://github.com/asengupta/prolog-exercises/blob/main/ilp/prolog_examples/symbolic_executor.pl)
