@@ -6,9 +6,9 @@ tags: ["Software Engineering", "Reverse Engineering", "COBOL", "Transpilation"]
 draft: true
 ---
 
-_This post has not been written or edited by AI._
-
 We will be talking about techniques in abstract, but will refer to concrete implementations in [Cobol-REKT](https://github.com/avishek-sen-gupta/cobol-rekt) as needed.
+
+_This post has not been written or edited by AI._
 
 ## Contents
 
