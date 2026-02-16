@@ -1,5 +1,14 @@
 heading: Code
 projects:
+  - name: Mojo LSP
+    description: A vibe-coded LSP client for experiments
+    link: https://github.com/avishek-sen-gupta/mojo-lsp
+  - name: Cartographer
+    description: A multi-stack code exploration and reverse engineering tool
+    link: https://github.com/avishek-sen-gupta/cartographer
+  - name: PICK Basic Tree-Sitter LSP
+    description: Tree Sitter grammar for PICK Basic
+    link: https://github.com/avishek-sen-gupta/pick-basic-treesitter-lsp
   - name: Cobol REKT
     description: An evolving toolkit of capabilities helpful for reverse engineering legacy Cobol code
     link: https://github.com/avishek-sen-gupta/cobol-rekt
