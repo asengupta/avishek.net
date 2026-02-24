@@ -69,3 +69,5 @@ fileignoreconfig:
   checksum: 7ab33dd791937a8024a0617562f31a7c49e3c73c9fdb363810661320c5a06baf
 - filename: assets/images/symbolic-execution.excalidraw
   checksum: b37648cb8e5834298fa9d982e4dcbd2b3bf01cd1fa341b7ac893f2c2eb0de58b
+- filename: assets/resume/avishek-sen-gupta-resume-2025-jun.md
+  checksum: b41fa4663f5f899c51ba6c010680b9135370b85bf77f8662ae40cbe1326a3cb4

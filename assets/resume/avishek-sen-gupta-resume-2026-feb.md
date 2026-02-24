@@ -1,8 +1,8 @@
 # Avishek Sen Gupta
 
-## Principal Consultant, ThoughtWorks
+## Director of Engineering, ThoughtWorks
 
-__Avishek Sen Gupta__ works with ThoughtWorks as a __Principal Consultant__ with over 20 years of experience in the creation of large-scale distributed systems involving integration of disparate components, legacy and greenfield. He consults with clients on design, architecture, technical choices, patterns, testing techniques and development methodologies. He has worked with C#/. NET development, J2EE technologies, Ruby on Rails, NodeJS, R for statistical analysis, Python for ML and Large Language Model-based solutions, and Objective C for mobile (iOS) development.
+__Avishek Sen Gupta__ works with ThoughtWorks as a __Director of Software Engineering__ with over 21 years of experience in the creation of large-scale distributed systems involving integration of disparate components, legacy and greenfield. He consults with clients on design, architecture, technical choices, patterns, testing techniques and development methodologies. He has worked with C#/. NET development, J2EE technologies, Ruby on Rails, NodeJS, R for statistical analysis, Python for ML and Large Language Model-based solutions, and Objective C for mobile (iOS) development.
 His current interests include compiler engineering, integrating symbolic AI with connectionist AI, logic programming with Prolog/Datalog, and OCaml.
 
 ## Domains
@@ -37,13 +37,17 @@ Engineers can pick components from this library to incorporate into their revers
 
 **Basis-Processing** [[https://github.com/asengupta/Basis](https://github.com/asengupta/Basis) ] : A library for easily plotting and transforming arbitrary non-orthogonal coordinate systems in Ruby=Processing.
 
+**Mojo LSP** [https://github.com/avishek-sen-gupta/mojo-lsp](https://github.com/avishek-sen-gupta/mojo-lsp): A generic Language Server Protocol (LSP) client library for Node.js, supporting multi-language LSP server access over stdio and socket transports without IDE lock-in. Includes a REST bridge server exposing LSP functionality over HTTP. Intended for use in experiments in AI inference on legacy codebases.
+
+**Pick BASIC Tree-Sitter LSP** [https://github.com/avishek-sen-gupta/pick-basic-treesitter-lsp](https://github.com/avishek-sen-gupta/pick-basic-treesitter-lsp): A tree-sitter grammar and Language Server Protocol (LSP) implementation for Pick BASIC (UniVerse BASIC). Provides parsing, syntax highlighting, diagnostics, go-to-definition, find references, hover documentation, and code completion capabilities, with a VS Code extension.
+
 **Jquery-Jenkins-Radiator** [[https://github.com/asengupta/jquery-jenkins-radiator](https://github.com/asengupta/jquery-jenkins-radiator) ] : A jQuery-based build radiator for Jenkins, with support for multiple radiators, independent refreshes and timeouts.
 
 ## **Experience**
 
 **AI-assisted Reverse Engineering Product**
 
-Avishek Sen Gupta is currently engaged as a Principal in developing an internal AI-assisted product for reverse and forward engineering legacy codebases in multiple stacks including COBOL, HLASM, Java, C#, DB2 SQL, PL-SQL and T-SQL. The tool uses a combination of code graphs and Large Language Models to reverse engineer requirements from legacy code, and feed into an agent graph to build modernised code. This information is also used to extract higher-level domain capabilities from the system. This product has been successfully used in both PoCs and production systems, and continues to be under active development.
+Avishek Sen Gupta is currently engaged in an Architecture / Engineering / Product capacity in developing an internal AI-assisted product for reverse and forward engineering legacy codebases in multiple stacks including COBOL, HLASM, Java, C#, DB2 SQL, PL-SQL and T-SQL. The tool uses a combination of code graphs and Large Language Models to reverse engineer requirements from legacy code, and feed into an agent graph to build modernised code. This information is also used to extract higher-level domain capabilities from the system. This product has been successfully used in both PoCs and production systems, and continues to be under active development.
 
 **AI-assisted Reverse + Forward Engineering of Mainframe Assembly+COBOL Legacy Systems at a US Financial Group offering insurance services**
 
@@ -338,7 +342,7 @@ Avishek has driven several developer workshops called Object Bootcamps in univer
 
 These are in addition to the several ad-hoc and planned sessions he has done on projects.
 
-He has also spoken in internal ThoughtWorks technical conferences.
+He has also spoken in technical conferences, eg: [XConf](https://www.youtube.com/watch?v=qAvQWaCzKZo&t=1845s&pp=ygUXeGNvbmYgYXZpc2hlayBzZW4gZ3VwdGE%3D)
 
 **Technologies worked on**
 

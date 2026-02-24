@@ -7,7 +7,7 @@
 - To render presentation, start server with ```marp --watch assets/presentations/value-articulation-guide.md assets/presentations/value-articulation-guide-ppt.html```.
 - To start server locally, run ```bundle exec jekyll serve```.
 - To build, run ```bundle exec jekyll build```
-- To regenerate resume, run ```pandoc avishek.net/assets/resume/avishek-sen-gupta-resume-2025-jun.md -s -o avishek.net/assets/resume/avishek-sen-gupta-resume-2025-jun.pdf```
+- To regenerate resume, run ```pandoc avishek.net/assets/resume/avishek-sen-gupta-resume-2026-feb.md -s -o avishek.net/assets/resume/avishek-sen-gupta-resume-2026-feb.pdf```
 
 To run Excalidraw locally, run the following:
 
