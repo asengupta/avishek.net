@@ -18,6 +18,7 @@ Here's what I learned about directing an AI to build non-trivial systems — and
 
 ---
 
+![Demo](/assets/red-dragon-tui.gif)
 ## Part 1: Codescry — Learning to Steer (Feb 18–23)
 
 ### The Problem
