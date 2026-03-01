@@ -8,6 +8,8 @@ draft: false
 
 *How a universal IR, 15 deterministic frontends, a symbolic VM, and an obsessive audit loop produced 7,268 tests with zero LLM calls.*
 
+![RedDragon TUI Demo](/assets/red-dragon-tui.gif)
+
 ---
 
 ## The Problem
