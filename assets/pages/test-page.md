@@ -2,6 +2,7 @@
 title: "Test Page"
 author: avishek
 usemathjax: true
+mermaid: true
 tags: ["Test Tag"]
 draft: false
 ---
@@ -39,7 +40,7 @@ beginAtZero: true
 
 ## MermaidJS Test
 
-{% mermaid %}
+```mermaid
 graph LR;
 debt[Tech Debt]-->principal[Cost of Fixing Debt: Principal];
 debt-->interest[Recurring Cost: Interest];
@@ -54,7 +55,7 @@ microservice-->downtime[Downtime]-->lost_transactions[Lesser Lost Transactions];
 style microservice fill:#006f00,stroke:#000,stroke-width:2px,color:#fff
 style debt fill:#006fff,stroke:#000,stroke-width:2px,color:#fff
 style architecture_decision fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
-{% endmermaid %}
+```
 
 ## IncludeCodeTag Test
 ```python

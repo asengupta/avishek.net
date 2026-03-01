@@ -28,10 +28,6 @@ plugins:
   - jekyll-feed
   - jekyll-sitemap
   - jekyll-seo-tag
-  - jekyll-mermaid
-
-mermaid:
-  src: '/assets/javascript/mermaid.min.js'
 
 theme: jekyll-theme-minimal
 title: Total Internal Reflection

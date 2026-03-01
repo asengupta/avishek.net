@@ -1,6 +1,7 @@
 ---
 title: "Economic Factors in Software Architectural Decisions"
 author: avishek
+mermaid: true
 usemathjax: true
 tags: ["Software Engineering", "Software Engineering Economics"]
 draft: false
@@ -112,7 +113,7 @@ Using **features as units of economic value** therefore seems plausible. The nex
 
 **We propose that economic value be attached to the tests which verify that features function properly.** Different aspects of the feature can be validated by different sorts of tests.
 
-{% mermaid %}
+```mermaid
 graph TD
 subgraph features[Features]
 feature1[Feature]
@@ -139,7 +140,7 @@ feature3-->test3[Tests]
 test1-->economic_value[Economic Value]
 test2-->economic_value
 test3-->economic_value
-{% endmermaid %}
+```
 
 Code may be refactored into patterns; more macro-level organisational units are generally represented as architectural elements. For this discussion, patterns are treated as lower level abstractions than architectures, even though they appear at the same level in the fiagram above. Thus, patterns are largely independent of the architectures they are applied in. For example, whether you are using a microservice architecture or not does not constrain you from either using or not using a factory pattern in any of those microservices.
 

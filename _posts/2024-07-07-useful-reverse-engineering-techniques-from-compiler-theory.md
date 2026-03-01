@@ -1,6 +1,7 @@
 ---
 title: "Experiments in Reverse Engineering COBOL codebases"
 author: avishek
+mermaid: true
 usemathjax: false
 tags: ["Software Engineering", "Reverse Engineering", "COBOL", "Transpilation"]
 draft: true
@@ -145,7 +146,7 @@ The flowgraph is created from the intermediate syntax tree with a few salient po
 - Control flow edges are added only as needed, and not indiscriminately as in the earlier version of the flowgraph.
 - Subroutine calls result in one outgoing edge from the call instruction ```BODY``` to the ```ENTER``` instruction of the start routine, and one incoming edge from the ```EXIT``` instruction of the end routine (which can be the start routine itself) to the ```EXIT``` instruction of the call instruction. The diagram below shows this scheme (the dotted arrow doesn't actually exist).
 
-{% mermaid %}
+```mermaid
 flowchart TD
     TJ_ENTRY["[ENTER] jump(subroutine-1)"]
     TJ_BODY["[BODY] jump(subroutine-1)"]
@@ -163,7 +164,7 @@ flowchart TD
     TS1_BODY --> T3
     T3 --> TS1_EXIT
     TS1_EXIT --> TJ_EXIT
-{% endmermaid %}
+```
 
 ## Control Flow Analysis
 In compiler theory, control flow analysis is usually done for the purposes of enabling various code optimisations and transformations. One way this is done is by identifying control structures in code which are not immediately apparent. For example, loops made out of ```IF```s and ```GOTO```s can be identified and such apparently 'unstructured' code can be transformed into structured programming constructs.
@@ -183,7 +184,7 @@ Such transformations are made easier when flowgraphs have a property called **re
 
 ### The concept of a 'natural loop'
 
-{% mermaid %}
+```mermaid
 flowchart TD
     T0["Instruction 0"]
     T1["Instruction 1"]
@@ -200,7 +201,7 @@ flowchart TD
     T4 --> T5
     T5 --> T1
     T5 --> T6
-{% endmermaid %}
+```
 
 Intuitively, we can see
 ### Depth First Tree Ordering

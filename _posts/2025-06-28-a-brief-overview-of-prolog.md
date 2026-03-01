@@ -1,6 +1,7 @@
 ---
 title: "Automated Reasoning: A brief overview of Prolog"
 author: avishek
+mermaid: true
 usemathjax: false
 tags: ["Logic Programming", "Automated Reasoning", "Prolog"]
 draft: false
@@ -433,17 +434,17 @@ true.
 
 You will notice that it returns two truth values. Each of these correspond to one of these viable paths. Conceptually, Prolog constructs the following abstract execution tree.
 
-{% mermaid %}
+```mermaid
 graph TD;
 can_reach_be["can_reach(b,e)"]-->chol[AND];
 chol[AND] --> edge_bZ["edge(b,Z)"];
 chol[AND] --> can_reach_Ze["can_reach(Z,e)"];
 style chol fill:#006f00,stroke:#000,stroke-width:2px,color:#fff
-{% endmermaid %}
+```
 
 This abstract execution tree gets concretised and constrained by the space of available solutions. In this case, the two values that `Z` can take are `c` and `d`. Thus, the execution tree runs for each of these paths.
 
-{% mermaid %}
+```mermaid
 graph TD;
 can_reach_bc["can_reach(b,e)"]-->path_Z_is_c;
 can_reach_bc["can_reach(b,e)"]-->path_Z_is_d;
@@ -457,7 +458,7 @@ and_Zd[AND] --> edge_bc_Zd["edge(b,c)"];
 and_Zd[AND] --> can_reach_de["can_reach(d,e)"];
 style and_Zc fill:#006f00,stroke:#000,stroke-width:2px,color:#fff
 style and_Zd fill:#006f00,stroke:#000,stroke-width:2px,color:#fff
-{% endmermaid %}
+```
 
 Once a solution is found, Prolog **walks back up the tree**. At each preceding level, it attempts to find more viable paths to exhaust the space of all possible solutions. In this case, both paths `Z=c` and `Z=d` are viable, `true` is returned twice, corresponding to each of those paths.
 

@@ -1,6 +1,7 @@
 ---
 title: "Every Software Engineer is an Economist"
 author: avishek
+mermaid: true
 usemathjax: true
 tags: ["Software Engineering", "Software Engineering Economics"]
 draft: false
@@ -186,7 +187,7 @@ ATD must have cost=principal (amount to pay to implement) + interest (continuing
 
 The following is an example of how a cash flow of an architectural decision might look like.
 
-{% mermaid %}
+```mermaid
 graph LR;
 architecture_decision[Architecture Decision]-->atd_principal[Cost of Architectural Decision: Principal];
 architecture_decision-->recurring_atd_interest[Recurring Costs: Interest];
@@ -194,7 +195,7 @@ architecture_decision-->recurring_atd_savings[Recurring Development Savings];
 architecture_decision-->atd_option_premium[Architecture Option Premium];
 
 style architecture_decision fill:#006fff,stroke:#000,stroke-width:2px,color:#fff
-{% endmermaid %}
+```
 
 {% include_chart atd_cbam!500!500!{
     type: 'bar',
@@ -268,7 +269,7 @@ If you are suggesting a new microservice for processing payments, these might be
 - **Option Premium**
     - Architecture Seam (see [Articulating Value: The Value of Timing](#2-articulating-value-the-value-of-timing-aka-real-options))
 
-{% mermaid %}
+```mermaid
 graph LR;
 microservice[Microservice ADR]-->database[Cloud DB Resources];
 microservice-->hosting[Cloud Hosting Resources];
@@ -279,7 +280,7 @@ microservice-->downtime[Downtime]-->lost_transactions[Lost Transaction Costs];
 microservice-->microservice_option_premium[Architecture Seam: Option Premium];
 
 style microservice fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
-{% endmermaid %}
+```
 
 #### 2. The Economics of Technical Debt repayment
 
@@ -293,7 +294,7 @@ style microservice fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
 
 The following is an example of how a value tree of a (general) Tech Debt might look like.
 
-{% mermaid %}
+```mermaid
 graph LR;
 debt[Tech Debt]-->principal[Cost of Fixing Debt: Principal];
 debt-->interest[Recurring Cost: Interest];
@@ -301,7 +302,7 @@ debt-->td_option_premium[Tech Debt Option Premium];
 debt-->risk[Risk-Related Cost, eg, Security Breach];
 
 style debt fill:#006f00,stroke:#000,stroke-width:2px,color:#fff
-{% endmermaid %}
+```
 
 **Example Tech Debt Cash Flow**
 
@@ -413,7 +414,7 @@ Before we get into the nitty-gritties of how to actually measure this, let's tal
 
 In general, any metric's value tree should encapsulate (most of) the following elements.
 
-{% mermaid %}
+```mermaid
 graph LR;
 metric[Metric]-->speed[Speed]-->time_to_market[Time to Market]-->first_mover_fast_follower[First Mover/Fast Follower Economic Advantage]
 time_to_market-->time_value[Time Value of Savings/Profits]
@@ -421,7 +422,7 @@ first_mover_fast_follower-->|No|no_invest[Don't Invest]
 first_mover_fast_follower-->|Yes|invest[Invest]
 time_value-->|Low|less_invest[Invest Less]
 time_value-->|High|more_invest[Invest More]
-{% endmermaid %}
+```
 
 It is also important to note that a single metric does not contribute to the speed effect. Other factors like development effort are key input factors in custom software development. Let's speak of the values which a metric can be traced to.
 
@@ -439,7 +440,7 @@ What business decisions do DORA metrics support? We can follow the above value t
 
 This is an example value tree for DORA metrics.
 
-{% mermaid %}
+```mermaid
 graph LR;
 df[Deployment Frequency]-->speed[Speed]-->time_to_market[Time to Market]-->first_mover_fast_follower[First Mover/Fast Follower Economic Advantage]
 mlt[Lead Time for Changes]-->speed
@@ -449,7 +450,7 @@ first_mover_fast_follower-->|No|no_invest[Don't Invest]
 first_mover_fast_follower-->|Yes|invest[Invest]
 time_value-->|Low|less_invest[Invest Less]
 time_value-->|High|more_invest[Invest More]
-{% endmermaid %}
+```
 
 There are a lot more concepts that I'd like to cover, including:
 

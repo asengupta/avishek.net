@@ -1,6 +1,7 @@
 ---
 title: "Road to Gaussian Processes"
 author: avishek
+mermaid: true
 usemathjax: true
 tags: ["Machine Learning", "Gaussian Processes", "Theory"]
 ---
@@ -12,7 +13,7 @@ I'd like to do some high level dives into some of the topics I believe will help
 ## Theory Track for Gaussian Processes
 The map below shows the rough order in which the preliminary material will be presented.
 
-{% mermaid %}
+```mermaid
 graph TD;
 quad[Quadratic Form of Matrix]-->chol[Cholesky Factorisation];
 tri[Triangular Matrices]-->chol[Cholesky Factorisation];
@@ -31,7 +32,7 @@ Marginalisation-->gp[Gaussian Processes]
 style chol fill:#006f00,stroke:#000,stroke-width:2px,color:#fff
 style mvn fill:#006fff,stroke:#000,stroke-width:2px,color:#fff
 style gp fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
-{% endmermaid %}
+```
 
 Let's survey the topics and their relevance quickly in this article.
 

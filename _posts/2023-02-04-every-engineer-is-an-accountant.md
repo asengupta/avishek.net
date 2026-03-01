@@ -1,6 +1,7 @@
 ---
 title: "Every Software Engineer is an Accountant"
 author: avishek
+mermaid: true
 usemathjax: true
 tags: ["Software Engineering", "Software Engineering Economics"]
 draft: false
@@ -123,7 +124,7 @@ I admit that I'm partial to the Binomial Option Pricing Model, because the binom
 
 **There is no one approach that can account for all types of software.** At the same time, multiple approaches may be applicable to a single type of software, with varying degrees of importance. It is important to note that the following categories are not mutually exclusive. The map below shows the type of value analysis that could be done for each kind of investment or asset.
 
-{% mermaid %}
+```mermaid
 graph TD
 platform[Platform] --> rov[Real Options Valuation]
 external[Products with External Transactional Value] --> dcf[Discounted Cash Flow]
@@ -133,7 +134,7 @@ internal --> rrm[Relief from Royalty Method]
 enterprise_modernisation[Enterprise Modernisation] --> rov
 enterprise_modernisation --> opex_npv
 maintenance[Maintenance] --> opex_npv
-{% endmermaid %}
+```
 
 **1. Platform**  
 **Use: Real Option Valuation**  
@@ -196,7 +197,7 @@ Suppose we have the situation above where a decision needs to be made. There is 
 
 Let X be the event that there will be a savings of $20000. Then $$P(X)=0.3$$. We can represent all the possibilities using a Decision Tree, like below.
 
-{% mermaid %}
+```mermaid
 graph LR
 A ==>|Cost=5000| implement["Implement"]
 A -->|Cost=0| dont_implement["Do Not Implement"]
@@ -204,7 +205,7 @@ implement ==>|"P(X)=0.3"| savings_1[Savings=20000-5000=15000]
 implement ==>|"1-P(X)=0.7"| no_savings_1[Savings=0-5000=-5000]
 dont_implement -->|"P(X)=0.3"| savings_2[Savings=0]
 dont_implement -->|"1-P(X)=0.7"| no_savings_2[Savings=0]
-{% endmermaid %}
+```
 
 Now, if we did not have any information beyond these probabilities, we'd pick the decision which maximises the expected payoff. The payoff from this decision is called the Expected Monetary Value, and is defined as:
 
@@ -218,7 +219,7 @@ Now assume we had a perfect expert who knew whether the decision is going to act
 
 The payoff then would be calculated using the following graph. The graph switches the chance nodes and the decision nodes, and for each chance node, picks the decision node which maximises the payoff.
 
-{% mermaid %}
+```mermaid
 graph LR
 A ==> savings["Savings<br>P(X)=0.3"]
 A ==> no_savings["No Savings<br>1-P(X)=0.7"]
@@ -226,7 +227,7 @@ savings ==>|Cost=5000| implement_1[Implement<br>Savings=20000-5000=15000]
 savings -->|Cost=0| dont_implement_1[Don't Implement<br>Savings=0]
 no_savings -->|Cost=5000| implement_2[Implement<br>Savings=0-5000=-5000]
 no_savings ==>|Cost=0| dont_implement_2[Don't Implement<br>Savings=0]
-{% endmermaid %}
+```
 
 We can then calculate expected payoff given perfect information (denoted as EV\|PI) as:
 
@@ -256,7 +257,7 @@ Assume that if there are savings to be made, the expert says "Good" 80% of the t
 
 In the above table, E is the random variable representing the opinion of the expert, and S is the random variable representing the realisation of savings. We can again represent all possibilities via a probability tree, like so:
 
-{% mermaid %}
+```mermaid
 graph LR
 A ==> savings["Savings<br>P(X)=0.3"]
 A ==> no_savings["No Savings<br>1-P(X)=0.7"]
@@ -272,7 +273,7 @@ p_1-->p_good["P(Good)=0.24+0.07=0.31"]
 p_3-->p_good
 p_2-->p_bad["P(Bad)=0.06+0.63=0.69"]
 p_4-->p_bad
-{% endmermaid %}
+```
 
 We now have our joint probabilities $$P(S,E)$$. What we really want to find is $$P(S \vert E)$$. By Bayes' Rule, we can write:
 
@@ -282,7 +283,7 @@ $$
 
 We can thus calculate the conditional probabilities of the payoff given the expert's prediction with the following graph.
 
-{% mermaid %}
+```mermaid
 graph LR
 p_1["P(Good,Savings)=0.3 x 0.8 = 0.24"]-->p_good["P(Good)=0.24+0.07=0.31"]
 p_2["P(Bad,Savings)=0.3 x 0.2 = 0.06"]-->p_bad["P(Bad)=0.06+0.63=0.69"]
@@ -296,11 +297,11 @@ p_3 --> p_no_savings_good["P(No Savings | Good)=0.07/0.31=0.226"]
 p_good --> p_no_savings_good
 p_4 --> p_no_savings_bad["P(No Savings | Bad)=0.63/0.69=0.913"]
 p_bad --> p_no_savings_bad
-{% endmermaid %}
+```
 
 Now we go back and calculate EMV again in the light of these new probabilities. The difference in this new tree is that in addition to the probability branches of our original uncertainty, we also need to add the branches for the expert's predictions, whose conditional probabilities we have just deduced.
 
-{% mermaid %}
+```mermaid
 graph LR
 A ==>|0.31| p_good[Good]
 A ==>|0.69| p_bad[Bad]
@@ -332,7 +333,7 @@ dont_implement_no_savings_given_bad ==> dont_implement_no_savings_given_bad_payo
 implement_savings_given_good_payoff ==> plus(("+"))
 implement_no_savings_given_good_payoff ==> plus
 plus ==> max_payoff_given_good[10480] ==> max_payoff[10480 X 0.31=3249]
-{% endmermaid %}
+```
 
 Thus, $3249 is the maximum amount we'd be willing to pay this expert given the level of our confidence in them. This number is the **Expected Value of Imperfect Information**. Remember that the EVPI was $3500, so EVII <= EVPI. If you remember, the expert's fee was $3400. This means that we would be overpaying the expert by $3400-$3249=$151.
 

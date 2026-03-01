@@ -1,6 +1,7 @@
 ---
 title: "Transformers using PyTorch : Worklog Part 2"
 author: avishek
+mermaid: true
 usemathjax: true
 tags: ["Machine Learning", "PyTorch", "Programming", "Deep Learning", "Transformers"]
 draft: false
@@ -34,7 +35,7 @@ The diagram below (you'll need to zoom in) shows the data flow for a single Enco
 
 The dimensions of the data at each stage are depicted to facilitate understanding.
 
-{% mermaid %}
+```mermaid
 graph LR;
     subgraph Encoder
         encoder_src[Source Text]--nx512-->pos_encoding[Positional Encoding];
@@ -188,7 +189,7 @@ graph LR;
         softmax--mxV-->select_max_probabilities[Select Maximum Probability Token for each Position]
         select_max_probabilities--1xm-->transformer_output[Transformer Output]
     end
-{% endmermaid %}
+```
 
 ## Notes on the Code
 

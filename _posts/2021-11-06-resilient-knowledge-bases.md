@@ -1,6 +1,7 @@
 ---
 title: "Resilient Knowledge Bases : Fundamentals, not Buzzwords"
 author: avishek
+mermaid: true
 usemathjax: true
 tags: ["Technology", "Resilient Knowledge Base"]
 draft: false
@@ -51,7 +52,7 @@ Let's take a look at some examples of what I consider as **'fundamental'**. Your
 
 Here's the lens applied to only a single aspect of the design of a transactional system, maybe a payments integrator.
 
-{% mermaid %}
+```mermaid
 graph TD;
 payments[Payments System]
 system_of_record[System of Record]
@@ -72,7 +73,7 @@ style payments fill:#006f00,stroke:#000,stroke-width:2px,color:#fff
 style system_of_record fill:#006fff,stroke:#000,stroke-width:2px,color:#fff
 style tradeoffs fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
 
-{% endmermaid %}
+```
 
 A few notes before introducing the main lesson. We need to work with the actual system of record (possibly the payment service provider), and thus need to ensure consistency of data between the our system and the service provider. There is not a single way of ensuring consistency, and we would want to make tradeoffs depending upon the operational constraints that are present to us.
 
@@ -84,7 +85,7 @@ Of course, this is highly simplified, and the system design of such a component 
 
 Let's look at another, more detailed map, this time of a certain technique in **Machine Learning**, called **Gaussian Processes**.
 
-{% mermaid %}
+```mermaid
 graph TD;
 quad[Quadratic Form of Matrix]
 chol[Cholesky Factorisation]
@@ -117,7 +118,7 @@ mercers_theorem-->kernels
 style chol fill:#006f00,stroke:#000,stroke-width:2px,color:#fff
 style mvn fill:#006fff,stroke:#000,stroke-width:2px,color:#fff
 style gp fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
-{% endmermaid %}
+```
 
 The exact details of the graph are not very important; what is salient to note is that the nodes closer to the sources are progressively more generally applicable to a problem statement in the domain. As simple examples, understanding **kernels**, and by extension **Mercer's Theorem** and/or **Reproducing Hilbert Kernel Spaces**, equips us equally well to understand how coefficients are computed in a different ML technique called **Support Vector Machines**. As another, more trivial, example, understanding the concept of a covariance matrix and general matrix theory, equips us very well to understand the tools used in a lot of other ML techniques, ranging from **Linear Regression** to **Principal Components Analysis**.
 

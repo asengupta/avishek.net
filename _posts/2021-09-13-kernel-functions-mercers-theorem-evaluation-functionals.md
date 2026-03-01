@@ -1,6 +1,7 @@
 ---
 title: "Mercer's Theorem: Mathematical Preliminaries "
 author: avishek
+mermaid: true
 usemathjax: true
 tags: ["Mathematics", "Theory", "Functional Analysis", "Mercer's Theorem", "Pure Mathematics"]
 draft: true
@@ -19,7 +20,7 @@ It is also advisable (though not necessary) to review [Kernel Functions with Rep
 
 Here is the roadmap for understanding the concepts relating to Mercer's Theorem.
 
-{% mermaid %}
+```mermaid
 graph TD;
 sequences[Sequences]
 function_sequences[Function Sequences]
@@ -51,7 +52,7 @@ style compact_set fill:#006f00,stroke:#000,stroke-width:2px,color:#fff
 style spectral_theorem fill:#006fff,stroke:#000,stroke-width:2px,color:#fff
 style mercer_theorem fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
 style arzela_ascoli_theorem fill:#8f0ff0,stroke:#000,stroke-width:2px,color:#fff
-{% endmermaid %}
+```
 
 ## Sequences and Boundedness
 ## Cauchy Sequences
