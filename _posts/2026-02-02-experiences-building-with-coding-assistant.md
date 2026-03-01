@@ -3,7 +3,7 @@ title: "Architecting Non-Trivial Systems with Claude Code: A Practitioner's Acco
 author: avishek
 usemathjax: false
 tags: ["Software Engineering", "Compilers", "Program Analysis", "Symbolic Execution", "AI-Assisted Development"]
-draft: false
+draft: true
 ---
 
 *How I built three interconnected code analysis tools — spanning 15 language frontends, a symbolic VM, dataflow analysis, embedding classifiers, and Datalog engines — in 9 days with an AI pair programmer.*
