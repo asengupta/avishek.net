@@ -33,3 +33,8 @@ theme: jekyll-theme-minimal
 title: Total Internal Reflection
 description: Technology and Art
 markdown: kramdown
+
+sass:
+  quiet_deps: true
+  silence_deprecations:
+    - import
