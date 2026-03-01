@@ -2,6 +2,7 @@
 title: "Designing RedDragon: A Multi-Language Symbolic Code Analysis Engine"
 author: avishek
 usemathjax: false
+mermaid: true
 tags: ["Software Engineering", "Compilers", "Program Analysis", "Symbolic Execution", "AI-Assisted Development"]
 draft: false
 ---
@@ -18,7 +19,9 @@ I wanted to analyse source code across many languages (trace data flow, build co
 
 The twist: I also wanted to handle *incomplete* programs gracefully. Real-world code depends on imports, frameworks, and external systems that aren't available during static analysis. Most tools crash or give up when they hit an unresolved reference. I wanted mine to keep going, creating symbolic placeholders for unknowns and tracing data flow through them.
 
-RedDragon is the result. It parses source in 15 languages, lowers it to a universal intermediate representation, builds control flow graphs, performs iterative dataflow analysis, and executes programs symbolically via a deterministic virtual machine. All with zero LLM calls for programs with concrete inputs.
+[RedDragon](https://github.com/avishek-sen-gupta/red-dragon) is the result. It parses source in 15 languages, lowers it to a universal intermediate representation, builds control flow graphs, performs iterative dataflow analysis, and executes programs symbolically via a deterministic virtual machine. All with zero LLM calls for programs with concrete inputs.
+
+RedDragon is part of a family of three tools: [Codescry](https://github.com/avishek-sen-gupta/codescry) (a repo surveying toolkit that detects integration points using regex, ML classifiers, code embeddings, and LLM classification) and [RedDragon-Codescry TUI](https://github.com/avishek-sen-gupta/reddragon-codescry-tui) (a terminal UI integrating the two). The TUI demo is shown above.
 
 This post covers how the system was designed, how it evolved, and the engineering discipline that kept it coherent across 28 architectural decisions and 400+ conversation sessions with Claude Code.
 
@@ -44,27 +47,18 @@ This post covers how the system was designed, how it evolved, and the engineerin
 
 RedDragon follows a classic compiler pipeline, extended with symbolic execution:
 
-```
-Source Code (15 languages)
-    │
-    ▼
-┌─────────────────────┐
-│  Frontend           │  tree-sitter parse → AST → IR
-│  (deterministic or  │  Sub-millisecond, zero LLM calls
-│   LLM-based)        │
-└─────────┬───────────┘
-          │  list[IRInstruction]
-          ▼
-┌─────────────────────┐
-│  CFG Builder        │  Basic blocks + edges
-└─────────┬───────────┘
-          │
-    ┌─────┴─────┐
-    ▼           ▼
-┌────────┐  ┌──────────────┐
-│  VM    │  │  Dataflow     │
-│(symex) │  │  Analysis     │
-└────────┘  └──────────────┘
+```mermaid
+%%{ init: { "flowchart": { "curve": "stepBefore" } } }%%
+flowchart TD
+src["Source Code (15 languages)"]-->frontend["Frontend<br/>(deterministic or LLM-based)"]
+frontend-->|"list[IRInstruction]"|cfg["CFG Builder"]
+cfg-->vm["VM (symex)"]
+cfg-->dataflow["Dataflow Analysis"]
+style src fill:#4a90d9,stroke:#000,stroke-width:2px,color:#fff
+style frontend fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
+style cfg fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
+style vm fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
+style dataflow fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
 ```
 
 Every stage operates on the same flat IR. The VM and dataflow analysis are language-agnostic. They don't know whether the instructions came from Python, Rust, or COBOL.
@@ -73,33 +67,120 @@ Every stage operates on the same flat IR. The VM and dataflow analysis are langu
 
 ## The IR: 19 Opcodes to Rule Them All
 
-The intermediate representation is a flattened three-address code with 19 opcodes:
+The intermediate representation is a flattened three-address code with 19 opcodes, grouped by role:
 
 ```
-CONST, BINOP, UNOP,
-STORE_VAR, LOAD_VAR,
-STORE_FIELD, LOAD_FIELD,
-STORE_INDEX, LOAD_INDEX,
-CALL_FUNCTION, CALL_METHOD,
-BRANCH, BRANCH_IF, LABEL,
-RETURN, THROW,
-NEW_OBJECT, NEW_ARRAY,
-SYMBOLIC
+Value producers:   CONST, LOAD_VAR, LOAD_FIELD, LOAD_INDEX,
+                   NEW_OBJECT, NEW_ARRAY, BINOP, UNOP,
+                   CALL_FUNCTION, CALL_METHOD, CALL_UNKNOWN
+
+Value consumers:   STORE_VAR, STORE_FIELD, STORE_INDEX
+
+Control flow:      BRANCH, BRANCH_IF, LABEL, RETURN, THROW
+
+Escape hatch:      SYMBOLIC
 ```
 
 Every instruction is a flat dataclass: an opcode, a list of operands, a destination register, and a source location tracing it back to the original code. No nested expressions. `a + b * c` decomposes into:
 
 ```
-%0 = CONST b
-%1 = CONST c
-%2 = BINOP *, %0, %1
-%3 = CONST a
-%4 = BINOP +, %3, %2
+%0 = const b
+%1 = const c
+%2 = binop * %0 %1
+%3 = const a
+%4 = binop + %3 %2
 ```
 
 This verbosity is the trade-off for universality. CFG construction, dataflow analysis, and VM execution all operate on the same flat list. Adding a new language means emitting these 19 opcodes; everything downstream works automatically.
 
-The `SYMBOLIC` opcode is the escape hatch. When a frontend encounters a construct it doesn't handle, it emits `SYMBOLIC "unsupported:list_comprehension"` instead of crashing. The VM treats it as a symbolic value that propagates through execution. Over time, these emissions get replaced with real IR. The project's history is essentially the story of systematically eliminating every last `SYMBOLIC`.
+### Source Location Traceability
+
+Every instruction carries a `SourceLocation` with start/end line and column, captured from the tree-sitter AST node that generated it. The IR's string representation appends this:
+
+```
+%0 = const 10  # 1:4-1:6
+```
+
+This means any IR instruction, any VM execution step, any dataflow dependency can be traced back to the exact span of source code that produced it. When a symbolic value appears in the output, its provenance chain leads back to specific source lines.
+
+### Control Flow in the IR
+
+All control flow is explicit. There are no structured `if`/`while`/`for` constructs in the IR. A simple `if/else` lowers to labels, conditional branches, and unconditional jumps:
+
+```
+%0 = binop > x 5
+branch_if %0 if_true_0,if_false_0
+if_true_0:
+  %1 = const 1
+  store_var y %1
+  branch if_end_0
+if_false_0:
+  %2 = const 0
+  store_var y %2
+  branch if_end_0
+if_end_0:
+  ...
+```
+
+`BRANCH_IF` encodes both targets in its label field (comma-separated). The CFG builder splits the IR into basic blocks at every `LABEL` and after every `BRANCH`/`BRANCH_IF`/`RETURN`/`THROW`, then wires edges based on the branch targets. Loops become back-edges: a `while` loop's `BRANCH` at the end of the body points back to the condition's label.
+
+### Functions as IR Patterns
+
+Function definitions are lowered as *skip-over* patterns. The body is emitted inline in the IR, bracketed by a `BRANCH` that jumps past it (so the body isn't executed at definition time) and a `LABEL` marking the entry point:
+
+```
+branch end_add_0              # skip over body
+func_add_0:                   # entry point
+  %0 = symbolic param:a       # parameter binding
+  store_var a %0
+  %1 = symbolic param:b
+  store_var b %1
+  %2 = load_var a
+  %3 = load_var b
+  %4 = binop + %2 %3
+  return %4
+end_add_0:
+  %5 = const <function:add@func_add_0>
+  store_var add %5
+```
+
+Parameters are emitted as `SYMBOLIC` instructions with a `param:` prefix. A `FunctionRegistry` scans the IR to extract parameter names from these markers and maps class names to method labels. This metadata drives call resolution at execution time.
+
+### Three Call Variants
+
+The IR distinguishes three kinds of calls by their operand layout:
+
+- **`CALL_FUNCTION`**: static calls where the target is a known name. Operands: `[func_name, arg0, arg1, ...]`
+- **`CALL_METHOD`**: method calls on objects. Operands: `[obj_reg, method_name, arg0, arg1, ...]`
+- **`CALL_UNKNOWN`**: dynamic calls where the target is a computed expression (a variable holding a function reference, or a closure). Operands: `[target_reg, arg0, arg1, ...]`
+
+The frontend decides which to emit based on the AST: `foo(x)` emits `CALL_FUNCTION`, `obj.foo(x)` emits `CALL_METHOD`, and `some_var(x)` where `some_var` isn't a known function emits `CALL_UNKNOWN`.
+
+### Object and Array Construction
+
+Objects and arrays are created via `NEW_OBJECT`/`NEW_ARRAY` followed by `STORE_FIELD`/`STORE_INDEX` for each member. An array literal `[1, 2, 3]` lowers to:
+
+```
+%0 = const 3
+%1 = new_array list %0
+%2 = const 0
+%3 = const 1
+store_index %1 %2 %3         # array[0] = 1
+%4 = const 1
+%5 = const 2
+store_index %1 %4 %5         # array[1] = 2
+%6 = const 2
+%7 = const 3
+store_index %1 %6 %7         # array[2] = 3
+```
+
+This verbose expansion means the VM and dataflow analysis see every individual element assignment, which matters for tracking which values flow into which positions.
+
+### The SYMBOLIC Escape Hatch
+
+`SYMBOLIC` is the escape hatch. When a frontend encounters a construct it doesn't handle, it emits `SYMBOLIC "unsupported:list_comprehension"` instead of crashing. The VM treats it as a symbolic value that propagates through execution. Parameters use it too (`SYMBOLIC "param:x"`), as do caught exceptions (`SYMBOLIC "caught_exception:ValueError"`).
+
+Over time, `unsupported:` emissions get replaced with real IR as frontends gain coverage. The project's history is essentially the story of systematically eliminating every last `SYMBOLIC`.
 
 ---
 
@@ -123,12 +204,18 @@ The heart of the deterministic frontends is a `BaseFrontend` class (~950 lines) 
 
 The lowering dispatch chain:
 
-```
-lower(root)
-  → _lower_block(root)           # iterate named children
-    → _lower_stmt(child)         # skip noise/comments; try STMT_DISPATCH
-      → _lower_expr(child)       # fallback: try EXPR_DISPATCH
-        → SYMBOLIC("unsupported:X")  # final fallback
+```mermaid
+%%{ init: { "flowchart": { "curve": "stepBefore" } } }%%
+flowchart TD
+lower["lower(root)"]-->block["_lower_block(root)<br/><i>iterate named children</i>"]
+block-->stmt["_lower_stmt(child)<br/><i>skip noise/comments; try STMT_DISPATCH</i>"]
+stmt-->expr["_lower_expr(child)<br/><i>fallback: try EXPR_DISPATCH</i>"]
+expr-->sym["SYMBOLIC('unsupported:X')<br/><i>final fallback</i>"]
+style lower fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
+style block fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
+style stmt fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
+style expr fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
+style sym fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
 ```
 
 Common constructs (`if/else`, `while`, `for`, `return`, `function_definition`, `class_definition`, `try/catch`) are handled in the base class. Language-specific constructs override or extend. Overridable constants handle the small but persistent differences across grammars:
@@ -158,15 +245,105 @@ The original design had the LLM deciding state changes at each execution step. W
 
 The key insight came from a simple question: *"Given that the IR is always bounded, shouldn't execution be deterministic?"* Yes. If the IR has no unbounded loops (or loops are bounded by concrete values), execution is a mechanical process. Unknown values don't need to be *resolved*. They can be *created* as symbolic placeholders that propagate through computation.
 
-So we ripped out all LLM calls from the VM. When execution hits an unresolved import or function, it creates a `SymbolicValue` with a descriptive hint:
+So we ripped out all LLM calls from the VM. The entire execution engine became reproducible across runs.
+
+### VM State: Frames, Heap, and Closures
+
+The VM's state is held in a single `VMState` dataclass:
+
+```python
+@dataclass
+class VMState:
+    heap: dict[str, HeapObject]          # flat object store
+    call_stack: list[StackFrame]         # LIFO execution frames
+    path_conditions: list[str]           # branch assumptions
+    symbolic_counter: int = 0            # fresh-name generator
+    closures: dict[str, ClosureEnvironment]  # shared mutable cells
+```
+
+Each `StackFrame` has a **two-level namespace**: `registers` for IR temporaries (`%0`, `%1`, ...) and `local_vars` for source-level named variables. This separation keeps the three-address code machinery invisible to the analysis layer, which only cares about named variables.
+
+The heap is a flat dictionary mapping addresses (`"obj_0"`, `"arr_1"`) to `HeapObject` instances. Each `HeapObject` stores a `type_hint` and a `fields` dictionary. Arrays use stringified indices as field keys. This uniform representation means the VM doesn't distinguish between object field access and array indexing at the storage level.
+
+### Opcode Dispatch
+
+The `LocalExecutor` maps each of the 19 `Opcode` enum values to a handler function via a static dispatch table:
+
+```python
+DISPATCH: dict[Opcode, Any] = {
+    Opcode.CONST: _handle_const,
+    Opcode.BINOP: _handle_binop,
+    Opcode.CALL_FUNCTION: _handle_call_function,
+    Opcode.LOAD_FIELD: _handle_load_field,
+    # ... all 19 opcodes
+}
+```
+
+Every handler receives the instruction, the VM state, the CFG, and a function registry, and returns an `ExecutionResult`. No handler mutates the VM directly. Instead, each constructs a `StateUpdate` describing the desired mutations.
+
+### StateUpdate: The Communication Contract
+
+`StateUpdate` is the universal contract between handlers and the state engine. It's a pure data object listing all effects:
+
+```python
+class StateUpdate:
+    register_writes: dict[str, Any]      # %0 = value
+    var_writes: dict[str, Any]           # x = value
+    heap_writes: list[HeapWrite]         # obj.field = value
+    new_objects: list[NewObject]         # allocate on heap
+    call_push: StackFramePush | None     # push new frame
+    call_pop: bool                       # pop frame on return
+    path_condition: str | None           # branch assumption
+    next_label: str | None               # jump target
+```
+
+This separation of *computation* (handlers) from *mutation* (`apply_update`) is a deliberate functional core / imperative shell split. The handlers are pure functions that return data. The mutation is centralised in one place.
+
+### `apply_update()`: The Single Mutator
+
+All state changes flow through a single function, `apply_update()`, which applies a `StateUpdate` to the VM in a strict order:
+
+1. **New objects**: allocate heap entries
+2. **Register writes**: write to the current frame's registers
+3. **Heap writes**: update object fields (materialising synthetic entries if needed)
+4. **Path condition**: record branch assumptions
+5. **Call push**: push a new `StackFrame` onto the call stack
+6. **Variable writes**: write to the *current* frame's `local_vars` (which is the new frame if step 5 fired)
+7. **Call pop**: pop the call stack on return
+
+The ordering of steps 5 and 6 is the subtle part. When calling a function, parameters need to land in the *new* frame, not the caller's. By pushing the frame first (step 5) and writing variables second (step 6), parameter bindings automatically go to the right place without any special-casing.
+
+Step 6 also handles closure synchronisation: if a written variable is in the frame's `captured_var_names`, the write is mirrored to the shared `ClosureEnvironment`, ensuring that mutations inside closures are visible to other closures sharing the same environment.
+
+### Symbolic Value Propagation
+
+When execution hits an unresolved import or function, the VM creates a `SymbolicValue` with a descriptive hint:
 
 ```
 sym_0 (hint: "math.sqrt(16)")
 ```
 
-This symbolic value propagates through arithmetic, field access, and method calls deterministically. `sym_0 + 1` produces `sym_1` with the provenance chain intact. The execution trace is reproducible across runs.
+This symbolic value propagates through computation deterministically. Each handler checks whether its operands are symbolic. If either operand of a `BINOP` is symbolic, the result is a fresh symbolic with a constraint recording the expression:
 
-The trade-off is that symbolic branches always take the true path (a simplification), and symbolic values can't be resolved to concrete results without help. For the latter, a configurable `UnresolvedCallResolver` allows plugging in an LLM oracle that makes lightweight calls to get plausible concrete values. This is opt-in, not the default path.
+```
+sym_0 + 1  →  sym_1 (constraint: "sym_0 + 1")
+```
+
+Field access on a symbolic object creates a symbolic field with lazy heap materialisation: the first access to `sym_0.x` allocates a synthetic heap entry and caches a symbolic value for `x`, so subsequent accesses to the same field return the same symbolic. This deduplication is important for dataflow analysis, where repeated reads of the same field should trace back to the same definition.
+
+Concrete operations that fail (division by zero, unsupported operator) produce an `UNCOMPUTABLE` sentinel, which triggers symbolic fallback rather than crashing.
+
+The trade-off is that symbolic branches always take the true path (a simplification), and symbolic values can't be resolved to concrete results without help.
+
+### The UnresolvedCallResolver
+
+For the latter trade-off, a configurable `UnresolvedCallResolver` uses the Strategy pattern:
+
+**SymbolicResolver** (default): creates a fresh symbolic for any unknown call. Zero LLM calls, fully deterministic.
+
+**LLMPlausibleResolver** (opt-in): sends a structured prompt to an LLM with the function name, arguments, and current VM state, then parses the response into a `StateUpdate`. Falls back to `SymbolicResolver` on failure.
+
+This separation keeps the default execution path fast and reproducible while allowing users to opt into richer (but slower, non-deterministic) analysis when needed.
 
 ### Closures
 
@@ -181,7 +358,11 @@ def make_counter():
     return inc
 ```
 
-With snapshot capture, `inc()` always reads `count = 0`. The fix was shared `ClosureEnvironment` cells: all closures from the same scope share a mutable environment, matching Python/JavaScript semantics. This is the kind of deep correctness issue that only surfaces through specific test cases. It's documented as ADR-019 in the project's decision records.
+With snapshot capture, `inc()` always reads `count = 0`. The fix was shared `ClosureEnvironment` cells: all closures from the same scope share a mutable environment, matching Python/JavaScript semantics. When a nested function is created, the enclosing frame's variables are copied into a `ClosureEnvironment`. On each call, captured variables are injected into the new frame, and `apply_update()` mirrors writes back to the shared environment. This is the kind of deep correctness issue that only surfaces through specific test cases. It's documented as ADR-019 in the project's decision records.
+
+### Built-in Functions
+
+The VM includes a small table of built-in functions (`len`, `range`, `print`, `int`, `float`, `str`, `bool`, `abs`, `max`, `min`, plus array constructors) that are resolved before falling through to the `UnresolvedCallResolver`. Each built-in handles symbolic arguments gracefully: `len` of a symbolic list returns a symbolic, `range` with symbolic bounds returns `UNCOMPUTABLE`, and so on. This keeps common operations concrete without requiring language-specific runtime support.
 
 ---
 
@@ -367,5 +548,7 @@ RedDragon started as a question: *"Can I build a single system that analyses cod
 None of the individual components are novel. TAC IR, dispatch tables, worklist dataflow, symbolic execution are all textbook techniques. The value, if any, is in applying them together to a practical multi-language analysis tool and then hardening the result through systematic auditing.
 
 The architecture wasn't planned upfront. The deterministic VM emerged from asking *"shouldn't this be deterministic?"* The audit loop emerged from asking *"what's still missing?"* The Exercism test suite emerged from wanting more confidence than unit tests alone could provide. Each decision was triggered by testing the previous one on real code and noticing a gap.
+
+All three projects are open source: [RedDragon](https://github.com/avishek-sen-gupta/red-dragon), [Codescry](https://github.com/avishek-sen-gupta/codescry), and [RedDragon-Codescry TUI](https://github.com/avishek-sen-gupta/reddragon-codescry-tui).
 
 _This post has not been written or edited by AI._
