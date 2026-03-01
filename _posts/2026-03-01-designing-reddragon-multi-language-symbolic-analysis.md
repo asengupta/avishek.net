@@ -6,7 +6,7 @@ tags: ["Software Engineering", "Compilers", "Program Analysis", "Symbolic Execut
 draft: false
 ---
 
-*How a universal IR, 15 deterministic frontends, a symbolic VM, and an obsessive audit loop produced 7,268 tests with zero LLM calls.*
+*A universal IR, 15 deterministic frontends, a symbolic VM, and an iterative audit loop.*
 
 ![RedDragon TUI Demo](/assets/red-dragon-tui.gif)
 
@@ -67,7 +67,7 @@ Source Code (15 languages)
 └────────┘  └──────────────┘
 ```
 
-Every stage operates on the same flat IR. The VM and dataflow analysis are completely language-agnostic. They have no idea whether the instructions came from Python, Rust, or COBOL. That's the whole point.
+Every stage operates on the same flat IR. The VM and dataflow analysis are language-agnostic. They don't know whether the instructions came from Python, Rust, or COBOL.
 
 ---
 
@@ -113,7 +113,7 @@ All three frontend strategies produce the same `list[IRInstruction]`. They diffe
 
 **3. Chunked LLM frontend:** For large files that overflow context windows. Tree-sitter decomposes the file into per-function chunks, each is LLM-lowered independently, registers and labels are renumbered to avoid collisions, and the chunks are reassembled into a single IR.
 
-The key architectural decision was making the LLM path a *compiler frontend*, not a *reasoning engine*. When you constrain the LLM to pattern-matching against a formal schema, output quality jumps dramatically. It's not reasoning about semantics. It's translating syntax, which is exactly what LLMs trained on millions of code files are good at.
+The key architectural decision was making the LLM path a *compiler frontend*, not a *reasoning engine*. When you constrain the LLM to pattern-matching against a formal schema, output quality improves. It's translating syntax, not reasoning about semantics.
 
 ---
 
@@ -152,7 +152,7 @@ Adding support for a new AST node type is mechanical: write a handler method, re
 
 ## The Deterministic VM
 
-The most important architectural decision in RedDragon was making the VM fully deterministic.
+One decision shaped the rest of the project more than any other: making the VM fully deterministic.
 
 The original design had the LLM deciding state changes at each execution step. When the VM encountered an unknown value, it asked the LLM what to do. This was slow, non-deterministic, untestable, and fragile.
 
@@ -164,7 +164,7 @@ So we ripped out all LLM calls from the VM. When execution hits an unresolved im
 sym_0 (hint: "math.sqrt(16)")
 ```
 
-This symbolic value propagates through arithmetic, field access, and method calls deterministically. `sym_0 + 1` produces `sym_1` with the provenance chain intact. The entire execution trace is reproducible. Run it twice, get exactly the same result.
+This symbolic value propagates through arithmetic, field access, and method calls deterministically. `sym_0 + 1` produces `sym_1` with the provenance chain intact. The execution trace is reproducible across runs.
 
 The trade-off is that symbolic branches always take the true path (a simplification), and symbolic values can't be resolved to concrete results without help. For the latter, a configurable `UnresolvedCallResolver` allows plugging in an LLM oracle that makes lightweight calls to get plausible concrete values. This is opt-in, not the default path.
 
@@ -205,7 +205,7 @@ The interesting part is step 4. The IR uses temporary registers (`%0`, `%1`, ...
 
 The raw def-use chain says "`y` depends on `%2`". But a human wants to know "`y` depends on `x`". The dependency graph builder traces through the register chain: `%2` comes from `BINOP` on `%0` and `%1`; `%0` comes from `LOAD_VAR x`; `%1` is a constant. Therefore `y` depends on `x`. Transitive closure extends this across multi-step computations.
 
-The dataflow module has zero dependencies on the VM, frontends, or backends. It's a pure analysis pass over the CFG. This is the ports-and-adapters architecture in practice: the functional core (analysis logic) is completely decoupled from the imperative shell (parsing, I/O, LLM calls).
+The dataflow module has no dependencies on the VM, frontends, or backends. It's a pure analysis pass over the CFG, decoupled from the imperative shell (parsing, I/O, LLM calls).
 
 ---
 
@@ -215,7 +215,7 @@ RedDragon's evolution followed a clear pattern of phases, each triggered by test
 
 **Phase 1: The monolith (Hour 0 to 2).** A single `interpreter.py` with an LLM-based lowering and execution engine. ~1,200 lines. It worked, barely.
 
-**Phase 2: The determinism pivot (Hour 2 to 4).** The key insight: execution should be deterministic. Ripped out all LLM calls from the VM. Added symbolic value creation. This was the decision that made everything else possible. Suddenly the system was testable.
+**Phase 2: The determinism pivot (Hour 2 to 4).** The key insight: execution should be deterministic. Ripped out all LLM calls from the VM. Added symbolic value creation. Once the VM was deterministic, everything became testable.
 
 **Phase 3: Multi-language frontends (Hour 4 to 8).** Asked: *"How hard is it to write deterministic logic to lower ASTs for 15 languages?"* The answer: not that hard, with tree-sitter and a dispatch table engine. 15 frontends generated in a single marathon session. 346 tests.
 
@@ -236,13 +236,13 @@ Exercism 4:  ~7,076 tests
 Final:        7,268 tests (+ 3 xfailed)
 ```
 
-Every test runs with zero LLM calls. Every test is deterministic.
+All tests run without LLM calls and are deterministic.
 
 ---
 
 ## The Audit Loop: Systematic Completeness
 
-The most distinctive engineering pattern in RedDragon was the *audit-fix-reaudit* loop. After every batch of frontend work, I ran a comprehensive two-pass audit:
+A recurring pattern in RedDragon's development was the *audit-fix-reaudit* loop. After every batch of frontend work, I ran a comprehensive two-pass audit:
 
 **Pass 1 (Dispatch Comparison):** Parse source samples in all 15 languages, collect every AST node type that appears, compare against the frontend's dispatch tables, and classify unhandled types as structural (harmless, consumed by parent handlers) or substantive (gaps that produce `SYMBOLIC`).
 
@@ -267,13 +267,13 @@ Re-audit → 12 gaps found → implement all 12 (18 new tests)
 Re-audit → 0 gaps, 0 SYMBOLIC
 ```
 
-This pattern (audit, batch-fix, re-audit) was the single most effective technique for driving the system toward completeness. I didn't enumerate every missing feature upfront. I let the audit tell me what was missing, fixed everything it found, and repeated until it found nothing.
+This pattern (audit, batch-fix, re-audit) was more effective than trying to enumerate every missing feature upfront. The audit told me what was missing, I fixed what it found, and repeated until it found nothing.
 
 ---
 
 ## Cross-Language Verification via Exercism
 
-The most ambitious verification effort was the Exercism integration test suite. The idea: take Exercism's canonical test cases (which define expected inputs and outputs for programming exercises), write equivalent solutions in all 15 languages, and verify that RedDragon's pipeline produces the correct answer for every case in every language.
+The broadest verification effort was the Exercism integration test suite. The idea: take Exercism's canonical test cases (which define expected inputs and outputs for programming exercises), write equivalent solutions in all 15 languages, and verify that RedDragon's pipeline produces the correct answer for every case in every language.
 
 Each exercise tests a specific set of language constructs:
 
@@ -306,13 +306,13 @@ For each exercise, every canonical test case generates tests across three dimens
 
 The argument substitution mechanism deserves a mention: a `build_program()` helper finds the `answer = f(default_arg)` line in each solution and substitutes new arguments for each canonical test case. This works across languages with different assignment syntaxes (`=`, `:=`, `: type =`) via regex.
 
-The Exercism suite was the single biggest driver of quality. Each exercise exposed new gaps: Ruby's `parenthesized_statements` vs Python's `parenthesized_expression`, Rust's expression-position loops, Pascal's single-quote string escaping, PHP's `.` concatenation operator. Every gap found was a bug fixed.
+The Exercism suite surfaced more bugs than any other test approach. Each exercise exposed new gaps: Ruby's `parenthesized_statements` vs Python's `parenthesized_expression`, Rust's expression-position loops, Pascal's single-quote string escaping, PHP's `.` concatenation operator. Every gap found was a bug fixed.
 
 ---
 
 ## Guardrails: The CLAUDE.md as Architecture
 
-RedDragon was built almost entirely through conversations with Claude Code. Across 400+ sessions, the most important technical artifact wasn't any Python module. It was `CLAUDE.md`, the file that encodes development rules.
+RedDragon was built almost entirely through conversations with Claude Code, across 400+ sessions. The file that had the most impact on consistency wasn't any Python module. It was `CLAUDE.md`, which encodes the development rules.
 
 Some of the rules that shaped the codebase most:
 
@@ -322,7 +322,7 @@ Some of the rules that shaped the codebase most:
 
 **"If a function has a non-None return type, never return None."** Combined with null object pattern enforcement, this eliminated an entire class of `NoneType` errors. Functions that can't produce a value return a null object, not `None`.
 
-**"Before committing anything, run all tests, fixing them if necessary."** This simple rule prevented test count regression across 100+ commits. The test count only ever went up.
+**"Before committing anything, run all tests, fixing them if necessary."** This prevented test count regression across 100+ commits.
 
 **"Once a design is finalised, document it as an ADR."** This produced 28 timestamped architectural decision records that serve as the project's institutional memory. Each records the context, the decision, and the consequences, including trade-offs.
 
@@ -332,7 +332,7 @@ The workflow encoded in CLAUDE.md is: **Brainstorm → Discuss trade-offs → Pl
 
 ## What I'd Do Differently
 
-**Start with the audit earlier.** The two-pass audit should have existed from the first batch of frontends. Instead, I relied on manual inspection for the first 50 sessions, and only built the audit when the number of frontends made manual checking impossible. The audit loop was the highest-leverage quality tool in the project.
+**Start with the audit earlier.** The two-pass audit should have existed from the first batch of frontends. Instead, I relied on manual inspection for the first 50 sessions, and only built the audit when the number of frontends made manual checking impossible. In hindsight, the audit loop was what kept quality from drifting.
 
 **Invest in cross-language tests from day one.** The Rosetta and Exercism suites exposed more bugs than all the language-specific unit tests combined. A single exercise tested across 15 languages covers more surface area than 50 unit tests in one language.
 
@@ -362,12 +362,10 @@ The workflow encoded in CLAUDE.md is: **Brainstorm → Discuss trade-offs → Pl
 
 ## Conclusion
 
-RedDragon started as a question: *"Can I build a single system that analyses code in any language?"* It evolved through iterative probing into a compiler pipeline with 15 deterministic frontends, a symbolic VM, and cross-language verification that would be impractical to build by hand.
+RedDragon started as a question: *"Can I build a single system that analyses code in any language?"* It evolved into a compiler pipeline with 15 deterministic frontends, a symbolic VM, and cross-language verification.
 
-The system design isn't novel in its components. TAC IR, dispatch tables, worklist dataflow, symbolic execution are all textbook techniques. What's unusual is the *combination*: applying classical compiler techniques to build a practical multi-language analysis tool, hardened through systematic auditing and cross-language testing.
+None of the individual components are novel. TAC IR, dispatch tables, worklist dataflow, symbolic execution are all textbook techniques. The value, if any, is in applying them together to a practical multi-language analysis tool and then hardening the result through systematic auditing.
 
-The architecture crystallised through empirical feedback, not upfront design. The deterministic VM wasn't planned. It emerged from asking *"shouldn't this be deterministic?"* The audit loop wasn't planned. It emerged from asking *"what's still missing?"* The Exercism test suite wasn't planned. It emerged from wanting more confidence than unit tests alone could provide.
-
-Each of these decisions was triggered by testing the previous one on real code and noticing a gap. The fastest path to a good architecture isn't to design it upfront. It's to build, test, and let the gaps tell you what to fix next.
+The architecture wasn't planned upfront. The deterministic VM emerged from asking *"shouldn't this be deterministic?"* The audit loop emerged from asking *"what's still missing?"* The Exercism test suite emerged from wanting more confidence than unit tests alone could provide. Each decision was triggered by testing the previous one on real code and noticing a gap.
 
 _This post has not been written or edited by AI._
