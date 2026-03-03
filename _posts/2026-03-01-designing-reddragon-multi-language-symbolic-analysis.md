@@ -4,7 +4,7 @@ author: avishek
 usemathjax: false
 mermaid: true
 tags: ["Software Engineering", "Compilers", "Program Analysis", "Symbolic Execution", "AI-Assisted Development"]
-draft: true
+draft: false
 ---
 
 *A universal IR, 15 deterministic frontends, a symbolic VM, and an iterative audit loop.*
