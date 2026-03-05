@@ -49,10 +49,11 @@ RedDragon explores three ideas about analysing frequently-incomplete code, the k
 2. [A Worked Example: Source to Execution](#a-worked-example-source-to-execution)
 3. [The IR: 27 Opcodes to Rule Them All](#the-ir-27-opcodes-to-rule-them-all)
 4. [Frontends: Four Strategies, One Output](#frontends-four-strategies-one-output)
-5. [The Dispatch Table Engine](#the-dispatch-table-engine)
-6. [The Deterministic VM](#the-deterministic-vm)
-7. [Dataflow Analysis](#dataflow-analysis)
-8. [Cross-Language Verification via Exercism](#cross-language-verification-via-exercism)
+5. [LLM-Assisted AST Repair](#llm-assisted-ast-repair)
+6. [The Dispatch Table Engine](#the-dispatch-table-engine)
+7. [The Deterministic VM](#the-deterministic-vm)
+8. [Dataflow Analysis](#dataflow-analysis)
+9. [Cross-Language Verification via Exercism](#cross-language-verification-via-exercism)
 
 ---
 
@@ -346,7 +347,7 @@ Over time, `unsupported:` emissions get replaced with real IR as frontends gain 
 
 All four frontend strategies produce the same `list[IRInstruction]`. They differ in speed, coverage, and determinism:
 
-**1. Deterministic frontends (15 languages):** Python, JavaScript, TypeScript, Java, Ruby, Go, PHP, C#, C, C++, Rust, Kotlin, Scala, Lua, Pascal. These use tree-sitter for parsing and a dispatch-table-based recursive descent for lowering. Sub-millisecond. Zero LLM calls. Fully testable. Each frontend is modularised into separate files for expressions, control flow, and declarations, inheriting from a shared `BaseFrontend`. An optional **AST repair decorator** wraps any deterministic frontend with an LLM-assisted error-fixing loop: when tree-sitter produces ERROR or MISSING nodes, the repair loop extracts the error spans, asks an LLM to fix only the broken fragments, patches the source, and re-parses. This maximises deterministic coverage for real-world malformed code with zero overhead when the source is clean.
+**1. Deterministic frontends (15 languages):** Python, JavaScript, TypeScript, Java, Ruby, Go, PHP, C#, C, C++, Rust, Kotlin, Scala, Lua, Pascal. These use tree-sitter for parsing and a dispatch-table-based recursive descent for lowering. Sub-millisecond. Zero LLM calls. Fully testable. Each frontend is modularised into separate files for expressions, control flow, and declarations, inheriting from a shared `BaseFrontend`. An optional **AST repair decorator** can wrap any deterministic frontend to handle malformed source (see the next section).
 
 **2. COBOL frontend (ProLeap bridge):** COBOL source is parsed by the ProLeap COBOL parser (a Java-based parser producing an Abstract Syntax Graph), bridged to Python via a shaded JAR that emits JSON ASGs. The frontend includes a complete type system: PIC clause parsing (zoned decimal, COMP/COMP-1/COMP-2, packed decimal, alphanumeric, EBCDIC), REDEFINES overlays with byte-addressed memory regions, OCCURS arrays with subscript resolution, level-88 condition names with value ranges, and paragraph-based control flow via named continuations. COBOL-specific IR is emitted using the region and continuation opcodes.
 
@@ -355,6 +356,84 @@ All four frontend strategies produce the same `list[IRInstruction]`. They differ
 **4. Chunked LLM frontend:** For large files that overflow context windows. Tree-sitter decomposes the file into per-function chunks, each is LLM-lowered independently, registers and labels are renumbered to avoid collisions, and the chunks are reassembled into a single IR.
 
 The key architectural decision was making the LLM path a *compiler frontend*, not a *reasoning engine*. When you constrain the LLM to pattern-matching against a formal schema, output quality improves. It's translating syntax, not reasoning about semantics.
+
+---
+
+## LLM-Assisted AST Repair
+
+Real-world source code is often malformed: missing semicolons, unclosed brackets, incomplete extracts pasted from documentation, partial files from legacy migrations. Tree-sitter is tolerant of errors (it produces ERROR and MISSING nodes in the AST rather than refusing to parse), but those error nodes reach the dispatch chain and produce `SYMBOLIC "unsupported:ERROR"` emissions. The deterministic frontend keeps going, but the analysis loses information at every error node.
+
+The AST repair facility recovers that information. It's implemented as a decorator (`RepairingFrontendDecorator`) that wraps any deterministic frontend. When the source is clean, the decorator adds zero overhead: it checks `tree.root_node.has_error`, finds no errors, and delegates directly to the inner frontend. When errors exist, it runs a repair loop:
+
+```mermaid
+%%{ init: { "flowchart": { "curve": "stepBefore" } } }%%
+flowchart TD
+    parse["Parse source with tree-sitter"]-->check{"has_error?"}
+    check-->|No|delegate["Delegate to inner frontend"]
+    check-->|Yes|extract["Extract error spans"]
+    extract-->prompt["Build repair prompt"]
+    prompt-->llm["Send to LLM"]
+    llm-->patch["Patch source at error spans"]
+    patch-->reparse["Re-parse patched source"]
+    reparse-->recheck{"has_error?"}
+    recheck-->|No|delegate
+    recheck-->|"Yes (retries left)"|extract
+    recheck-->|"Yes (exhausted)"|fallback["Fall back to original source"]
+    fallback-->delegate
+    style parse fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
+    style check fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
+    style delegate fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
+    style extract fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
+    style prompt fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
+    style llm fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
+    style patch fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
+    style reparse fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
+    style recheck fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
+    style fallback fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
+```
+
+The loop has four stages, each implemented as a pure function:
+
+### 1. Error Span Extraction
+
+The extractor walks the tree-sitter AST recursively, collecting every ERROR and MISSING node. Each node's byte offsets are expanded to cover full source lines (so the LLM sees complete lines, not mid-line fragments). Overlapping or adjacent spans are merged to avoid sending redundant context. Each merged span gets N lines of surrounding context (configurable, default 3) attached as `context_before` and `context_after`.
+
+### 2. Prompt Construction
+
+The prompter builds a structured repair prompt from the error spans. The system prompt constrains the LLM to fix *only* syntax errors and return *only* the repaired code, with no markdown wrapping and no explanations. Each error span becomes a delimited section in the user prompt showing the broken code with its surrounding context:
+
+```
+# Context before:
+def process(data):
+    result = []
+
+# Broken code:
+    for item in data
+        result.append(item.value
+
+# Context after:
+    return result
+```
+
+Multiple error spans are separated by a `===FRAGMENT===` delimiter. The LLM returns repaired fragments separated by the same delimiter.
+
+### 3. Source Patching
+
+The patcher applies repaired fragments back to the original source bytes. It processes spans from end-of-file backward so that earlier byte offsets remain valid as later spans are replaced. This is the same technique compilers use for applying source-level fixups.
+
+### 4. Re-parse and Retry
+
+The patched source is re-parsed with tree-sitter. If the parse is now clean (`has_error` is false), the repaired source is passed to the inner deterministic frontend for lowering. If errors remain and retry budget allows (default: 3 attempts), the loop repeats from step 1 with the partially-repaired source. If all retries are exhausted, the decorator falls back to the original source, accepting `SYMBOLIC` emissions for the error nodes rather than crashing.
+
+### Design Properties
+
+**Zero overhead on clean source.** The fast path is a single `has_error` check on the root node.
+
+**Decorator pattern.** The repair facility wraps any `Frontend` implementation. It's not baked into the frontends themselves. This means the same `PythonFrontend` works with or without repair, and the repair logic is tested independently.
+
+**The LLM fixes syntax, not semantics.** The prompt explicitly constrains the LLM to syntactic repair: fix the missing semicolon, close the bracket, complete the partial statement. It doesn't ask the LLM to reason about what the code does. This keeps the repair narrowly scoped and verifiable (the repaired source either parses cleanly or it doesn't).
+
+**Graceful degradation.** If the LLM returns garbage, the source patcher applies it, tree-sitter re-parses, finds errors again, and eventually the retry budget is exhausted. The fallback is always the original source through the deterministic frontend, which handles ERROR nodes via `SYMBOLIC`. The worst case is identical to not having repair at all.
 
 ---
 
