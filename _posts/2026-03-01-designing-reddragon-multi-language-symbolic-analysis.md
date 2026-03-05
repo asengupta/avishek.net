@@ -50,10 +50,11 @@ RedDragon explores three ideas about analysing frequently-incomplete code, the k
 3. [The IR: 27 Opcodes to Rule Them All](#the-ir-27-opcodes-to-rule-them-all)
 4. [Frontends: Four Strategies, One Output](#frontends-four-strategies-one-output)
 5. [LLM-Assisted AST Repair](#llm-assisted-ast-repair)
-6. [The Dispatch Table Engine](#the-dispatch-table-engine)
-7. [The Deterministic VM](#the-deterministic-vm)
-8. [Dataflow Analysis](#dataflow-analysis)
-9. [Cross-Language Verification via Exercism](#cross-language-verification-via-exercism)
+6. [LLM Frontend: Lowering Unknown Languages](#llm-frontend-lowering-unknown-languages)
+7. [The Dispatch Table Engine](#the-dispatch-table-engine)
+8. [The Deterministic VM](#the-deterministic-vm)
+9. [Dataflow Analysis](#dataflow-analysis)
+10. [Cross-Language Verification via Exercism](#cross-language-verification-via-exercism)
 
 ---
 
@@ -434,6 +435,129 @@ The patched source is re-parsed with tree-sitter. If the parse is now clean (`ha
 **The LLM fixes syntax, not semantics.** The prompt explicitly constrains the LLM to syntactic repair: fix the missing semicolon, close the bracket, complete the partial statement. It doesn't ask the LLM to reason about what the code does. This keeps the repair narrowly scoped and verifiable (the repaired source either parses cleanly or it doesn't).
 
 **Graceful degradation.** If the LLM returns garbage, the source patcher applies it, tree-sitter re-parses, finds errors again, and eventually the retry budget is exhausted. The fallback is always the original source through the deterministic frontend, which handles ERROR nodes via `SYMBOLIC`. The worst case is identical to not having repair at all.
+
+---
+
+## LLM Frontend: Lowering Unknown Languages
+
+The 15 deterministic frontends cover a fixed set of languages. For everything else (Haskell, Elixir, Perl, R, Fortran, or any language with parseable source), the LLM frontend lowers source directly to IR. No tree-sitter grammar needed, no dispatch table, no language-specific code. The LLM acts as the entire compiler frontend.
+
+### The Prompt as a Formal Schema
+
+The LLM frontend works by constraining the LLM to a mechanical translation task. The system prompt is a ~180-line specification containing:
+
+1. **The instruction format**: every IR instruction is a JSON object with `opcode`, `result_reg`, `operands`, `label`, and `source_location` fields.
+2. **All 27 opcode definitions**: grouped into value producers (`CONST`, `LOAD_VAR`, `BINOP`, `CALL_FUNCTION`, ...), consumers/control flow (`STORE_VAR`, `BRANCH_IF`, `RETURN`, ...), and special instructions (`SYMBOLIC`, `LABEL`).
+3. **Critical patterns**: exact lowering templates for function definitions (the skip-over pattern with `BRANCH`/`LABEL`/`SYMBOLIC param:`/implicit `RETURN None`), class definitions, constructor calls, method calls, and if/elif/else chains.
+4. **A complete worked example**: a `fib(n)` function lowered to 30 IR instructions, showing every convention in context.
+5. **Rules**: the first instruction is always `LABEL "entry"`, every expression is flattened into registers, string literals include quotes in the operand, booleans are `"True"`/`"False"`, return only the JSON array with no markdown fences.
+
+The user prompt is simply: *"Lower the following {language} source code into IR instructions:"* followed by the raw source.
+
+This prompt design means the LLM is pattern-matching against a formal grammar, not reasoning about program semantics. It sees `def foo(a, b): return a + b` and emits the same skip-over/param/binop/return pattern it saw in the worked example. The opcode definitions and patterns are the specification; the LLM is the translator.
+
+### Parsing and Validation
+
+The LLM's response (a JSON array of instruction objects) goes through three stages:
+
+1. **Fence stripping**: markdown code fences are removed if present (LLMs add them reflexively despite being told not to).
+2. **JSON parsing**: each object is mapped to an `IRInstruction`, validating that every opcode string matches the `Opcode` enum. Unknown opcodes raise `IRParsingError`.
+3. **Entry label validation**: if the first instruction isn't `LABEL "entry"`, one is auto-prepended with a warning. This ensures the CFG builder always finds a valid entry point.
+
+If JSON parsing fails, the frontend retries up to 3 times (configurable). Each retry makes a fresh LLM call. If all retries are exhausted, the parsing error propagates.
+
+### Chunked LLM Frontend: Scaling to Large Files
+
+A single LLM call can't handle a 2,000-line file: the source plus the ~180-line system prompt plus the response would overflow the context window. The chunked frontend solves this by decomposing the file before calling the LLM.
+
+The decomposition uses tree-sitter for structural splitting (even though the language may not have a deterministic *lowering* frontend, tree-sitter grammars exist for most languages). The `ChunkExtractor` walks the top-level children of the parse tree and classifies each as a function, class, or top-level statement. Contiguous top-level statements are grouped into a single chunk. Functions and classes are emitted first, then top-level groups, preserving the definition-before-use ordering that the skip-over pattern requires.
+
+Each chunk is lowered independently through the standard `LLMFrontend`. The `IRRenumberer` then fixes up the results:
+
+- **Register renumbering**: each chunk's registers start at `%0`, so the renumberer offsets them (`%0` in chunk 2 becomes `%47` if chunk 1 used registers up to `%46`).
+- **Label renumbering**: each chunk's labels get a `_chunkN` suffix to avoid collisions (`if_true_2` in chunk 1 vs. `if_true_2_chunk1`).
+- **Function reference fixup**: the `<function:foo@func_foo_0>` convention embeds the label in a string literal. The renumberer patches these to match the suffixed labels.
+
+The entry label is stripped from each chunk's output and a single `LABEL "entry"` is prepended to the combined result. If a chunk fails (the LLM returns unparseable JSON), a `SYMBOLIC "chunk_error:chunk_name"` placeholder is inserted and lowering continues with the next chunk.
+
+### End-to-End Example: Haskell
+
+Haskell has no deterministic frontend in RedDragon. Here is the full pipeline for a Haskell program with pattern-matched recursion, imports, and external function calls:
+
+```haskell
+import Data.Char (toUpper, ord)
+
+factorial :: Int -> Int
+factorial 0 = 1
+factorial n = n * factorial (n - 1)
+
+x = factorial 5
+ch = toUpper 'a'
+code = ord ch
+total = x + code
+```
+
+The LLM frontend receives this source along with the 180-line system prompt and produces IR following the same conventions as the deterministic frontends. The `factorial` function is lowered using the skip-over pattern:
+
+```
+entry:
+  branch end_factorial_1          # skip over function body
+
+func_factorial_0:
+  %0 = symbolic "param:n"
+  store_var n %0
+  %1 = load_var n
+  %2 = const 0
+  %3 = binop == %1 %2
+  branch_if %3 if_true_2,if_false_3
+
+if_true_2:
+  %4 = const 1
+  return %4
+
+if_false_3:
+  %5 = load_var n
+  %6 = const 1
+  %7 = binop - %5 %6
+  %8 = call_function factorial %7
+  %9 = load_var n
+  %10 = binop * %9 %8
+  return %10
+  %11 = const "None"
+  return %11
+
+end_factorial_1:
+  %12 = const "<function:factorial@func_factorial_0>"
+  store_var factorial %12
+```
+
+The top-level bindings are straightforward:
+
+```
+  %13 = const 5
+  %14 = call_function factorial %13
+  store_var x %14
+
+  %15 = const "a"
+  %16 = call_function toUpper %15
+  store_var ch %16
+
+  %17 = load_var ch
+  %18 = call_function ord %17
+  store_var code %18
+
+  %19 = load_var x
+  %20 = load_var code
+  %21 = binop + %19 %20
+  store_var total %21
+```
+
+Note what happens at execution time. The VM executes `factorial(5)` deterministically: it's a concrete recursive call with all values known, resolving to 120. No LLM involvement. But `toUpper('a')` and `ord(ch)` are calls to `Data.Char` functions that don't exist in the IR. The VM's `UnresolvedCallResolver` handles these:
+
+- **Default (SymbolicResolver)**: creates `sym_0 (hint: "toUpper('a')")` and `sym_1 (hint: "ord(sym_0)")`. The `total` variable becomes `sym_2 (constraint: "120 + sym_1")`. Zero LLM calls, fully deterministic, and the dataflow analysis still traces that `total` depends on `x`, `code`, and `ch`.
+- **Opt-in (LLMPlausibleResolver)**: sends a structured prompt to an LLM with the function name, arguments, and VM state. The LLM responds with `'A'` for `toUpper('a')` and `65` for `ord('A')`, producing `total = 185`. Non-deterministic, but useful when concrete answers matter more than reproducibility.
+
+The result: from Haskell source to IR to CFG to executed VM state, with zero language-specific code written. The same path works for any language the LLM can read.
 
 ---
 
