@@ -1,5 +1,5 @@
 ---
-title: "Designing RedDragon: A Deterministic Compiler Pipeline with LLM-Assisted Repair for Analysing Incomplete Code and Unknown Languages"
+title: "RedDragon: A Deterministic Compiler Pipeline with LLM-Assisted Repair for Analysing Incomplete Code and Unknown Languages"
 author: avishek
 usemathjax: false
 mermaid: true
