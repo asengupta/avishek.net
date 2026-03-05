@@ -749,7 +749,7 @@ Not "does the code work"; 8,400 green dots covered that. But: does `test_constru
 
 When an AI writes your tests, you get volume and coverage breadth for free. What you don't get is *assertion depth*. The AI produces a test for every function, every edge case, every language, but each individual assertion may be checking the easy thing (does it not crash?) rather than the hard thing (does it produce the right output?). The AI optimises for the test *passing*, not for the test *verifying*.
 
-Over two days and 11 audit passes, I had Claude Code scan every test file, comparing each test's name against its actual assertions. The results were sobering.
+Over two days and 11 audit passes, I had Claude Code scan every test file, comparing each test's name against its actual assertions. Here is what I found.
 
 ### The Taxonomy of Weak Assertions
 
@@ -883,7 +883,7 @@ The test count went *up*, not down. Strengthening assertions sometimes meant spl
 
 ### Lessons
 
-**Green tests are necessary but not sufficient.** Every test was green before the audit. The audit found 15 P0 violations where the test would pass even when the behaviour it named was completely broken. Two of these exposed genuine frontend bugs that had been silently lurking.
+**Green tests are necessary but not sufficient.** Every test was green before the audit. The audit found 15 P0 violations where the test would pass even when the behaviour it named was completely broken. Two of these exposed genuine frontend bugs.
 
 **OR-fallback assertions are the most dangerous pattern.** The pattern `assert A or B` appeared in every frontend category. In every case, one side of the OR was trivially satisfied by unrelated instructions, making the assertion vacuous.
 
@@ -1012,11 +1012,11 @@ Midway through the project, I changed the workflow to: **Brainstorm → Discuss 
 
 **The AI hallucinated audit findings.** During the assertion audit, the AI reported violations that didn't exist or had already been fixed. Different parallel agents flagged different things based on traversal order, inconsistently applied priority criteria, and occasionally re-reported fixed violations with different wording. The reconciliation pass caught this. The lesson: the auditor itself needs auditing. Fresh scans without anchoring against previous findings produce unreliable results.
 
-**CLAUDE.md rules are reactive, not proactive.** Every rule in CLAUDE.md was added in response to a specific failure mode. "STOP USING FOR LOOPS WITH MUTATIONS" came after seeing mutation bugs. "Don't blindly change test assertions" came after watching the AI weaken tests to make them pass. "Categorically avoid defensive programming" came after the AI added silent `None` checks that masked real bugs. The rules are scar tissue. They accumulate over time, and each one represents a mistake that happened at least once.
+**CLAUDE.md rules are reactive, not proactive.** Every rule in CLAUDE.md was added in response to a specific failure mode. "STOP USING FOR LOOPS WITH MUTATIONS" came after seeing mutation bugs. "Don't blindly change test assertions" came after watching the AI weaken tests to make them pass. "Categorically avoid defensive programming" came after the AI added silent `None` checks that masked real bugs. They accumulate over time, and each one represents a mistake that happened at least once.
 
 **The plan document as interface contract.** An interaction pattern that worked well was the structured plan. After brainstorming and discussing trade-offs, I'd formulate a plan document covering context, phases, file-by-file changes, and verification steps, then feed it to the AI as an implementation spec. The plan serves as a contract between the human architect and the AI implementer: specific enough for unambiguous execution, high-level enough to retain architectural control. This happened roughly 15 times across the project.
 
-**The determinism pivot was the single most impactful decision.** The original VM had the LLM deciding state changes at each execution step. When I asked "given that the IR is always bounded, shouldn't execution be deterministic?", the answer reshaped the entire project. We ripped out all LLM calls from the VM and replaced them with symbolic value creation. Once execution was deterministic, everything became testable, reproducible, and fast. The entire test suite runs with zero LLM calls. This decision wasn't planned; it emerged from questioning an assumption.
+**The determinism pivot was the single most impactful decision.** The original VM had the LLM deciding state changes at each execution step. When I asked "given that the IR is always bounded, shouldn't execution be deterministic?", the answer changed the project's direction. We ripped out all LLM calls from the VM and replaced them with symbolic value creation. Once execution was deterministic, everything became testable, reproducible, and fast. The entire test suite runs with zero LLM calls. This decision wasn't planned; it emerged from questioning an assumption.
 
 ---
 
