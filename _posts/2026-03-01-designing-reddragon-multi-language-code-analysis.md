@@ -9,6 +9,8 @@ draft: false
 
 *A universal IR, 15 deterministic frontends, LLM-assisted repair/lowering/execution, a deterministic VM, and iterative dataflow analysis.*
 
+**GitHub**: [avishek-sen-gupta/red-dragon](https://github.com/avishek-sen-gupta/red-dragon)
+
 ![RedDragon TUI Demo](/assets/red-dragon-tui.gif)
 
 ---
