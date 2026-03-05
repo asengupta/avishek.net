@@ -3,11 +3,11 @@ title: "Designing RedDragon: A Deterministic Compiler Pipeline with LLM-Assisted
 author: avishek
 usemathjax: false
 mermaid: true
-tags: ["Software Engineering", "Compilers", "Program Analysis", "Symbolic Execution", "AI-Assisted Development"]
+tags: ["Software Engineering", "Compilers", "Program Analysis", "AI-Assisted Development"]
 draft: false
 ---
 
-*A universal IR, 15 deterministic frontends, LLM-assisted repair/lowering/execution, a symbolic VM, and iterative dataflow analysis.*
+*A universal IR, 15 deterministic frontends, LLM-assisted repair/lowering/execution, a deterministic VM, and iterative dataflow analysis.*
 
 ![RedDragon TUI Demo](/assets/red-dragon-tui.gif)
 
@@ -15,7 +15,7 @@ draft: false
 
 ## The Problem
 
-I wanted to analyse source code across many languages (trace data flow, build control flow graphs, understand how variables depend on each other) without writing a separate analyser for each language. The conventional approach is to build language-specific tooling (Roslyn for C#, javac's AST for Java, etc.), but that means duplicating every downstream analysis pass for every language. I wanted one representation, one analyser, many languages.
+I wanted to analyse source code across many languages (trace data flow, build control flow graphs, understand how variables depend on each other) without writing a separate analyser for each language. The conventional approach is to build language-specific tooling (Roslyn for C#, javac's AST for Java, etc.), but that means duplicating every downstream analysis pass for every language. I wanted **one representation, one analyser, many languages**.
 
 Established IRs exist for this kind of work. LLVM IR covers C, C++, Rust, Swift, and others. WebAssembly targets a growing set of languages. GraalVM's Truffle framework provides a polyglot execution layer. I considered all of these and chose to build my own for three reasons:
 
@@ -23,9 +23,9 @@ Established IRs exist for this kind of work. LLVM IR covers C, C++, Rust, Swift,
 - Existing IRs assume programs are complete and all dependencies are resolved. They are not designed for incomplete code with missing imports, unresolved externals, or partial extracts.
 - I wanted to integrate LLM-based lowering and LLM-assisted execution as first-class features of the pipeline, and grafting that onto an existing IR's toolchain would have taken more time than building a purpose-built one.
 
-The twist: I wanted to handle *incomplete* programs gracefully. Real-world code depends on imports, frameworks, and external systems that aren't available during static analysis. Most tools crash or give up when they hit an unresolved reference. I wanted mine to keep going, creating symbolic placeholders for unknowns and tracing data flow through them.
+The twist: I wanted to handle *incomplete* programs gracefully. Real-world code depends on imports, frameworks, and external systems that aren't available during static analysis. Most tools crash or give up when they hit an unresolved reference. I wanted mine to keep going, creating **symbolic placeholders** for unknowns and tracing data flow through them.
 
-[RedDragon](https://github.com/avishek-sen-gupta/red-dragon) is the result. It parses source in 15 languages, lowers it to a universal intermediate representation, builds control flow graphs, performs iterative dataflow analysis, and executes programs symbolically via a deterministic virtual machine. All with zero LLM calls for programs with concrete inputs. RedDragon is a work in progress.
+[RedDragon](https://github.com/avishek-sen-gupta/red-dragon) is the result. It parses source in 15 languages, lowers it to a universal intermediate representation, builds control flow graphs, performs iterative dataflow analysis, and executes programs via a deterministic virtual machine. All with **zero LLM calls** for programs with concrete inputs. RedDragon is a work in progress.
 
 RedDragon is part of a family of three tools: [Codescry](https://github.com/avishek-sen-gupta/codescry) (a repo surveying toolkit that detects integration points using regex, ML classifiers, code embeddings, and LLM classification) and [RedDragon-Codescry TUI](https://github.com/avishek-sen-gupta/reddragon-codescry-tui) (a terminal UI integrating the two). The TUI demo is shown above.
 
@@ -62,14 +62,14 @@ RedDragon explores three ideas about analysing frequently-incomplete code, the k
 
 ## Architecture Overview
 
-RedDragon follows a classic compiler pipeline, extended with symbolic execution:
+RedDragon follows a classic compiler pipeline:
 
 ```mermaid
 %%{ init: { "flowchart": { "curve": "stepBefore" } } }%%
 flowchart TD
 src["Source Code (15 languages)"]-->frontend["Frontend<br/>(deterministic or LLM-based)"]
 frontend-->|"list[IRInstruction]"|cfg["CFG Builder"]
-cfg-->vm["VM (symex)"]
+cfg-->vm["VM"]
 cfg-->dataflow["Dataflow Analysis"]
 style src fill:#4a90d9,stroke:#000,stroke-width:2px,color:#fff
 style frontend fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
@@ -200,7 +200,7 @@ The [LLM-Assisted VM Execution](#llm-assisted-vm-execution) section shows what h
 
 ## The IR: 27 Opcodes to Rule Them All
 
-The intermediate representation is a flattened three-address code with 27 opcodes, grouped by role:
+The intermediate representation is a **flattened three-address code** with 27 opcodes, grouped by role:
 
 ```
 Value producers:   CONST, LOAD_VAR, LOAD_FIELD, LOAD_INDEX,
@@ -231,7 +231,7 @@ Every instruction is a flat dataclass: an opcode, a list of operands, a destinat
 %4 = binop + %3 %2
 ```
 
-This verbosity is the trade-off for universality. CFG construction, dataflow analysis, and VM execution all operate on the same flat list. Adding a new language means emitting these opcodes; everything downstream works automatically.
+This verbosity is the **trade-off for universality**. CFG construction, dataflow analysis, and VM execution all operate on the same flat list. Adding a new language means emitting these opcodes; everything downstream works automatically.
 
 ### Source Location Traceability
 
@@ -245,7 +245,7 @@ This means any IR instruction, any VM execution step, any dataflow dependency ca
 
 ### Control Flow and Functions
 
-All control flow is explicit: labels, conditional branches, and unconditional jumps. There are no structured `if`/`while`/`for` constructs. `BRANCH_IF` encodes both targets in its label field (comma-separated). The CFG builder splits the IR into basic blocks at every `LABEL` and after every `BRANCH`/`BRANCH_IF`/`RETURN`/`THROW`, then wires edges based on the branch targets. Loops become back-edges: a `while` loop's `BRANCH` at the end of the body points back to the condition's label. Function definitions use the *skip-over* pattern shown in the [worked example](#a-worked-example-source-to-execution): a `BRANCH` jumps past the body at definition time, and a `FunctionRegistry` scans the IR for `SYMBOLIC "param:"` markers to extract parameter names and map class names to method labels.
+All control flow is explicit: labels, conditional branches, and unconditional jumps. There are no structured `if`/`while`/`for` constructs. `BRANCH_IF` encodes both targets in its label field (comma-separated). The CFG builder splits the IR into basic blocks at every `LABEL` and after every `BRANCH`/`BRANCH_IF`/`RETURN`/`THROW`, then wires edges based on the branch targets. Loops become back-edges: a `while` loop's `BRANCH` at the end of the body points back to the condition's label. Function definitions use the **skip-over pattern** shown in the [worked example](#a-worked-example-source-to-execution): a `BRANCH` jumps past the body at definition time, and a `FunctionRegistry` scans the IR for `SYMBOLIC "param:"` markers to extract parameter names and map class names to method labels.
 
 ### Three Call Variants
 
@@ -289,7 +289,7 @@ Over time, `unsupported:` emissions get replaced with real IR as frontends gain 
 
 All four frontend strategies produce the same `list[IRInstruction]`. They differ in speed, coverage, and determinism:
 
-**1. Deterministic frontends (15 languages):** Python, JavaScript, TypeScript, Java, Ruby, Go, PHP, C#, C, C++, Rust, Kotlin, Scala, Lua, Pascal. These use tree-sitter for parsing and a dispatch-table-based recursive descent for lowering. Sub-millisecond. Zero LLM calls. Fully testable. Each frontend is modularised into separate files for expressions, control flow, and declarations, inheriting from a shared `BaseFrontend`. An optional **AST repair decorator** can wrap any deterministic frontend to handle malformed source (see the next section).
+**1. Deterministic frontends (15 languages):** Python, JavaScript, TypeScript, Java, Ruby, Go, PHP, C#, C, C++, Rust, Kotlin, Scala, Lua, Pascal. These use tree-sitter for parsing and a dispatch-table-based recursive descent for lowering. **Sub-millisecond. Zero LLM calls. Fully testable.** Each frontend is modularised into separate files for expressions, control flow, and declarations, inheriting from a shared `BaseFrontend`. An optional **AST repair decorator** can wrap any deterministic frontend to handle malformed source (see the next section).
 
 **2. COBOL frontend (ProLeap bridge):** COBOL source is parsed by the ProLeap COBOL parser (a Java-based parser producing an Abstract Syntax Graph), bridged to Python via a shaded JAR that emits JSON ASGs. The frontend includes a complete type system: PIC clause parsing (zoned decimal, COMP/COMP-1/COMP-2, packed decimal, alphanumeric, EBCDIC), REDEFINES overlays with byte-addressed memory regions, OCCURS arrays with subscript resolution, level-88 condition names with value ranges, and paragraph-based control flow via named continuations. COBOL-specific IR is emitted using the region and continuation opcodes.
 
@@ -303,7 +303,7 @@ All four frontend strategies produce the same `list[IRInstruction]`. They differ
 
 Real-world source code is often malformed: missing semicolons, unclosed brackets, incomplete extracts pasted from documentation, partial files from legacy migrations. Tree-sitter is tolerant of errors (it produces ERROR and MISSING nodes in the AST rather than refusing to parse), but those error nodes reach the dispatch chain and produce `SYMBOLIC "unsupported:ERROR"` emissions. The deterministic frontend keeps going, but the analysis loses information at every error node.
 
-The AST repair facility recovers that information. It's implemented as a decorator (`RepairingFrontendDecorator`) that wraps any deterministic frontend. When the source is clean, the decorator adds zero overhead: it checks `tree.root_node.has_error`, finds no errors, and delegates directly to the inner frontend. When errors exist, it runs a repair loop:
+The AST repair facility recovers that information. It's implemented as a decorator (`RepairingFrontendDecorator`) that wraps any deterministic frontend. When the source is clean, the decorator adds **zero overhead**: it checks `tree.root_node.has_error`, finds no errors, and delegates directly to the inner frontend. When errors exist, it runs a repair loop:
 
 ```mermaid
 %%{ init: { "flowchart": { "curve": "stepBefore" } } }%%
@@ -379,7 +379,7 @@ The 15 deterministic frontends cover a fixed set of languages. For everything el
 
 ### The Prompt as a Formal Schema
 
-The LLM frontend works by constraining the LLM to a mechanical translation task. The system prompt is a ~180-line specification containing:
+The LLM frontend works by constraining the LLM to a **mechanical translation task**. The system prompt is a ~180-line specification containing:
 
 1. **The instruction format**: every IR instruction is a JSON object with `opcode`, `result_reg`, `operands`, `label`, and `source_location` fields.
 2. **All 27 opcode definitions**: grouped into value producers (`CONST`, `LOAD_VAR`, `BINOP`, `CALL_FUNCTION`, ...), consumers/control flow (`STORE_VAR`, `BRANCH_IF`, `RETURN`, ...), and special instructions (`SYMBOLIC`, `LABEL`).
@@ -464,7 +464,7 @@ end_factorial_1:
   store_var factorial %12
 ```
 
-The top-level bindings follow the same pattern: `CONST` + `CALL_FUNCTION` + `STORE_VAR` for each assignment. At execution time, `factorial(5)` resolves to 120 deterministically (concrete recursive call). `toUpper('a')` and `ord(ch)` are unresolved `Data.Char` functions, handled by the `UnresolvedCallResolver`: the default `SymbolicResolver` traces dependencies through symbolic placeholders; the opt-in `LLMPlausibleResolver` produces concrete values (`'A'`, `65`, `total = 185`). From Haskell source to executed VM state, with zero language-specific code.
+The top-level bindings follow the same pattern: `CONST` + `CALL_FUNCTION` + `STORE_VAR` for each assignment. At execution time, `factorial(5)` resolves to 120 deterministically (concrete recursive call). `toUpper('a')` and `ord(ch)` are unresolved `Data.Char` functions, handled by the `UnresolvedCallResolver`: the default `SymbolicResolver` traces dependencies through symbolic placeholders; the opt-in `LLMPlausibleResolver` produces concrete values (`'A'`, `65`, `total = 185`). From Haskell source to executed VM state, with **zero language-specific code**.
 
 ---
 
@@ -501,7 +501,7 @@ FUNC_BODY_FIELD: str = "body"
 IF_CONSEQUENCE_FIELD: str = "consequence"
 ```
 
-All 15 languages canonicalise their native null/boolean forms to Python-form at lowering time. `nil`, `null`, `undefined`, `NULL` all become `"None"`. `true`, `True`, `TRUE` all become `"True"`. This means the VM only handles one set of literals, regardless of source language.
+All 15 languages **canonicalise their native null/boolean forms** to Python-form at lowering time. `nil`, `null`, `undefined`, `NULL` all become `"None"`. `true`, `True`, `TRUE` all become `"True"`. This means the VM only handles one set of literals, regardless of source language.
 
 Adding support for a new AST node type is mechanical: write a handler method, register it in the dispatch table. This is what made the systematic coverage push possible. When the audit flagged 34 missing node types across 15 languages, implementing them was straightforward because each one followed the same pattern.
 
@@ -542,13 +542,13 @@ These are all candidates for frontend-level peephole optimisations: removing dea
 
 The equivalence tests complement the Exercism execution tests. Exercism verifies that all 15 frontends produce the *correct answer*. Equivalence tests verify that they produce the *same IR structure*. A frontend could produce the correct answer through a longer, less efficient IR path (extra stores, redundant loads, unnecessary branches). The execution test would pass; the equivalence test would fail.
 
-This distinction matters for analysis quality. Redundant instructions can introduce spurious dependencies in the dataflow graph, create unnecessary basic blocks in the CFG, or slow down the VM. Structural equivalence is a stronger property than semantic correctness.
+This distinction matters for analysis quality. Redundant instructions can introduce spurious dependencies in the dataflow graph, create unnecessary basic blocks in the CFG, or slow down the VM. **Structural equivalence is a stronger property than semantic correctness.**
 
 ---
 
 ## The Deterministic VM
 
-The VM is fully deterministic. Unknown values are *created* as symbolic placeholders that propagate through computation, rather than being resolved via LLM calls. The entire execution engine is reproducible across runs.
+The VM is **fully deterministic**. Unknown values are *created* as symbolic placeholders that propagate through computation, rather than being resolved via LLM calls. The entire execution engine is reproducible across runs.
 
 ### VM State: Frames, Heap, and Closures
 
@@ -582,7 +582,7 @@ DISPATCH: dict[Opcode, Any] = {
 }
 ```
 
-Every handler receives the instruction, the VM state, the CFG, and a function registry, and returns an `ExecutionResult`. No handler mutates the VM directly. Instead, each constructs a `StateUpdate` describing the desired mutations.
+Every handler receives the instruction, the VM state, the CFG, and a function registry, and returns an `ExecutionResult`. **No handler mutates the VM directly.** Instead, each constructs a `StateUpdate` describing the desired mutations.
 
 ### StateUpdate: The Communication Contract
 
@@ -600,7 +600,7 @@ class StateUpdate:
     next_label: str | None               # jump target
 ```
 
-This separation of *computation* (handlers) from *mutation* (`apply_update`) is a deliberate functional core / imperative shell split. The handlers are pure functions that return data. The mutation is centralised in one place.
+This separation of *computation* (handlers) from *mutation* (`apply_update`) is a deliberate **functional core / imperative shell** split. The handlers are pure functions that return data. The mutation is centralised in one place.
 
 ### `apply_update()`: The Single Mutator
 
@@ -620,7 +620,7 @@ This symbolic value propagates through computation deterministically. Each handl
 sym_0 + 1  →  sym_1 (constraint: "sym_0 + 1")
 ```
 
-Field access on a symbolic object creates a symbolic field with lazy heap materialisation: the first access to `sym_0.x` allocates a synthetic heap entry and caches a symbolic value for `x`, so subsequent accesses to the same field return the same symbolic. This deduplication is important for dataflow analysis, where repeated reads of the same field should trace back to the same definition.
+Field access on a symbolic object creates a symbolic field with **lazy heap materialisation**: the first access to `sym_0.x` allocates a synthetic heap entry and caches a symbolic value for `x`, so subsequent accesses to the same field return the same symbolic. This deduplication is important for dataflow analysis, where repeated reads of the same field should trace back to the same definition.
 
 Concrete operations that fail (division by zero, unsupported operator) produce an `UNCOMPUTABLE` sentinel, which triggers symbolic fallback rather than crashing.
 
@@ -737,7 +737,7 @@ name      = sym_3 (hint: "sym_2.name")  where sym_2 = sym_1["user"]
 greeting  = sym_4 (constraint: "'Hello, ' + sym_3")
 ```
 
-The dataflow analysis traces `greeting` back through `name`, `body`, and `response` to the `requests.get` call. The dependency chain is fully preserved even though no concrete HTTP call was made.
+The dataflow analysis traces `greeting` back through `name`, `body`, and `response` to the `requests.get` call. The **dependency chain is fully preserved** even though no concrete HTTP call was made.
 
 **With LLMPlausibleResolver:**
 
@@ -754,7 +754,7 @@ The LLM produces a plausible JSON response for the API call. `response.json()` r
 
 ## Dataflow Analysis
 
-The dataflow module (`interpreter/dataflow.py`, ~430 lines) performs iterative intraprocedural analysis over the CFG in five stages:
+The dataflow module (`interpreter/dataflow.py`, ~430 lines) performs **iterative intraprocedural analysis** over the CFG in five stages:
 
 1. **Collect definitions**: identify every point where a variable or register is assigned
 2. **Reaching definitions**: GEN/KILL worklist fixpoint iteration over the CFG
@@ -887,7 +887,7 @@ At the merge block, `x` has *two* reaching definitions (from `entry` and `if_tru
 
 ### Decoupling
 
-The dataflow module has no dependencies on the VM, frontends, or backends. It's a pure analysis pass over the CFG, decoupled from the imperative shell (parsing, I/O, LLM calls). Its input is a `CFG` object; its output is a `DataflowResult` containing definitions, block facts, def-use chains, and both raw and transitive dependency graphs.
+The dataflow module has **no dependencies on the VM, frontends, or backends**. It's a pure analysis pass over the CFG, decoupled from the imperative shell (parsing, I/O, LLM calls). Its input is a `CFG` object; its output is a `DataflowResult` containing definitions, block facts, def-use chains, and both raw and transitive dependency graphs.
 
 ---
 
@@ -922,9 +922,9 @@ The Exercism suite surfaced more bugs than any other test approach. Each exercis
 
 ## Conclusion
 
-RedDragon started as a question: *"Can I build a single system that analyses code in any language?"* It evolved into a compiler pipeline with 15 deterministic frontends, a COBOL frontend via ProLeap, LLM-assisted AST repair, a symbolic VM with byte-addressed memory regions and named continuations, and cross-language verification.
+RedDragon started as a question: *"Can I build a single system that analyses code in any language?"* It evolved into a compiler pipeline with 15 deterministic frontends, a COBOL frontend via ProLeap, LLM-assisted AST repair, a deterministic VM with byte-addressed memory regions and named continuations, and cross-language verification.
 
-None of the individual components are novel. TAC IR, dispatch tables, worklist dataflow, symbolic execution are all textbook techniques. The value, if any, is in applying them together to a practical multi-language analysis tool.
+**None of the individual components are novel.** TAC IR, dispatch tables, worklist dataflow are all textbook techniques. The value, if any, is in applying them together to a practical multi-language analysis tool.
 
 All three projects are open source: [RedDragon](https://github.com/avishek-sen-gupta/red-dragon), [Codescry](https://github.com/avishek-sen-gupta/codescry), and [RedDragon-Codescry TUI](https://github.com/avishek-sen-gupta/reddragon-codescry-tui).
 
