@@ -533,14 +533,30 @@ The VM includes a small table of built-in functions (`len`, `range`, `print`, `i
 
 ## Dataflow Analysis
 
-The dataflow module performs iterative intraprocedural analysis:
+The dataflow module (`interpreter/dataflow.py`, ~430 lines) performs iterative intraprocedural analysis over the CFG in five stages:
 
 1. **Collect definitions**: identify every point where a variable or register is assigned
 2. **Reaching definitions**: GEN/KILL worklist fixpoint iteration over the CFG
 3. **Def-use chains**: link each use to the definition(s) that reach it
-4. **Variable dependency graph**: trace through register chains to discover named-variable-to-named-variable dependencies, with transitive closure
+4. **Raw dependency graph**: trace through register chains to discover direct named-variable-to-named-variable dependencies
+5. **Transitive closure**: propagate indirect dependencies to produce the full dependency graph
 
-The interesting part is step 4. The IR uses temporary registers (`%0`, `%1`, ...) for all intermediate values. A statement like `y = x + 1` becomes:
+The analysis is forward, may-approximate (over-approximate), and intraprocedural (single function/module scope). It covers all value-producing opcodes including the byte-addressed memory region operations (`ALLOC_REGION`, `LOAD_REGION`, `WRITE_REGION`), so COBOL programs get full dataflow tracking.
+
+### Reaching Definitions
+
+For each basic block, the algorithm computes two local sets. **GEN** is the last definition of each variable within the block (if a block defines `x` twice, only the second is in GEN). **KILL** is all definitions of variables that this block redefines, from other blocks. The worklist then iterates the standard dataflow equations until convergence:
+
+```
+reach_in(B)  = ∪ { reach_out(P) | P ∈ predecessors(B) }
+reach_out(B) = GEN(B) ∪ (reach_in(B) − KILL(B))
+```
+
+The lattice is the power set of all definitions (finite), and the transfer function is monotone, so convergence is guaranteed. A safety cap of 1,000 iterations prevents runaway on pathological CFGs.
+
+### The Register Chain Problem
+
+The interesting part is translating from register-level def-use chains to human-readable variable dependencies. The IR uses temporary registers (`%0`, `%1`, ...) for all intermediate values. A statement like `y = x + 1` becomes:
 
 ```
 %0 = LOAD_VAR x
@@ -551,7 +567,114 @@ The interesting part is step 4. The IR uses temporary registers (`%0`, `%1`, ...
 
 The raw def-use chain says "`y` depends on `%2`". But a human wants to know "`y` depends on `x`". The dependency graph builder traces through the register chain: `%2` comes from `BINOP` on `%0` and `%1`; `%0` comes from `LOAD_VAR x`; `%1` is a constant. Therefore `y` depends on `x`. Transitive closure extends this across multi-step computations.
 
-The dataflow module has no dependencies on the VM, frontends, or backends. It's a pure analysis pass over the CFG, decoupled from the imperative shell (parsing, I/O, LLM calls).
+### Worked Example: Diamond Dependencies
+
+Consider this program with diamond dependencies, function calls, and multi-operand expressions:
+
+```python
+a = 1
+b = 2
+c = a + b
+d = a * b
+e = c + d
+f = e - a
+
+def square(x):
+    return x * x
+
+g = square(c)
+h = g + f
+total = h + e + b
+```
+
+`c` and `d` both depend on `a` and `b` (the diamond). `g` depends on `c` through the function call. `total` depends on three variables directly. The IR for just the main body (omitting the function) looks like:
+
+```
+%0  = const 1           → a = 1
+%1  = const 2           → b = 2
+%2  = load_var a
+%3  = load_var b
+%4  = binop + %2 %3     → c = a + b
+%5  = load_var a
+%6  = load_var b
+%7  = binop * %5 %6     → d = a * b
+%8  = load_var c
+%9  = load_var d
+%10 = binop + %8 %9     → e = c + d
+%11 = load_var e
+%12 = load_var a
+%13 = binop - %11 %12   → f = e - a
+%14 = load_var c
+%15 = call_function square %14  → g = square(c)
+%16 = load_var g
+%17 = load_var f
+%18 = binop + %16 %17   → h = g + f
+%19 = load_var h
+%20 = load_var e
+%21 = load_var b
+%22 = binop + %19 %20   → (partial)
+%23 = binop + %22 %21   → total = h + e + b
+```
+
+The reaching definitions analysis runs over the CFG (which for this straight-line program is a single block). Every `STORE_VAR` generates a definition, and every `LOAD_VAR` creates a use. The def-use chain extraction links each use to its reaching definition.
+
+The raw dependency graph builder then traces through the register chains:
+
+- `c` depends on `%4`, which reads `%2` (from `LOAD_VAR a`) and `%3` (from `LOAD_VAR b`). So `c → {a, b}`.
+- `d` depends on `%7`, which reads `%5` (from `LOAD_VAR a`) and `%6` (from `LOAD_VAR b`). So `d → {a, b}`.
+- `e` depends on `%10`, which reads `%8` (from `LOAD_VAR c`) and `%9` (from `LOAD_VAR d`). So `e → {c, d}`.
+- `f` depends on `%13`, which reads `%11` (from `LOAD_VAR e`) and `%12` (from `LOAD_VAR a`). So `f → {e, a}`.
+- `g` depends on `%15` (from `CALL_FUNCTION square %14`), and `%14` comes from `LOAD_VAR c`. So `g → {c}`.
+- `h` depends on `%18`, which reads `%16` (from `LOAD_VAR g`) and `%17` (from `LOAD_VAR f`). So `h → {g, f}`.
+- `total` traces through the chained binops to `%19` (`LOAD_VAR h`), `%20` (`LOAD_VAR e`), `%21` (`LOAD_VAR b`). So `total → {h, e, b}`.
+
+The direct dependency graph:
+
+```mermaid
+flowchart BT
+    a["a"]
+    b["b"]
+    c["c"]
+    d["d"]
+    e["e"]
+    f["f"]
+    g["g"]
+    h["h"]
+    total["total"]
+    a --> c
+    b --> c
+    a --> d
+    b --> d
+    c --> e
+    d --> e
+    a --> f
+    e --> f
+    c --> g
+    f --> h
+    g --> h
+    b --> total
+    e --> total
+    h --> total
+```
+
+`total` directly depends on `h`, `e`, and `b`. The transitive closure adds `a`, `c`, `d`, `f`, and `g`, giving `total → {a, b, c, d, e, f, g, h}`. This means a change to any of these variables could affect `total`.
+
+### Branching and Multiple Reaching Definitions
+
+On a diamond CFG (if/else), reaching definitions produce multiple reaching defs for the same variable at the merge point:
+
+```
+entry:    x = 10        → reach_out = {x@entry}
+if_true:  x = 20        → reach_out = {x@if_true}
+if_false: y = 30        → reach_out = {x@entry, y@if_false}
+merge:    use(x)        → reach_in = {x@entry, x@if_true, y@if_false}
+```
+
+At the merge block, `x` has *two* reaching definitions (from `entry` and `if_true`). This correctly models the fact that the value of `x` at the merge point depends on which branch was taken. The def-use chain links the use of `x` in `merge` to both definitions.
+
+### Decoupling
+
+The dataflow module has no dependencies on the VM, frontends, or backends. It's a pure analysis pass over the CFG, decoupled from the imperative shell (parsing, I/O, LLM calls). Its input is a `CFG` object; its output is a `DataflowResult` containing definitions, block facts, def-use chains, and both raw and transitive dependency graphs.
 
 ---
 
