@@ -2,48 +2,128 @@
 title: "Architecting Non-Trivial Systems with Claude Code: A Practitioner's Account"
 author: avishek
 usemathjax: false
-tags: ["Software Engineering", "Compilers", "Program Analysis", "Symbolic Execution", "AI-Assisted Development"]
+tags: ["Software Engineering", "Compilers", "Program Analysis", "Code Embeddings", "AI-Assisted Development"]
 draft: false
 ---
 
-*How I built three interconnected code analysis tools, spanning 15 language frontends, a symbolic VM, dataflow analysis, embedding classifiers, and Datalog engines, in 9 days with an AI pair programmer.*
+*How I built three interconnected code analysis tools — spanning 15 language frontends, a deterministic VM, dataflow analysis, 7 embedding/ML/LLM classification pipelines, and Datalog engines — across 35+ days and 500+ conversation sessions with an AI pair programmer.*
+
+---
+
+## Table of Contents
+
+- [The Setup](#the-setup)
+- [Part 1: Codescry, Learning to Steer](#part-1-codescry-learning-to-steer)
+  - [Origins: Cartographer (Jan 30 – Feb 3)](#origins-cartographer-jan-30--feb-3)
+  - [Structural Analysis: Call Flow and CFGs (Feb 9 – Feb 18)](#structural-analysis-call-flow-and-cfgs-feb-9--feb-18)
+  - [The Concretisation Problem (Feb 18 – Feb 25)](#the-concretisation-problem-feb-18--feb-25)
+  - [Engineering Maturity (Feb 20 – Mar 2)](#engineering-maturity-feb-20--mar-2)
+  - [What I Learned: Steering](#what-i-learned-steering)
+- [Part 2: RedDragon, The 18-Hour Marathon (Feb 25–26)](#part-2-reddragon-the-18-hour-marathon-feb-2526)
+  - [The Starting Point](#the-starting-point)
+  - [How the Architecture Took Shape](#how-the-architecture-took-shape)
+  - [The Implementation Rhythm](#the-implementation-rhythm)
+  - [Filling Language Feature Gaps](#filling-language-feature-gaps)
+  - [Screenshot-Driven Debugging](#screenshot-driven-debugging)
+- [Part 3: Patterns That Emerged](#part-3-patterns-that-emerged)
+- [Part 4: Where It Surprised Me](#part-4-where-it-surprised-me)
+- [Part 5: The Evolution, From Monolith to 8,569 Tests](#part-5-the-evolution-from-monolith-to-8569-tests)
+- [Part 6: The Audit Loop, Systematic Completeness](#part-6-the-audit-loop-systematic-completeness)
+- [Part 7: The Assertion Audit, Green Tests, False Confidence](#part-7-the-assertion-audit-green-tests-false-confidence)
+  - [The Taxonomy of Weak Assertions](#the-taxonomy-of-weak-assertions)
+  - [The Audit Timeline](#the-audit-timeline)
+  - [The Governing Principle: Strengthen, Don't Rename](#the-governing-principle-strengthen-dont-rename)
+  - [Errors During Fix Attempts](#errors-during-fix-attempts)
+  - [Real Bugs Found](#real-bugs-found)
+  - [The Feedback Loop Structure](#the-feedback-loop-structure)
+  - [Assertion Audit Results](#assertion-audit-results)
+  - [Assertion Audit Lessons](#assertion-audit-lessons)
+- [Part 8: Guardrails, The CLAUDE.md as Architecture](#part-8-guardrails-the-claudemd-as-architecture)
+- [Part 9: What I'd Do Differently](#part-9-what-id-do-differently)
+- [Part 10: The Numbers](#part-10-the-numbers)
+- [Conclusion](#conclusion)
 
 ---
 
 ## The Setup
 
-Over nine days in late February 2026, I built three open-source projects almost entirely through conversations with Claude Code:
+Over January–March 2026, I built three open-source projects almost entirely through conversations with Claude Code:
 
-- **[Codescry](https://github.com/avishek-sen-gupta/codescry)**: A repo surveying toolkit that detects integration points in source code using regex patterns, ML classifiers, code embeddings, and LLM-based classification
-- **[RedDragon](https://github.com/avishek-sen-gupta/red-dragon)**: A multi-language symbolic code analysis engine with a universal IR, deterministic VM, and iterative dataflow analysis
+- **[Codescry](https://github.com/avishek-sen-gupta/codescry)** (originally "Cartographer"): A repo surveying toolkit that detects integration points in source code using regex patterns, ML classifiers, code embeddings, and LLM-based classification — 250 commits across 35 days
+- **[RedDragon](https://github.com/avishek-sen-gupta/red-dragon)**: A multi-language code analysis engine with a universal IR, deterministic VM, and iterative dataflow analysis
 - **[Rev-Eng TUI](https://github.com/avishek-sen-gupta/reddragon-codescry-tui)**: A terminal UI integrating the two
 
-Codescry has ~195 conversation sessions. RedDragon was built in an 18-hour session, then refined across 131 more sessions. The llm-symbolic-interpreter (RedDragon's precursor) added another 73. That's roughly 400 human-AI conversation sessions.
+Codescry has ~195 conversation sessions (101 under its original name "Cartographer", the rest as Codescry). RedDragon was built in an 18-hour session, then refined across 131 more sessions. The llm-symbolic-interpreter (RedDragon's precursor) added another 73. That's roughly 400+ human-AI conversation sessions.
 
 Here's what I learned about directing an AI to build non-trivial systems, and where the process surprised me.
 
 ---
 
 ![Demo](/assets/red-dragon-tui.gif)
-## Part 1: Codescry, Learning to Steer (Feb 18–23)
+## Part 1: Codescry, Learning to Steer
 
-### The Problem
+### Origins: Cartographer (Jan 30 – Feb 3)
 
-I had an existing codebase for surveying source code repositories, scanning for integration points like HTTP calls, database queries, message queue interactions. The detection was regex-based: fast but noisy. I wanted to make it smarter.
+Codescry started under a different name. On January 30, I opened a fresh session and said: *"Given the path to a repo, I want repo_surveyor to deduce the technology stack(s) used in the repository, and produce a basic report."* The project was called **Cartographer**.
 
-### The Exploration Phase
+From that single prompt, the first session produced a `RepoSurveyor` class — walking a directory tree, identifying languages by file extension, detecting frameworks from indicator files. CTags integration followed the next day, adding code symbol extraction across languages via Universal CTags as an external subprocess.
 
-What struck me about this project, looking back at my prompts, is how *exploratory* it was. I didn't have a fixed architecture in mind. I had a problem and I was using Claude as a thinking partner to evaluate approaches in rapid succession:
+Then the project's engineering principles crystallised rapidly over Feb 1–2. In 26 commits across 5 days:
 
-**Attempt 1: LLM classification.** My first instinct was to throw an LLM at the problem: take each regex match, grab surrounding AST context, ask Claude or a local model whether it's a real integration point. This worked... on small inputs. When I ran it on a real Java repo (2,116 signals across 1,809 groups), it needed 37+ LLM batches. *"This is taking way too long,"* I told Claude. *"What other tricks can be used to reduce the number of signals before it's sent to the LLM?"*
+- `Neo4jPersistence` was refactored to accept a `Neo4jDriver` protocol, then renamed to `AnalysisGraphBuilder`. This set the pattern — every external system boundary became a protocol.
+- `IntegrationDetector` appeared, finding system integration points (HTTP, SOAP, messaging, databases) via regex patterns. Over the next 15 commits, detection split into common/language-specific/framework-specific layers, with COBOL, IDMS, and PL/I patterns.
+- Enums replaced strings everywhere: `IntegrationType`, `Confidence`, `EntityType`, `Language`. `IntegrationPoint` was renamed to `IntegrationSignal` — detections are signals, not confirmed facts.
+- `PHILOSOPHY.md` was written: *"Code wants to be free. This project exposes mechanisms, not workflows."*
 
-**Attempt 2: ML classifier.** I pivoted to training a TF-IDF + logistic regression classifier, using Claude's Batches API to generate training data at 50% cost. The classifier was fast but mediocre; confidence scores were low, and it struggled with framework-specific patterns.
+### Structural Analysis: Call Flow and CFGs (Feb 9 – Feb 18)
 
-**Attempt 3: Code embeddings.** I tested `nomic-embed-code` to see if embeddings could separate integration code from non-I/O code. They could. I then tried Gemini's embedding model. Both worked, but directional classification (inward vs. outward) was weak.
+After a week's pause, the project expanded in two directions.
 
-**Attempt 4: Hybrid pipeline.** The winning architecture was a two-stage pipeline: a fast embedding gate to separate signal from noise, then Gemini Flash to classify direction on only the signals that survived the gate.
+**Call-flow extraction via LSP.** A Java call-flow example used JDTLS via the [mojo-lsp](https://github.com/avishek-sen-gupta/mojo-lsp) bridge to trace method call trees. Regex-based call extraction was replaced with tree-sitter queries, the LSP bridge was extracted into a reusable module, and call-flow became a standalone `call_flow` module.
 
-**The Datalog tangent.** Midway through, I had Claude build a Datalog-based structural analysis system that emits tree-sitter parse trees as Souffle facts, then write declarative queries for framework patterns. This tangent became a real feature.
+**Framework-aware integration detection.** A major expansion on Feb 12: 20 commits in a single day. Integration patterns were grouped per framework, naive substring matching was replaced with structured config file parsing (preventing `"reactive-streams"` from matching `"react"`), the codebase was restructured into a plugin architecture with a declarative `languages.json`, and support was added for Dropwizard, Vert.x, Play, Apache CXF, .NET frameworks, FILE_IO and GRPC types.
+
+**CFG construction.** The most architecturally ambitious addition: a language-independent CFG builder on tree-sitter parse trees. The approach started with LLM-generated CFG role mappings for 99 languages — but the LLM output was unreliable, and the mappings were hand-authored for 14 languages instead. This was the first instance of a pattern that would recur: **use LLM to bootstrap, then replace with a deterministic approach once the problem is understood.**
+
+**The rename.** On Feb 18, commit 120: *"Rename Cartographer to Codescry across project."* Accompanied by a topographic terrain banner, CI badges, and Graphviz export for both CFG and integration signal diagrams.
+
+### The Concretisation Problem (Feb 18 – Feb 25)
+
+This was the most experimentally intensive phase. The core challenge: regex-based pattern matching produces many false positives. How do you classify which detected signals are genuine (SIGNAL vs NOISE) and their direction (INWARD vs OUTWARD)?
+
+What struck me about this phase, looking back at my prompts, is how *exploratory* it was. I didn't have a fixed architecture in mind. I had a problem and I was using Claude as a thinking partner to evaluate approaches in rapid succession:
+
+**Attempt 1: LLM classification.** My first instinct was to throw an LLM at the problem: take each regex match, grab surrounding AST context, ask Claude or a local model whether it's a real integration point. This worked... on small inputs. When I ran it on a real Java repo (2,116 signals across 1,809 groups), it needed 37+ LLM batches. *"This is taking way too long,"* I told Claude. *"What other tricks can be used to reduce the number of signals before it's sent to the LLM?"* The LLM concretisation path was removed, though AST walk-up (grouping signals by enclosing function) was retained as infrastructure.
+
+**Attempt 2: ML classifier.** I pivoted to training a TF-IDF + logistic regression classifier, using Claude's Batches API to generate training data at 50% cost. A GitHub training-data harvester mined real code using the pattern registry itself as search queries — each HIGH-confidence pattern became a GitHub search query, with the pattern's `SignalDirection` providing labels with no LLM required. The classifier was fast but mediocre; confidence scores were low, and it struggled with framework-specific patterns.
+
+**Attempt 3: Code embeddings.** I tested `nomic-embed-code` to see if embeddings could separate integration code from non-I/O code. They could. Then Gemini's embedding model. Both worked, but directional classification (inward vs. outward) was weak. Then came the most surprising finding of the project.
+
+**The embedding model shootout.** Five embedding backends were evaluated:
+
+| Backend | Type | Result |
+|---------|------|--------|
+| nomic-embed-code | Cloud API | 91% on small test |
+| Gemini embedding-001 | Cloud API | 91% on small test |
+| CodeT5p-110m | Local, code-specific | 50% — scores too compressed |
+| CodeRankEmbed | Local, code-specific | 4.5% — catastrophic failure |
+| **BGE-base-en-v1.5** | Local, general-purpose | **100%** on all test sets |
+
+The core finding: **general-purpose text embedding models trained for semantic similarity outperform code-specific models** on this description-to-code classification task. MTEB leaderboard scores did not predict performance.
+
+A critical sub-experiment: through iterative testing against a single Java line (`String text = new String(Files.readAllBytes(src.toPath()))`), I discovered that **passive-voice, subject-first descriptions** maximise cosine similarity in embedding space. Scores improved from 0.448 to 0.773. All 3,017 pattern descriptions were rewritten to this template.
+
+**Attempt 4: Hybrid pipeline.** The winning architecture was a two-stage pipeline: a fast embedding gate (framework-specific pattern embedding, BGE, distance-weighted KNN) to separate signal from noise, then Gemini Flash to classify direction on only the signals that survived the gate. This achieved **84.7% exact-match accuracy** and **82.3% precision** — surpassing standalone Gemini Flash.
+
+**The Datalog tangent.** Midway through, I had Claude build a Datalog-based structural analysis system that emits tree-sitter parse trees as a 16-relation Soufflé ontology, then write declarative queries for framework patterns — annotation-based, type-reference-based, and instantiation-based detection. Patterns impossible with line-level regex. This tangent became a real feature, though it remained a PoC not integrated into the main pipeline.
+
+**Evidence checks.** Seven universal suppression checks (test files, vendor dirs, generated code, config dirs, string literals, log statements, constant declarations) adjusted raw embedding scores before thresholding. This addressed the dominant false positive source: 219 of 758 smojol signals were COBOL string literals in Java test code.
+
+In total, **seven distinct classification pipelines** were built, all sharing the same detection Phase 1 and output Phase 3, differing only in Phase 2 classification: TF-IDF+LogReg, generic embedding, pattern-embedding KNN, Ollama LLM, Gemini Flash LLM, hybrid generic+Gemini, and hybrid pattern+Gemini.
+
+### Engineering Maturity (Feb 20 – Mar 2)
+
+The final phase focused on production-readiness: vectorized cosine similarity (741x speedup), batched AST extraction, embedding caching with SHA-256 content-hash invalidation, a Reveal.js presentation iteratively refined over 8 commits, codebase restructuring (all relative imports to absolute, `repo_surveyor` into classified subpackages, tests into functional subdirectories), and retroactive ADRs.
 
 ### What I Learned: Steering
 
@@ -53,8 +133,11 @@ The takeaway from Codescry was that **the human's job is strategic, not tactical
 - Making pivot decisions based on empirical feedback ("this is too slow", "confidence is too low")
 - Composing architectures ("bolt the LLM onto the embedding gate")
 - Interrupting when a direction wasn't working
+- **Replacing LLM-based approaches with deterministic ones** once the problem was understood (CFG roles, signal classification, training data)
 
 My prompts got terser as trust built up. Early on: detailed specifications with context. By day 3: *"do all of them"*, *"push"*, *"run it on smojol and show me the results"*.
+
+The scale of experimentation was unusual: 5 embedding backends tested, 7 classification pipelines built, 3,017 pattern descriptions rewritten based on a single embedding-space experiment, three independent classifiers compared head-to-head. The AI made this breadth of exploration practical — each experiment took minutes, not days.
 
 ---
 
@@ -479,14 +562,17 @@ Midway through the project, I changed the workflow to: **Brainstorm -> Discuss t
 
 | Metric | Codescry | RedDragon | Total |
 |--------|----------|-----------|-------|
-| Conversation sessions | ~195 | ~204 | ~399 |
-| Development days | 6 | 3 | 9 |
+| Conversation sessions | ~195 (101 as Cartographer + 94 as Codescry) | ~204 | ~399 |
+| Transcript data | ~379 MB | — | — |
+| Development span | 35 days (Jan 30 – Mar 2) | 9 days | — |
+| Git commits | 250 | 292 | 542 |
 | Language frontends | N/A | 15 | 15 |
-| Test count (final) | N/A | 8,569 | N/A |
+| Classification pipelines | 7 | N/A | 7 |
+| Embedding backends tested | 5 | N/A | 5 |
+| Pattern descriptions | 3,017 | N/A | 3,017 |
+| Test count (final) | — | 8,569 | — |
+| Architectural decision records | 23 | 66 | 89 |
 | Architectural pivots | 7 | 5 | 12 |
-| Lines of Python (est.) | ~5,000+ | ~8,000+ | ~13,000+ |
-| Architectural decision records | N/A | 66 | N/A |
-| Git commits | N/A | 292 | N/A |
 | Audit substantive gaps (final) | N/A | 0 | N/A |
 
 ---
