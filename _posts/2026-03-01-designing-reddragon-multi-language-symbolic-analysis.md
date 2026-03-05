@@ -23,7 +23,7 @@ The twist: I also wanted to handle *incomplete* programs gracefully. Real-world 
 
 RedDragon is part of a family of three tools: [Codescry](https://github.com/avishek-sen-gupta/codescry) (a repo surveying toolkit that detects integration points using regex, ML classifiers, code embeddings, and LLM classification) and [RedDragon-Codescry TUI](https://github.com/avishek-sen-gupta/reddragon-codescry-tui) (a terminal UI integrating the two). The TUI demo is shown above.
 
-This post covers how the system was designed, how it evolved, and the engineering discipline that kept it coherent across 28 architectural decisions and 400+ conversation sessions with Claude Code.
+This post covers how the system was designed, how it evolved, and the engineering discipline that kept it coherent across 66 architectural decisions and 400+ conversation sessions with Claude Code.
 
 ### Core Theses
 
@@ -41,8 +41,8 @@ RedDragon explores three ideas about analysing frequently-incomplete code, the k
 
 1. [Architecture Overview](#architecture-overview)
 2. [A Worked Example: Source to Execution](#a-worked-example-source-to-execution)
-3. [The IR: 19 Opcodes to Rule Them All](#the-ir-19-opcodes-to-rule-them-all)
-4. [Frontends: Three Strategies, One Output](#frontends-three-strategies-one-output)
+3. [The IR: 27 Opcodes to Rule Them All](#the-ir-27-opcodes-to-rule-them-all)
+4. [Frontends: Four Strategies, One Output](#frontends-four-strategies-one-output)
 5. [The Dispatch Table Engine](#the-dispatch-table-engine)
 6. [The Deterministic VM](#the-deterministic-vm)
 7. [Dataflow Analysis](#dataflow-analysis)
@@ -215,9 +215,9 @@ This is the core idea: deterministic by default, LLM-assisted only at the bounda
 
 ---
 
-## The IR: 19 Opcodes to Rule Them All
+## The IR: 27 Opcodes to Rule Them All
 
-The intermediate representation is a flattened three-address code with 19 opcodes, grouped by role:
+The intermediate representation is a flattened three-address code with 27 opcodes, grouped by role:
 
 ```
 Value producers:   CONST, LOAD_VAR, LOAD_FIELD, LOAD_INDEX,
@@ -226,10 +226,17 @@ Value producers:   CONST, LOAD_VAR, LOAD_FIELD, LOAD_INDEX,
 
 Value consumers:   STORE_VAR, STORE_FIELD, STORE_INDEX
 
-Control flow:      BRANCH, BRANCH_IF, LABEL, RETURN, THROW
+Control flow:      BRANCH, BRANCH_IF, LABEL, RETURN, THROW,
+                   TRY_PUSH, TRY_POP
+
+Regions:           ALLOC_REGION, WRITE_REGION, LOAD_REGION
+
+Continuations:     SET_CONTINUATION, RESUME_CONTINUATION
 
 Escape hatch:      SYMBOLIC
 ```
+
+The first 19 opcodes handle all general-purpose lowering across 15 languages. `TRY_PUSH` and `TRY_POP` model structured exception handling (pushing/popping handler labels onto the VM's exception stack). The three region opcodes (`ALLOC_REGION`, `WRITE_REGION`, `LOAD_REGION`) provide byte-addressed memory for COBOL-style overlays, REDEFINES, and packed data layouts. The two continuation opcodes (`SET_CONTINUATION`, `RESUME_CONTINUATION`) model COBOL's PERFORM return semantics, where control transfers to a named paragraph and returns to the caller on completion. All eight extended opcodes are language-agnostic in the IR and VM; they happen to be emitted by the COBOL frontend but could serve C struct layouts or binary protocol parsing.
 
 Every instruction is a flat dataclass: an opcode, a list of operands, a destination register, and a source location tracing it back to the original code. No nested expressions. `a + b * c` decomposes into:
 
@@ -241,7 +248,7 @@ Every instruction is a flat dataclass: an opcode, a list of operands, a destinat
 %4 = binop + %3 %2
 ```
 
-This verbosity is the trade-off for universality. CFG construction, dataflow analysis, and VM execution all operate on the same flat list. Adding a new language means emitting these 19 opcodes; everything downstream works automatically.
+This verbosity is the trade-off for universality. CFG construction, dataflow analysis, and VM execution all operate on the same flat list. Adding a new language means emitting these opcodes; everything downstream works automatically.
 
 ### Source Location Traceability
 
@@ -334,15 +341,17 @@ Over time, `unsupported:` emissions get replaced with real IR as frontends gain 
 
 ---
 
-## Frontends: Three Strategies, One Output
+## Frontends: Four Strategies, One Output
 
-All three frontend strategies produce the same `list[IRInstruction]`. They differ in speed, coverage, and determinism:
+All four frontend strategies produce the same `list[IRInstruction]`. They differ in speed, coverage, and determinism:
 
-**1. Deterministic frontends (15 languages):** Python, JavaScript, TypeScript, Java, Ruby, Go, PHP, C#, C, C++, Rust, Kotlin, Scala, Lua, Pascal. These use tree-sitter for parsing and a dispatch-table-based recursive descent for lowering. Sub-millisecond. Zero LLM calls. Fully testable.
+**1. Deterministic frontends (15 languages):** Python, JavaScript, TypeScript, Java, Ruby, Go, PHP, C#, C, C++, Rust, Kotlin, Scala, Lua, Pascal. These use tree-sitter for parsing and a dispatch-table-based recursive descent for lowering. Sub-millisecond. Zero LLM calls. Fully testable. Each frontend is modularised into separate files for expressions, control flow, and declarations, inheriting from a shared `BaseFrontend`. An optional **AST repair decorator** wraps any deterministic frontend with an LLM-assisted error-fixing loop: when tree-sitter produces ERROR or MISSING nodes, the repair loop extracts the error spans, asks an LLM to fix only the broken fragments, patches the source, and re-parses. This maximises deterministic coverage for real-world malformed code with zero overhead when the source is clean.
 
-**2. LLM frontend:** For languages without a deterministic frontend. The source is sent to an LLM constrained by a formal schema: all 19 opcode specs, concrete patterns, and worked examples. The LLM acts as a mechanical compiler frontend, not a reasoning engine. This distinction matters: the prompt doesn't ask *"what does this code do?"* It asks *"translate this into these specific opcodes."*
+**2. COBOL frontend (ProLeap bridge):** COBOL source is parsed by the ProLeap COBOL parser (a Java-based parser producing an Abstract Syntax Graph), bridged to Python via a shaded JAR that emits JSON ASGs. The frontend includes a complete type system: PIC clause parsing (zoned decimal, COMP/COMP-1/COMP-2, packed decimal, alphanumeric, EBCDIC), REDEFINES overlays with byte-addressed memory regions, OCCURS arrays with subscript resolution, level-88 condition names with value ranges, and paragraph-based control flow via named continuations. COBOL-specific IR is emitted using the region and continuation opcodes.
 
-**3. Chunked LLM frontend:** For large files that overflow context windows. Tree-sitter decomposes the file into per-function chunks, each is LLM-lowered independently, registers and labels are renumbered to avoid collisions, and the chunks are reassembled into a single IR.
+**3. LLM frontend:** For languages without a deterministic frontend. The source is sent to an LLM constrained by a formal schema: all 27 opcode specs, concrete patterns, and worked examples. The LLM acts as a mechanical compiler frontend, not a reasoning engine. This distinction matters: the prompt doesn't ask *"what does this code do?"* It asks *"translate this into these specific opcodes."*
+
+**4. Chunked LLM frontend:** For large files that overflow context windows. Tree-sitter decomposes the file into per-function chunks, each is LLM-lowered independently, registers and labels are renumbered to avoid collisions, and the chunks are reassembled into a single IR.
 
 The key architectural decision was making the LLM path a *compiler frontend*, not a *reasoning engine*. When you constrain the LLM to pattern-matching against a formal schema, output quality improves. It's translating syntax, not reasoning about semantics.
 
@@ -417,7 +426,7 @@ The heap is a flat dictionary mapping addresses (`"obj_0"`, `"arr_1"`) to `HeapO
 
 ### Opcode Dispatch
 
-The `LocalExecutor` maps each of the 19 `Opcode` enum values to a handler function via a static dispatch table:
+The `LocalExecutor` maps each of the 27 `Opcode` enum values to a handler function via a static dispatch table:
 
 ```python
 DISPATCH: dict[Opcode, Any] = {
@@ -425,7 +434,7 @@ DISPATCH: dict[Opcode, Any] = {
     Opcode.BINOP: _handle_binop,
     Opcode.CALL_FUNCTION: _handle_call_function,
     Opcode.LOAD_FIELD: _handle_load_field,
-    # ... all 19 opcodes
+    # ... all 27 opcodes
 }
 ```
 
@@ -552,19 +561,20 @@ RedDragon's evolution followed a clear pattern of phases, each triggered by test
 
 **Phase 4: Analysis and tooling (Hour 8 to 14).** Added iterative dataflow analysis, chunked LLM frontend, Mermaid CFG visualisation with subgraphs and call edges, source location traceability. Extracted CLI into composable API.
 
-**Phase 5: Systematic hardening (Sessions 50 to 130).** This is where the test count exploded. The Rosetta cross-language test suite (8 algorithms x 15 languages) and then the Exercism integration suite drove the test count from ~700 to 7,268 across 80+ sessions. Each exercise exposed new frontend gaps, VM limitations, and edge cases, and each fix was immediately verified across all 15 languages.
+**Phase 5: Systematic hardening (Sessions 50 to 130).** This is where the test count exploded. The Rosetta cross-language test suite (14 algorithms x 15 languages) and then the Exercism integration suite drove the test count from ~700 to 7,268 across 80+ sessions. Each exercise exposed new frontend gaps, VM limitations, and edge cases, and each fix was immediately verified across all 15 languages.
 
 The test count tells the story:
 
 ```
-Phase 1–3:   346 tests
-Phase 4:     ~700 tests
-Rosetta:     ~1,200 tests
-Exercism 1:  ~2,700 tests
-Exercism 2:  ~4,200 tests
-Exercism 3:  ~5,150 tests
-Exercism 4:  ~7,076 tests
-Final:        7,268 tests (+ 3 xfailed)
+Phase 1–3:        346 tests
+Phase 4:         ~700 tests
+Rosetta:        ~1,200 tests
+Exercism 1:     ~2,700 tests
+Exercism 2:     ~4,200 tests
+Exercism 3:     ~5,150 tests
+Exercism 4:     ~7,076 tests
+Exercism done:   7,268 tests
+COBOL + audit:   8,569 tests
 ```
 
 All tests run without LLM calls and are deterministic.
@@ -811,7 +821,7 @@ Some of the rules that shaped the codebase most:
 
 **"Before committing anything, run all tests, fixing them if necessary."** This prevented test count regression across 100+ commits.
 
-**"Once a design is finalised, document it as an ADR."** This produced 28 timestamped architectural decision records that serve as the project's institutional memory. Each records the context, the decision, and the consequences, including trade-offs.
+**"Once a design is finalised, document it as an ADR."** This produced 66 timestamped architectural decision records that serve as the project's institutional memory. Each records the context, the decision, and the consequences, including trade-offs.
 
 The workflow encoded in CLAUDE.md is: **Brainstorm → Discuss trade-offs → Plan → Write unit tests → Implement → Fix tests → Commit → Refactor.** This isn't just process documentation. It's an enforceable contract. Every session begins with these rules loaded into context.
 
@@ -831,17 +841,15 @@ The workflow encoded in CLAUDE.md is: **Brainstorm → Discuss trade-offs → Pl
 
 | Metric | Value |
 |--------|-------|
-| Supported languages | 15 (deterministic) + any (LLM) |
-| IR opcodes | 19 |
-| Tests (all passing) | 8,469 |
+| Supported languages | 15 (deterministic) + COBOL (ProLeap) + any (LLM) |
+| IR opcodes | 27 |
+| Tests (all passing) | 8,569 |
 | LLM calls at test time | 0 |
-| Architectural decision records | 28 |
+| Architectural decision records | 66 |
 | Exercism exercises | 18 (across 15 languages) |
-| Rosetta algorithms | 8 (across 15 languages) |
+| Rosetta algorithms | 14 (across 15 languages) |
 | Conversation sessions | ~400 |
-| Git commits | 125 |
-| Co-authored with Claude | 124 (99.2%) |
-| Solo human commits | 1 |
+| Git commits | 292 |
 | Audit substantive gaps (final) | 0 |
 | Audit SYMBOLIC emissions (final) | 0 |
 
@@ -849,7 +857,7 @@ The workflow encoded in CLAUDE.md is: **Brainstorm → Discuss trade-offs → Pl
 
 ## Conclusion
 
-RedDragon started as a question: *"Can I build a single system that analyses code in any language?"* It evolved into a compiler pipeline with 15 deterministic frontends, a symbolic VM, and cross-language verification.
+RedDragon started as a question: *"Can I build a single system that analyses code in any language?"* It evolved into a compiler pipeline with 15 deterministic frontends, a COBOL frontend via ProLeap, LLM-assisted AST repair, a symbolic VM with byte-addressed memory regions and named continuations, and cross-language verification.
 
 None of the individual components are novel. TAC IR, dispatch tables, worklist dataflow, symbolic execution are all textbook techniques. The value, if any, is in applying them together to a practical multi-language analysis tool and then hardening the result through systematic auditing.
 
