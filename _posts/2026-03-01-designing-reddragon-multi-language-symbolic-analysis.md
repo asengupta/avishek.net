@@ -193,29 +193,7 @@ Final state: result = "positive"  (18 steps, 0 LLM calls)
 
 The reaching definitions analysis traces through the register chain. The raw def-use chain says "`result` depends on `%9`". But tracing through: `%9` comes from `CALL_FUNCTION` on `classify` with argument `%8`; inside the call, `label` is set to `"positive"` (the branch taken); `label` is loaded into `%6` and returned. The dependency graph says: `result` depends on `classify` and `x`.
 
-### What Changes With Incomplete Code
-
-Now consider what happens when the source has a missing dependency:
-
-```python
-import math
-result = math.sqrt(16) + 1
-```
-
-The frontend doesn't know what `math.sqrt` returns. Instead of crashing, the VM creates a symbolic value:
-
-```
-step 1: call_function math.sqrt 16    → sym_0 (hint: "math.sqrt(16)")
-step 2: const 1                       → %1 = 1
-step 3: binop + sym_0 %1              → sym_1 (constraint: "sym_0 + 1")
-step 4: store_var result sym_1        → result = sym_1
-
-Final state: result = sym_1 [sym_0 + 1, where sym_0 = math.sqrt(16)]
-```
-
-The dataflow analysis still works: `result` depends on `math.sqrt` and the constant `1`. The symbolic value propagates deterministically. If you opt into the LLM resolver (`UnresolvedCallStrategy.LLM`), the VM would instead resolve `math.sqrt(16)` to `4.0`, and the final result would be `5.0`.
-
-This is the core idea: deterministic by default, LLM-assisted only at the boundaries where information is genuinely missing.
+The [LLM-Assisted VM Execution](#llm-assisted-vm-execution) section shows what happens when the source has missing dependencies: the VM creates symbolic placeholders that propagate deterministically, preserving dataflow tracing even without concrete values.
 
 ---
 
@@ -264,48 +242,9 @@ Every instruction carries a `SourceLocation` with start/end line and column, cap
 
 This means any IR instruction, any VM execution step, any dataflow dependency can be traced back to the exact span of source code that produced it. When a symbolic value appears in the output, its provenance chain leads back to specific source lines.
 
-### Control Flow in the IR
+### Control Flow and Functions
 
-All control flow is explicit. There are no structured `if`/`while`/`for` constructs in the IR. A simple `if/else` lowers to labels, conditional branches, and unconditional jumps:
-
-```
-%0 = binop > x 5
-branch_if %0 if_true_0,if_false_0
-if_true_0:
-  %1 = const 1
-  store_var y %1
-  branch if_end_0
-if_false_0:
-  %2 = const 0
-  store_var y %2
-  branch if_end_0
-if_end_0:
-  ...
-```
-
-`BRANCH_IF` encodes both targets in its label field (comma-separated). The CFG builder splits the IR into basic blocks at every `LABEL` and after every `BRANCH`/`BRANCH_IF`/`RETURN`/`THROW`, then wires edges based on the branch targets. Loops become back-edges: a `while` loop's `BRANCH` at the end of the body points back to the condition's label.
-
-### Functions as IR Patterns
-
-Function definitions are lowered as *skip-over* patterns. The body is emitted inline in the IR, bracketed by a `BRANCH` that jumps past it (so the body isn't executed at definition time) and a `LABEL` marking the entry point:
-
-```
-branch end_add_0              # skip over body
-func_add_0:                   # entry point
-  %0 = symbolic param:a       # parameter binding
-  store_var a %0
-  %1 = symbolic param:b
-  store_var b %1
-  %2 = load_var a
-  %3 = load_var b
-  %4 = binop + %2 %3
-  return %4
-end_add_0:
-  %5 = const <function:add@func_add_0>
-  store_var add %5
-```
-
-Parameters are emitted as `SYMBOLIC` instructions with a `param:` prefix. A `FunctionRegistry` scans the IR to extract parameter names from these markers and maps class names to method labels. This metadata drives call resolution at execution time.
+All control flow is explicit: labels, conditional branches, and unconditional jumps. There are no structured `if`/`while`/`for` constructs. `BRANCH_IF` encodes both targets in its label field (comma-separated). The CFG builder splits the IR into basic blocks at every `LABEL` and after every `BRANCH`/`BRANCH_IF`/`RETURN`/`THROW`, then wires edges based on the branch targets. Loops become back-edges: a `while` loop's `BRANCH` at the end of the body points back to the condition's label. Function definitions use the *skip-over* pattern shown in the [worked example](#a-worked-example-source-to-execution): a `BRANCH` jumps past the body at definition time, and a `FunctionRegistry` scans the IR for `SYMBOLIC "param:"` markers to extract parameter names and map class names to method labels.
 
 ### Three Call Variants
 
@@ -356,8 +295,6 @@ All four frontend strategies produce the same `list[IRInstruction]`. They differ
 **3. LLM frontend:** For languages without a deterministic frontend. The source is sent to an LLM constrained by a formal schema: all 27 opcode specs, concrete patterns, and worked examples. The LLM acts as a mechanical compiler frontend, not a reasoning engine. This distinction matters: the prompt doesn't ask *"what does this code do?"* It asks *"translate this into these specific opcodes."*
 
 **4. Chunked LLM frontend:** For large files that overflow context windows. Tree-sitter decomposes the file into per-function chunks, each is LLM-lowered independently, registers and labels are renumbered to avoid collisions, and the chunks are reassembled into a single IR.
-
-The key architectural decision was making the LLM path a *compiler frontend*, not a *reasoning engine*. When you constrain the LLM to pattern-matching against a formal schema, output quality improves. It's translating syntax, not reasoning about semantics.
 
 ---
 
@@ -429,13 +366,9 @@ The patched source is re-parsed with tree-sitter. If the parse is now clean (`ha
 
 ### Design Properties
 
-**Zero overhead on clean source.** The fast path is a single `has_error` check on the root node.
+**The LLM fixes syntax, not semantics.** The prompt constrains the LLM to syntactic repair: fix the missing semicolon, close the bracket, complete the partial statement. This keeps the repair narrowly scoped and verifiable (the repaired source either parses cleanly or it doesn't).
 
-**Decorator pattern.** The repair facility wraps any `Frontend` implementation. It's not baked into the frontends themselves. This means the same `PythonFrontend` works with or without repair, and the repair logic is tested independently.
-
-**The LLM fixes syntax, not semantics.** The prompt explicitly constrains the LLM to syntactic repair: fix the missing semicolon, close the bracket, complete the partial statement. It doesn't ask the LLM to reason about what the code does. This keeps the repair narrowly scoped and verifiable (the repaired source either parses cleanly or it doesn't).
-
-**Graceful degradation.** If the LLM returns garbage, the source patcher applies it, tree-sitter re-parses, finds errors again, and eventually the retry budget is exhausted. The fallback is always the original source through the deterministic frontend, which handles ERROR nodes via `SYMBOLIC`. The worst case is identical to not having repair at all.
+**Graceful degradation.** If the LLM returns garbage, the retry budget is eventually exhausted and the decorator falls back to the original source. The worst case is identical to not having repair at all.
 
 ---
 
@@ -453,9 +386,7 @@ The LLM frontend works by constraining the LLM to a mechanical translation task.
 4. **A complete worked example**: a `fib(n)` function lowered to 30 IR instructions, showing every convention in context.
 5. **Rules**: the first instruction is always `LABEL "entry"`, every expression is flattened into registers, string literals include quotes in the operand, booleans are `"True"`/`"False"`, return only the JSON array with no markdown fences.
 
-The user prompt is simply: *"Lower the following {language} source code into IR instructions:"* followed by the raw source.
-
-This prompt design means the LLM is pattern-matching against a formal grammar, not reasoning about program semantics. It sees `def foo(a, b): return a + b` and emits the same skip-over/param/binop/return pattern it saw in the worked example. The opcode definitions and patterns are the specification; the LLM is the translator.
+The user prompt is simply: *"Lower the following {language} source code into IR instructions:"* followed by the raw source. The opcode definitions and patterns are the specification; the LLM is the translator.
 
 ### Parsing and Validation
 
@@ -532,33 +463,7 @@ end_factorial_1:
   store_var factorial %12
 ```
 
-The top-level bindings are straightforward:
-
-```
-  %13 = const 5
-  %14 = call_function factorial %13
-  store_var x %14
-
-  %15 = const "a"
-  %16 = call_function toUpper %15
-  store_var ch %16
-
-  %17 = load_var ch
-  %18 = call_function ord %17
-  store_var code %18
-
-  %19 = load_var x
-  %20 = load_var code
-  %21 = binop + %19 %20
-  store_var total %21
-```
-
-Note what happens at execution time. The VM executes `factorial(5)` deterministically: it's a concrete recursive call with all values known, resolving to 120. No LLM involvement. But `toUpper('a')` and `ord(ch)` are calls to `Data.Char` functions that don't exist in the IR. The VM's `UnresolvedCallResolver` handles these:
-
-- **Default (SymbolicResolver)**: creates `sym_0 (hint: "toUpper('a')")` and `sym_1 (hint: "ord(sym_0)")`. The `total` variable becomes `sym_2 (constraint: "120 + sym_1")`. Zero LLM calls, fully deterministic, and the dataflow analysis still traces that `total` depends on `x`, `code`, and `ch`.
-- **Opt-in (LLMPlausibleResolver)**: sends a structured prompt to an LLM with the function name, arguments, and VM state. The LLM responds with `'A'` for `toUpper('a')` and `65` for `ord('A')`, producing `total = 185`. Non-deterministic, but useful when concrete answers matter more than reproducibility.
-
-The result: from Haskell source to IR to CFG to executed VM state, with zero language-specific code written. The same path works for any language the LLM can read.
+The top-level bindings follow the same pattern: `CONST` + `CALL_FUNCTION` + `STORE_VAR` for each assignment. At execution time, `factorial(5)` resolves to 120 deterministically (concrete recursive call). `toUpper('a')` and `ord(ch)` are unresolved `Data.Char` functions, handled by the `UnresolvedCallResolver`: the default `SymbolicResolver` traces dependencies through symbolic placeholders; the opt-in `LLMPlausibleResolver` produces concrete values (`'A'`, `65`, `total = 185`). From Haskell source to executed VM state, with zero language-specific code.
 
 ---
 
@@ -603,13 +508,7 @@ Adding support for a new AST node type is mechanical: write a handler method, re
 
 ## The Deterministic VM
 
-One decision shaped the rest of the project more than any other: making the VM fully deterministic.
-
-The original design had the LLM deciding state changes at each execution step. When the VM encountered an unknown value, it asked the LLM what to do. This was slow, non-deterministic, untestable, and fragile.
-
-The key insight came from a simple question: *"Given that the IR is always bounded, shouldn't execution be deterministic?"* Yes. If the IR has no unbounded loops (or loops are bounded by concrete values), execution is a mechanical process. Unknown values don't need to be *resolved*. They can be *created* as symbolic placeholders that propagate through computation.
-
-So we ripped out all LLM calls from the VM. The entire execution engine became reproducible across runs.
+The VM is fully deterministic. Unknown values are *created* as symbolic placeholders that propagate through computation, rather than being resolved via LLM calls. The entire execution engine is reproducible across runs.
 
 ### VM State: Frames, Heap, and Closures
 
@@ -665,19 +564,7 @@ This separation of *computation* (handlers) from *mutation* (`apply_update`) is 
 
 ### `apply_update()`: The Single Mutator
 
-All state changes flow through a single function, `apply_update()`, which applies a `StateUpdate` to the VM in a strict order:
-
-1. **New objects**: allocate heap entries
-2. **Register writes**: write to the current frame's registers
-3. **Heap writes**: update object fields (materialising synthetic entries if needed)
-4. **Path condition**: record branch assumptions
-5. **Call push**: push a new `StackFrame` onto the call stack
-6. **Variable writes**: write to the *current* frame's `local_vars` (which is the new frame if step 5 fired)
-7. **Call pop**: pop the call stack on return
-
-The ordering of steps 5 and 6 is the subtle part. When calling a function, parameters need to land in the *new* frame, not the caller's. By pushing the frame first (step 5) and writing variables second (step 6), parameter bindings automatically go to the right place without any special-casing.
-
-Step 6 also handles closure synchronisation: if a written variable is in the frame's `captured_var_names`, the write is mirrored to the shared `ClosureEnvironment`, ensuring that mutations inside closures are visible to other closures sharing the same environment.
+All state changes flow through `apply_update()`, which applies a `StateUpdate` in strict order: new objects, register writes, heap writes, path conditions, call push, variable writes, call pop. The ordering matters: call push (step 5) happens *before* variable writes (step 6), so parameter bindings automatically land in the new frame without special-casing. Variable writes also handle closure synchronisation: if a variable is in the frame's `captured_var_names`, the write is mirrored to the shared `ClosureEnvironment`.
 
 ### Symbolic Value Propagation
 
@@ -726,7 +613,7 @@ The VM includes a small table of built-in functions (`len`, `range`, `print`, `i
 
 ## LLM-Assisted VM Execution
 
-The deterministic VM handles all known functions, built-ins, and concrete operations without external help. But real-world code calls libraries, frameworks, and system functions that don't exist in the IR. When the VM encounters a call it can't resolve (not in the function registry, not a built-in, not a recognized class constructor), it delegates to an `UnresolvedCallResolver`.
+The deterministic VM handles known functions, built-ins, class constructors, and concrete operations without external help. But real-world code calls libraries, frameworks, and system functions that don't exist in the IR. When the VM exhausts all internal resolution paths (built-in table, function registry, class constructors, string/list indexing conversion), it delegates to an `UnresolvedCallResolver`. For a program with 50 function calls where 45 are to local functions and built-ins, only 5 hit the resolver.
 
 This is the third and final point where an LLM can enter the pipeline. The first is at the frontend (lowering source to IR). The second is AST repair (fixing malformed syntax). This third point is at runtime: resolving calls to functions whose implementations are unavailable.
 
@@ -747,16 +634,7 @@ Both `resolve_call` (for `CALL_FUNCTION` and `CALL_UNKNOWN`) and `resolve_method
 
 ### SymbolicResolver (Default)
 
-The default resolver creates a fresh `SymbolicValue` with a descriptive hint:
-
-```
-math.sqrt(16)  →  sym_0 (hint: "math.sqrt(16)", constraints: ["math.sqrt(16)"])
-obj.process(sym_0, 42)  →  sym_1 (hint: "obj.process(sym_0, 42)")
-```
-
-The symbolic value propagates through subsequent operations. If `y = math.sqrt(16) + 1`, the result is `sym_1 (constraint: "sym_0 + 1")`. The dataflow analysis still tracks that `y` depends on the call to `math.sqrt`, even though it doesn't know the concrete value.
-
-This is the right default for most analysis tasks. Dataflow tracing, dependency graphs, and control flow analysis don't need concrete values from external functions. They need to know that a dependency exists and that data flows through it. Zero LLM calls, fully deterministic, fully reproducible.
+The default resolver creates a fresh `SymbolicValue` for any unknown call (e.g., `sym_0 (hint: "math.sqrt(16)")`). The symbolic propagation described in the [VM section](#symbolic-value-propagation) takes over from there: dependent operations produce constrained symbolics, and the dataflow analysis traces dependencies through them. This is the right default for most analysis tasks, where knowing that a dependency exists matters more than knowing its concrete value.
 
 ### LLMPlausibleResolver (Opt-In)
 
@@ -832,18 +710,6 @@ greeting  = "Hello, Alice"
 
 The LLM produces a plausible JSON response for the API call. `response.json()` returns a plausible dict. `extract_name` runs concretely on the plausible data. The final values are concrete and inspectable, at the cost of one LLM call per unresolved external.
 
-### Where the Resolver Fires
-
-The resolver is not a catch-all. The VM tries several resolution paths before falling through to it:
-
-1. **Built-in functions** (`len`, `range`, `print`, `int`, `str`, etc.) are handled by a built-in table. No resolver needed.
-2. **Known functions** (defined in the IR and registered in the `FunctionRegistry`) are dispatched by pushing a new stack frame. No resolver needed.
-3. **Class constructors** (registered class refs) trigger object allocation and `__init__` dispatch. No resolver needed.
-4. **String/list indexing** (Scala-style `s(i)` lowered as `CALL_FUNCTION`) is detected and converted to `LOAD_INDEX`. No resolver needed.
-5. **Everything else** falls through to the `UnresolvedCallResolver`.
-
-This layered resolution means the LLM is only consulted for genuinely unknown externals. For a program with 50 function calls where 45 are to local functions and built-ins, only 5 hit the resolver.
-
 ---
 
 ## Dataflow Analysis
@@ -860,14 +726,14 @@ The analysis is forward, may-approximate (over-approximate), and intraprocedural
 
 ### Reaching Definitions
 
-For each basic block, the algorithm computes two local sets. **GEN** is the last definition of each variable within the block (if a block defines `x` twice, only the second is in GEN). **KILL** is all definitions of variables that this block redefines, from other blocks. The worklist then iterates the standard dataflow equations until convergence:
+Standard GEN/KILL worklist iteration over the dataflow equations:
 
 ```
 reach_in(B)  = ∪ { reach_out(P) | P ∈ predecessors(B) }
 reach_out(B) = GEN(B) ∪ (reach_in(B) − KILL(B))
 ```
 
-The lattice is the power set of all definitions (finite), and the transfer function is monotone, so convergence is guaranteed. A safety cap of 1,000 iterations prevents runaway on pathological CFGs.
+The lattice is the power set of all definitions (finite), so convergence is guaranteed. A safety cap of 1,000 iterations prevents runaway on pathological CFGs.
 
 ### The Register Chain Problem
 
@@ -931,17 +797,9 @@ total = h + e + b
 %23 = binop + %22 %21   → total = h + e + b
 ```
 
-The reaching definitions analysis runs over the CFG (which for this straight-line program is a single block). Every `STORE_VAR` generates a definition, and every `LOAD_VAR` creates a use. The def-use chain extraction links each use to its reaching definition.
+The dependency graph builder traces through the register chains. For example, `c` depends on `%4` (a `BINOP`), which reads `%2` (from `LOAD_VAR a`) and `%3` (from `LOAD_VAR b`), so `c → {a, b}`. Applying this recursively across all variables:
 
-The raw dependency graph builder then traces through the register chains:
-
-- `c` depends on `%4`, which reads `%2` (from `LOAD_VAR a`) and `%3` (from `LOAD_VAR b`). So `c → {a, b}`.
-- `d` depends on `%7`, which reads `%5` (from `LOAD_VAR a`) and `%6` (from `LOAD_VAR b`). So `d → {a, b}`.
-- `e` depends on `%10`, which reads `%8` (from `LOAD_VAR c`) and `%9` (from `LOAD_VAR d`). So `e → {c, d}`.
-- `f` depends on `%13`, which reads `%11` (from `LOAD_VAR e`) and `%12` (from `LOAD_VAR a`). So `f → {e, a}`.
-- `g` depends on `%15` (from `CALL_FUNCTION square %14`), and `%14` comes from `LOAD_VAR c`. So `g → {c}`.
-- `h` depends on `%18`, which reads `%16` (from `LOAD_VAR g`) and `%17` (from `LOAD_VAR f`). So `h → {g, f}`.
-- `total` traces through the chained binops to `%19` (`LOAD_VAR h`), `%20` (`LOAD_VAR e`), `%21` (`LOAD_VAR b`). So `total → {h, e, b}`.
+`c → {a, b}`, `d → {a, b}`, `e → {c, d}`, `f → {e, a}`, `g → {c}` (through the function call), `h → {g, f}`, `total → {h, e, b}`.
 
 The direct dependency graph:
 
@@ -997,30 +855,7 @@ The dataflow module has no dependencies on the VM, frontends, or backends. It's 
 
 The broadest verification effort was the Exercism integration test suite. The idea: take Exercism's canonical test cases (which define expected inputs and outputs for programming exercises), write equivalent solutions in all 15 languages, and verify that RedDragon's pipeline produces the correct answer for every case in every language.
 
-Each exercise tests a specific set of language constructs:
-
-| Exercise | Key Constructs | Cases | Total Tests |
-|----------|----------------|-------|-------------|
-| leap | modulo, boolean logic, short-circuit eval | 9 | 287 |
-| collatz-conjecture | while loop, conditional, integer division | 4 | 137 |
-| difference-of-squares | accumulator, function composition | 9 | 287 |
-| two-fer | string concatenation, string literals | 3 | 107 |
-| hamming | string indexing, character comparison | 5 | 167 |
-| reverse-string | backward iteration, char-by-char building | 5 | 167 |
-| rna-transcription | multi-branch if, character mapping | 6 | 197 |
-| perfect-numbers | divisor loop, three-way string return | 9 | 287 |
-| triangle | nested ifs, validity guards, 3-arg functions | 21 | 647 |
-| space-age | float division, float constants | 8 | 257 |
-| grains | exponentiation, large integers | 8 | 257 |
-| isogram | nested loops, continue, helper functions | 14 | 437 |
-| nth-prime | trial division, primality testing | 3 | 107 |
-| resistor-color | string-to-int mapping | 3 | 107 |
-| pangram | string variable indexing, nested loops | 11 | 347 |
-| bob | multi-branch string classification | 22 | 633 |
-| luhn | two-pass validation, right-to-left traversal | 22 | 677 |
-| acronym | word boundary detection, toUpperChar | 9 | 269 |
-
-For each exercise, every canonical test case generates tests across three dimensions:
+The 18 exercises span a range of constructs: modulo and boolean logic (leap), while loops (collatz-conjecture), accumulators (difference-of-squares), string operations (two-fer, hamming, reverse-string, rna-transcription), nested loops (isogram, pangram), multi-branch classification (bob), float arithmetic (space-age), and multi-pass validation (luhn). For each exercise, every canonical test case generates tests across three dimensions:
 
 1. **Lowering quality**: does the IR contain any `unsupported:` SYMBOLIC? (15 tests per exercise)
 2. **Cross-language consistency**: do all 15 languages produce structurally equivalent IR? (2 tests per exercise)
