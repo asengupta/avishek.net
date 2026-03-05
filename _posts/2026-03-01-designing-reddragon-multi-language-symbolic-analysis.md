@@ -1,5 +1,5 @@
 ---
-title: "Designing RedDragon: A Multi-Language Symbolic Code Analysis Engine"
+title: "Designing RedDragon: A Deterministic Compiler Pipeline with LLM-Assisted Repair for Analysing Incomplete Code and Unknown Languages"
 author: avishek
 usemathjax: false
 mermaid: true
@@ -7,7 +7,7 @@ tags: ["Software Engineering", "Compilers", "Program Analysis", "Symbolic Execut
 draft: false
 ---
 
-*A universal IR, 15 deterministic frontends, a symbolic VM, and an iterative audit loop.*
+*A universal IR, 15 deterministic frontends, a symbolic VM, and an iterative audit loop. This post is a work in progress.*
 
 ![RedDragon TUI Demo](/assets/red-dragon-tui.gif)
 
