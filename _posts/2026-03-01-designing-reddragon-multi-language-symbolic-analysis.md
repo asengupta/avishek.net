@@ -990,7 +990,9 @@ The programming rules enforce a specific coding style that reduces the surface a
 
 ### The Workflow Contract
 
-The workflow encoded in CLAUDE.md is: **Brainstorm → Discuss trade-offs → Plan → Write unit tests → Implement → Fix tests → Commit → Refactor.** This isn't just process documentation. It's an enforceable contract. Every session begins with these rules loaded into context. The brainstorming phase explicitly requires considering whether open source projects perform similar functionality, and balancing absolute correctness against "good enough." If in doubt, the rule says to ask for guidance rather than guessing.
+The workflow encoded in CLAUDE.md wasn't the original one. Early in the project, the workflow was simply **Brainstorm → Plan → Implement → Test**. Tests came after implementation, which meant the AI wrote code first and tests second. This worked for the initial sprint but led to the weak assertion patterns that the later audit uncovered: when tests are written to match existing code, they tend to verify what the code *does* rather than what it *should do*.
+
+Midway through the project, I changed the workflow to: **Brainstorm → Discuss trade-offs → Plan → Write unit tests → Implement → Fix tests → Commit → Refactor.** Tests now come *before* implementation. The AI writes tests that encode the expected behaviour, then writes code to make them pass. This inversion also added two new phases: discussing trade-offs (forcing the AI to consider alternatives before committing to an approach) and an explicit refactoring step after the commit. Every session begins with these rules loaded into context. The brainstorming phase explicitly requires considering whether open source projects perform similar functionality, and balancing absolute correctness against "good enough." If in doubt, the rule says to ask for guidance rather than guessing.
 
 ---
 
