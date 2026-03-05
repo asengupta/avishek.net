@@ -7,7 +7,7 @@ tags: ["Software Engineering", "Compilers", "Program Analysis", "Symbolic Execut
 draft: false
 ---
 
-*A universal IR, 15 deterministic frontends, a symbolic VM, and iterative dataflow analysis. This post is a work in progress.*
+*A universal IR, 15 deterministic frontends, a symbolic VM, and iterative dataflow analysis.*
 
 ![RedDragon TUI Demo](/assets/red-dragon-tui.gif)
 
@@ -25,7 +25,7 @@ Established IRs exist for this kind of work. LLVM IR covers C, C++, Rust, Swift,
 
 The twist: I wanted to handle *incomplete* programs gracefully. Real-world code depends on imports, frameworks, and external systems that aren't available during static analysis. Most tools crash or give up when they hit an unresolved reference. I wanted mine to keep going, creating symbolic placeholders for unknowns and tracing data flow through them.
 
-[RedDragon](https://github.com/avishek-sen-gupta/red-dragon) is the result. It parses source in 15 languages, lowers it to a universal intermediate representation, builds control flow graphs, performs iterative dataflow analysis, and executes programs symbolically via a deterministic virtual machine. All with zero LLM calls for programs with concrete inputs.
+[RedDragon](https://github.com/avishek-sen-gupta/red-dragon) is the result. It parses source in 15 languages, lowers it to a universal intermediate representation, builds control flow graphs, performs iterative dataflow analysis, and executes programs symbolically via a deterministic virtual machine. All with zero LLM calls for programs with concrete inputs. RedDragon is a work in progress.
 
 RedDragon is part of a family of three tools: [Codescry](https://github.com/avishek-sen-gupta/codescry) (a repo surveying toolkit that detects integration points using regex, ML classifiers, code embeddings, and LLM classification) and [RedDragon-Codescry TUI](https://github.com/avishek-sen-gupta/reddragon-codescry-tui) (a terminal UI integrating the two). The TUI demo is shown above.
 
