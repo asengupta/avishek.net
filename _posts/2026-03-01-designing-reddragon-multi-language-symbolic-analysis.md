@@ -938,21 +938,59 @@ The Exercism suite surfaced more bugs than any other test approach. Each exercis
 
 ## Guardrails: The CLAUDE.md as Architecture
 
-RedDragon was built almost entirely through conversations with Claude Code, across 400+ sessions. The file that had the most impact on consistency wasn't any Python module. It was `CLAUDE.md`, which encodes the development rules.
+RedDragon was built almost entirely through conversations with Claude Code, across 400+ sessions. The file that had the most impact on consistency wasn't any Python module. It was `CLAUDE.md`, which encodes the development rules. Claude Code reads this file at the start of every session, so every conversation begins with the same constraints. The rules evolved over the project's lifetime, each one added in response to a specific failure mode.
 
-Some of the rules that shaped the codebase most:
+### Build Rules
 
-**"STOP USING FOR LOOPS WITH MUTATIONS IN THEM. JUST STOP."** This rule forced a functional programming style across the codebase. List comprehensions, `map`, `filter`, `reduce` instead of mutable accumulators. The code is denser but more predictable.
+The build section encodes a strict pre-commit discipline:
 
-**"Do not use `unittest.mock.patch`. Use proper dependency injection."** This forced every external dependency (LLM clients, file I/O, clocks) to be injectable. The result: the entire VM, all 15 frontends, and all analysis passes are testable in isolation without mocking.
+**"Before committing anything, run all tests, fixing them if necessary."** This prevented test count regression across 292 commits. The rule also specifies: if test assertions are being *removed*, ask for human review first. This distinction matters. Adding assertions is safe; removing them requires justification.
 
-**"If a function has a non-None return type, never return None."** Combined with null object pattern enforcement, this eliminated an entire class of `NoneType` errors. Functions that can't produce a value return a null object, not `None`.
+**"Before committing anything, run `poetry run black` on the full codebase."** The CI pipeline enforces Black formatting and will fail if this is skipped. Encoding this in CLAUDE.md means the AI formats before every commit without being asked.
 
-**"Before committing anything, run all tests, fixing them if necessary."** This prevented test count regression across 100+ commits.
+**"Before committing anything, update the README based on the diffs."** This keeps the README in sync with the code. Without this rule, the README would have drifted within the first week.
+
+**"For each feature, treat it as an independent commit / push, with its own testing."** This produced atomic, reviewable commits. Combined with "do not start a new task until the current one is committed," it prevented half-finished features from accumulating across sessions.
 
 **"Once a design is finalised, document it as an ADR."** This produced 66 timestamped architectural decision records that serve as the project's institutional memory. Each records the context, the decision, and the consequences, including trade-offs.
 
-The workflow encoded in CLAUDE.md is: **Brainstorm → Discuss trade-offs → Plan → Write unit tests → Implement → Fix tests → Commit → Refactor.** This isn't just process documentation. It's an enforceable contract. Every session begins with these rules loaded into context.
+### Testing Patterns
+
+The testing rules address the specific failure modes of AI-generated tests:
+
+**"When fixing tests, do not blindly change test assertions to make the test pass."** This is the single most important testing rule. Without it, the AI's default behaviour is to modify the assertion to match whatever the code produces, regardless of whether the code is correct. The rule forces it to verify the actual output before changing assertions.
+
+**"Make sure you are not creating any special implementation behaviour just to get the tests to pass."** The complement of the above. Without this rule, the AI occasionally added if-branches or special cases in production code solely to satisfy a test expectation, rather than fixing the underlying logic.
+
+**"Do not use `unittest.mock.patch`. Use proper dependency injection."** This forced every external dependency (LLM clients, file I/O, clocks) to be injectable. The result: the entire VM, all 15 frontends, and all analysis passes are testable in isolation without mocking.
+
+**"Always start from writing unit tests for the smallest feasible units of code."** The rule further specifies the directory structure: true unit tests (no I/O) go in `tests/unit/`, tests that exercise I/O (LLM calls, databases) go in `tests/integration/`. This separation means `tests/unit/` can run in CI without API keys.
+
+**"For every bug you fix, make sure you have a test that fails without the bug fix."** This prevents fixes that are never actually verified. Without this rule, the AI occasionally produced fixes that looked plausible but didn't address the actual failure path.
+
+### Programming Patterns
+
+The programming rules enforce a specific coding style that reduces the surface area for bugs:
+
+**"STOP USING FOR LOOPS WITH MUTATIONS IN THEM. JUST STOP."** This rule forced a functional programming style across the codebase. List comprehensions, `map`, `filter`, `reduce` instead of mutable accumulators. The code is denser but more predictable.
+
+**"Categorically avoid defensive programming. This includes checking for None, and adding generic exception handling."** This is counterintuitive but deliberate. Defensive code hides bugs. A `None` check that silently returns an empty list masks the fact that a value should never have been `None` in the first place. Without this rule, the AI adds defensive checks reflexively, and each one is a potential silent failure.
+
+**"If a function has a non-None return type, never return None."** Combined with the null object pattern enforcement ("if a function cannot return an object of that type because of some condition, use null object pattern"), this eliminated an entire class of `NoneType` errors. Functions that can't produce a value return a null object, not `None`.
+
+**"When writing `if` conditions, prefer early return. Use `if` conditions for checking and acting on exceptional cases."** This keeps the happy path at the top level of indentation. Without it, the AI tends to nest the happy path inside increasingly deep conditionals.
+
+**"Do not use static methods. EVER."** Static methods resist dependency injection and create hidden coupling. This rule forced all behaviour to live on instances, making every dependency explicit.
+
+**"Use a ports-and-adapter type architecture. Adhere to the tenet of 'Functional Core, Imperative Shell'."** This principle shaped the overall architecture: the VM handlers are pure functions returning `StateUpdate` data objects, the dataflow module is a pure analysis pass, and I/O lives at the edges. The modules that follow this pattern most closely (dataflow, frontends) are the easiest to test and reason about.
+
+**"If enums map to actual objects with behaviour, resolve them into the actual executable objects as early on in the call chain as possible."** This prevents enum values from being threaded through multiple layers as configuration tokens. The resolution happens once, at the entry point, and the resulting objects are injected as dependencies.
+
+**"Parameters in functions, if they must have default values, must have those values as empty structures corresponding to the non-empty types."** Empty dicts, empty lists, never `None`. This eliminates the mutable default argument bug in Python and removes an entire category of `is None` checks from the codebase.
+
+### The Workflow Contract
+
+The workflow encoded in CLAUDE.md is: **Brainstorm → Discuss trade-offs → Plan → Write unit tests → Implement → Fix tests → Commit → Refactor.** This isn't just process documentation. It's an enforceable contract. Every session begins with these rules loaded into context. The brainstorming phase explicitly requires considering whether open source projects perform similar functionality, and balancing absolute correctness against "good enough." If in doubt, the rule says to ask for guidance rather than guessing.
 
 ---
 
