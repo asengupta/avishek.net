@@ -1004,6 +1004,20 @@ Midway through the project, I changed the workflow to: **Brainstorm → Discuss 
 
 **Be more aggressive about the functional core.** Even with the FP rules in CLAUDE.md, some mutation crept in, especially in the VM executor. The dataflow module, by contrast, is almost purely functional and is by far the easiest module to reason about and test. The correlation is not a coincidence.
 
+**The AI is better at breadth than depth.** Tasks like "generate deterministic frontends for 15 languages" or "audit all 130 test files for weak assertions" are where the AI excels. These breadth tasks, applying a consistent pattern across many targets, would have taken days of tedious work. The AI did them in minutes. Where it needed more guidance was depth: subtle semantic decisions like closure capture semantics (snapshot vs. shared environment), when to emit `SYMBOLIC` vs. crash, or whether an assertion is vacuous. These required me to probe with specific test cases and reason about the implications.
+
+**Empirical validation beats specification.** I rarely specified exact behaviour upfront. Instead, I implemented a feature, ran it on real code, and judged the results. "The confidence scores seem low" led to pivoting from LLM classification to embeddings. "Why does the CFG look disjointed?" led to five rounds of visualisation fixes. The AI made this feedback loop fast enough to be practical. I could test an idea and get results in minutes, not hours.
+
+**Terse directives after trust.** Early prompts were detailed and cautious: full specifications with context, constraints, and expected behaviour. By mid-project, I was saying "do all of them", "push", "commit and push this". Trust built through consistent execution. When the AI produced correct, formatted, tested code for the 50th time, I stopped micromanaging implementation details and focused on architectural direction.
+
+**The AI hallucinated audit findings.** During the assertion audit, the AI reported violations that didn't exist or had already been fixed. Different parallel agents flagged different things based on traversal order, inconsistently applied priority criteria, and occasionally re-reported fixed violations with different wording. The reconciliation pass caught this. The lesson: the auditor itself needs auditing. Fresh scans without anchoring against previous findings produce unreliable results.
+
+**CLAUDE.md rules are reactive, not proactive.** Every rule in CLAUDE.md was added in response to a specific failure mode. "STOP USING FOR LOOPS WITH MUTATIONS" came after seeing mutation bugs. "Don't blindly change test assertions" came after watching the AI weaken tests to make them pass. "Categorically avoid defensive programming" came after the AI added silent `None` checks that masked real bugs. The rules are scar tissue. They accumulate over time, and each one represents a mistake that happened at least once.
+
+**The plan document as interface contract.** An interaction pattern that worked well was the structured plan. After brainstorming and discussing trade-offs, I'd formulate a plan document covering context, phases, file-by-file changes, and verification steps, then feed it to the AI as an implementation spec. The plan serves as a contract between the human architect and the AI implementer: specific enough for unambiguous execution, high-level enough to retain architectural control. This happened roughly 15 times across the project.
+
+**The determinism pivot was the single most impactful decision.** The original VM had the LLM deciding state changes at each execution step. When I asked "given that the IR is always bounded, shouldn't execution be deterministic?", the answer reshaped the entire project. We ripped out all LLM calls from the VM and replaced them with symbolic value creation. Once execution was deterministic, everything became testable, reproducible, and fast. The entire test suite runs with zero LLM calls. This decision wasn't planned; it emerged from questioning an assumption.
+
 ---
 
 ## The Numbers
