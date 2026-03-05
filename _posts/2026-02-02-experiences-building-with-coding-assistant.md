@@ -172,16 +172,322 @@ Late in the project, I modified my workflow to: Brainstorm → Trade-offs → Pl
 
 ---
 
-## Part 5: The Numbers
+## Part 5: The Evolution, From Monolith to 8,569 Tests
+
+RedDragon's evolution followed a clear pattern of phases, each triggered by testing the previous one on real code:
+
+**Phase 1: The monolith (Hour 0 to 2).** A single `interpreter.py` with an LLM-based lowering and execution engine. ~1,200 lines. It worked, barely.
+
+**Phase 2: The determinism pivot (Hour 2 to 4).** The key insight: execution should be deterministic. Ripped out all LLM calls from the VM. Added symbolic value creation. Once the VM was deterministic, everything became testable.
+
+**Phase 3: Multi-language frontends (Hour 4 to 8).** Asked: *"How hard is it to write deterministic logic to lower ASTs for 15 languages?"* The answer: not that hard, with tree-sitter and a dispatch table engine. 15 frontends generated in a single marathon session. 346 tests.
+
+**Phase 4: Analysis and tooling (Hour 8 to 14).** Added iterative dataflow analysis, chunked LLM frontend, Mermaid CFG visualisation with subgraphs and call edges, source location traceability. Extracted CLI into composable API.
+
+**Phase 5: Systematic hardening (Sessions 50 to 130).** This is where the test count exploded. The Rosetta cross-language test suite (14 algorithms x 15 languages) and then the Exercism integration suite drove the test count from ~700 to 7,268 across 80+ sessions. Each exercise exposed new frontend gaps, VM limitations, and edge cases, and each fix was immediately verified across all 15 languages.
+
+The test count tells the story:
+
+```
+Phase 1-3:        346 tests
+Phase 4:         ~700 tests
+Rosetta:        ~1,200 tests
+Exercism 1:     ~2,700 tests
+Exercism 2:     ~4,200 tests
+Exercism 3:     ~5,150 tests
+Exercism 4:     ~7,076 tests
+Exercism done:   7,268 tests
+COBOL + audit:   8,569 tests
+```
+
+All tests run without LLM calls and are deterministic.
+
+---
+
+## Part 6: The Audit Loop, Systematic Completeness
+
+A recurring pattern in RedDragon's development was the *audit-fix-reaudit* loop. After every batch of frontend work, I ran a comprehensive two-pass audit:
+
+**Pass 1 (Dispatch Comparison):** Parse source samples in all 15 languages, collect every AST node type that appears, compare against the frontend's dispatch tables, and classify unhandled types as structural (harmless, consumed by parent handlers) or substantive (gaps that produce `SYMBOLIC`).
+
+**Pass 2 (Runtime SYMBOLIC check):** Actually lower the source through each frontend, scan the resulting IR for `SYMBOLIC` instructions with `"unsupported:"` operands. This catches gaps that the static analysis might miss.
+
+The classification heuristic itself went through three iterations:
+
+1. **Naive:** Flag everything not in a dispatch table. This produced hundreds of false positives, because nodes like `parameter_list` and `type_annotation` are consumed by parent handlers and never reach the dispatch chain independently.
+
+2. **Parent heuristic:** Flag unhandled nodes only if their immediate parent isn't handled. This reduced false positives but still produced 259. When the parent was also unhandled but deep structural (never block-iterated), its children got flagged incorrectly.
+
+3. **Block-reachability analysis:** The final approach. Walk the AST and identify which unhandled nodes are *direct named children of block-iterated nodes* (the root, or nodes whose type maps to `_lower_block` in the dispatch table). Only these nodes can ever reach `_lower_stmt` and produce `SYMBOLIC`. Everything else is a deep structural node consumed by parent handlers.
+
+The block-reachability approach dropped substantive gaps from 259 to 1 (a C `case_statement` that was a genuine gap, subsequently fixed with a defensive handler). The evolution of this heuristic is a good example of how empirical feedback drives design. Each version was tested against the full corpus, and false positives were investigated until the classification matched reality.
+
+The audit loop ran dozens of times across the project's life:
+
+```
+Audit -> 34 gaps found -> implement all 34 (57 new tests)
+Re-audit -> 19 gaps found -> implement all 19 (28 new tests)
+Re-audit -> 12 gaps found -> implement all 12 (18 new tests)
+Re-audit -> 0 gaps, 0 SYMBOLIC
+```
+
+This pattern (audit, batch-fix, re-audit) was more effective than trying to enumerate every missing feature upfront. The audit told me what was missing, I fixed what it found, and repeated until it found nothing.
+
+---
+
+## Part 7: The Assertion Audit, Green Tests, False Confidence
+
+The dispatch audit ensured that every language construct was *handled*. But it said nothing about whether the tests *verifying* that handling were any good. By March 2026, the test suite had grown to ~8,400 tests across ~130 files. All green. The question I'd been avoiding: **if every test passes, how do I know each test is actually checking what it says it's checking?**
+
+Not "does the code work"; 8,400 green dots covered that. But: does `test_constructor_sets_fields` actually verify that field values are set? Does `test_switch_statement` actually verify that switch/case lowering works? Does `test_perform_until_loop_ordering` actually verify that instructions appear in the right order?
+
+When an AI writes your tests, you get volume and coverage breadth for free. What you don't get is *assertion depth*. The AI produces a test for every function, every edge case, every language, but each individual assertion may be checking the easy thing (does it not crash?) rather than the hard thing (does it produce the right output?). The AI optimises for the test *passing*, not for the test *verifying*.
+
+Over two days and 11 audit passes, I had Claude Code scan every test file, comparing each test's name against its actual assertions. Here is what I found.
+
+### The Taxonomy of Weak Assertions
+
+**1. OR-fallback assertions: the most dangerous pattern.** Tests like:
+
+```python
+assert Opcode.BRANCH_IF in opcodes or Opcode.BRANCH in opcodes
+```
+
+claimed to verify conditional branching, but `BRANCH` (unconditional jump) exists in virtually *every* program. It's the basic goto. The `or` made the assertion tautologically true. The match expression lowering could be completely broken and this test would still pass. I found this in Scala match/case, C# switch expressions, COBOL PERFORM ordering, and IR stats tests: 23+ instances where the test would pass even if the feature it named was completely broken.
+
+**2. Existence-only checks.** `assert len(writes) >= 1` on WRITE_REGION was a systematic problem in COBOL tests. It was satisfied by DATA DIVISION initial-value writes, making the PROCEDURE statement under test effectively untested. The strengthened version decoded the EBCDIC bytes and checked `_decode_zoned_unsigned(region, 0, 3) == 100`. The fix pattern across all COBOL tests was to count initial-value writes and assert the total exceeds that baseline.
+
+**3. Cross-product matching.**
+
+```python
+assert any(bi < pi for bi in branch_if_indices for pi in print_indices)
+```
+
+This claimed to verify that `BRANCH_IF` appears before a print `CALL` in the loop body. But `any()` over a cross-product means it matches if *any* `BRANCH_IF` appears before *any* print, even if they're from completely unrelated parts of the program. The test passes even when the loop structure is wrong.
+
+**4. Substring-by-coincidence.** `assert any("x" in inst.operands for inst in stores)` checks `STORE_VAR` for `"x"`, which passes whether the try body or the except body produced it, giving no confidence that both branches were lowered.
+
+**5. Silent parametrised passes.** Bare `return` in parametrised tests for excluded languages:
+
+```python
+@pytest.mark.parametrize("language", ALL_15_LANGUAGES)
+def test_closure_captures_variable(self, language):
+    if language not in CLOSURE_LANGUAGES:
+        return  # <-- silently passes
+```
+
+Eleven languages that can't express closures were showing as green in the test report. Not skipped. Not xfailed. *Passed.* With zero assertions executed. The test report said "15/15 languages pass closure tests" when only 4 actually ran. The fix was `pytest.skip()` with a reason string, making the exclusion visible in test output.
+
+**6. Tautological guards.**
+
+```python
+if "x" in result.dependency_graph:
+    assert "x" not in result.dependency_graph["x"]
+```
+
+If `x` is missing from the dependency graph entirely (the exact bug this test should catch), the `if` guard silently skips the assertion. Worse: `result.definitions` was a list of `Definition` objects, not a dict. The `in` check always returned `False`, so the guard *never* fired, and the test silently passed on every run.
+
+### The Audit Timeline
+
+**Phase 1: Discrepancy audits (2026-03-03).** The first pass focused on claim-vs-reality mismatches: tests whose names or docstrings contradicted what the code actually did. Three audits found 30+ discrepancies, including: a diamond-shape test that actually asserted stadium shape; a "two closures share state" test with only one closure; `test_cpp_catch_ellipsis` that set up a `stores_after_caught` list but never asserted on it; `test_constructor_sets_fields` that never verified field values; and `test_java_lambda_apply` that never verified the `FUNC_REF` dispatch mechanism. The human directive during this phase set the tone for the entire effort: **strengthen, don't delete.** Fix the test, don't remove it.
+
+**Phase 2: Name-vs-assertion audits (2026-03-04).** The focus shifted from docstring accuracy to assertion strength: does the test assert what its name claims? The first scan found 22 violations. A broader scan found 30 more across 22 files, introducing the taxonomy: Category A (misleading name, 7), Category B (missing key assertion, 8), Category C (weak/generic assertion, 13).
+
+**Phase 3: Priority-based audits.** A full scan of 122 files found ~82 violations. Introduced the priority classification: P0 (false confidence), P1 (missing key assertion), P2 (weak/generic), P3 (cosmetic). Re-scans after each fix batch drove the count down: 82 to 56 to 17.
+
+**Phase 4: Reconciliation.** After several audits, I noticed the violation list kept changing. Items that were fixed reappeared with different wording. New phantom items appeared. Priority assignments shifted. Each audit launched fresh agents that re-discovered the codebase independently, producing inconsistent results. The fix was **reconciliation passes**: starting from the previous audit's known remaining items and verifying each against the current code. This produced a stable, verified list of 13 remaining items.
+
+### The Governing Principle: Strengthen, Don't Rename
+
+Early in the audit, Claude tried to fix a misleading test name by renaming `test_compute_expression` to `test_compute_respects_operator_precedence`. I stopped it immediately: **always strengthen the assertion to match the name, never weaken the name to match the assertion.** Renaming moves the problem. The original name described behaviour that *should* be tested. Renaming it to match the weak assertion just means that behaviour goes unverified forever. Strengthening the assertion closes the gap.
+
+This became the governing principle for all subsequent fixes.
+
+### Errors During Fix Attempts
+
+Strengthening assertions is harder than writing the original test. Many fix attempts failed on the first try:
+
+**Asserting on the wrong representation.** Go's `test_return_without_value` initially asserted `returns[0].operands == []` but bare return has `['%0']` (register pointing to default value). The Python decorator test asserted `"my_dec" in inst.operands` but `CALL_FUNCTION` uses register references (`%4`, `%3`), not names. The fix was to check `LOAD_VAR` instead. Pascal FILLER EBCDIC expected `0x40` (EBCDIC space) at FILLER offsets but got `\xe2\xd7`.
+
+**String vs integer operands.** Pascal's `test_try_lowers_body` asserted `1 in const_vals` (integer) but IR operands are strings (`["1"]`). Fixed to `"1" in const_vals`.
+
+**Misunderstanding the execution model.** `test_initial_value_100_in_region` expected value 100 but the test helper `_execute_straight_line` runs ALL instructions (DATA + PROCEDURE division), producing 125 (100+50-25). The test had been asserting `len(region) == 5` which was tautologically true.
+
+**Private vs public attributes.** `test_llm_frontend_any_language` asserted `frontend.language` but `LLMFrontend` stores it as `_language`.
+
+The fix cycle was consistently: read test, write assertion, run test, discover actual representation, fix assertion, re-run. The AI is good at this cycle once you force it through it, but it will never enter this cycle voluntarily. It will write the assertion it thinks is correct and move on.
+
+### Real Bugs Found
+
+P0 fixes exposed genuine bugs that had been hiding behind weak assertions:
+
+**Pascal bare-except.** The test `test_try_lowers_body` used `try x := 1; except x := 0; end;` but the Pascal frontend silently dropped bare `except` blocks (without `on E: Exception do` wrapper). The test passed because it only checked that `STORE_VAR "x"` existed, which was satisfied by the try body alone. Strengthening the assertion to verify both the try-body constant (`"1"`) and the except-body constant (`"0"`) exposed the bug. The fix was in `_extract_pascal_try_parts` to handle `statements` nodes in the except section.
+
+**C# else-if chain lowering.** A similar pattern where a weak assertion masked incomplete lowering of chained else-if blocks.
+
+**`test_no_self_dependency_without_loop`.** The guard `if "x" in result.definitions:` was checking membership on a list of `Definition` objects, not a dict. The `in` check always returned `False`, so the assertion never executed. The test had been passing for weeks while the behaviour it named went completely unverified.
+
+**`test_initial_value_100_in_region`.** Expected 100 but the helper runs all instructions sequentially, producing 125. The test's original assertion `len(region) == 5` was tautologically true and would pass regardless of the actual computed value.
+
+### The Feedback Loop Structure
+
+Each audit cycle followed this structure:
+
+```
+Human: "audit all tests"
+  -> AI: launches parallel agents, scans ~130 files
+  -> AI: produces prioritised violation list
+  -> Human: reviews, selects priority tier to fix
+  -> AI: reads each test, writes fix, runs test
+    -> Fix fails (wrong representation, wrong attribute, wrong type)
+    -> AI: investigates actual behaviour, corrects fix
+    -> Fix passes
+  -> AI: runs full test suite (8,457 tests)
+  -> AI: runs Black formatter
+  -> AI: commits and pushes
+  -> Human: "audit again"
+  -> [repeat]
+```
+
+The critical human interventions were:
+1. **"Always strengthen assertions, do not rename"**: set the governing principle
+2. **"You keep changing the list"**: identified the audit stability problem
+3. **"Do a reconciliation pass"**: prescribed the fix for drift
+4. **"Fix the frontend bug"**: escalated from test fix to code fix when an assertion exposed a real bug
+5. **Selective priority focus**: always fixing P0 first, then P1, deferring P2
+
+The AI's role was execution at scale (scanning 130 files, writing fixes, running 8,457 tests) while the human provided quality gates and strategic direction.
+
+### Assertion Audit Results
+
+| Metric | Value |
+|--------|-------|
+| Calendar span | 2 days |
+| Audit passes | 11 (3 discrepancy + 8 name-vs-assertion) |
+| Total violations identified | ~180 (with overlap across audits) |
+| Unique violations (deduplicated) | ~90 |
+| Violations fixed | ~75 |
+| Remaining (P2 cosmetic) | ~13 |
+| Frontend bugs exposed | 2 |
+| False-pass tests eliminated | 5 |
+| Commits for assertion audit fixes | 33 |
+| Tests at end of assertion audit | 8,469 |
+
+The test count went *up*, not down. Strengthening assertions sometimes meant splitting one weak test into multiple specific ones.
+
+### Assertion Audit Lessons
+
+**Green tests are necessary but not sufficient.** Every test was green before the audit. The audit found 15 P0 violations where the test would pass even when the behaviour it named was completely broken. Two of these exposed genuine frontend bugs.
+
+**OR-fallback assertions are the most dangerous pattern.** The pattern `assert A or B` appeared in every frontend category. In every case, one side of the OR was trivially satisfied by unrelated instructions, making the assertion vacuous.
+
+**Audit stability requires anchoring.** Fresh scans produce inconsistent results because the agents don't share context. The reconciliation approach (starting from the previous audit's known list and verifying each item) is the only way to produce a stable, trustworthy list.
+
+**Fixing assertions requires running the code under test.** Many fix attempts failed because the assertion assumed a representation that didn't match reality. The fix cycle (write assertion, run, discover actual representation, fix, re-run) was consistently necessary and never happened voluntarily.
+
+**Parametrised tests need explicit skips, not silent returns.** Bare `return` in excluded branches produces green dots with zero assertions. `pytest.skip()` with a reason string makes exclusions visible.
+
+The CLAUDE.md rules were updated to encode these lessons: never modify assertions to make tests pass without verifying the actual output, and never create special implementation behaviour just to satisfy tests.
+
+---
+
+## Part 8: Guardrails, The CLAUDE.md as Architecture
+
+RedDragon was built almost entirely through conversations with Claude Code, across 400+ sessions. The file that had the most impact on consistency wasn't any Python module. It was `CLAUDE.md`, which encodes the development rules. Claude Code reads this file at the start of every session, so every conversation begins with the same constraints. The rules evolved over the project's lifetime, each one added in response to a specific failure mode.
+
+### Build Rules
+
+The build section encodes a strict pre-commit discipline:
+
+**"Before committing anything, run all tests, fixing them if necessary."** This prevented test count regression across 292 commits. The rule also specifies: if test assertions are being *removed*, ask for human review first. This distinction matters. Adding assertions is safe; removing them requires justification.
+
+**"Before committing anything, run `poetry run black` on the full codebase."** The CI pipeline enforces Black formatting and will fail if this is skipped. Encoding this in CLAUDE.md means the AI formats before every commit without being asked.
+
+**"Before committing anything, update the README based on the diffs."** This keeps the README in sync with the code. Without this rule, the README would have drifted within the first week.
+
+**"For each feature, treat it as an independent commit / push, with its own testing."** This produced atomic, reviewable commits. Combined with "do not start a new task until the current one is committed," it prevented half-finished features from accumulating across sessions.
+
+**"Once a design is finalised, document it as an ADR."** This produced 66 timestamped architectural decision records that serve as the project's institutional memory. Each records the context, the decision, and the consequences, including trade-offs.
+
+### Testing Patterns
+
+The testing rules address the specific failure modes of AI-generated tests:
+
+**"When fixing tests, do not blindly change test assertions to make the test pass."** This is the single most important testing rule. Without it, the AI's default behaviour is to modify the assertion to match whatever the code produces, regardless of whether the code is correct. The rule forces it to verify the actual output before changing assertions.
+
+**"Make sure you are not creating any special implementation behaviour just to get the tests to pass."** The complement of the above. Without this rule, the AI occasionally added if-branches or special cases in production code solely to satisfy a test expectation, rather than fixing the underlying logic.
+
+**"Do not use `unittest.mock.patch`. Use proper dependency injection."** This forced every external dependency (LLM clients, file I/O, clocks) to be injectable. The result: the entire VM, all 15 frontends, and all analysis passes are testable in isolation without mocking.
+
+**"Always start from writing unit tests for the smallest feasible units of code."** The rule further specifies the directory structure: true unit tests (no I/O) go in `tests/unit/`, tests that exercise I/O (LLM calls, databases) go in `tests/integration/`. This separation means `tests/unit/` can run in CI without API keys.
+
+**"For every bug you fix, make sure you have a test that fails without the bug fix."** This prevents fixes that are never actually verified. Without this rule, the AI occasionally produced fixes that looked plausible but didn't address the actual failure path.
+
+### Programming Patterns
+
+The programming rules enforce a specific coding style that reduces the surface area for bugs:
+
+**"STOP USING FOR LOOPS WITH MUTATIONS IN THEM. JUST STOP."** This rule forced a functional programming style across the codebase. List comprehensions, `map`, `filter`, `reduce` instead of mutable accumulators. The code is denser but more predictable.
+
+**"Categorically avoid defensive programming. This includes checking for None, and adding generic exception handling."** This is counterintuitive but deliberate. Defensive code hides bugs. A `None` check that silently returns an empty list masks the fact that a value should never have been `None` in the first place. Without this rule, the AI adds defensive checks reflexively, and each one is a potential silent failure.
+
+**"If a function has a non-None return type, never return None."** Combined with the null object pattern enforcement ("if a function cannot return an object of that type because of some condition, use null object pattern"), this eliminated an entire class of `NoneType` errors. Functions that can't produce a value return a null object, not `None`.
+
+**"When writing `if` conditions, prefer early return. Use `if` conditions for checking and acting on exceptional cases."** This keeps the happy path at the top level of indentation. Without it, the AI tends to nest the happy path inside increasingly deep conditionals.
+
+**"Do not use static methods. EVER."** Static methods resist dependency injection and create hidden coupling. This rule forced all behaviour to live on instances, making every dependency explicit.
+
+**"Use a ports-and-adapter type architecture. Adhere to the tenet of 'Functional Core, Imperative Shell'."** This principle shaped the overall architecture: the VM handlers are pure functions returning `StateUpdate` data objects, the dataflow module is a pure analysis pass, and I/O lives at the edges. The modules that follow this pattern most closely (dataflow, frontends) are the easiest to test and reason about.
+
+**"If enums map to actual objects with behaviour, resolve them into the actual executable objects as early on in the call chain as possible."** This prevents enum values from being threaded through multiple layers as configuration tokens. The resolution happens once, at the entry point, and the resulting objects are injected as dependencies.
+
+**"Parameters in functions, if they must have default values, must have those values as empty structures corresponding to the non-empty types."** Empty dicts, empty lists, never `None`. This eliminates the mutable default argument bug in Python and removes an entire category of `is None` checks from the codebase.
+
+### The Workflow Contract
+
+The workflow encoded in CLAUDE.md wasn't the original one. Early in the project, the workflow was simply **Brainstorm -> Plan -> Implement -> Test**. Tests came after implementation, which meant the AI wrote code first and tests second. This worked for the initial sprint but led to the weak assertion patterns that the later audit uncovered: when tests are written to match existing code, they tend to verify what the code *does* rather than what it *should do*.
+
+Midway through the project, I changed the workflow to: **Brainstorm -> Discuss trade-offs -> Plan -> Write unit tests -> Implement -> Fix tests -> Commit -> Refactor.** Tests now come *before* implementation. The AI writes tests that encode the expected behaviour, then writes code to make them pass. This inversion also added two new phases: discussing trade-offs (forcing the AI to consider alternatives before committing to an approach) and an explicit refactoring step after the commit. Every session begins with these rules loaded into context. The brainstorming phase explicitly requires considering whether open source projects perform similar functionality, and balancing absolute correctness against "good enough." If in doubt, the rule says to ask for guidance rather than guessing.
+
+---
+
+## Part 9: What I'd Do Differently
+
+**Start with the audit earlier.** The two-pass audit should have existed from the first batch of frontends. Instead, I relied on manual inspection for the first 50 sessions, and only built the audit when the number of frontends made manual checking impossible. In hindsight, the audit loop was what kept quality from drifting.
+
+**Invest in cross-language tests from day one.** The Rosetta and Exercism suites exposed more bugs than all the language-specific unit tests combined. A single exercise tested across 15 languages covers more surface area than 50 unit tests in one language.
+
+**Be more aggressive about the functional core.** Even with the FP rules in CLAUDE.md, some mutation crept in, especially in the VM executor. The dataflow module, by contrast, is almost purely functional and is by far the easiest module to reason about and test. The correlation is not a coincidence.
+
+**The AI is better at breadth than depth.** Tasks like "generate deterministic frontends for 15 languages" or "audit all 130 test files for weak assertions" are where the AI excels. These breadth tasks, applying a consistent pattern across many targets, would have taken days of tedious work. The AI did them in minutes. Where it needed more guidance was depth: subtle semantic decisions like closure capture semantics (snapshot vs. shared environment), when to emit `SYMBOLIC` vs. crash, or whether an assertion is vacuous. These required me to probe with specific test cases and reason about the implications.
+
+**Empirical validation beats specification.** I rarely specified exact behaviour upfront. Instead, I implemented a feature, ran it on real code, and judged the results. "The confidence scores seem low" led to pivoting from LLM classification to embeddings. "Why does the CFG look disjointed?" led to five rounds of visualisation fixes. The AI made this feedback loop fast enough to be practical. I could test an idea and get results in minutes, not hours.
+
+**Terse directives after trust.** Early prompts were detailed and cautious: full specifications with context, constraints, and expected behaviour. By mid-project, I was saying "do all of them", "push", "commit and push this". Trust built through consistent execution. When the AI produced correct, formatted, tested code for the 50th time, I stopped micromanaging implementation details and focused on architectural direction.
+
+**The AI hallucinated audit findings.** During the assertion audit, the AI reported violations that didn't exist or had already been fixed. Different parallel agents flagged different things based on traversal order, inconsistently applied priority criteria, and occasionally re-reported fixed violations with different wording. The reconciliation pass caught this. The lesson: the auditor itself needs auditing. Fresh scans without anchoring against previous findings produce unreliable results.
+
+**CLAUDE.md rules are reactive, not proactive.** Every rule in CLAUDE.md was added in response to a specific failure mode. "STOP USING FOR LOOPS WITH MUTATIONS" came after seeing mutation bugs. "Don't blindly change test assertions" came after watching the AI weaken tests to make them pass. "Categorically avoid defensive programming" came after the AI added silent `None` checks that masked real bugs. They accumulate over time, and each one represents a mistake that happened at least once.
+
+**The plan document as interface contract.** An interaction pattern that worked well was the structured plan. After brainstorming and discussing trade-offs, I'd formulate a plan document covering context, phases, file-by-file changes, and verification steps, then feed it to the AI as an implementation spec. The plan serves as a contract between the human architect and the AI implementer: specific enough for unambiguous execution, high-level enough to retain architectural control. This happened roughly 15 times across the project.
+
+**The determinism pivot was the single most impactful decision.** The original VM had the LLM deciding state changes at each execution step. When I asked "given that the IR is always bounded, shouldn't execution be deterministic?", the answer changed the project's direction. We ripped out all LLM calls from the VM and replaced them with symbolic value creation. Once execution was deterministic, everything became testable, reproducible, and fast. The entire test suite runs with zero LLM calls. This decision wasn't planned; it emerged from questioning an assumption.
+
+---
+
+## Part 10: The Numbers
 
 | Metric | Codescry | RedDragon | Total |
 |--------|----------|-----------|-------|
 | Conversation sessions | ~195 | ~204 | ~399 |
 | Development days | 6 | 3 | 9 |
 | Language frontends | N/A | 15 | 15 |
-| Test count (final) | N/A | 1,214 | N/A |
+| Test count (final) | N/A | 8,569 | N/A |
 | Architectural pivots | 7 | 5 | 12 |
 | Lines of Python (est.) | ~5,000+ | ~8,000+ | ~13,000+ |
+| Architectural decision records | N/A | 66 | N/A |
+| Git commits | N/A | 292 | N/A |
+| Audit substantive gaps (final) | N/A | 0 | N/A |
 
 ---
 
