@@ -52,10 +52,11 @@ RedDragon explores three ideas about analysing frequently-incomplete code, the k
 5. [LLM-Assisted AST Repair](#llm-assisted-ast-repair)
 6. [LLM Frontend: Lowering Unknown Languages](#llm-frontend-lowering-unknown-languages)
 7. [The Dispatch Table Engine](#the-dispatch-table-engine)
-8. [The Deterministic VM](#the-deterministic-vm)
-9. [LLM-Assisted VM Execution](#llm-assisted-vm-execution)
-10. [Dataflow Analysis](#dataflow-analysis)
-11. [Cross-Language Verification via Exercism](#cross-language-verification-via-exercism)
+8. [Lowering Equivalence](#lowering-equivalence)
+9. [The Deterministic VM](#the-deterministic-vm)
+10. [LLM-Assisted VM Execution](#llm-assisted-vm-execution)
+11. [Dataflow Analysis](#dataflow-analysis)
+12. [Cross-Language Verification via Exercism](#cross-language-verification-via-exercism)
 
 ---
 
@@ -503,6 +504,45 @@ IF_CONSEQUENCE_FIELD: str = "consequence"
 All 15 languages canonicalise their native null/boolean forms to Python-form at lowering time. `nil`, `null`, `undefined`, `NULL` all become `"None"`. `true`, `True`, `TRUE` all become `"True"`. This means the VM only handles one set of literals, regardless of source language.
 
 Adding support for a new AST node type is mechanical: write a handler method, register it in the dispatch table. This is what made the systematic coverage push possible. When the audit flagged 34 missing node types across 15 languages, implementing them was straightforward because each one followed the same pattern.
+
+---
+
+## Lowering Equivalence
+
+If 15 frontends lower the same algorithm from 15 different languages, does the resulting IR look the same? It should. The whole point of a universal IR is that downstream analysis (VM execution, dataflow, CFG) doesn't depend on the source language. If two frontends produce structurally different IR for the same logic, it means one of them has a bug or an unnecessary inefficiency.
+
+The lowering equivalence tests verify this directly. For each algorithm, the test lowers the source through all 15 deterministic frontends, extracts the function body from the IR (scanning for the `LABEL func_<name>_N` ... `LABEL end_<name>_N` markers), strips `LABEL` instructions (which vary in naming across languages), and compares the resulting opcode sequences.
+
+### Iterative Factorial: Full Equivalence
+
+The iterative factorial is implemented in all 15 languages using the same structure: initialise `result = 1` and `i = 2`, loop while `i <= n`, multiply `result *= i`, increment `i`, return `result`. Despite the syntactic differences (Python's `while`, Go's `for`, Rust's `loop` with `break`, Pascal's `while...do`), all 15 frontends produce the identical opcode sequence:
+
+```
+SYMBOLIC, STORE_VAR, CONST, STORE_VAR, CONST, STORE_VAR,
+LOAD_VAR, LOAD_VAR, BINOP, BRANCH_IF, LOAD_VAR, LOAD_VAR,
+BINOP, STORE_VAR, LOAD_VAR, CONST, BINOP, STORE_VAR, BRANCH,
+LOAD_VAR, RETURN, CONST, RETURN
+```
+
+This is a 23-opcode sequence: parameter binding, three initialisations, the loop condition (`LOAD_VAR i`, `LOAD_VAR n`, `BINOP <=`, `BRANCH_IF`), the loop body (`BINOP *`, `STORE_VAR result`, `BINOP +`, `STORE_VAR i`, `BRANCH` back), and the return path. Every frontend, from C to Lua to Scala, produces exactly this sequence.
+
+### Recursive Factorial: Partial Equivalence
+
+The recursive variant (`if n <= 1: return 1; return n * factorial(n - 1)`) achieves equivalence across 11 of 15 frontends. Four languages (Kotlin, Pascal, Rust, Scala) emit minor redundant instructions: an extra `STORE_VAR`/`LOAD_VAR` pair or an unreachable `BRANCH`. These are semantically correct (the VM produces the right answer) but structurally non-identical. The test is marked `xfail` with `strict=True`, so it will fail loudly when the frontends are fixed, signalling that the xfail should be removed.
+
+The structural differences are instructive:
+
+- **Kotlin** emits an extra `LOAD_VAR` before the return, because Kotlin's tree-sitter grammar wraps the return value in a `parenthesized_expression` that the frontend lowers as a separate load.
+- **Rust** emits an extra `BRANCH` after the implicit return, because Rust's expression-position blocks produce a trailing unconditional jump to the function end label.
+- **Pascal** and **Scala** have similar minor redundancies from language-specific AST structures.
+
+These are all candidates for frontend-level peephole optimisations: removing dead stores, eliminating redundant loads, pruning unreachable branches. The equivalence test makes the gap visible and quantifiable.
+
+### What Equivalence Tests Catch
+
+The equivalence tests complement the Exercism execution tests. Exercism verifies that all 15 frontends produce the *correct answer*. Equivalence tests verify that they produce the *same IR structure*. A frontend could produce the correct answer through a longer, less efficient IR path (extra stores, redundant loads, unnecessary branches). The execution test would pass; the equivalence test would fail.
+
+This distinction matters for analysis quality. Redundant instructions can introduce spurious dependencies in the dataflow graph, create unnecessary basic blocks in the CFG, or slow down the VM. Structural equivalence is a stronger property than semantic correctness.
 
 ---
 
