@@ -7,7 +7,7 @@ tags: ["Software Engineering", "Compilers", "Program Analysis", "Symbolic Execut
 draft: false
 ---
 
-*A universal IR, 15 deterministic frontends, LLM-assisted repair and lowering, a symbolic VM, and iterative dataflow analysis.*
+*A universal IR, 15 deterministic frontends, LLM-assisted repair/lowering/execution, a symbolic VM, and iterative dataflow analysis.*
 
 ![RedDragon TUI Demo](/assets/red-dragon-tui.gif)
 
