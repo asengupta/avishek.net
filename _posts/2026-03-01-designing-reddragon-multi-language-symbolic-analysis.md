@@ -53,8 +53,9 @@ RedDragon explores three ideas about analysing frequently-incomplete code, the k
 6. [LLM Frontend: Lowering Unknown Languages](#llm-frontend-lowering-unknown-languages)
 7. [The Dispatch Table Engine](#the-dispatch-table-engine)
 8. [The Deterministic VM](#the-deterministic-vm)
-9. [Dataflow Analysis](#dataflow-analysis)
-10. [Cross-Language Verification via Exercism](#cross-language-verification-via-exercism)
+9. [LLM-Assisted VM Execution](#llm-assisted-vm-execution)
+10. [Dataflow Analysis](#dataflow-analysis)
+11. [Cross-Language Verification via Exercism](#cross-language-verification-via-exercism)
 
 ---
 
@@ -700,13 +701,7 @@ The trade-off is that symbolic branches always take the true path (a simplificat
 
 ### The UnresolvedCallResolver
 
-For the latter trade-off, a configurable `UnresolvedCallResolver` uses the Strategy pattern:
-
-**SymbolicResolver** (default): creates a fresh symbolic for any unknown call. Zero LLM calls, fully deterministic.
-
-**LLMPlausibleResolver** (opt-in): sends a structured prompt to an LLM with the function name, arguments, and current VM state, then parses the response into a `StateUpdate`. Falls back to `SymbolicResolver` on failure.
-
-This separation keeps the default execution path fast and reproducible while allowing users to opt into richer (but slower, non-deterministic) analysis when needed.
+For the latter trade-off, a configurable `UnresolvedCallResolver` uses the Strategy pattern. Two strategies ship with RedDragon: a default symbolic resolver (zero LLM calls, fully deterministic) and an opt-in LLM-based resolver that produces plausible concrete values. The next section covers this mechanism in detail.
 
 ### Closures
 
@@ -726,6 +721,128 @@ With snapshot capture, `inc()` always reads `count = 0`. The fix was shared `Clo
 ### Built-in Functions
 
 The VM includes a small table of built-in functions (`len`, `range`, `print`, `int`, `float`, `str`, `bool`, `abs`, `max`, `min`, plus array constructors) that are resolved before falling through to the `UnresolvedCallResolver`. Each built-in handles symbolic arguments gracefully: `len` of a symbolic list returns a symbolic, `range` with symbolic bounds returns `UNCOMPUTABLE`, and so on. This keeps common operations concrete without requiring language-specific runtime support.
+
+---
+
+## LLM-Assisted VM Execution
+
+The deterministic VM handles all known functions, built-ins, and concrete operations without external help. But real-world code calls libraries, frameworks, and system functions that don't exist in the IR. When the VM encounters a call it can't resolve (not in the function registry, not a built-in, not a recognized class constructor), it delegates to an `UnresolvedCallResolver`.
+
+This is the third and final point where an LLM can enter the pipeline. The first is at the frontend (lowering source to IR). The second is AST repair (fixing malformed syntax). This third point is at runtime: resolving calls to functions whose implementations are unavailable.
+
+### The Strategy Pattern
+
+The resolver is a pluggable strategy, selected at pipeline configuration time:
+
+```python
+class UnresolvedCallResolver(ABC):
+    @abstractmethod
+    def resolve_call(self, func_name, args, inst, vm) -> ExecutionResult: ...
+
+    @abstractmethod
+    def resolve_method(self, obj_desc, method_name, args, inst, vm) -> ExecutionResult: ...
+```
+
+Both `resolve_call` (for `CALL_FUNCTION` and `CALL_UNKNOWN`) and `resolve_method` (for `CALL_METHOD`) return an `ExecutionResult` containing a `StateUpdate`, the same data object that every opcode handler returns. This means the resolver's output flows through the same `apply_update()` path as everything else. No special cases.
+
+### SymbolicResolver (Default)
+
+The default resolver creates a fresh `SymbolicValue` with a descriptive hint:
+
+```
+math.sqrt(16)  →  sym_0 (hint: "math.sqrt(16)", constraints: ["math.sqrt(16)"])
+obj.process(sym_0, 42)  →  sym_1 (hint: "obj.process(sym_0, 42)")
+```
+
+The symbolic value propagates through subsequent operations. If `y = math.sqrt(16) + 1`, the result is `sym_1 (constraint: "sym_0 + 1")`. The dataflow analysis still tracks that `y` depends on the call to `math.sqrt`, even though it doesn't know the concrete value.
+
+This is the right default for most analysis tasks. Dataflow tracing, dependency graphs, and control flow analysis don't need concrete values from external functions. They need to know that a dependency exists and that data flows through it. Zero LLM calls, fully deterministic, fully reproducible.
+
+### LLMPlausibleResolver (Opt-In)
+
+When concrete results matter (e.g., verifying that a computed value matches an expected output), the `LLMPlausibleResolver` asks an LLM to produce a plausible return value.
+
+The resolver sends a structured JSON prompt containing:
+
+```json
+{
+  "call": "math.sqrt(16)",
+  "args": [16],
+  "result_reg": "%5",
+  "state": {
+    "local_vars": {"x": 16, "y": "sym_0"},
+    "heap": {}
+  },
+  "language": "python"
+}
+```
+
+The system prompt constrains the LLM to return a JSON object with:
+- `value`: the concrete return value (or null if unknowable)
+- `heap_writes`: any side effects as `[{"obj_addr": "...", "field": "...", "value": ...}]`
+- `var_writes`: any variable mutations as `{"name": value}`
+- `reasoning`: a short explanation
+
+For standard library functions (`math.sqrt`, `string.upper`, `list.append`), the prompt instructs the LLM to compute the exact result. For unknown functions, it asks for a best estimate based on the name and arguments.
+
+The response is parsed into a `StateUpdate` and applied through the same `apply_update()` path. If the LLM returns invalid JSON or the call fails for any reason, the resolver falls back to `SymbolicResolver` automatically. The worst case is identical to not using LLM resolution at all.
+
+### Worked Example: Analysing Code with Missing Dependencies
+
+Consider a Python program that uses `requests` (not available in the IR) and a local function:
+
+```python
+import requests
+
+def extract_name(data):
+    return data["user"]["name"]
+
+response = requests.get("https://api.example.com/users/1")
+body = response.json()
+name = extract_name(body)
+greeting = "Hello, " + name
+```
+
+The deterministic frontend lowers this to IR. `extract_name` gets a full function definition (skip-over pattern, parameter binding, `LOAD_FIELD` chain). `requests.get` and `response.json()` are calls to unresolved externals.
+
+**With SymbolicResolver:**
+
+```
+response  = sym_0 (hint: "requests.get('https://api.example.com/users/1')")
+body      = sym_1 (hint: "sym_0.json()")
+```
+
+The VM enters `extract_name` with `data = sym_1`. The `LOAD_FIELD` for `data["user"]` triggers lazy heap materialisation: a synthetic heap entry is created for `sym_1`, and a symbolic field `user` is cached. Then `LOAD_FIELD` for `["name"]` creates another symbolic. The result:
+
+```
+name      = sym_3 (hint: "sym_2.name")  where sym_2 = sym_1["user"]
+greeting  = sym_4 (constraint: "'Hello, ' + sym_3")
+```
+
+The dataflow analysis traces `greeting` back through `name`, `body`, and `response` to the `requests.get` call. The dependency chain is fully preserved even though no concrete HTTP call was made.
+
+**With LLMPlausibleResolver:**
+
+```
+response  = <plausible Response object>
+body      = {"user": {"name": "Alice", "email": "alice@example.com"}}
+name      = "Alice"
+greeting  = "Hello, Alice"
+```
+
+The LLM produces a plausible JSON response for the API call. `response.json()` returns a plausible dict. `extract_name` runs concretely on the plausible data. The final values are concrete and inspectable, at the cost of one LLM call per unresolved external.
+
+### Where the Resolver Fires
+
+The resolver is not a catch-all. The VM tries several resolution paths before falling through to it:
+
+1. **Built-in functions** (`len`, `range`, `print`, `int`, `str`, etc.) are handled by a built-in table. No resolver needed.
+2. **Known functions** (defined in the IR and registered in the `FunctionRegistry`) are dispatched by pushing a new stack frame. No resolver needed.
+3. **Class constructors** (registered class refs) trigger object allocation and `__init__` dispatch. No resolver needed.
+4. **String/list indexing** (Scala-style `s(i)` lowered as `CALL_FUNCTION`) is detected and converted to `LOAD_INDEX`. No resolver needed.
+5. **Everything else** falls through to the `UnresolvedCallResolver`.
+
+This layered resolution means the LLM is only consulted for genuinely unknown externals. For a program with 50 function calls where 45 are to local functions and built-ins, only 5 hit the resolver.
 
 ---
 
