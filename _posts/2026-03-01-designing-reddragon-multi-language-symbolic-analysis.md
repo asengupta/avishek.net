@@ -25,21 +25,33 @@ RedDragon is part of a family of three tools: [Codescry](https://github.com/avis
 
 This post covers how the system was designed, how it evolved, and the engineering discipline that kept it coherent across 28 architectural decisions and 400+ conversation sessions with Claude Code.
 
+### Core Theses
+
+RedDragon explores three ideas about analysing frequently-incomplete code, the kind found in legacy migrations, decompiled binaries, partial extracts, and codebases with missing dependencies:
+
+1. **Deterministic language frontends with LLM-assisted repair.** Tree-sitter frontends (15 languages) and a ProLeap bridge (COBOL) handle well-formed source deterministically. When tree-sitter hits malformed syntax, an optional LLM repair loop fixes only the broken fragments and re-parses, maximising deterministic coverage for real-world incomplete code. All paths produce the same universal IR.
+
+2. **Full LLM frontends for unsupported languages.** For languages without a tree-sitter frontend, an LLM lowers source to IR entirely, supporting any language without new parser code. A chunked variant splits large files into per-function chunks via tree-sitter, lowering each independently. The LLM acts as a *compiler frontend*, constrained by a formal IR schema with concrete patterns. It's translating syntax, not reasoning about semantics.
+
+3. **A VM that integrates LLMs only at the boundaries where information is genuinely missing.** When execution hits missing dependencies, unresolved imports, or unknown externals, a configurable resolver can invoke an LLM to produce plausible state changes, keeping execution moving through incomplete programs instead of halting at the first unknown. When source is complete and all dependencies are present, the entire pipeline (parse → lower → execute) is deterministic with zero LLM calls.
+
 ---
 
 ## Table of Contents
 
 1. [Architecture Overview](#architecture-overview)
-2. [The IR: 19 Opcodes to Rule Them All](#the-ir-19-opcodes-to-rule-them-all)
-3. [Frontends: Three Strategies, One Output](#frontends-three-strategies-one-output)
-4. [The Dispatch Table Engine](#the-dispatch-table-engine)
-5. [The Deterministic VM](#the-deterministic-vm)
-6. [Dataflow Analysis](#dataflow-analysis)
-7. [The Evolution: From Monolith to 7,268 Tests](#the-evolution-from-monolith-to-7268-tests)
-8. [The Audit Loop: Systematic Completeness](#the-audit-loop-systematic-completeness)
-9. [Cross-Language Verification via Exercism](#cross-language-verification-via-exercism)
-10. [Guardrails: The CLAUDE.md as Architecture](#guardrails-the-claudemd-as-architecture)
-11. [What I'd Do Differently](#what-id-do-differently)
+2. [A Worked Example: Source to Execution](#a-worked-example-source-to-execution)
+3. [The IR: 19 Opcodes to Rule Them All](#the-ir-19-opcodes-to-rule-them-all)
+4. [Frontends: Three Strategies, One Output](#frontends-three-strategies-one-output)
+5. [The Dispatch Table Engine](#the-dispatch-table-engine)
+6. [The Deterministic VM](#the-deterministic-vm)
+7. [Dataflow Analysis](#dataflow-analysis)
+8. [The Evolution: From Monolith to 7,268 Tests](#the-evolution-from-monolith-to-7268-tests)
+9. [The Audit Loop: Systematic Completeness](#the-audit-loop-systematic-completeness)
+10. [The Assertion Audit: Green Tests, False Confidence](#the-assertion-audit-green-tests-false-confidence)
+11. [Cross-Language Verification via Exercism](#cross-language-verification-via-exercism)
+12. [Guardrails: The CLAUDE.md as Architecture](#guardrails-the-claudemd-as-architecture)
+13. [What I'd Do Differently](#what-id-do-differently)
 
 ---
 
@@ -62,6 +74,144 @@ style dataflow fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
 ```
 
 Every stage operates on the same flat IR. The VM and dataflow analysis are language-agnostic. They don't know whether the instructions came from Python, Rust, or COBOL.
+
+---
+
+## A Worked Example: Source to Execution
+
+To make the pipeline concrete, here's a complete trace of a simple program through every stage. This is the same pipeline that runs for all 15 languages.
+
+### Source (Python)
+
+```python
+def classify(x):
+    if x > 0:
+        label = "positive"
+    else:
+        label = "negative"
+    return label
+
+result = classify(5)
+```
+
+### Stage 1: Lowering to IR
+
+The Python tree-sitter frontend parses this and emits flat three-address code. The function body is wrapped in a skip-over pattern (a `BRANCH` jumps past it so it's not executed at definition time):
+
+```
+branch end_classify_0                    # skip over body
+func_classify_0:                         # entry point
+  %0 = symbolic param:x                  # parameter binding
+  store_var x %0
+  %1 = load_var x                        # if x > 0
+  %2 = const 0
+  %3 = binop > %1 %2
+  branch_if %3 if_true_0,if_false_0
+if_true_0:
+  %4 = const "positive"
+  store_var label %4
+  branch if_end_0
+if_false_0:
+  %5 = const "negative"
+  store_var label %5
+  branch if_end_0
+if_end_0:
+  %6 = load_var label
+  return %6
+end_classify_0:
+  %7 = const <function:classify@func_classify_0>
+  store_var classify %7
+  %8 = const 5
+  store_var x %8
+  %9 = call_function classify %8         # classify(5)
+  store_var result %9
+```
+
+Every instruction is a flat dataclass with an opcode, operands, a destination register, and a source location tracing it back to the original line and column. No nested expressions. `x > 0` decomposes into `LOAD_VAR`, `CONST`, `BINOP`.
+
+### Stage 2: CFG Construction
+
+The CFG builder splits the IR at every `LABEL` and after every `BRANCH`/`BRANCH_IF`/`RETURN`/`THROW`, then wires edges based on branch targets:
+
+```mermaid
+flowchart TD
+    entry(["<b>entry</b><br>BRANCH end_classify_0"])
+    func["<b>func_classify_0</b><br>SYMBOLIC param:x · STORE x<br>LOAD x · CONST 0 · BINOP ><br>BRANCH_IF"]
+    if_true["<b>if_true_0</b><br>CONST &quot;positive&quot;<br>STORE label · BRANCH"]
+    if_false["<b>if_false_0</b><br>CONST &quot;negative&quot;<br>STORE label · BRANCH"]
+    if_end(["<b>if_end_0</b><br>LOAD label<br>RETURN"])
+    end_classify["<b>end_classify_0</b><br>CONST function · STORE classify<br>CONST 5 · STORE x<br>CALL classify · STORE result"]
+
+    entry --> end_classify
+    entry -.->|"skip"| func
+    func -- T --> if_true
+    func -- F --> if_false
+    if_true --> if_end
+    if_false --> if_end
+    end_classify -.->|"call"| func
+
+    style entry fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
+    style func fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
+    style if_true fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
+    style if_false fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
+    style if_end fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
+    style end_classify fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
+```
+
+### Stage 3: VM Execution (0 LLM calls)
+
+The deterministic VM executes step by step. When it hits `CALL_FUNCTION classify`, it pushes a new stack frame, binds the parameter `x = 5`, and jumps to `func_classify_0`:
+
+```
+step  1: branch end_classify_0          → skip to end_classify_0
+step  2: const <function:classify>       → %7 = <function:classify@func_classify_0>
+step  3: store_var classify %7           → classify = <function>
+step  4: const 5                         → %8 = 5
+step  5: store_var x %8                  → x = 5
+step  6: call_function classify %8       → push frame, jump to func_classify_0
+step  7: symbolic param:x               → %0 = 5 (bound from caller)
+step  8: store_var x %0                  → x = 5
+step  9: load_var x                      → %1 = 5
+step 10: const 0                         → %2 = 0
+step 11: binop > %1 %2                   → %3 = True (5 > 0)
+step 12: branch_if %3 if_true,if_false   → True, jump to if_true_0
+step 13: const "positive"                → %4 = "positive"
+step 14: store_var label %4              → label = "positive"
+step 15: branch if_end_0                 → jump to if_end_0
+step 16: load_var label                  → %6 = "positive"
+step 17: return %6                       → pop frame, return "positive"
+step 18: store_var result %9             → result = "positive"
+
+Final state: result = "positive"  (18 steps, 0 LLM calls)
+```
+
+### Stage 4: Dataflow Analysis
+
+The reaching definitions analysis traces through the register chain. The raw def-use chain says "`result` depends on `%9`". But tracing through: `%9` comes from `CALL_FUNCTION` on `classify` with argument `%8`; inside the call, `label` is set to `"positive"` (the branch taken); `label` is loaded into `%6` and returned. The dependency graph says: `result` depends on `classify` and `x`.
+
+### What Changes With Incomplete Code
+
+Now consider what happens when the source has a missing dependency:
+
+```python
+import math
+result = math.sqrt(16) + 1
+```
+
+The frontend doesn't know what `math.sqrt` returns. Instead of crashing, the VM creates a symbolic value:
+
+```
+step 1: call_function math.sqrt 16    → sym_0 (hint: "math.sqrt(16)")
+step 2: const 1                       → %1 = 1
+step 3: binop + sym_0 %1              → sym_1 (constraint: "sym_0 + 1")
+step 4: store_var result sym_1        → result = sym_1
+
+Final state: result = sym_1 [sym_0 + 1, where sym_0 = math.sqrt(16)]
+```
+
+The dataflow analysis still works: `result` depends on `math.sqrt` and the constant `1`. The symbolic value propagates deterministically. If you opt into the LLM resolver (`UnresolvedCallStrategy.LLM`), the VM would instead resolve `math.sqrt(16)` to `4.0`, and the final result would be `5.0`.
+
+This is the core idea: deterministic by default, LLM-assisted only at the boundaries where information is genuinely missing.
 
 ---
 
@@ -452,6 +602,162 @@ This pattern (audit, batch-fix, re-audit) was more effective than trying to enum
 
 ---
 
+## The Assertion Audit: Green Tests, False Confidence
+
+The dispatch audit ensured that every language construct was *handled*. But it said nothing about whether the tests *verifying* that handling were any good. By March 2026, the test suite had grown to ~8,400 tests across ~130 files. All green. The question I'd been avoiding: **if every test passes, how do I know each test is actually checking what it says it's checking?**
+
+Not "does the code work"; 8,400 green dots covered that. But: does `test_constructor_sets_fields` actually verify that field values are set? Does `test_switch_statement` actually verify that switch/case lowering works? Does `test_perform_until_loop_ordering` actually verify that instructions appear in the right order?
+
+When an AI writes your tests, you get volume and coverage breadth for free. What you don't get is *assertion depth*. The AI produces a test for every function, every edge case, every language, but each individual assertion may be checking the easy thing (does it not crash?) rather than the hard thing (does it produce the right output?). The AI optimises for the test *passing*, not for the test *verifying*.
+
+Over two days and 11 audit passes, I had Claude Code scan every test file, comparing each test's name against its actual assertions. The results were sobering.
+
+### The Taxonomy of Weak Assertions
+
+**1. OR-fallback assertions: the most dangerous pattern.** Tests like:
+
+```python
+assert Opcode.BRANCH_IF in opcodes or Opcode.BRANCH in opcodes
+```
+
+claimed to verify conditional branching, but `BRANCH` (unconditional jump) exists in virtually *every* program. It's the basic goto. The `or` made the assertion tautologically true. The match expression lowering could be completely broken and this test would still pass. I found this in Scala match/case, C# switch expressions, COBOL PERFORM ordering, and IR stats tests: 23+ instances where the test would pass even if the feature it named was completely broken.
+
+**2. Existence-only checks.** `assert len(writes) >= 1` on WRITE_REGION was a systematic problem in COBOL tests. It was satisfied by DATA DIVISION initial-value writes, making the PROCEDURE statement under test effectively untested. The strengthened version decoded the EBCDIC bytes and checked `_decode_zoned_unsigned(region, 0, 3) == 100`. The fix pattern across all COBOL tests was to count initial-value writes and assert the total exceeds that baseline.
+
+**3. Cross-product matching.**
+
+```python
+assert any(bi < pi for bi in branch_if_indices for pi in print_indices)
+```
+
+This claimed to verify that `BRANCH_IF` appears before a print `CALL` in the loop body. But `any()` over a cross-product means it matches if *any* `BRANCH_IF` appears before *any* print, even if they're from completely unrelated parts of the program. The test passes even when the loop structure is wrong.
+
+**4. Substring-by-coincidence.** `assert any("x" in inst.operands for inst in stores)` checks `STORE_VAR` for `"x"`, which passes whether the try body or the except body produced it, giving no confidence that both branches were lowered.
+
+**5. Silent parametrised passes.** Bare `return` in parametrised tests for excluded languages:
+
+```python
+@pytest.mark.parametrize("language", ALL_15_LANGUAGES)
+def test_closure_captures_variable(self, language):
+    if language not in CLOSURE_LANGUAGES:
+        return  # <-- silently passes
+```
+
+Eleven languages that can't express closures were showing as green in the test report. Not skipped. Not xfailed. *Passed.* With zero assertions executed. The test report said "15/15 languages pass closure tests" when only 4 actually ran. The fix was `pytest.skip()` with a reason string, making the exclusion visible in test output.
+
+**6. Tautological guards.**
+
+```python
+if "x" in result.dependency_graph:
+    assert "x" not in result.dependency_graph["x"]
+```
+
+If `x` is missing from the dependency graph entirely (the exact bug this test should catch), the `if` guard silently skips the assertion. Worse: `result.definitions` was a list of `Definition` objects, not a dict. The `in` check always returned `False`, so the guard *never* fired, and the test silently passed on every run.
+
+### The Audit Timeline
+
+**Phase 1: Discrepancy audits (2026-03-03).** The first pass focused on claim-vs-reality mismatches: tests whose names or docstrings contradicted what the code actually did. Three audits found 30+ discrepancies, including: a diamond-shape test that actually asserted stadium shape; a "two closures share state" test with only one closure; `test_cpp_catch_ellipsis` that set up a `stores_after_caught` list but never asserted on it; `test_constructor_sets_fields` that never verified field values; and `test_java_lambda_apply` that never verified the `FUNC_REF` dispatch mechanism. The human directive during this phase set the tone for the entire effort: **strengthen, don't delete.** Fix the test, don't remove it.
+
+**Phase 2: Name-vs-assertion audits (2026-03-04).** The focus shifted from docstring accuracy to assertion strength: does the test assert what its name claims? The first scan found 22 violations. A broader scan found 30 more across 22 files, introducing the taxonomy: Category A (misleading name, 7), Category B (missing key assertion, 8), Category C (weak/generic assertion, 13).
+
+**Phase 3: Priority-based audits.** A full scan of 122 files found ~82 violations. Introduced the priority classification: P0 (false confidence), P1 (missing key assertion), P2 (weak/generic), P3 (cosmetic). Re-scans after each fix batch drove the count down: 82 → 56 → 17.
+
+**Phase 4: Reconciliation.** After several audits, I noticed the violation list kept changing. Items that were fixed reappeared with different wording. New phantom items appeared. Priority assignments shifted. Each audit launched fresh agents that re-discovered the codebase independently, producing inconsistent results. The fix was **reconciliation passes**: starting from the previous audit's known remaining items and verifying each against the current code. This produced a stable, verified list of 13 remaining items.
+
+### The Governing Principle: Strengthen, Don't Rename
+
+Early in the audit, Claude tried to fix a misleading test name by renaming `test_compute_expression` to `test_compute_respects_operator_precedence`. I stopped it immediately: **always strengthen the assertion to match the name, never weaken the name to match the assertion.** Renaming moves the problem. The original name described behaviour that *should* be tested. Renaming it to match the weak assertion just means that behaviour goes unverified forever. Strengthening the assertion closes the gap.
+
+This became the governing principle for all subsequent fixes.
+
+### Errors During Fix Attempts
+
+Strengthening assertions is harder than writing the original test. Many fix attempts failed on the first try:
+
+**Asserting on the wrong representation.** Go's `test_return_without_value` initially asserted `returns[0].operands == []` but bare return has `['%0']` (register pointing to default value). The Python decorator test asserted `"my_dec" in inst.operands` but `CALL_FUNCTION` uses register references (`%4`, `%3`), not names. The fix was to check `LOAD_VAR` instead. Pascal FILLER EBCDIC expected `0x40` (EBCDIC space) at FILLER offsets but got `\xe2\xd7`.
+
+**String vs integer operands.** Pascal's `test_try_lowers_body` asserted `1 in const_vals` (integer) but IR operands are strings (`["1"]`). Fixed to `"1" in const_vals`.
+
+**Misunderstanding the execution model.** `test_initial_value_100_in_region` expected value 100 but the test helper `_execute_straight_line` runs ALL instructions (DATA + PROCEDURE division), producing 125 (100+50-25). The test had been asserting `len(region) == 5` which was tautologically true.
+
+**Private vs public attributes.** `test_llm_frontend_any_language` asserted `frontend.language` but `LLMFrontend` stores it as `_language`.
+
+The fix cycle was consistently: read test, write assertion, run test, discover actual representation, fix assertion, re-run. The AI is good at this cycle once you force it through it, but it will never enter this cycle voluntarily. It will write the assertion it thinks is correct and move on.
+
+### Real Bugs Found
+
+P0 fixes exposed genuine bugs that had been hiding behind weak assertions:
+
+**Pascal bare-except.** The test `test_try_lowers_body` used `try x := 1; except x := 0; end;` but the Pascal frontend silently dropped bare `except` blocks (without `on E: Exception do` wrapper). The test passed because it only checked that `STORE_VAR "x"` existed, which was satisfied by the try body alone. Strengthening the assertion to verify both the try-body constant (`"1"`) and the except-body constant (`"0"`) exposed the bug. The fix was in `_extract_pascal_try_parts` to handle `statements` nodes in the except section.
+
+**C# else-if chain lowering.** A similar pattern where a weak assertion masked incomplete lowering of chained else-if blocks.
+
+**`test_no_self_dependency_without_loop`.** The guard `if "x" in result.definitions:` was checking membership on a list of `Definition` objects, not a dict. The `in` check always returned `False`, so the assertion never executed. The test had been passing for weeks while the behaviour it named went completely unverified.
+
+**`test_initial_value_100_in_region`.** Expected 100 but the helper runs all instructions sequentially, producing 125. The test's original assertion `len(region) == 5` was tautologically true and would pass regardless of the actual computed value.
+
+### The Feedback Loop Structure
+
+Each audit cycle followed this structure:
+
+```
+Human: "audit all tests"
+  → AI: launches parallel agents, scans ~130 files
+  → AI: produces prioritised violation list
+  → Human: reviews, selects priority tier to fix
+  → AI: reads each test, writes fix, runs test
+    → Fix fails (wrong representation, wrong attribute, wrong type)
+    → AI: investigates actual behaviour, corrects fix
+    → Fix passes
+  → AI: runs full test suite (8,457 tests)
+  → AI: runs Black formatter
+  → AI: commits and pushes
+  → Human: "audit again"
+  → [repeat]
+```
+
+The critical human interventions were:
+1. **"Always strengthen assertions, do not rename"**: set the governing principle
+2. **"You keep changing the list"**: identified the audit stability problem
+3. **"Do a reconciliation pass"**: prescribed the fix for drift
+4. **"Fix the frontend bug"**: escalated from test fix to code fix when an assertion exposed a real bug
+5. **Selective priority focus**: always fixing P0 first, then P1, deferring P2
+
+The AI's role was execution at scale (scanning 130 files, writing fixes, running 8,457 tests) while the human provided quality gates and strategic direction.
+
+### Results
+
+| Metric | Value |
+|--------|-------|
+| Calendar span | 2 days |
+| Audit passes | 11 (3 discrepancy + 8 name-vs-assertion) |
+| Total violations identified | ~180 (with overlap across audits) |
+| Unique violations (deduplicated) | ~90 |
+| Violations fixed | ~75 |
+| Remaining (P2 cosmetic) | ~13 |
+| Frontend bugs exposed | 2 |
+| False-pass tests eliminated | 5 |
+| Commits for assertion audit fixes | 33 |
+| Tests at end of assertion audit | 8,469 |
+
+The test count went *up*, not down. Strengthening assertions sometimes meant splitting one weak test into multiple specific ones.
+
+### Lessons
+
+**Green tests are necessary but not sufficient.** Every test was green before the audit. The audit found 15 P0 violations where the test would pass even when the behaviour it named was completely broken. Two of these exposed genuine frontend bugs that had been silently lurking.
+
+**OR-fallback assertions are the most dangerous pattern.** The pattern `assert A or B` appeared in every frontend category. In every case, one side of the OR was trivially satisfied by unrelated instructions, making the assertion vacuous.
+
+**Audit stability requires anchoring.** Fresh scans produce inconsistent results because the agents don't share context. The reconciliation approach (starting from the previous audit's known list and verifying each item) is the only way to produce a stable, trustworthy list.
+
+**Fixing assertions requires running the code under test.** Many fix attempts failed because the assertion assumed a representation that didn't match reality. The fix cycle (write assertion → run → discover actual representation → fix → re-run) was consistently necessary and never happened voluntarily.
+
+**Parametrised tests need explicit skips, not silent returns.** Bare `return` in excluded branches produces green dots with zero assertions. `pytest.skip()` with a reason string makes exclusions visible.
+
+The CLAUDE.md rules were updated to encode these lessons: never modify assertions to make tests pass without verifying the actual output, and never create special implementation behaviour just to satisfy tests.
+
+---
+
 ## Cross-Language Verification via Exercism
 
 The broadest verification effort was the Exercism integration test suite. The idea: take Exercism's canonical test cases (which define expected inputs and outputs for programming exercises), write equivalent solutions in all 15 languages, and verify that RedDragon's pipeline produces the correct answer for every case in every language.
@@ -527,7 +833,7 @@ The workflow encoded in CLAUDE.md is: **Brainstorm → Discuss trade-offs → Pl
 |--------|-------|
 | Supported languages | 15 (deterministic) + any (LLM) |
 | IR opcodes | 19 |
-| Tests (all passing) | 7,268 + 3 xfailed |
+| Tests (all passing) | 8,469 |
 | LLM calls at test time | 0 |
 | Architectural decision records | 28 |
 | Exercism exercises | 18 (across 15 languages) |
