@@ -7,7 +7,7 @@ tags: ["Software Engineering", "Compilers", "Program Analysis", "AI-Assisted Dev
 draft: false
 ---
 
-*A universal IR, 15 deterministic frontends, LLM-assisted repair/lowering/execution, a deterministic VM, and iterative dataflow analysis.*
+*A universal IR, 15 deterministic frontends, LLM-assisted repair/lowering/execution, a deterministic VM, static type inference, and iterative dataflow analysis.*
 
 **GitHub**: [avishek-sen-gupta/red-dragon](https://github.com/avishek-sen-gupta/red-dragon)
 
@@ -31,7 +31,7 @@ The twist: I wanted to handle *incomplete* programs gracefully. Real-world code 
 
 RedDragon is part of a family of three tools: [Codescry](https://github.com/avishek-sen-gupta/codescry) (a repo surveying toolkit that detects integration points using regex, ML classifiers, code embeddings, and LLM classification) and [RedDragon-Codescry TUI](https://github.com/avishek-sen-gupta/reddragon-codescry-tui) (a terminal UI integrating the two). The TUI demo is shown above.
 
-This post covers how the system is designed: the IR, the frontends, the VM, and the dataflow analysis.
+This post covers how the system is designed: the IR, the frontends, the VM, type inference, and the dataflow analysis.
 
 ### Core Theses
 
@@ -58,7 +58,9 @@ RedDragon explores three ideas about analysing frequently-incomplete code, the k
 9. [The Deterministic VM](#the-deterministic-vm)
 10. [LLM-Assisted VM Execution](#llm-assisted-vm-execution)
 11. [Dataflow Analysis](#dataflow-analysis)
-12. [Cross-Language Verification via Exercism](#cross-language-verification-via-exercism)
+12. [Type Inference](#type-inference)
+13. [Cross-Language Type Inference in Practice](#cross-language-type-inference-in-practice)
+14. [Cross-Language Verification via Exercism](#cross-language-verification-via-exercism)
 
 ---
 
@@ -71,16 +73,19 @@ RedDragon follows a classic compiler pipeline:
 flowchart TD
 src["Source Code (15 languages)"]-->frontend["Frontend<br/>(deterministic or LLM-based)"]
 frontend-->|"list[IRInstruction]"|cfg["CFG Builder"]
-cfg-->vm["VM"]
+frontend-->|"list[IRInstruction]"|typeinf["Type Inference"]
+typeinf-->|"TypeEnvironment"|vm["VM"]
+cfg-->vm
 cfg-->dataflow["Dataflow Analysis"]
 style src fill:#4a90d9,stroke:#000,stroke-width:2px,color:#fff
 style frontend fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
 style cfg fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
 style vm fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
+style typeinf fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
 style dataflow fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
 ```
 
-Every stage operates on the same flat IR. The VM and dataflow analysis are language-agnostic. They don't know whether the instructions came from Python, Rust, or COBOL.
+Every stage operates on the same flat IR. The type inference pass, VM, and dataflow analysis are all language-agnostic. They don't know whether the instructions came from Python, Rust, or COBOL.
 
 ---
 
@@ -893,6 +898,227 @@ The dataflow module has **no dependencies on the VM, frontends, or backends**. I
 
 ---
 
+## Type Inference
+
+The type inference module (`interpreter/type_inference.py`) is a **static analysis pass** that runs after lowering but before VM execution. It walks the IR instructions once in a forward pass and produces an immutable `TypeEnvironment` mapping registers and variables to canonical types. The VM then uses this environment for type-aware coercion at write time.
+
+### The Type Ontology
+
+Types are organised in a DAG (`TypeGraph`) with subtype queries and least-upper-bound computation:
+
+```
+Any
+├── Number
+│   ├── Int
+│   └── Float
+├── String
+├── Bool
+├── Object
+└── Array
+```
+
+The graph is pluggable: `TypeGraph` is constructed from a tuple of `TypeNode` values and can be extended with new nodes (e.g., user-defined class types) without mutating the original. Subtype checks (`is_subtype`) and common-supertype queries (`common_supertype`) traverse the DAG via BFS.
+
+### Two Sources of Type Information
+
+Type information enters the system through two paths:
+
+**1. Frontend type extraction (12 statically-typed languages).** During lowering, each frontend extracts type annotations from the tree-sitter AST and normalises them to canonical `TypeName` values via a per-language type map. Java's `int` → `Int`, Rust's `f64` → `Float`, Go's `string` → `String`, C#'s `bool` → `Bool`, and so on. These are seeded into a `TypeEnvironmentBuilder` that the inference pass merges before its walk. Dynamically-typed languages (JavaScript, Ruby, Lua) skip this step — they have no annotations to extract.
+
+**2. Inference from IR structure.** The inference pass itself infers types from the IR opcodes, covering both dynamically-typed languages (where all types come from inference) and filling gaps in statically-typed code (e.g., inferring the type of an expression result).
+
+### The Inference Algorithm
+
+The inference walk is a single forward pass over the flat IR. A dispatch table maps 19 of the 27 opcodes to handler functions (the remaining 8 are control flow instructions with no typeable results). Each handler is a pure function that reads from and writes to an `_InferenceContext` — a mutable bundle of four maps:
+
+- `register_types`: `%0` → `Int`, `%3` → `Bool`, ...
+- `var_types`: `x` → `Int`, `label` → `String`, ...
+- `func_return_types`: `factorial` → `Int`, `len` → `Int`, ...
+- `func_param_types`: `factorial` → `[("n", "Int")]`, ...
+
+The key inference rules:
+
+| Opcode | Rule |
+|--------|------|
+| `CONST` | Literal analysis: `42` → Int, `3.14` → Float, `"hello"` → String, `True`/`False` → Bool |
+| `LOAD_VAR` | Copy type from `var_types` |
+| `STORE_VAR` | Inherit type from source register |
+| `BINOP` | Delegate to `TypeResolver` — comparison ops → Bool, arithmetic follows promotion rules (Int + Float → Float) |
+| `UNOP` | Fixed types for `not`/`!` → Bool, `#` → Int; otherwise inherit operand type |
+| `CALL_FUNCTION` | Look up `func_return_types`, then `_BUILTIN_RETURN_TYPES` (`len` → Int, `str` → String, `range` → Array) |
+| `CALL_METHOD` | Class-scoped dispatch: look up the method's return type for the receiver's class |
+| `RETURN` | Backfill `func_return_types` from the return expression's type |
+| `NEW_OBJECT` | Use the class name as the type |
+| `STORE_FIELD` / `LOAD_FIELD` | Track and retrieve per-class field types |
+| `STORE_INDEX` / `LOAD_INDEX` | Track and retrieve array element types |
+
+The `RETURN` backfill deserves mention: when the pass encounters a `RETURN` instruction inside a function, it records the return expression's type in `func_return_types`. This means callers later in the IR can resolve the function's return type even without an explicit annotation.
+
+### Type-Aware Coercion in the VM
+
+The inference pass produces a frozen `TypeEnvironment` (backed by `MappingProxyType` for immutability). The VM's `apply_update()` uses this environment at write time: when a value is written to a register, `_coerce_value()` checks the declared type and applies a coercion function if needed.
+
+The coercion rules are encapsulated in a pluggable `ConversionRules` interface. The default rules (`DefaultConversionRules`) handle:
+
+- **Widening**: Int → Float (lossless promotion)
+- **Narrowing**: Float → Int (truncate toward zero, matching C/Java/COBOL semantics)
+- **Bool promotion**: Bool → Int
+- **Arithmetic result types**: Int ÷ Int → Int (floor division), Int + Float → Float
+- **Comparison results**: any comparison → Bool
+
+This coercion at write time means the VM produces correct typed results for cross-language programs. A Go program that declares `var x int = 7 / 2` gets `3` (integer division), not `3.5`. A COBOL program with PIC 9(4) fields truncates float assignments. The type system makes this automatic rather than requiring per-language special cases in the VM.
+
+### Self/This Typing
+
+Inside class definitions, the inference pass recognises `self`, `this`, and `$this` parameter names and assigns them the enclosing class type. This enables method return type resolution: when `self.method()` is called, the pass knows the receiver's class and can look up the method's return type in the class-scoped method type map.
+
+### Design Properties
+
+**Pure function.** `infer_types()` takes a list of IR instructions and a `TypeResolver`, returns a `TypeEnvironment`. No mutation of the input instructions. No side effects.
+
+**Single-pass, last-write-wins.** The forward walk records the most recent type for each variable. This is correct within a single function scope (the intraprocedural analysis boundary).
+
+**Pluggable ontology.** The `TypeGraph`, `ConversionRules`, and `TypeResolver` are all injected. A different language family (e.g., one with unsigned integers or decimal types) can supply its own rules without changing the inference engine.
+
+---
+
+## Cross-Language Type Inference in Practice
+
+The type inference engine described above is language-agnostic: it operates on IR instructions without knowing which frontend produced them. But making it work *correctly* across 15 languages required solving language-specific lowering gaps — places where idiomatic code in one language produced IR that the inference pass couldn't reason about.
+
+### The End-to-End Flow
+
+The full pipeline from source to typed environment looks like this:
+
+```mermaid
+%%{ init: { "flowchart": { "curve": "stepBefore" } } }%%
+flowchart LR
+    subgraph Frontend ["Frontend (per-language)"]
+        SRC["Source Code"] --> PARSE["tree-sitter<br/>Parse"]
+        PARSE --> LOWER["Lower to IR"]
+        LOWER --> SEED["Seed Type<br/>Environment<br/>Builder"]
+    end
+    subgraph Inference ["Type Inference (language-agnostic)"]
+        SEED --> MERGE["Merge Seeds"]
+        MERGE --> WALK["Forward Pass<br/>over IR"]
+        WALK --> ENV["Frozen<br/>TypeEnvironment"]
+    end
+    ENV --> VM["VM<br/>(type-aware<br/>coercion)"]
+
+    style Frontend fill:#2d3748,stroke:#4a5568,color:#e2e8f0
+    style Inference fill:#1a365d,stroke:#2a4a7f,color:#e2e8f0
+```
+
+The critical contract: **frontends must produce IR that the inference pass can consume**. If a frontend drops a return value, the inference pass has nothing to propagate. If a field access is lowered as a variable load instead of a field load, field tracking breaks.
+
+### Field Type Tracking Across OOP Languages
+
+Eight OOP languages (Python, Java, C#, C++, JavaScript, TypeScript, PHP, Scala) support field type tracking through `this`/`self`. The mechanism:
+
+```mermaid
+%%{ init: { "flowchart": { "curve": "stepBefore" } } }%%
+flowchart TD
+    STORE["STORE_FIELD %this 'age' %val<br/><i>%this typed as Dog, %val typed as Int</i>"]
+    STORE --> FT["field_types['Dog']['age'] = Int"]
+    FT --> LOAD["LOAD_FIELD %this 'age'<br/><i>%this typed as Dog</i>"]
+    LOAD --> RESULT["%result typed as Int"]
+
+    style STORE fill:#2d3748,stroke:#4a5568,color:#e2e8f0
+    style FT fill:#1a365d,stroke:#2a4a7f,color:#e2e8f0
+    style LOAD fill:#2d3748,stroke:#4a5568,color:#e2e8f0
+    style RESULT fill:#22543d,stroke:#276749,color:#e2e8f0
+```
+
+This only works if:
+1. The `self`/`this` parameter register is typed as the enclosing class (handled by each frontend's `_emit_this_param` / `_emit_self_param`)
+2. `this.field` access is lowered as `LOAD_FIELD`, not `LOAD_VAR`
+
+### Return Backfill and Expression-Bodied Functions
+
+Return backfill infers a function's return type from its `RETURN` instructions:
+
+```mermaid
+%%{ init: { "flowchart": { "curve": "stepBefore" } } }%%
+flowchart LR
+    CONST["%0 = CONST 42<br/><i>typed as Int</i>"]
+    CONST --> RET["RETURN %0"]
+    RET --> BF["Backfill:<br/>func_return_types['f'] = Int"]
+    BF --> CALL["result = f()<br/>CALL_FUNCTION"]
+    CALL --> TYPED["%result typed as Int"]
+
+    style CONST fill:#2d3748,stroke:#4a5568,color:#e2e8f0
+    style RET fill:#2d3748,stroke:#4a5568,color:#e2e8f0
+    style BF fill:#1a365d,stroke:#2a4a7f,color:#e2e8f0
+    style CALL fill:#2d3748,stroke:#4a5568,color:#e2e8f0
+    style TYPED fill:#22543d,stroke:#276749,color:#e2e8f0
+```
+
+This works for explicit `return` statements. But three languages have idioms where the return value is implicit:
+
+- **Scala** expression-bodied functions: `def f() = 42` (the body *is* the return value)
+- **Kotlin** expression-bodied functions: `fun f() = 42`
+- **Ruby** implicit return: the last expression in a method is the return value
+
+In all three cases, the original frontend lowering discarded the expression value and unconditionally emitted a default nil return. The inference pass saw `RETURN nil` and could not backfill the actual type.
+
+### The Fix Pattern
+
+The fix for all three languages followed the same principle: **detect when a function body is a bare expression rather than a block of statements, and wire the expression's register to the RETURN instruction**.
+
+For Scala, `lower_function_def` checks if `body_node` is a block type or a bare expression. If bare, it calls `lower_expr` and emits `RETURN` with the result:
+
+```
+# Before: def getAge(): Int = this.age
+func_getAge:
+  %0 = load_var this    # ← wrong: should be load_field
+  %1 = load_var age     # ← body iterated as children
+  %2 = const ()
+  return %2             # ← default nil return
+
+# After:
+func_getAge:
+  %0 = load_var this
+  %1 = load_field %0 age   # ← field_expression lowered correctly
+  return %1                 # ← expression value returned
+```
+
+For Ruby, a `_lower_body_with_implicit_return` helper identifies the last named child of the method body. If it's an expression (not a statement like `if`, `while`, or `return`), it lowers it via `lower_expr` and returns its register:
+
+```
+# Before: def get_age; @age; end
+func_get_age:
+  %0 = load_var self
+  %1 = load_field %0 age    # value loaded...
+  %2 = const None
+  return %2                  # ...but discarded
+
+# After:
+func_get_age:
+  %0 = load_var self
+  %1 = load_field %0 age
+  return %1                  # implicit return wired
+```
+
+### Cross-Language Type Inference Test Matrix
+
+With all three gaps fixed, the integration test suite verifies type inference scenarios across all applicable languages:
+
+| Scenario | Languages Tested |
+|----------|-----------------|
+| BINOP (Int + Int → Int) | Java, Go, C, C++, C#, Rust, Python, JavaScript, TypeScript, Kotlin, Scala, PHP, Lua, Ruby, Pascal |
+| BINOP (Int + Float → Float) | Java, Go, C, C++, C#, Rust, Python, JavaScript, TypeScript, Kotlin, Scala, PHP, Lua, Ruby |
+| Comparison → Bool | Java, Go, C, C++, C#, Rust, Python, JavaScript, TypeScript, Kotlin, Scala, PHP, Lua, Ruby |
+| UNOP (not/!) → Bool | Java, C, C++, C#, Python, JavaScript, TypeScript, Kotlin, Scala, PHP, Lua, Ruby |
+| Return backfill | Lua, PHP, TypeScript, Kotlin, Scala |
+| Typed param seeding | Java, Go, C, C++, C#, Rust, TypeScript, Kotlin, Scala |
+| Field type tracking (OOP) | Python, Java, C#, C++, JavaScript, TypeScript, PHP, Scala |
+| CALL_METHOD return types | Python, Java, C#, C++, JavaScript, TypeScript, Kotlin, Scala, PHP, Ruby |
+| NEW_OBJECT typing | JavaScript, TypeScript, PHP, Ruby, Scala |
+
+Each cell is a parametrized pytest fixture — a failure in one language doesn't mask failures in others.
+
+---
+
 ## Cross-Language Verification via Exercism
 
 The broadest verification effort was the Exercism integration test suite. The idea: take Exercism's canonical test cases (which define expected inputs and outputs for programming exercises), write equivalent solutions in all 15 languages, and verify that RedDragon's pipeline produces the correct answer for every case in every language.
@@ -915,18 +1141,19 @@ The Exercism suite surfaced more bugs than any other test approach. Each exercis
 |--------|-------|
 | Supported languages | 15 (deterministic) + COBOL (ProLeap) + any (LLM) |
 | IR opcodes | 27 |
-| Tests (all passing) | 8,569 |
+| Tests (all passing) | 9,258 |
 | LLM calls at test time | 0 |
 | Exercism exercises | 18 (across 15 languages) |
 | Rosetta algorithms | 14 (across 15 languages) |
+| Type inference scenarios | 9 (verified across up to 15 languages each) |
 
 ---
 
 ## Conclusion
 
-RedDragon started as a question: *"Can I build a single system that analyses code in any language?"* It evolved into a compiler pipeline with 15 deterministic frontends, a COBOL frontend via ProLeap, LLM-assisted AST repair, a deterministic VM with byte-addressed memory regions and named continuations, and cross-language verification.
+RedDragon started as a question: *"Can I build a single system that analyses code in any language?"* It evolved into a compiler pipeline with 15 deterministic frontends, a COBOL frontend via ProLeap, LLM-assisted AST repair, a static type inference pass with pluggable coercion rules (verified across 9 inference scenarios and up to 15 languages each), a deterministic VM with byte-addressed memory regions and named continuations, and cross-language verification.
 
-**None of the individual components are novel.** TAC IR, dispatch tables, worklist dataflow are all textbook techniques. The value, if any, is in applying them together to a practical multi-language analysis tool.
+**None of the individual components are novel.** TAC IR, dispatch tables, worklist dataflow, and forward type inference are all textbook techniques. The value, if any, is in applying them together to a practical multi-language analysis tool.
 
 All three projects are open source: [RedDragon](https://github.com/avishek-sen-gupta/red-dragon), [Codescry](https://github.com/avishek-sen-gupta/codescry), and [RedDragon-Codescry TUI](https://github.com/avishek-sen-gupta/reddragon-codescry-tui).
 
