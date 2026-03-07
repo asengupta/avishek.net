@@ -900,7 +900,7 @@ The dataflow module has **no dependencies on the VM, frontends, or backends**. I
 
 ## Type Inference
 
-The type inference module (`interpreter/type_inference.py`) is a **static analysis pass** that runs after lowering but before VM execution. It walks the IR instructions once in a forward pass and produces an immutable `TypeEnvironment` mapping registers and variables to canonical types. The VM then uses this environment for type-aware coercion at write time.
+The type inference module (`interpreter/type_inference.py`) is a **static analysis pass** that runs after lowering but before VM execution. It walks the IR instructions in a fixpoint loop — repeating until no new types are discovered — and produces an immutable `TypeEnvironment` mapping registers and variables to canonical types. The VM then uses this environment for type-aware coercion at write time.
 
 ### The Type Ontology
 
@@ -929,7 +929,7 @@ Type information enters the system through two paths:
 
 ### The Inference Algorithm
 
-The inference walk is a single forward pass over the flat IR. A dispatch table maps 19 of the 27 opcodes to handler functions (the remaining 8 are control flow instructions with no typeable results). Each handler is a pure function that reads from and writes to an `_InferenceContext` — a mutable bundle of four maps:
+The inference walk runs to fixpoint over the flat IR. A dispatch table maps 19 of the 27 opcodes to handler functions (the remaining 8 are control flow instructions with no typeable results). Each handler is a pure function that reads from and writes to an `_InferenceContext` — a mutable bundle of four maps:
 
 - `register_types`: `%0` → `Int`, `%3` → `Bool`, ...
 - `var_types`: `x` → `Int`, `label` → `String`, ...
@@ -944,21 +944,21 @@ The key inference rules:
 | `LOAD_VAR` | Copy type from `var_types` |
 | `STORE_VAR` | Inherit type from source register |
 | `BINOP` | Delegate to `TypeResolver` — comparison ops → Bool, arithmetic follows promotion rules (Int + Float → Float) |
-| `UNOP` | Fixed types for `not`/`!` → Bool, `#` → Int; otherwise inherit operand type |
+| `UNOP` | Fixed types for `not`/`!` → Bool, `#`/`~` → Int; otherwise inherit operand type |
 | `CALL_FUNCTION` | Look up `func_return_types`, then `_BUILTIN_RETURN_TYPES` (`len` → Int, `str` → String, `range` → Array) |
-| `CALL_METHOD` | Class-scoped dispatch: look up the method's return type for the receiver's class |
+| `CALL_METHOD` | Class-scoped dispatch → `func_return_types` fallback → builtin method table (60+ methods: `.upper()` → String, `.split()` → Array, `.find()` → Int, `.startswith()` → Bool, etc.) |
 | `RETURN` | Backfill `func_return_types` from the return expression's type |
 | `NEW_OBJECT` | Use the class name as the type |
 | `STORE_FIELD` / `LOAD_FIELD` | Track and retrieve per-class field types |
 | `STORE_INDEX` / `LOAD_INDEX` | Track and retrieve array element types |
 
-The `RETURN` backfill deserves mention: when the pass encounters a `RETURN` instruction inside a function, it records the return expression's type in `func_return_types`. This means callers later in the IR can resolve the function's return type even without an explicit annotation.
+The `RETURN` backfill deserves mention: when the pass encounters a `RETURN` instruction inside a function, it records the return expression's type in `func_return_types`. This means callers later in the IR can resolve the function's return type even without an explicit annotation. The fixpoint loop extends this to **forward references**: when function A calls function B defined later in the IR, the first pass learns B's return type from its `RETURN`, and the second pass propagates it to A's call site. Chains of arbitrary depth (A → B → C) resolve correctly.
 
 ### Type-Aware Coercion in the VM
 
 The inference pass produces a frozen `TypeEnvironment` (backed by `MappingProxyType` for immutability). The VM's `apply_update()` uses this environment at write time: when a value is written to a register, `_coerce_value()` checks the declared type and applies a coercion function if needed.
 
-The coercion rules are encapsulated in a pluggable `ConversionRules` interface. The default rules (`DefaultConversionRules`) handle:
+The coercion rules are encapsulated in a pluggable `TypeConversionRules` interface. The default rules (`DefaultTypeConversionRules`) handle:
 
 - **Widening**: Int → Float (lossless promotion)
 - **Narrowing**: Float → Int (truncate toward zero, matching C/Java/COBOL semantics)
@@ -976,9 +976,9 @@ Inside class definitions, the inference pass recognises `self`, `this`, and `$th
 
 **Pure function.** `infer_types()` takes a list of IR instructions and a `TypeResolver`, returns a `TypeEnvironment`. No mutation of the input instructions. No side effects.
 
-**Single-pass, last-write-wins.** The forward walk records the most recent type for each variable. This is correct within a single function scope (the intraprocedural analysis boundary).
+**Fixpoint convergence.** The pass repeats until no new types are discovered, resolving forward references across function boundaries. Convergence is measured by the combined size of `register_types` and `func_return_types`. Programs without forward references converge in one pass (no performance penalty). Each handler's "skip if already known" guards prevent clobbering types from earlier passes while allowing unfilled gaps to be resolved on subsequent passes.
 
-**Pluggable ontology.** The `TypeGraph`, `ConversionRules`, and `TypeResolver` are all injected. A different language family (e.g., one with unsigned integers or decimal types) can supply its own rules without changing the inference engine.
+**Pluggable ontology.** The `TypeGraph`, `TypeConversionRules`, and `TypeResolver` are all injected. A different language family (e.g., one with unsigned integers or decimal types) can supply its own rules without changing the inference engine.
 
 ---
 
@@ -1000,7 +1000,7 @@ flowchart LR
     end
     subgraph Inference ["Type Inference (language-agnostic)"]
         SEED --> MERGE["Merge Seeds"]
-        MERGE --> WALK["Forward Pass<br/>over IR"]
+        MERGE --> WALK["Fixpoint Loop<br/>over IR"]
         WALK --> ENV["Frozen<br/>TypeEnvironment"]
     end
     ENV --> VM["VM<br/>(type-aware<br/>coercion)"]
@@ -1114,6 +1114,8 @@ With all three gaps fixed, the integration test suite verifies type inference sc
 | Field type tracking (OOP) | Python, Java, C#, C++, JavaScript, TypeScript, PHP, Scala |
 | CALL_METHOD return types | Python, Java, C#, C++, JavaScript, TypeScript, Kotlin, Scala, PHP, Ruby |
 | NEW_OBJECT typing | JavaScript, TypeScript, PHP, Ruby, Scala |
+| Builtin method return types | Python, JavaScript, Java, Ruby, Kotlin |
+| Forward reference resolution | Python, JavaScript, Ruby |
 
 Each cell is a parametrized pytest fixture — a failure in one language doesn't mask failures in others.
 
@@ -1141,17 +1143,17 @@ The Exercism suite surfaced more bugs than any other test approach. Each exercis
 |--------|-------|
 | Supported languages | 15 (deterministic) + COBOL (ProLeap) + any (LLM) |
 | IR opcodes | 27 |
-| Tests (all passing) | 9,258 |
+| Tests (all passing) | 9,298 |
 | LLM calls at test time | 0 |
 | Exercism exercises | 18 (across 15 languages) |
 | Rosetta algorithms | 14 (across 15 languages) |
-| Type inference scenarios | 9 (verified across up to 15 languages each) |
+| Type inference scenarios | 11 (verified across up to 15 languages each) |
 
 ---
 
 ## Conclusion
 
-RedDragon started as a question: *"Can I build a single system that analyses code in any language?"* It evolved into a compiler pipeline with 15 deterministic frontends, a COBOL frontend via ProLeap, LLM-assisted AST repair, a static type inference pass with pluggable coercion rules (verified across 9 inference scenarios and up to 15 languages each), a deterministic VM with byte-addressed memory regions and named continuations, and cross-language verification.
+RedDragon started as a question: *"Can I build a single system that analyses code in any language?"* It evolved into a compiler pipeline with 15 deterministic frontends, a COBOL frontend via ProLeap, LLM-assisted AST repair, a static type inference pass with fixpoint convergence, builtin method awareness, and pluggable coercion rules (verified across 11 inference scenarios and up to 15 languages each), a deterministic VM with byte-addressed memory regions and named continuations, and cross-language verification.
 
 **None of the individual components are novel.** TAC IR, dispatch tables, worklist dataflow, and forward type inference are all textbook techniques. The value, if any, is in applying them together to a practical multi-language analysis tool.
 
