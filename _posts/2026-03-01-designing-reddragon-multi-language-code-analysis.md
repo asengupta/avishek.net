@@ -7,7 +7,7 @@ tags: ["Software Engineering", "Compilers", "Program Analysis", "AI-Assisted Dev
 draft: false
 ---
 
-*A universal IR, 15 deterministic frontends, LLM-assisted repair/lowering/execution, a deterministic VM with class hierarchy support, static type inference, and iterative dataflow analysis.*
+*A universal IR, 15 deterministic frontends, LLM-assisted repair/lowering/execution, a deterministic VM with class hierarchy support, a structured type system with generics/unions/variance/traits, and iterative dataflow analysis.*
 
 **GitHub**: [avishek-sen-gupta/red-dragon](https://github.com/avishek-sen-gupta/red-dragon)
 
@@ -937,9 +937,24 @@ The dataflow module has **no dependencies on the VM, frontends, or backends**. I
 
 The type inference module (`interpreter/type_inference.py`) is a **static analysis pass** that runs after lowering but before VM execution. It walks the IR instructions in a fixpoint loop — repeating until no new types are discovered — and produces an immutable `TypeEnvironment` mapping registers and variables to canonical types. The VM then uses this environment for type-aware coercion at write time.
 
+### Type Representation: The TypeExpr ADT
+
+Types are represented as an algebraic data type (`TypeExpr`) with six variants:
+
+```
+ScalarType(name)                          # Int, String, Bool, MyClass
+ParameterizedType(constructor, arguments) # Array[Int], Map[String, Int], Pointer[Pointer[Float]]
+FunctionType(params, return_type)         # Fn(Int, String) -> Bool
+UnionType(members)                        # Union[Int, String], Optional = Union[T, Null]
+TypeVar(name, bound)                      # T, T: Number (bounded type variable)
+UnknownType                               # sentinel for unresolved types
+```
+
+All TypeExpr values produce canonical string representations and — critically for the migration from the original string-based system — compare equal to those strings (`ScalarType("Int") == "Int"`). This made it possible to migrate the inference engine, type resolver, and coercion rules to structured types incrementally without breaking existing tests.
+
 ### The Type Ontology
 
-Types are organised in a DAG (`TypeGraph`) with subtype queries and least-upper-bound computation:
+The base type hierarchy is a DAG (`TypeGraph`) with subtype queries and least-upper-bound (LUB) computation:
 
 ```
 Any
@@ -952,24 +967,39 @@ Any
 └── Array
 ```
 
-The graph is pluggable: `TypeGraph` is constructed from a tuple of `TypeNode` values and can be extended with new nodes (e.g., user-defined class types) without mutating the original. Subtype checks (`is_subtype`) and common-supertype queries (`common_supertype`) traverse the DAG via BFS.
+The graph is pluggable: `TypeGraph` is constructed from a tuple of `TypeNode` values and can be extended without mutating the original. Subtype checks (`is_subtype`) and common-supertype queries (`common_supertype`) traverse the DAG via BFS. At runtime the graph is extended with user-defined class types, interface/trait nodes, and parameterized type rules.
+
+**Parameterized types.** `ParameterizedType` values carry subtype checking through their arguments. `Array[Int]` is a subtype of `Array[Number]` because `Int` is a subtype of `Number` (covariant by default). A raw constructor (`Array`) is a supertype of any parameterised variant (`Array[Int]`).
+
+**Union types.** `UnionType` members are flattened (nested unions merge), deduplicated, and singleton-eliminated (`Union[Int]` simplifies to `Int`). `Optional` is sugar for `Union[T, Null]`. A union is a subtype of a parent if all members are subtypes; a child is a subtype of a union parent if it is a subtype of at least one member.
+
+**Function types.** `FunctionType` follows standard variance: parameters are **contravariant** (a function accepting `Number` is a subtype of one requiring `Int`), return types are **covariant** (returning `Int` is a subtype of returning `Number`).
+
+**Type aliases.** A `type_aliases` registry maps alias names to `TypeExpr` targets. Resolution is transitive with cycle protection: `IntPtr → Pointer[Int]`, `NestedPtr → Pointer[IntPtr] → Pointer[Pointer[Int]]`.
+
+**Interface and trait typing.** `TypeNode` values carry a `kind` field (`"class"` or `"interface"`). `TypeGraph.extend_with_interfaces()` adds interface nodes and wires implementing classes to them, so `is_subtype(MyClass, Serializable)` works when `MyClass` implements `Serializable`.
+
+**Variance annotations.** A per-constructor variance registry maps constructors to per-argument variance (`COVARIANT`, `CONTRAVARIANT`, or `INVARIANT`). For example, `MutableList` can be marked invariant so that `MutableList[Int]` is *not* a subtype of `MutableList[Number]`. Unregistered constructors default to covariant.
+
+**Bounded type variables.** `TypeVar("T", bound=ScalarType("Number"))` represents a generic parameter constrained to `Number` subtypes. `Array[Int]` is a subtype of `Array[T: Number]` because `Int` satisfies the bound.
 
 ### Two Sources of Type Information
 
 Type information enters the system through two paths:
 
-**1. Frontend type extraction (12 statically-typed languages).** During lowering, each frontend extracts type annotations from the tree-sitter AST and normalises them to canonical `TypeName` values via a per-language type map. Java's `int` → `Int`, Rust's `f64` → `Float`, Go's `string` → `String`, C#'s `bool` → `Bool`, and so on. These are seeded into a `TypeEnvironmentBuilder` that the inference pass merges before its walk. Dynamically-typed languages (JavaScript, Ruby, Lua) skip this step — they have no annotations to extract.
+**1. Frontend type extraction (12 statically-typed languages).** During lowering, each frontend extracts type annotations from the tree-sitter AST and normalises them to canonical types via a per-language type map. Simple types are straightforward: Java's `int` → `Int`, Rust's `f64` → `Float`, Go's `string` → `String`. Generic types are extracted structurally: a shared `extract_normalized_type()` function walks tree-sitter's `generic_type` / `generic_name` / `user_type` nodes recursively, decomposes each component through the language's type map, and emits bracket notation (`List[Int]`, `Map[String, Array[Float]]`). C pointer types use a depth-counting approach: `int **p` becomes `Pointer[Pointer[Int]]`. All extracted types are parsed into `TypeExpr` objects and seeded into a `TypeEnvironmentBuilder` that the inference pass merges before its walk. Dynamically-typed languages (JavaScript, Ruby, Lua) skip this step — they have no annotations to extract.
 
 **2. Inference from IR structure.** The inference pass itself infers types from the IR opcodes, covering both dynamically-typed languages (where all types come from inference) and filling gaps in statically-typed code (e.g., inferring the type of an expression result).
 
 ### The Inference Algorithm
 
-The inference walk runs to fixpoint over the flat IR. A dispatch table maps 19 of the 27 opcodes to handler functions (the remaining 8 are control flow instructions with no typeable results). Each handler is a pure function that reads from and writes to an `_InferenceContext` — a mutable bundle of four maps:
+The inference walk runs to fixpoint over the flat IR. A dispatch table maps 19 of the 27 opcodes to handler functions (the remaining 8 are control flow instructions with no typeable results). Each handler is a pure function that reads from and writes to an `_InferenceContext` — a mutable bundle of maps storing `TypeExpr` values:
 
-- `register_types`: `%0` → `Int`, `%3` → `Bool`, ...
-- `var_types`: `x` → `Int`, `label` → `String`, ...
-- `func_return_types`: `factorial` → `Int`, `len` → `Int`, ...
-- `func_param_types`: `factorial` → `[("n", "Int")]`, ...
+- `register_types`: `%0` → `ScalarType("Int")`, `%3` → `ScalarType("Bool")`, ...
+- `var_types`: `x` → `ScalarType("Int")`, `items` → `ParameterizedType("Array", [ScalarType("String")])`, ...
+- `func_return_types`: `factorial` → `ScalarType("Int")`, ...
+- `func_param_types`: `factorial` → `[("n", ScalarType("Int"))]`, ...
+- `tuple_element_types`: `%5` → `{0: ScalarType("Int"), 1: ScalarType("String")}`, ...
 
 The key inference rules:
 
@@ -985,7 +1015,7 @@ The key inference rules:
 | `RETURN` | Backfill `func_return_types` from the return expression's type |
 | `NEW_OBJECT` | Use the class name as the type |
 | `STORE_FIELD` / `LOAD_FIELD` | Track and retrieve per-class field types |
-| `STORE_INDEX` / `LOAD_INDEX` | Track and retrieve array element types |
+| `STORE_INDEX` / `LOAD_INDEX` | Track and retrieve array/tuple element types (tuples track per-index: `Tuple[Int, String]`) |
 
 The `RETURN` backfill deserves mention: when the pass encounters a `RETURN` instruction inside a function, it records the return expression's type in `func_return_types`. This means callers later in the IR can resolve the function's return type even without an explicit annotation. The fixpoint loop extends this to **forward references**: when function A calls function B defined later in the IR, the first pass learns B's return type from its `RETURN`, and the second pass propagates it to A's call site. Chains of arbitrary depth (A → B → C) resolve correctly.
 
@@ -1014,6 +1044,8 @@ Inside class definitions, the inference pass recognises `self`, `this`, and `$th
 **Fixpoint convergence.** The pass repeats until no new types are discovered, resolving forward references across function boundaries. Convergence is measured by the combined size of `register_types` and `func_return_types`. Programs without forward references converge in one pass (no performance penalty). Each handler's "skip if already known" guards prevent clobbering types from earlier passes while allowing unfilled gaps to be resolved on subsequent passes.
 
 **Pluggable ontology.** The `TypeGraph`, `TypeConversionRules`, and `TypeResolver` are all injected. A different language family (e.g., one with unsigned integers or decimal types) can supply its own rules without changing the inference engine.
+
+**Structured types end-to-end.** The entire type pipeline — from frontend extraction through inference, coercion, and environment output — operates on `TypeExpr` objects. There are no string serialization boundaries: frontends parse type text into `TypeExpr` at extraction time, and all downstream consumers (inference context, type resolver, conversion rules) work with the structured representation directly.
 
 ---
 
@@ -1190,7 +1222,7 @@ The Exercism suite surfaced more bugs than any other test approach. Each exercis
 
 ## Conclusion
 
-RedDragon started as a question: *"Can I build a single system that analyses code in any language?"* It evolved into a compiler pipeline with 15 deterministic frontends, a COBOL frontend via ProLeap, LLM-assisted AST repair, a static type inference pass with fixpoint convergence, builtin method awareness, and pluggable coercion rules (verified across 11 inference scenarios and up to 15 languages each), a deterministic VM with class hierarchy support (inherited method dispatch via linearized parent chains across 10 OOP languages), byte-addressed memory regions and named continuations, and cross-language verification.
+RedDragon started as a question: *"Can I build a single system that analyses code in any language?"* It evolved into a compiler pipeline with 15 deterministic frontends, a COBOL frontend via ProLeap, LLM-assisted AST repair, a structured type system (an algebraic TypeExpr ADT with generics, unions, function types, tuples, type aliases, interface/trait typing, variance annotations, and bounded type variables), static type inference with fixpoint convergence and structural generic extraction across 12 statically-typed languages, a deterministic VM with class hierarchy support (inherited method dispatch via linearized parent chains across 10 OOP languages), byte-addressed memory regions and named continuations, and cross-language verification.
 
 **None of the individual components are novel.** TAC IR, dispatch tables, worklist dataflow, and forward type inference are all textbook techniques. The value, if any, is in applying them together to a practical multi-language analysis tool.
 
