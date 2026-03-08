@@ -61,6 +61,7 @@ RedDragon explores three ideas about analysing frequently-incomplete code, the k
 12. [Type Inference](#type-inference)
 13. [Cross-Language Type Inference in Practice](#cross-language-type-inference-in-practice)
 14. [Cross-Language Verification via Exercism](#cross-language-verification-via-exercism)
+15. [References](#references)
 
 ---
 
@@ -207,6 +208,8 @@ The [LLM-Assisted VM Execution](#llm-assisted-vm-execution) section shows what h
 
 ## The IR: 27 Opcodes to Rule Them All
 
+*See also: [IR Reference](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/ir-reference.md)*
+
 The intermediate representation is a **flattened three-address code** with 27 opcodes, grouped by role:
 
 ```
@@ -293,6 +296,8 @@ Over time, `unsupported:` emissions get replaced with real IR as frontends gain 
 ---
 
 ## Frontends: Four Strategies, One Output
+
+*See also: [Frontend Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/notes-on-frontend-design.md) · [Per-Language Frontend Docs](https://github.com/avishek-sen-gupta/red-dragon/tree/main/docs/frontend-design)*
 
 All four frontend strategies produce the same `list[IRInstruction]`. They differ in speed, coverage, and determinism:
 
@@ -477,6 +482,8 @@ The top-level bindings follow the same pattern: `CONST` + `CALL_FUNCTION` + `STO
 
 ## The Dispatch Table Engine
 
+*See also: [Base Frontend Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/frontend-design/base-frontend.md)*
+
 The heart of the deterministic frontends is a `BaseFrontend` class (~950 lines) that all 15 languages inherit from. It uses two dispatch tables (one for statements, one for expressions) mapping tree-sitter AST node types to handler methods.
 
 The lowering dispatch chain:
@@ -554,6 +561,8 @@ This distinction matters for analysis quality. Redundant instructions can introd
 ---
 
 ## The Deterministic VM
+
+*See also: [VM Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/notes-on-vm-design.md)*
 
 The VM is **fully deterministic**. Unknown values are *created* as symbolic placeholders that propagate through computation, rather than being resolved via LLM calls. The entire execution engine is reproducible across runs.
 
@@ -650,7 +659,7 @@ def make_counter():
     return inc
 ```
 
-With snapshot capture, `inc()` always reads `count = 0`. The fix was shared `ClosureEnvironment` cells: all closures from the same scope share a mutable environment, matching Python/JavaScript semantics. When a nested function is created, the enclosing frame's variables are copied into a `ClosureEnvironment`. On each call, captured variables are injected into the new frame, and `apply_update()` mirrors writes back to the shared environment. This is the kind of deep correctness issue that only surfaces through specific test cases. It's documented as ADR-019 in the project's decision records.
+With snapshot capture, `inc()` always reads `count = 0`. The fix was shared `ClosureEnvironment` cells: all closures from the same scope share a mutable environment, matching Python/JavaScript semantics. When a nested function is created, the enclosing frame's variables are copied into a `ClosureEnvironment`. On each call, captured variables are injected into the new frame, and `apply_update()` mirrors writes back to the shared environment. This is the kind of deep correctness issue that only surfaces through specific test cases. It's documented as ADR-019 in the project's [architectural decision records](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/architectural-design-decisions.md).
 
 ### Class Hierarchy and Inherited Method Dispatch
 
@@ -782,6 +791,8 @@ The LLM produces a plausible JSON response for the API call. `response.json()` r
 ---
 
 ## Dataflow Analysis
+
+*See also: [Dataflow Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/notes-on-dataflow-design.md)*
 
 The dataflow module (`interpreter/dataflow.py`, ~430 lines) performs **iterative intraprocedural analysis** over the CFG in five stages:
 
@@ -1006,6 +1017,8 @@ Inside class definitions, the inference pass recognises `self`, `this`, and `$th
 
 ## Cross-Language Type Inference in Practice
 
+*See also: [IR Lowering Gaps](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/ir-lowering-gaps.md)*
+
 The type inference engine described above is language-agnostic: it operates on IR instructions without knowing which frontend produced them. But making it work *correctly* across 15 languages required solving language-specific lowering gaps — places where idiomatic code in one language produced IR that the inference pass couldn't reason about.
 
 ### The End-to-End Flow
@@ -1180,5 +1193,21 @@ RedDragon started as a question: *"Can I build a single system that analyses cod
 **None of the individual components are novel.** TAC IR, dispatch tables, worklist dataflow, and forward type inference are all textbook techniques. The value, if any, is in applying them together to a practical multi-language analysis tool.
 
 All three projects are open source: [RedDragon](https://github.com/avishek-sen-gupta/red-dragon), [Codescry](https://github.com/avishek-sen-gupta/codescry), and [RedDragon-Codescry TUI](https://github.com/avishek-sen-gupta/reddragon-codescry-tui).
+
+---
+
+## References
+
+Design documents and detailed specs from the RedDragon repository:
+
+- [IR Reference](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/ir-reference.md) — Full specification of all 27 opcodes, instruction format, and lowering conventions
+- [Frontend Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/notes-on-frontend-design.md) — Architecture of the frontend subsystem: dispatch tables, AST repair, LLM frontends
+- [Per-Language Frontend Docs](https://github.com/avishek-sen-gupta/red-dragon/tree/main/docs/frontend-design) — Exhaustive per-file documentation for all 15 language frontends and the base frontend
+- [VM Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/notes-on-vm-design.md) — VM internals: state model, opcode dispatch, symbolic propagation, closures, class hierarchy
+- [Dataflow Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/notes-on-dataflow-design.md) — Reaching definitions, def-use chains, and dependency graph construction
+- [Architectural Decision Records](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/architectural-design-decisions.md) — Chronological log of key design decisions (ADR-001 through ADR-083)
+- [IR Lowering Gaps](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/ir-lowering-gaps.md) — Tracking document for cross-language type inference lowering gaps
+- [Project Philosophy](https://github.com/avishek-sen-gupta/red-dragon/blob/main/PHILOSOPHY.md) — Design principles and engineering values
+- [Contributing Guide](https://github.com/avishek-sen-gupta/red-dragon/blob/main/CONTRIBUTING.md) — How to contribute to the project
 
 _This post has not been written or edited by AI._
