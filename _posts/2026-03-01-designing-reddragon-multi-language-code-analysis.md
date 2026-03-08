@@ -7,7 +7,7 @@ tags: ["Software Engineering", "Compilers", "Program Analysis", "AI-Assisted Dev
 draft: false
 ---
 
-*A universal IR, 15 deterministic frontends, LLM-assisted repair/lowering/execution, a deterministic VM, static type inference, and iterative dataflow analysis.*
+*A universal IR, 15 deterministic frontends, LLM-assisted repair/lowering/execution, a deterministic VM with class hierarchy support, static type inference, and iterative dataflow analysis.*
 
 **GitHub**: [avishek-sen-gupta/red-dragon](https://github.com/avishek-sen-gupta/red-dragon)
 
@@ -252,7 +252,7 @@ This means any IR instruction, any VM execution step, any dataflow dependency ca
 
 ### Control Flow and Functions
 
-All control flow is explicit: labels, conditional branches, and unconditional jumps. There are no structured `if`/`while`/`for` constructs. `BRANCH_IF` encodes both targets in its label field (comma-separated). The CFG builder splits the IR into basic blocks at every `LABEL` and after every `BRANCH`/`BRANCH_IF`/`RETURN`/`THROW`, then wires edges based on the branch targets. Loops become back-edges: a `while` loop's `BRANCH` at the end of the body points back to the condition's label. Function definitions use the **skip-over pattern** shown in the [worked example](#a-worked-example-source-to-execution): a `BRANCH` jumps past the body at definition time, and a `FunctionRegistry` scans the IR for `SYMBOLIC "param:"` markers to extract parameter names and map class names to method labels.
+All control flow is explicit: labels, conditional branches, and unconditional jumps. There are no structured `if`/`while`/`for` constructs. `BRANCH_IF` encodes both targets in its label field (comma-separated). The CFG builder splits the IR into basic blocks at every `LABEL` and after every `BRANCH`/`BRANCH_IF`/`RETURN`/`THROW`, then wires edges based on the branch targets. Loops become back-edges: a `while` loop's `BRANCH` at the end of the body points back to the condition's label. Function definitions use the **skip-over pattern** shown in the [worked example](#a-worked-example-source-to-execution): a `BRANCH` jumps past the body at definition time, and a `FunctionRegistry` scans the IR for `SYMBOLIC "param:"` markers to extract parameter names, map class names to method labels, and build linearized parent chains for class inheritance (see [Class Hierarchy and Inherited Method Dispatch](#class-hierarchy-and-inherited-method-dispatch)).
 
 ### Three Call Variants
 
@@ -651,6 +651,28 @@ def make_counter():
 ```
 
 With snapshot capture, `inc()` always reads `count = 0`. The fix was shared `ClosureEnvironment` cells: all closures from the same scope share a mutable environment, matching Python/JavaScript semantics. When a nested function is created, the enclosing frame's variables are copied into a `ClosureEnvironment`. On each call, captured variables are injected into the new frame, and `apply_update()` mirrors writes back to the shared environment. This is the kind of deep correctness issue that only surfaces through specific test cases. It's documented as ADR-019 in the project's decision records.
+
+### Class Hierarchy and Inherited Method Dispatch
+
+OOP languages encode class hierarchies differently: Java uses `extends`, Python lists bases in the class signature, Ruby uses `<`, C++ has access-specified base lists, and so on. RedDragon handles all of these through a single mechanism in the `FunctionRegistry`, without adding any new IR opcodes.
+
+Each frontend extracts parent class names from its language-specific tree-sitter nodes and encodes them in the class reference string: `<class:Dog@label:Animal>` records that `Dog` extends `Animal`. The registry's `_scan_classes` method collects these direct parents, and `_expand_parent_chains` transitively expands them into a linearized list. For a chain `C extends B extends A`, `class_parents["C"]` becomes `["B", "A"]`.
+
+At execution time, when `CALL_METHOD` resolves a method on an object, the executor first looks in the child class's method table. On a miss, it walks `class_parents` until it finds a matching method:
+
+```python
+# Walk parent chain for inherited methods
+for parent in registry.class_parents.get(type_hint, []):
+    parent_methods = registry.class_methods.get(parent, {})
+    candidate = parent_methods.get(method_name, "")
+    if candidate and candidate in cfg.blocks:
+        func_label = candidate
+        break
+```
+
+Method override works naturally: the child's method table is checked first, so a redefined method in the child shadows the parent's version. Multi-level inheritance (C → B → A) resolves at any depth.
+
+Ten OOP frontends extract parent classes: Java, Python, C#, Kotlin, Ruby, JavaScript, TypeScript, Scala, PHP, and C++. Each uses a shared `make_class_ref` helper to encode parents into the class reference string, keeping the language-specific code minimal. The five non-OOP frontends (C, Go, Rust, Lua, Pascal) are unaffected.
 
 ### Built-in Functions
 
@@ -1153,7 +1175,7 @@ The Exercism suite surfaced more bugs than any other test approach. Each exercis
 
 ## Conclusion
 
-RedDragon started as a question: *"Can I build a single system that analyses code in any language?"* It evolved into a compiler pipeline with 15 deterministic frontends, a COBOL frontend via ProLeap, LLM-assisted AST repair, a static type inference pass with fixpoint convergence, builtin method awareness, and pluggable coercion rules (verified across 11 inference scenarios and up to 15 languages each), a deterministic VM with byte-addressed memory regions and named continuations, and cross-language verification.
+RedDragon started as a question: *"Can I build a single system that analyses code in any language?"* It evolved into a compiler pipeline with 15 deterministic frontends, a COBOL frontend via ProLeap, LLM-assisted AST repair, a static type inference pass with fixpoint convergence, builtin method awareness, and pluggable coercion rules (verified across 11 inference scenarios and up to 15 languages each), a deterministic VM with class hierarchy support (inherited method dispatch via linearized parent chains across 10 OOP languages), byte-addressed memory regions and named continuations, and cross-language verification.
 
 **None of the individual components are novel.** TAC IR, dispatch tables, worklist dataflow, and forward type inference are all textbook techniques. The value, if any, is in applying them together to a practical multi-language analysis tool.
 
