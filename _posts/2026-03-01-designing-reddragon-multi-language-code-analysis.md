@@ -391,7 +391,7 @@ The 15 deterministic frontends cover a fixed set of languages. For everything el
 
 ### The Prompt as a Formal Schema
 
-The LLM frontend works by constraining the LLM to a **mechanical translation task**. The system prompt is a ~180-line specification containing:
+The LLM frontend works by constraining the LLM to a **mechanical translation task**. The system prompt is a specification containing:
 
 1. **The instruction format**: every IR instruction is a JSON object with `opcode`, `result_reg`, `operands`, `label`, and `source_location` fields.
 2. **All 27 opcode definitions**: grouped into value producers (`CONST`, `LOAD_VAR`, `BINOP`, `CALL_FUNCTION`, ...), consumers/control flow (`STORE_VAR`, `BRANCH_IF`, `RETURN`, ...), and special instructions (`SYMBOLIC`, `LABEL`).
@@ -413,7 +413,7 @@ If JSON parsing fails, the frontend retries up to 3 times (configurable). Each r
 
 ### Chunked LLM Frontend: Scaling to Large Files
 
-A single LLM call can't handle a 2,000-line file: the source plus the ~180-line system prompt plus the response would overflow the context window. The chunked frontend solves this by decomposing the file before calling the LLM.
+A single LLM call can't handle a 2,000-line file: the source plus the system prompt plus the response would overflow the context window. The chunked frontend solves this by decomposing the file before calling the LLM.
 
 The decomposition uses tree-sitter for structural splitting (even though the language may not have a deterministic *lowering* frontend, tree-sitter grammars exist for most languages). The `ChunkExtractor` walks the top-level children of the parse tree and classifies each as a function, class, or top-level statement. Contiguous top-level statements are grouped into a single chunk. Functions and classes are emitted first, then top-level groups, preserving the definition-before-use ordering that the skip-over pattern requires.
 
@@ -484,7 +484,7 @@ The top-level bindings follow the same pattern: `CONST` + `CALL_FUNCTION` + `STO
 
 *See also: [Base Frontend Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/frontend-design/base-frontend.md)*
 
-The heart of the deterministic frontends is a `BaseFrontend` class (~950 lines) that all 15 languages inherit from. It uses two dispatch tables (one for statements, one for expressions) mapping tree-sitter AST node types to handler methods.
+The heart of the deterministic frontends is a `BaseFrontend` class that all 15 languages inherit from. It uses two dispatch tables (one for statements, one for expressions) mapping tree-sitter AST node types to handler methods.
 
 The lowering dispatch chain:
 
@@ -665,7 +665,7 @@ With snapshot capture, `inc()` always reads `count = 0`. The fix was shared `Clo
 
 OOP languages encode class hierarchies differently: Java uses `extends`, Python lists bases in the class signature, Ruby uses `<`, C++ has access-specified base lists, and so on. RedDragon handles all of these through a single mechanism in the `FunctionRegistry`, without adding any new IR opcodes.
 
-Each frontend extracts parent class names from its language-specific tree-sitter nodes and encodes them in the class reference string: `<class:Dog@label:Animal>` records that `Dog` extends `Animal`. The registry's `_scan_classes` method collects these direct parents, and `_expand_parent_chains` transitively expands them into a linearized list. For a chain `C extends B extends A`, `class_parents["C"]` becomes `["B", "A"]`.
+Each frontend extracts parent class names from its language-specific tree-sitter nodes and encodes them in the class reference string: `<class:Dog@class_Dog_0:Animal>` records that `Dog` extends `Animal`. The registry's `_scan_classes` method collects these direct parents, and `_expand_parent_chains` transitively expands them into a linearized list. For a chain `C extends B extends A`, `class_parents["C"]` becomes `["B", "A"]`.
 
 At execution time, when `CALL_METHOD` resolves a method on an object, the executor first looks in the child class's method table. On a miss, it walks `class_parents` until it finds a matching method:
 
@@ -794,7 +794,7 @@ The LLM produces a plausible JSON response for the API call. `response.json()` r
 
 *See also: [Dataflow Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/notes-on-dataflow-design.md)*
 
-The dataflow module (`interpreter/dataflow.py`, ~430 lines) performs **iterative intraprocedural analysis** over the CFG in five stages:
+The dataflow module (`interpreter/dataflow.py`) performs **iterative intraprocedural analysis** over the CFG in five stages:
 
 1. **Collect definitions**: identify every point where a variable or register is assigned
 2. **Reaching definitions**: GEN/KILL worklist fixpoint iteration over the CFG
@@ -1183,7 +1183,7 @@ The Exercism suite surfaced more bugs than any other test approach. Each exercis
 | Tests (all passing) | 9,298 |
 | LLM calls at test time | 0 |
 | Exercism exercises | 18 (across 15 languages) |
-| Rosetta algorithms | 14 (across 15 languages) |
+| Rosetta algorithms | 15 (across 15 languages) |
 | Type inference scenarios | 11 (verified across up to 15 languages each) |
 
 ---
