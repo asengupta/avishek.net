@@ -933,6 +933,8 @@ The dataflow module has **no dependencies on the VM, frontends, or backends**. I
 
 ## Type Inference
 
+*See also: [Type System Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/type-system.md)*
+
 The type inference module (`interpreter/type_inference.py`) is a **static analysis pass** that runs after lowering but before VM execution. It walks the IR instructions in a fixpoint loop — repeating until no new types are discovered — and produces an immutable `TypeEnvironment` mapping registers and variables to canonical types. The VM then uses this environment for type-aware coercion at write time.
 
 ### The Type Ontology
@@ -1205,6 +1207,7 @@ Design documents and detailed specs from the RedDragon repository:
 - [Per-Language Frontend Docs](https://github.com/avishek-sen-gupta/red-dragon/tree/main/docs/frontend-design) — Exhaustive per-file documentation for all 15 language frontends and the base frontend
 - [VM Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/notes-on-vm-design.md) — VM internals: state model, opcode dispatch, symbolic propagation, closures, class hierarchy
 - [Dataflow Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/notes-on-dataflow-design.md) — Reaching definitions, def-use chains, and dependency graph construction
+- [Type System Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/type-system.md) — Type ontology, inference algorithm, coercion rules, and cross-language type extraction
 - [Architectural Decision Records](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/architectural-design-decisions.md) — Chronological log of key design decisions (ADR-001 through ADR-083)
 - [IR Lowering Gaps](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/ir-lowering-gaps.md) — Tracking document for cross-language type inference lowering gaps
 - [Project Philosophy](https://github.com/avishek-sen-gupta/red-dragon/blob/main/PHILOSOPHY.md) — Design principles and engineering values
