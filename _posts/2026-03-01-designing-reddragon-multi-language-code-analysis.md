@@ -49,7 +49,7 @@ RedDragon explores three ideas about analysing frequently-incomplete code, the k
 
 1. [Architecture Overview](#architecture-overview)
 2. [A Worked Example: Source to Execution](#a-worked-example-source-to-execution)
-3. [The IR: 27 Opcodes to Rule Them All](#the-ir-27-opcodes-to-rule-them-all)
+3. [The IR: 28 Opcodes to Rule Them All](#the-ir-28-opcodes-to-rule-them-all)
 4. [Frontends: Four Strategies, One Output](#frontends-four-strategies-one-output)
 5. [LLM-Assisted AST Repair](#llm-assisted-ast-repair)
 6. [LLM Frontend: Lowering Unknown Languages](#llm-frontend-lowering-unknown-languages)
@@ -206,11 +206,11 @@ The [LLM-Assisted VM Execution](#llm-assisted-vm-execution) section shows what h
 
 ---
 
-## The IR: 27 Opcodes to Rule Them All
+## The IR: 28 Opcodes to Rule Them All
 
 *See also: [IR Reference](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/ir-reference.md)*
 
-The intermediate representation is a **flattened three-address code** with 27 opcodes, grouped by role:
+The intermediate representation is a **flattened three-address code** with 28 opcodes, grouped by role:
 
 ```
 Value producers:   CONST, LOAD_VAR, LOAD_FIELD, LOAD_INDEX,
@@ -222,6 +222,8 @@ Value consumers:   STORE_VAR, STORE_FIELD, STORE_INDEX
 Control flow:      BRANCH, BRANCH_IF, LABEL, RETURN, THROW,
                    TRY_PUSH, TRY_POP
 
+Pointers:          ADDRESS_OF
+
 Regions:           ALLOC_REGION, WRITE_REGION, LOAD_REGION
 
 Continuations:     SET_CONTINUATION, RESUME_CONTINUATION
@@ -229,7 +231,7 @@ Continuations:     SET_CONTINUATION, RESUME_CONTINUATION
 Escape hatch:      SYMBOLIC
 ```
 
-The first 19 opcodes handle all general-purpose lowering across 15 languages. `TRY_PUSH` and `TRY_POP` model structured exception handling (pushing/popping handler labels onto the VM's exception stack). The three region opcodes (`ALLOC_REGION`, `WRITE_REGION`, `LOAD_REGION`) provide byte-addressed memory for COBOL-style overlays, REDEFINES, and packed data layouts. The two continuation opcodes (`SET_CONTINUATION`, `RESUME_CONTINUATION`) model COBOL's PERFORM return semantics, where control transfers to a named paragraph and returns to the caller on completion. All eight extended opcodes are language-agnostic in the IR and VM; they happen to be emitted by the COBOL frontend but could serve C struct layouts or binary protocol parsing.
+The first 19 opcodes handle all general-purpose lowering across 15 languages. `TRY_PUSH` and `TRY_POP` model structured exception handling (pushing/popping handler labels onto the VM's exception stack). `ADDRESS_OF` supports pointer aliasing: `&x` on a primitive promotes the variable to a heap object and returns a typed `Pointer(base, offset)`, enabling `*ptr = 99` to update the original variable through the alias (see [Pointer Aliasing](#pointer-aliasing)). The three region opcodes (`ALLOC_REGION`, `WRITE_REGION`, `LOAD_REGION`) provide byte-addressed memory for COBOL-style overlays, REDEFINES, and packed data layouts. The two continuation opcodes (`SET_CONTINUATION`, `RESUME_CONTINUATION`) model COBOL's PERFORM return semantics, where control transfers to a named paragraph and returns to the caller on completion. The extended opcodes are language-agnostic in the IR and VM; they happen to be emitted by specific frontends but could serve broader use cases.
 
 Every instruction is a flat dataclass: an opcode, a list of operands, a destination register, and a source location tracing it back to the original code. No nested expressions. `a + b * c` decomposes into:
 
@@ -502,7 +504,7 @@ style expr fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
 style sym fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
 ```
 
-Common constructs (`if/else`, `while`, `for`, `return`, `function_definition`, `class_definition`, `try/catch`) are handled in the base class. Language-specific constructs override or extend. Overridable constants handle the small but persistent differences across grammars:
+Common constructs (`if/else`, `while`, `for`, `for-each` with destructuring, `return`, `function_definition`, `class_definition`, `try/catch`) are handled in the base class. For-loop destructuring (`for (const [k, v] of arr)` in JS/TS, `for ((k, v) in map)` in Kotlin, structured bindings in C++) decomposes binding patterns into individual `LOAD_INDEX`/`LOAD_FIELD` + `STORE_VAR` instructions per iteration. Language-specific constructs override or extend. Overridable constants handle the small but persistent differences across grammars:
 
 ```python
 # Python says "True", Go says "true", Lua says "true"
@@ -594,7 +596,7 @@ DISPATCH: dict[Opcode, Any] = {
     Opcode.BINOP: _handle_binop,
     Opcode.CALL_FUNCTION: _handle_call_function,
     Opcode.LOAD_FIELD: _handle_load_field,
-    # ... all 27 opcodes
+    # ... all 28 opcodes
 }
 ```
 
@@ -682,6 +684,24 @@ for parent in registry.class_parents.get(type_hint, []):
 Method override works naturally: the child's method table is checked first, so a redefined method in the child shadows the parent's version. Multi-level inheritance (C → B → A) resolves at any depth.
 
 Ten OOP frontends extract parent classes: Java, Python, C#, Kotlin, Ruby, JavaScript, TypeScript, Scala, PHP, and C++. Each uses a shared `make_class_ref` helper to encode parents into the class reference string, keeping the language-specific code minimal. The five non-OOP frontends (C, Go, Rust, Lua, Pascal) are unaffected.
+
+### Pointer Aliasing
+
+C and Rust programs use `&x` to take the address of a variable. In most analysis tools, this creates an aliasing relationship that's tracked through a separate alias analysis pass. RedDragon handles it directly in the VM through a KLEE-inspired **promote-on-address-of** model.
+
+When the VM encounters `ADDRESS_OF`, it promotes the target variable from a primitive to a `HeapObject` and returns a typed `Pointer(base, offset)` value. Subsequent writes through the pointer (`*ptr = 99`) go through the heap and update the original variable's storage. This means aliasing is exact: `*ptr` and `x` always see the same value, with no approximation.
+
+```
+%0 = const 42
+store_var x %0
+%1 = address_of x               # promote x to heap, return Pointer
+store_var ptr %1
+%2 = const 99
+store_field ptr "value" %2       # *ptr = 99; x is now 99
+%3 = load_var x                  # %3 = 99 (reads through heap)
+```
+
+The model supports nested pointers (`int **pp`), pointer arithmetic (`ptr + 1` offsets into arrays), pointer subtraction (returns the offset difference between same-base pointers), pointer relational comparisons (`<`, `>`, `==` on offsets within the same base), struct pointers (arrow operator via `LOAD_FIELD`), and array pointer decay. The C and Rust frontends emit `ADDRESS_OF` for `&identifier` expressions.
 
 ### Built-in Functions
 
@@ -993,7 +1013,7 @@ Type information enters the system through two paths:
 
 ### The Inference Algorithm
 
-The inference walk runs to fixpoint over the flat IR. A dispatch table maps 19 of the 27 opcodes to handler functions (the remaining 8 are control flow instructions with no typeable results). Each handler is a pure function that reads from and writes to an `_InferenceContext` — a mutable bundle of maps storing `TypeExpr` values:
+The inference walk runs to fixpoint over the flat IR. A dispatch table maps 19 of the 28 opcodes to handler functions (the remaining 9 are control flow and pointer instructions with no typeable results). Each handler is a pure function that reads from and writes to an `_InferenceContext` — a mutable bundle of maps storing `TypeExpr` values:
 
 - `register_types`: `%0` → `ScalarType("Int")`, `%3` → `ScalarType("Bool")`, ...
 - `var_types`: `x` → `ScalarType("Int")`, `items` → `ParameterizedType("Array", [ScalarType("String")])`, ...
@@ -1211,7 +1231,7 @@ The Exercism suite surfaced more bugs than any other test approach. Each exercis
 | Metric | Value |
 |--------|-------|
 | Supported languages | 15 (deterministic) + COBOL (ProLeap) + any (LLM) |
-| IR opcodes | 27 |
+| IR opcodes | 28 |
 | Tests (all passing) | 9,298 |
 | LLM calls at test time | 0 |
 | Exercism exercises | 18 (across 15 languages) |
@@ -1234,7 +1254,7 @@ All three projects are open source: [RedDragon](https://github.com/avishek-sen-g
 
 Design documents and detailed specs from the RedDragon repository:
 
-- [IR Reference](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/ir-reference.md) — Full specification of all 27 opcodes, instruction format, and lowering conventions
+- [IR Reference](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/ir-reference.md) — Full specification of all 28 opcodes, instruction format, and lowering conventions
 - [Frontend Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/notes-on-frontend-design.md) — Architecture of the frontend subsystem: dispatch tables, AST repair, LLM frontends
 - [Per-Language Frontend Docs](https://github.com/avishek-sen-gupta/red-dragon/tree/main/docs/frontend-design) — Exhaustive per-file documentation for all 15 language frontends and the base frontend
 - [VM Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/notes-on-vm-design.md) — VM internals: state model, opcode dispatch, symbolic propagation, closures, class hierarchy
