@@ -40,6 +40,7 @@ draft: true
   - [Memory Files](#memory-files)
   - [The Quick Win Trap](#the-quick-win-trap)
 - [Patterns and Observations](#patterns-and-observations)
+  - [The Anonymous Class Story, or, Why the AI Reaches for New Infrastructure](#the-anonymous-class-story-or-why-the-ai-reaches-for-new-infrastructure)
 - [What I Would Change](#what-i-would-change)
 - [Conclusion](#conclusion)
 
@@ -430,6 +431,38 @@ flowchart LR
 **CLAUDE.md rules are reactive.** Every rule was added in response to a specific failure. They accumulate over time, and each one represents a mistake that happened at least once.
 
 **Screenshot-driven debugging.** For the CFG visualisation work, I'd generate a diagram, screenshot it, paste it into the conversation, and ask "why does it look so disjointed?" Claude could see the rendering and diagnose layout issues. The visualisation went through five rounds.
+
+### The Anonymous Class Story, or, Why the AI Reaches for New Infrastructure
+
+TypeScript allows assigning anonymous classes to variables: `const MyClass = class { constructor() { ... } }`. When someone writes `new MyClass()`, the VM needs to resolve `MyClass` — but `MyClass` isn't a declared class name. It's a variable that *holds* a class.
+
+The first design Claude proposed: a new `class_aliases` dictionary in the class registry, populated during lowering, with a `resolve_class_name()` method that checks aliases before the main registry. New data structure, new resolution method, new lowering logic to populate it.
+
+I asked: *"Why is this so complicated?"*
+
+Second attempt: a pointer chain mechanism. The variable would store a pointer to the class entry, and `_handle_new_object` would follow the pointer chain. Still new infrastructure — a new pointer type and a resolution protocol.
+
+I asked: *"Why can't it just be a regular variable living on the stack?"*
+
+Third attempt — the one that shipped: at `_handle_new_object` time, if the class name isn't in the registry, check if it's a variable in scope. If so, dereference it and use the result as the class name. The variable store *already was* the lookup table. Five lines of code. Zero new data structures.
+
+```python
+# The entire fix
+if class_name not in self.class_registry:
+    resolved = self.current_frame.lookup(class_name)
+    if isinstance(resolved, str):
+        class_name = resolved
+```
+
+The pattern repeated immediately. The next step was seeding the variable's type as `Type[ClassName]` — a metatype — so the type inference engine could track it. Claude proposed a string-encoded `"Type[ClassName]"` representation. But the codebase already had `ParameterizedType` in its `TypeExpr` ADT. The metatype was just `ParameterizedType("Type", (ScalarType("ClassName"),))`. A one-line convenience constructor, no new types.
+
+That metatype work then surfaced a deeper issue: the type extraction pipeline was converting `TypeExpr` objects to strings, passing strings through seed methods, and then parsing them back to `TypeExpr` on the other side. The round-trip was pointless. This led to a migration across all 15 frontends — changing seed methods to accept `TypeExpr` directly, eliminating the string intermediary. The migration touched ~30 files and passed through 11,193 tests without a single failure, because it was removing accidental complexity, not adding new behaviour.
+
+Three iterations to reach a 5-line solution. Each iteration was simpler than the last. The AI's instinct at each step was to *add* — a new registry, a new pointer type, a new string encoding. The human's role was to ask *"doesn't the existing system already do this?"* until the answer was yes.
+
+This is the most common design failure mode I've observed: **the AI builds new infrastructure before checking whether the existing system already solves the problem.** It's not a capability limitation — Claude understood the variable store, the class registry, and the TypeExpr ADT perfectly well. It just didn't *start* from them. It started from the problem and worked forward, rather than starting from the existing system and asking what was missing.
+
+The fix isn't a CLAUDE.md rule (though I added one). It's a conversational habit: before accepting any design, ask *"what existing mechanism does this duplicate?"*
 
 ---
 
