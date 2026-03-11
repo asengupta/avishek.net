@@ -41,14 +41,14 @@ draft: false
 - [Part 8: Guardrails, The CLAUDE.md as Architecture](#part-8-guardrails-the-claudemd-as-architecture)
 - [Part 9: What I'd Do Differently](#part-9-what-id-do-differently)
 - [Part 10: The Numbers](#part-10-the-numbers)
-- [Part 11: From Sprints to Systematic Management](#part-11-from-sprints-to-systematic-management)
+- [Part 11: From Sprints to Structured Agent Memory](#part-11-from-sprints-to-structured-agent-memory)
   - [The Scaling Problem](#the-scaling-problem)
   - [Beads: Local-First Issue Tracking](#beads-local-first-issue-tracking)
   - [Gap Analysis as Planning Infrastructure](#gap-analysis-as-planning-infrastructure)
   - [The Type System as Architectural Maturation](#the-type-system-as-architectural-maturation)
-  - [Memory Files: Cross-Session Continuity](#memory-files-cross-session-continuity)
+  - [Memory Files: The Agent's Working Memory](#memory-files-the-agents-working-memory)
   - [The Quick Win Trap](#the-quick-win-trap)
-  - [The Management Layer Lessons](#the-management-layer-lessons)
+  - [The Structured Memory Lessons](#the-structured-memory-lessons)
 - [Conclusion](#conclusion)
 
 ---
@@ -91,13 +91,13 @@ After a week's pause, the project expanded in two directions.
 
 **Framework-aware integration detection.** A major expansion on Feb 12: 20 commits in a single day. Integration patterns were grouped per framework, naive substring matching was replaced with structured config file parsing (preventing `"reactive-streams"` from matching `"react"`), the codebase was restructured into a plugin architecture with a declarative `languages.json`, and support was added for Dropwizard, Vert.x, Play, Apache CXF, .NET frameworks, FILE_IO and GRPC types.
 
-**CFG construction.** The most architecturally ambitious addition: a language-independent CFG builder on tree-sitter parse trees. The approach started with LLM-generated CFG role mappings for 99 languages — but the LLM output was unreliable, and the mappings were hand-authored for 14 languages instead. This was the first instance of a pattern that would recur: **use LLM to bootstrap, then replace with a deterministic approach once the problem is understood.**
+**CFG construction.** The most complex addition: a language-independent CFG builder on tree-sitter parse trees. The approach started with LLM-generated CFG role mappings for 99 languages — but the LLM output was unreliable, and the mappings were hand-authored for 14 languages instead. This was the first instance of a pattern that would recur: **use LLM to bootstrap, then replace with a deterministic approach once the problem is understood.**
 
 **The rename.** On Feb 18, commit 120: *"Rename Cartographer to Codescry across project."* Accompanied by a topographic terrain banner, CI badges, and Graphviz export for both CFG and integration signal diagrams.
 
 ### The Concretisation Problem (Feb 18 – Feb 25)
 
-This was the most experimentally intensive phase. The core challenge: regex-based pattern matching produces many false positives. How do you classify which detected signals are genuine (SIGNAL vs NOISE) and their direction (INWARD vs OUTWARD)?
+This was the most experimental phase. The core challenge: regex-based pattern matching produces many false positives. How do you classify which detected signals are genuine (SIGNAL vs NOISE) and their direction (INWARD vs OUTWARD)?
 
 What struck me about this phase, looking back at my prompts, is how *exploratory* it was. I didn't have a fixed architecture in mind. I had a problem and I was using Claude as a thinking partner to evaluate approaches in rapid succession:
 
@@ -105,7 +105,7 @@ What struck me about this phase, looking back at my prompts, is how *exploratory
 
 **Attempt 2: ML classifier.** I pivoted to training a TF-IDF + logistic regression classifier, using Claude's Batches API to generate training data at 50% cost. A GitHub training-data harvester mined real code using the pattern registry itself as search queries — each HIGH-confidence pattern became a GitHub search query, with the pattern's `SignalDirection` providing labels with no LLM required. The classifier was fast but mediocre; confidence scores were low, and it struggled with framework-specific patterns.
 
-**Attempt 3: Code embeddings.** I tested `nomic-embed-code` to see if embeddings could separate integration code from non-I/O code. They could. Then Gemini's embedding model. Both worked, but directional classification (inward vs. outward) was weak. Then came the most surprising finding of the project.
+**Attempt 3: Code embeddings.** I tested `nomic-embed-code` to see if embeddings could separate integration code from non-I/O code. They could. Then Gemini's embedding model. Both worked, but directional classification (inward vs. outward) was weak. Then came an unexpected finding.
 
 **The embedding model shootout.** Five embedding backends were evaluated:
 
@@ -275,7 +275,7 @@ RedDragon's evolution followed a clear pattern of phases, each triggered by test
 
 **Phase 4: Analysis and tooling (Hour 8 to 14).** Added iterative dataflow analysis, chunked LLM frontend, Mermaid CFG visualisation with subgraphs and call edges, source location traceability. Extracted CLI into composable API.
 
-**Phase 5: Systematic hardening (Sessions 50 to 130).** This is where the test count exploded. The Rosetta cross-language test suite (14 algorithms x 15 languages) and then the Exercism integration suite drove the test count from ~700 to 7,268 across 80+ sessions. Each exercise exposed new frontend gaps, VM limitations, and edge cases, and each fix was immediately verified across all 15 languages.
+**Phase 5: Systematic hardening (Sessions 50 to 130).** This is where the test count grew rapidly. The Rosetta cross-language test suite (14 algorithms x 15 languages) and then the Exercism integration suite drove the test count from ~700 to 7,268 across 80+ sessions. Each exercise exposed new frontend gaps, VM limitations, and edge cases, and each fix was immediately verified across all 15 languages.
 
 The test count tells the story:
 
@@ -506,7 +506,7 @@ The build section encodes a strict pre-commit discipline:
 
 The testing rules address the specific failure modes of AI-generated tests:
 
-**"When fixing tests, do not blindly change test assertions to make the test pass."** This is the single most important testing rule. Without it, the AI's default behaviour is to modify the assertion to match whatever the code produces, regardless of whether the code is correct. The rule forces it to verify the actual output before changing assertions.
+**"When fixing tests, do not blindly change test assertions to make the test pass."** This is the most important testing rule. Without it, the AI's default behaviour is to modify the assertion to match whatever the code produces, regardless of whether the code is correct. The rule forces it to verify the actual output before changing assertions.
 
 **"Make sure you are not creating any special implementation behaviour just to get the tests to pass."** The complement of the above. Without this rule, the AI occasionally added if-branches or special cases in production code solely to satisfy a test expectation, rather than fixing the underlying logic.
 
@@ -564,7 +564,7 @@ Midway through the project, I changed the workflow to: **Brainstorm -> Discuss t
 
 **The plan document as interface contract.** An interaction pattern that worked well was the structured plan. After brainstorming and discussing trade-offs, I'd formulate a plan document covering context, phases, file-by-file changes, and verification steps, then feed it to the AI as an implementation spec. The plan serves as a contract between the human architect and the AI implementer: specific enough for unambiguous execution, high-level enough to retain architectural control. This happened roughly 15 times across the project.
 
-**The determinism pivot was the single most impactful decision.** The original VM had the LLM deciding state changes at each execution step. When I asked "given that the IR is always bounded, shouldn't execution be deterministic?", the answer changed the project's direction. We ripped out all LLM calls from the VM and replaced them with symbolic value creation. Once execution was deterministic, everything became testable, reproducible, and fast. The entire test suite runs with zero LLM calls. This decision wasn't planned; it emerged from questioning an assumption.
+**The determinism pivot was the most impactful decision.** The original VM had the LLM deciding state changes at each execution step. When I asked "given that the IR is always bounded, shouldn't execution be deterministic?", the answer changed the project's direction. We ripped out all LLM calls from the VM and replaced them with symbolic value creation. Once execution was deterministic, everything became testable, reproducible, and fast. The entire test suite runs with zero LLM calls. This decision wasn't planned; it emerged from questioning an assumption.
 
 ---
 
@@ -588,13 +588,17 @@ Midway through the project, I changed the workflow to: **Brainstorm -> Discuss t
 
 ---
 
-## Part 11: From Sprints to Systematic Management
+## Part 11: From Sprints to Structured Agent Memory
 
-The first ten parts of this account describe a project built in sprints: intense sessions, audit loops, and test count as the primary progress metric. By session 200, that model started to break.
+The first ten parts of this account describe a project built in sprints: intense sessions, audit loops, and test count as the primary progress metric. By session 200, that model started to break — not because the AI got worse, but because the project outgrew what any single conversation could hold.
 
 ### The Scaling Problem
 
 At 8,500+ tests, 15 frontends, 66 ADRs, and a type system under active development, the project had outgrown ad-hoc session management. I'd open a new conversation, describe what I wanted, and Claude would execute — but the *what* was getting harder to determine. Which frontend gaps remained? Which were P0 vs. P1? What depended on what? The answers lived in my head, in scattered ADRs, and in the git log. There was no single view of outstanding work.
+
+The deeper problem was *agent amnesia*. Each conversation started from zero. Claude didn't remember that the TypeExpr migration was complete, that Pascal `declLabels` was already handled, that `poetry run python -m pytest` was the correct test command. Every session began with me re-establishing context. At 50 sessions, this was a minor annoyance. At 200, it was the dominant cost.
+
+The solution wasn't any single tool. It was building a **structured memory layer** — a set of persistent artefacts that the agent reads at session start, giving it continuity across conversations. The memory layer has four components: a curated memory file, a gap analysis document, an issue tracker, and architectural decision records. Together, they answer the questions that every session needs answered: *what's the current state?*, *what's left to do?*, *what are the rules?*, and *why were past decisions made?*
 
 The inflection point was the frontend lowering gap analysis. I had Claude cross-reference every frontend's dispatch table against its tree-sitter grammar definition and classify every unhandled node type. The result: 25 P0, 187 P1, and ~326 P2 gaps across 15 languages. The P0s took priority and were all resolved in three commits. But 187 P1 gaps couldn't be managed as a mental list. I needed an issue tracker.
 
@@ -632,7 +636,7 @@ The analysis also forced honest assessment of what "done" meant. Early on, I'd h
 
 ### The Type System as Architectural Maturation
 
-The most significant post-sprint development was the type system. RedDragon started with string-based type hints — `"Int"`, `"String"`, `"List<Int>"` — threaded through the IR as operand annotations. This worked for simple inference but couldn't represent parameterised types, union types, or subtype relationships.
+The largest post-sprint development was the type system. RedDragon started with string-based type hints — `"Int"`, `"String"`, `"List<Int>"` — threaded through the IR as operand annotations. This worked for simple inference but couldn't represent parameterised types, union types, or subtype relationships.
 
 The evolution happened in phases, each driven by a concrete limitation:
 
@@ -644,18 +648,30 @@ The evolution happened in phases, each driven by a concrete limitation:
 
 Each phase was documented as an ADR, tested with both unit and integration tests, and committed independently. The type system alone accounts for ~1,500 tests and 34 ADRs.
 
-### Memory Files: Cross-Session Continuity
+### Memory Files: The Agent's Working Memory
 
-With 237 sessions, context continuity became a real problem. Each new conversation started fresh. Claude didn't know that the TypeExpr migration was complete, or that Pascal `declLabels` was already handled, or that `poetry run python -m pytest` was the correct test command (not `poetry run pytest`).
+The memory file is an easy-to-overlook component of the structured memory layer. Claude Code supports a persistent memory directory (`.claude/projects/.../memory/MEMORY.md`) that is loaded into context at the start of every session. This is the agent's working memory — curated, compact, and always current.
 
-The solution was a persistent memory directory (`.claude/projects/.../memory/MEMORY.md`) that Claude reads at the start of every session. It contains:
+My memory file contains:
 
-- **Key references**: Links to audit results, gap analyses, and roadmaps
-- **Critical workflow reminders**: "ALWAYS run `poetry run python -m black .` on the entire codebase before committing"
-- **Project notes**: Current test count, resolved issues, known gotchas
-- **Type system state**: Which phases are complete, what the current TypeExpr API looks like
+- **Key references**: Links to audit results, gap analyses, roadmaps, and their current status
+- **Critical workflow reminders**: "ALWAYS run `poetry run python -m black .` on the entire codebase before committing" — the kind of thing that's in CLAUDE.md but worth reinforcing because it's been forgotten before
+- **Project state**: Current test count, resolved issues, known gotchas (`poetry run python -m pytest`, not `poetry run pytest`)
+- **Type system state**: Which migration phases are complete, what the current TypeExpr API looks like
+- **Future work pointers**: What's been deferred and why, so Claude doesn't re-derive decisions that were already made
 
-The memory file is curated, not appended. Outdated information is removed. Entries are updated when facts change. It functions as a living project brief — the minimum context needed to start any session productively.
+The memory file is curated, not appended. Outdated information is removed. Entries are updated when facts change. It functions as a living project brief — the minimum context needed to start any session productively. Without it, every session would spend its first 10 minutes rediscovering project state from git logs and file reads. With it, Claude starts knowing what the test count is, which phases are complete, and what the active work items are.
+
+The distinction between the memory file and `CLAUDE.md` is important. `CLAUDE.md` encodes *rules* — how to behave, what patterns to follow, what mistakes to avoid. The memory file encodes *state* — what's been done, what's in progress, what's next. Together with the gap analysis (the *plan*) and the issue tracker (the *work queue*), they form a four-layer structured memory:
+
+| Layer | Artefact | Purpose | Update frequency |
+|-------|----------|---------|-----------------|
+| Rules | `CLAUDE.md` | How to behave | When failure modes are discovered |
+| State | `MEMORY.md` | What's been done | Every few sessions |
+| Plan | Gap analysis doc | What's left to do | After each implementation batch |
+| Work queue | Beads issues | What to do next | After each task closes |
+
+This layered structure means a fresh session can orient itself in seconds rather than minutes. The agent reads the rules, the state, and the plan, then picks up work from the queue. No re-derivation, no context-setting preamble, no "where were we?"
 
 ### The Quick Win Trap
 
@@ -665,7 +681,9 @@ The pattern: **what looks like a no-op from the node type name often isn't.** `a
 
 The verified quick-win list went from 16 items to 7, with only 2 genuine no-ops. The rest needed real handlers. This is a general lesson for AI-assisted project management: the AI will optimise for closing tickets, not for closing them correctly. The human's job is to challenge the classification before the work begins, not after.
 
-### The Management Layer Lessons
+### The Structured Memory Lessons
+
+**Agent memory is not a feature — it's an architecture.** No single tool solves the continuity problem. `CLAUDE.md` alone gives you rules without state. A memory file alone gives you state without a plan. An issue tracker alone gives you tasks without context. The four-layer structure (rules, state, plan, work queue) works because each layer answers a different question, and the agent needs all four answers to start a session cold.
 
 **Issue trackers change how you direct the AI.** Before Beads, every session started with "here's what I want to do." After Beads, sessions start with "pick up the next task." The issue tracker externalises the planning, freeing the conversation for execution.
 
@@ -673,9 +691,11 @@ The verified quick-win list went from 16 items to 7, with only 2 genuine no-ops.
 
 **Themed epics beat per-language epics.** Implementing pattern matching across 6 languages in one themed push means each language's implementation informs the next. The pattern for `or_pattern` in C# is structurally similar to `union_pattern` in Python and `alternative_pattern` in Scala. Per-language epics miss these cross-cutting patterns.
 
-**Backup your issue state with your code.** Beads stores its data in a Dolt database next to the repo. JSONL backups are committed to git, so `bd backup restore` on a new machine reconstructs the full issue tree. The issue state and the code travel together.
+**Curate memory aggressively.** The memory file must be edited, not appended. Stale entries are worse than no entries — they cause the agent to make decisions based on outdated state. When a migration completes, update the entry. When a test count changes, update the number. When a workaround is no longer needed, delete it. The memory file is a cache, and caches need invalidation.
 
-**The project management layer is itself a product of the AI workflow.** I didn't plan to need an issue tracker. The need emerged from the project's growth. The gap analysis, the themed epics, the priority classifications — all of these were produced collaboratively with Claude, then curated by me. The AI is good at generating the raw breakdown; the human is good at spotting when the breakdown is wrong (the quick win trap) and restructuring it.
+**Backup your structured memory with your code.** Beads stores its data in a Dolt database next to the repo. JSONL backups are committed to git, so `bd backup restore` on a new machine reconstructs the full issue tree. The gap analysis doc is already in `docs/`. The memory file lives under `.claude/`. All of it travels with the repository. On a new machine, everything the agent needs to resume work is already checked in.
+
+**The structured memory layer is itself a product of the AI workflow.** I didn't plan to need an issue tracker, or a four-layer memory architecture. The need emerged from the project's growth. The gap analysis, the themed epics, the priority classifications, the curated memory file — all of these were produced collaboratively with Claude, then curated by me. The AI is good at generating the raw material; the human is good at spotting when the material is wrong (the quick win trap) and structuring it into something the agent can consume reliably.
 
 ---
 
@@ -685,6 +705,6 @@ Building non-trivial systems with an AI pair programmer is not about "prompting"
 
 The workflow I converged on (brainstorm, discuss trade-offs, plan, test-first, implement, clean up) emerged through trial and error across 400+ sessions. It's not the only way to work with AI, but it produced working systems: tested, documented, formatted, and internally consistent.
 
-What changed between session 100 and session 237 was the *management layer*. The early sessions were sprints — intense, exploratory, driven by momentum. The later sessions were systematic — driven by gap analyses, issue trackers, and priority classifications. The AI's role expanded from "implement this feature" to "break down 187 gaps into themed epics, then verify the quick wins aren't shortcuts." The human's role expanded from architect to project manager: defining work, challenging classifications, and curating the persistent memory that makes each session productive.
+What changed between session 100 and session 237 was the emergence of *structured agent memory*. The early sessions were sprints — intense, exploratory, driven by momentum. The later sessions were systematic — the agent started each conversation already knowing the project state, the active work queue, and the governing rules. The AI's role expanded from "implement this feature" to "break down 187 gaps into themed epics, then verify the quick wins aren't shortcuts." The human's role expanded from architect to memory curator: defining work, challenging classifications, and maintaining the persistent artefacts that make each session productive from its first message.
 
-If I had to point to two things that mattered most across 600+ sessions, they would be `CLAUDE.md` (the rules that keep every session consistent) and the gap analysis (the data that keeps every session directed). The rules prevent drift. The data prevents waste. Everything else — the issue tracker, the memory files, the ADRs — is infrastructure that keeps those two things honest.
+If I had to distil 600+ sessions into one lesson, it's this: **the limiting factor in AI-assisted development is not the AI's capability — it's the AI's memory.** A capable agent with no memory rediscovers context every session. A capable agent with structured memory — rules, state, plan, work queue — picks up where the last session left off. The architecture of that memory matters as much as the architecture of the code it helps build.
