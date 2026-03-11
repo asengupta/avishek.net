@@ -6,17 +6,13 @@ tags: ["Software Engineering", "Compilers", "Program Analysis", "AI-Assisted Dev
 draft: false
 ---
 
-*Notes from building two code analysis tools — a reverse engineering toolkit and a multi-language compiler pipeline — across 600+ conversation sessions with Claude Code.*
+*Notes from building a multi-language code analysis engine across 400+ conversation sessions with Claude Code.*
 
 ---
 
 ## Table of Contents
 
 - [Context](#context)
-- [The Reverse Engineering Tool: Learning to Direct an AI](#the-reverse-engineering-tool-learning-to-direct-an-ai)
-  - [Integration Detection and Classification](#integration-detection-and-classification)
-  - [Embedding Experiments](#embedding-experiments)
-  - [Takeaways from the First Project](#takeaways-from-the-first-project)
 - [RedDragon: How the Architecture Emerged](#reddragon-how-the-architecture-emerged)
   - [The Initial Session (Feb 25–26)](#the-initial-session-feb-2526)
   - [The Determinism Pivot](#the-determinism-pivot)
@@ -25,7 +21,7 @@ draft: false
 - [Growing the Test Suite](#growing-the-test-suite)
   - [Cross-Language Testing via Rosetta and Exercism](#cross-language-testing-via-rosetta-and-exercism)
   - [The Dispatch Audit Loop](#the-dispatch-audit-loop)
-- [The Assertion Audit](#the-assertion-audit)
+- [The Assertion Audit, or, Why Green Tests may not imply a working system](#the-assertion-audit-or-why-green-tests-may-not-imply-a-working-system)
   - [Weak Assertion Patterns](#weak-assertion-patterns)
   - [The Audit Process](#the-audit-process)
   - [Bugs Found Behind Weak Assertions](#bugs-found-behind-weak-assertions)
@@ -50,64 +46,13 @@ draft: false
 
 ## Context
 
-Over January–March 2026, I built two open-source code analysis tools almost entirely through conversations with Claude Code, plus a terminal UI that integrates them:
+Over February–March 2026, I built **[RedDragon](https://github.com/avishek-sen-gupta/red-dragon)** — a multi-language code analysis engine with a universal IR, deterministic VM, type system, and iterative dataflow analysis — almost entirely through conversations with Claude Code. RedDragon was built in an initial session, then refined across 237+ more, with 73 additional sessions on its precursor project. That's roughly 400+ human-AI conversation sessions total.
 
-- An internal reverse engineering toolkit that detects integration points in source code using regex patterns, ML classifiers, code embeddings, and LLM classification — 250 commits across 35 days
-- **[RedDragon](https://github.com/avishek-sen-gupta/red-dragon)**: A multi-language code analysis engine with a universal IR, deterministic VM, type system, and iterative dataflow analysis
-
-The reverse engineering tool accumulated ~195 conversation sessions. RedDragon was built in an initial session, then refined across 237+ more, with 73 additional sessions on its precursor project. That's roughly 600+ human-AI conversation sessions total.
-
-This post documents what I learned about directing an AI to build systems of this scale.
+This post documents what I learned about directing an AI to build a system of this scale.
 
 ---
 
-![Demo](/assets/red-dragon-tui.gif)
-
-## The Reverse Engineering Tool: Learning to Direct an AI
-
-The first project was a repo surveying toolkit — given a repository path, it would identify the technology stack, detect integration points (HTTP, SOAP, messaging, database connections), and classify them by type and direction.
-
-The first session produced a `RepoSurveyor` class that walked directory trees and identified languages by file extension. Over the next five days, the project developed its engineering principles: every external system boundary became a protocol, enums replaced strings throughout, and integration detections were renamed from `IntegrationPoint` to `IntegrationSignal` — because detections are signals, not confirmed facts.
-
-The structural analysis phase added call-flow extraction via LSP (using tree-sitter queries instead of regex), framework-aware integration detection (restructured into a plugin architecture with declarative configuration), and a language-independent CFG builder on tree-sitter parse trees. The CFG work started with LLM-generated role mappings for 99 languages, but the output was unreliable. The mappings were hand-authored for 14 languages instead. This became a recurring pattern: **use LLM to bootstrap, then replace with a deterministic approach once the problem is understood.**
-
-### Integration Detection and Classification
-
-The core challenge was that regex-based pattern matching produces many false positives. How do you classify which detected signals are genuine and which direction they face (inward vs outward)?
-
-The approach went through several iterations:
-
-**LLM classification** worked on small inputs, but when run on a real Java repository (2,116 signals across 1,809 groups), it needed 37+ batches. Too slow. The LLM path was removed, though AST walk-up (grouping signals by enclosing function) was retained.
-
-**ML classifier.** A TF-IDF + logistic regression model trained on data generated via Claude's Batches API and a GitHub training-data harvester. Fast, but mediocre — confidence scores were low on framework-specific patterns.
-
-**Code embeddings.** Testing `nomic-embed-code` and Gemini's embedding model showed that embeddings could separate integration code from non-I/O code, but directional classification was weak.
-
-### Embedding Experiments
-
-Five embedding backends were compared:
-
-| Backend | Type | Result |
-|---------|------|--------|
-| nomic-embed-code | Cloud API | 91% on small test |
-| Gemini embedding-001 | Cloud API | 91% on small test |
-| CodeT5p-110m | Local, code-specific | 50% — scores too compressed |
-| CodeRankEmbed | Local, code-specific | 4.5% — failure |
-| **BGE-base-en-v1.5** | Local, general-purpose | **100%** on all test sets |
-
-The finding: **general-purpose text embedding models trained for semantic similarity outperformed code-specific models** on this description-to-code classification task. MTEB leaderboard scores did not predict performance.
-
-A sub-experiment through iterative testing against a single Java line showed that **passive-voice, subject-first descriptions** maximise cosine similarity in embedding space. Scores improved from 0.448 to 0.773. All 3,017 pattern descriptions were rewritten to this template.
-
-The final architecture was a two-stage pipeline: an embedding gate (BGE, distance-weighted KNN) to separate signal from noise, then Gemini Flash to classify direction on survivors only. Seven distinct classification pipelines were built over the course of the project, all sharing the same detection and output phases, differing only in classification.
-
-### Takeaways from the First Project
-
-The human's job was strategic, not tactical. I wasn't writing code. I was evaluating approaches by running them on real data, making pivot decisions based on empirical feedback, composing architectures, and interrupting when a direction wasn't working.
-
-My prompts got terser as trust built up. Early on: detailed specifications with context. By day 3: *"do all of them"*, *"push"*, *"run it on smojol and show me the results"*.
-
----
+![Demo](/assets/pipeline-viz.gif)
 
 ## RedDragon: How the Architecture Emerged
 
@@ -216,7 +161,7 @@ This pattern (audit, batch-fix, re-audit) was more effective than trying to enum
 
 ---
 
-## The Assertion Audit
+## The Assertion Audit, or, Why Green Tests may not imply a working system
 
 By March 2026, the test suite had grown to ~8,400 tests across ~130 files. All green. The question I'd been putting off: **if every test passes, how do I know each test is actually checking what it says it's checking?**
 
@@ -324,9 +269,11 @@ The file that had the most impact on consistency wasn't any Python module. It wa
 
 ### The Workflow Evolution
 
-The workflow encoded in CLAUDE.md changed over time. Early: **Brainstorm -> Plan -> Implement -> Test.** Tests came after implementation, which led to the weak assertion patterns the audit uncovered.
+The workflow encoded in CLAUDE.md changed over time. Early: **Brainstorm -> Plan -> Implement -> Test.** Tests came after implementation. This was the root cause of the weak assertion patterns the audit uncovered — when the AI writes tests *after* the code exists, it tends to assert what the code *does* rather than what it *should do*. The test becomes a description of current behaviour, not a specification of correct behaviour.
 
-The revised workflow: **Brainstorm -> Discuss trade-offs -> Plan -> Write unit tests -> Implement -> Fix tests -> Commit -> Refactor.** Tests come before implementation. The AI writes tests that encode expected behaviour, then writes code to make them pass.
+The assertion audit made this cost concrete. After spending two days fixing ~75 violations — OR-fallbacks, existence-only checks, silent parametrised passes — I changed the workflow to test-first: **Brainstorm -> Discuss trade-offs -> Plan -> Write unit tests -> Implement -> Fix tests -> Commit -> Refactor.** The AI writes tests that encode expected behaviour *before* implementation. It then writes code to make them pass. This inverts the incentive: the test defines the target, and the code adapts to meet it, rather than the test adapting to describe whatever the code produced.
+
+The type system work (Phase 3 onward) was built entirely under this TDD workflow. The difference was visible — the type inference tests asserted specific return types for specific expressions, not just "inference produced a result."
 
 Every rule was reactive. "STOP USING FOR LOOPS WITH MUTATIONS" came after mutation bugs. "Don't blindly change test assertions" came after watching the AI weaken tests to make them pass. "Categorically avoid defensive programming" came after silent `None` checks masked real bugs. Each rule represents a mistake that happened at least once.
 
@@ -461,4 +408,15 @@ What changed between the early sessions and the later ones was the emergence of 
 
 The limiting factor in AI-assisted development is not the AI's capability — it's the AI's memory. A capable agent with no memory rediscovers context every session. A capable agent with structured memory picks up where the last session left off.
 
-_This post has not been written or edited by AI._
+---
+
+## References
+
+- [IR Reference](https://github.com/avishek-sen-gupta/red-dragon/blob/master/docs/ir-reference.md) — The 28-opcode instruction set
+- [Notes on VM Design](https://github.com/avishek-sen-gupta/red-dragon/blob/master/docs/notes-on-vm-design.md) — Deterministic execution model and symbolic values
+- [Notes on Frontend Design](https://github.com/avishek-sen-gupta/red-dragon/blob/master/docs/notes-on-frontend-design.md) — Tree-sitter dispatch table architecture
+- [Notes on Dataflow Design](https://github.com/avishek-sen-gupta/red-dragon/blob/master/docs/notes-on-dataflow-design.md) — Iterative dataflow analysis
+- [Type System](https://github.com/avishek-sen-gupta/red-dragon/blob/master/docs/type-system.md) — TypeExpr ADT, TypeGraph, and inference
+- [Frontend Lowering Gaps](https://github.com/avishek-sen-gupta/red-dragon/blob/master/docs/frontend-lowering-gaps.md) — Gap analysis across 15 languages
+- [IR Lowering Gaps](https://github.com/avishek-sen-gupta/red-dragon/blob/master/docs/ir-lowering-gaps.md) — IR-level lowering gaps
+- [Architectural Decision Records](https://github.com/avishek-sen-gupta/red-dragon/blob/master/docs/architectural-design-decisions.md) — 100+ ADRs documenting design decisions
