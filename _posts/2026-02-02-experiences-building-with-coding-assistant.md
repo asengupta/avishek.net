@@ -4,7 +4,7 @@ author: avishek
 usemathjax: false
 mermaid: true
 tags: ["Software Engineering", "Compilers", "Program Analysis", "AI-Assisted Development"]
-draft: false
+draft: true
 ---
 
 *Notes from building a multi-language code analysis engine across 400+ conversation sessions with Claude Code.*
