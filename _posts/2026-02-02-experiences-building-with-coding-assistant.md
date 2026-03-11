@@ -38,7 +38,7 @@ draft: false
   - [The Feedback Loop Structure](#the-feedback-loop-structure)
   - [Assertion Audit Results](#assertion-audit-results)
   - [Assertion Audit Lessons](#assertion-audit-lessons)
-- [Part 8: Guardrails, The CLAUDE.md as Architecture](#part-8-guardrails-the-claudemd-as-architecture)
+- [Part 8: Guardrails and CLAUDE.md](#part-8-guardrails-and-claudemd)
 - [Part 9: What I'd Do Differently](#part-9-what-id-do-differently)
 - [Part 10: The Numbers](#part-10-the-numbers)
 - [Part 11: From Sprints to Structured Agent Memory](#part-11-from-sprints-to-structured-agent-memory)
@@ -484,7 +484,7 @@ The CLAUDE.md rules were updated to encode these lessons: never modify assertion
 
 ---
 
-## Part 8: Guardrails, The CLAUDE.md as Architecture
+## Part 8: Guardrails and CLAUDE.md
 
 RedDragon was built almost entirely through conversations with Claude Code, across 400+ sessions. The file that had the most impact on consistency wasn't any Python module. It was `CLAUDE.md`, which encodes the development rules. Claude Code reads this file at the start of every session, so every conversation begins with the same constraints. The rules evolved over the project's lifetime, each one added in response to a specific failure mode.
 
