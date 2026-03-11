@@ -6,7 +6,7 @@ tags: ["Software Engineering", "Compilers", "Program Analysis", "Code Embeddings
 draft: false
 ---
 
-*How I built three interconnected code analysis tools — spanning 15 language frontends, a deterministic VM, dataflow analysis, 7 embedding/ML/LLM classification pipelines, and Datalog engines — across 35+ days and 500+ conversation sessions with an AI pair programmer.*
+*How I built three interconnected code analysis tools — spanning 15 language frontends, a deterministic VM, dataflow analysis, a full type system, 7 embedding/ML/LLM classification pipelines, and Datalog engines — across 40+ days, 10,000+ tests, and 600+ conversation sessions with an AI pair programmer.*
 
 ---
 
@@ -27,7 +27,7 @@ draft: false
   - [Screenshot-Driven Debugging](#screenshot-driven-debugging)
 - [Part 3: Patterns That Emerged](#part-3-patterns-that-emerged)
 - [Part 4: Where It Surprised Me](#part-4-where-it-surprised-me)
-- [Part 5: The Evolution, From Monolith to 8,569 Tests](#part-5-the-evolution-from-monolith-to-8569-tests)
+- [Part 5: The Evolution, From Monolith to 10,000+ Tests](#part-5-the-evolution-from-monolith-to-10000-tests)
 - [Part 6: The Audit Loop, Systematic Completeness](#part-6-the-audit-loop-systematic-completeness)
 - [Part 7: The Assertion Audit, Green Tests, False Confidence](#part-7-the-assertion-audit-green-tests-false-confidence)
   - [The Taxonomy of Weak Assertions](#the-taxonomy-of-weak-assertions)
@@ -41,6 +41,14 @@ draft: false
 - [Part 8: Guardrails, The CLAUDE.md as Architecture](#part-8-guardrails-the-claudemd-as-architecture)
 - [Part 9: What I'd Do Differently](#part-9-what-id-do-differently)
 - [Part 10: The Numbers](#part-10-the-numbers)
+- [Part 11: From Sprints to Systematic Management](#part-11-from-sprints-to-systematic-management)
+  - [The Scaling Problem](#the-scaling-problem)
+  - [Beads: Local-First Issue Tracking](#beads-local-first-issue-tracking)
+  - [Gap Analysis as Planning Infrastructure](#gap-analysis-as-planning-infrastructure)
+  - [The Type System as Architectural Maturation](#the-type-system-as-architectural-maturation)
+  - [Memory Files: Cross-Session Continuity](#memory-files-cross-session-continuity)
+  - [The Quick Win Trap](#the-quick-win-trap)
+  - [The Management Layer Lessons](#the-management-layer-lessons)
 - [Conclusion](#conclusion)
 
 ---
@@ -53,7 +61,7 @@ Over January–March 2026, I built three open-source projects almost entirely th
 - **[RedDragon](https://github.com/avishek-sen-gupta/red-dragon)**: A multi-language code analysis engine with a universal IR, deterministic VM, and iterative dataflow analysis
 - **[Rev-Eng TUI](https://github.com/avishek-sen-gupta/reddragon-codescry-tui)**: A terminal UI integrating the two
 
-Codescry has ~195 conversation sessions (101 under its original name "Cartographer", the rest as Codescry). RedDragon was built in an 18-hour session, then refined across 131 more sessions. The llm-symbolic-interpreter (RedDragon's precursor) added another 73. That's roughly 400+ human-AI conversation sessions.
+Codescry has ~195 conversation sessions (101 under its original name "Cartographer", the rest as Codescry). RedDragon was built in an 18-hour session, then refined across 237+ more sessions. The llm-symbolic-interpreter (RedDragon's precursor) added another 73. That's roughly 600+ human-AI conversation sessions.
 
 Here's what I learned about directing an AI to build non-trivial systems, and where the process surprised me.
 
@@ -255,7 +263,7 @@ Late in the project, I modified my workflow to: Brainstorm → Trade-offs → Pl
 
 ---
 
-## Part 5: The Evolution, From Monolith to 8,569 Tests
+## Part 5: The Evolution, From Monolith to 10,000+ Tests
 
 RedDragon's evolution followed a clear pattern of phases, each triggered by testing the previous one on real code:
 
@@ -272,15 +280,17 @@ RedDragon's evolution followed a clear pattern of phases, each triggered by test
 The test count tells the story:
 
 ```
-Phase 1-3:        346 tests
-Phase 4:         ~700 tests
-Rosetta:        ~1,200 tests
-Exercism 1:     ~2,700 tests
-Exercism 2:     ~4,200 tests
-Exercism 3:     ~5,150 tests
-Exercism 4:     ~7,076 tests
-Exercism done:   7,268 tests
-COBOL + audit:   8,569 tests
+Phase 1-3:           346 tests
+Phase 4:            ~700 tests
+Rosetta:           ~1,200 tests
+Exercism 1:        ~2,700 tests
+Exercism 2:        ~4,200 tests
+Exercism 3:        ~5,150 tests
+Exercism 4:        ~7,076 tests
+Exercism done:      7,268 tests
+COBOL + audit:      8,569 tests
+Type system:       ~9,400 tests
+Gap analysis:     10,152 tests
 ```
 
 All tests run without LLM calls and are deterministic.
@@ -562,18 +572,110 @@ Midway through the project, I changed the workflow to: **Brainstorm -> Discuss t
 
 | Metric | Codescry | RedDragon | Total |
 |--------|----------|-----------|-------|
-| Conversation sessions | ~195 (101 as Cartographer + 94 as Codescry) | ~204 | ~399 |
+| Conversation sessions | ~195 (101 as Cartographer + 94 as Codescry) | ~237 | ~432 |
 | Transcript data | ~379 MB | — | — |
-| Development span | 35 days (Jan 30 – Mar 2) | 9 days | — |
-| Git commits | 250 | 292 | 542 |
+| Development span | 35 days (Jan 30 – Mar 2) | 14 days (Feb 25 – Mar 11) | — |
+| Git commits | 250 | 472 | 722 |
 | Language frontends | N/A | 15 | 15 |
 | Classification pipelines | 7 | N/A | 7 |
 | Embedding backends tested | 5 | N/A | 5 |
 | Pattern descriptions | 3,017 | N/A | 3,017 |
-| Test count (final) | — | 8,569 | — |
-| Architectural decision records | 23 | 66 | 89 |
+| Test count (final) | — | 10,152 | — |
+| Architectural decision records | 23 | 100 | 123 |
 | Architectural pivots | 7 | 5 | 12 |
-| Audit substantive gaps (final) | N/A | 0 | N/A |
+| Tracked issues (Beads) | N/A | 168 | 168 |
+| Audit substantive gaps (final) | N/A | 0 P0, 187 P1 | N/A |
+
+---
+
+## Part 11: From Sprints to Systematic Management
+
+The first ten parts of this account describe a project built in sprints: intense sessions, audit loops, and test count as the primary progress metric. By session 200, that model started to break.
+
+### The Scaling Problem
+
+At 8,500+ tests, 15 frontends, 66 ADRs, and a type system under active development, the project had outgrown ad-hoc session management. I'd open a new conversation, describe what I wanted, and Claude would execute — but the *what* was getting harder to determine. Which frontend gaps remained? Which were P0 vs. P1? What depended on what? The answers lived in my head, in scattered ADRs, and in the git log. There was no single view of outstanding work.
+
+The inflection point was the frontend lowering gap analysis. I had Claude cross-reference every frontend's dispatch table against its tree-sitter grammar definition and classify every unhandled node type. The result: 25 P0, 187 P1, and ~326 P2 gaps across 15 languages. The P0s took priority and were all resolved in three commits. But 187 P1 gaps couldn't be managed as a mental list. I needed an issue tracker.
+
+### Beads: Local-First Issue Tracking
+
+I chose [Beads](https://github.com/eqlabs/beads), a local-first issue tracker that stores its data in a Dolt database alongside the repo. The command is `bd`. It supports hierarchical issues (epics → stories → tasks), dependency chains, labels, and priority classifications — all from the command line.
+
+The 187 P1 gaps became a structured breakdown:
+
+```
+red-dragon-gvu [epic]: 129 P1 frontend lowering gaps
+├── gvu.1 [epic]: Cross-language pattern matching (25 tasks across 6 languages)
+├── gvu.2 [epic]: Class/OOP features (14 tasks)
+├── gvu.3 [epic]: Type system and generics (11 tasks)
+├── gvu.4 [epic]: Async/coroutine support (8 tasks)
+├── gvu.5 [epic]: Destructuring and rest patterns (7 tasks)
+├── gvu.6 [epic]: Metaprogramming/macros (9 tasks)
+├── gvu.7 [epic]: Module system and imports (8 tasks)
+└── gvu.8 [epic]: Language-specific features (remaining)
+```
+
+Each sub-epic broke down further into per-language groups, and each language group into individual node-type tasks. A single `bd list` showed the full tree. `bd show red-dragon-gvu.1.2.5` gave me the details of C#'s `and_pattern` gap.
+
+This changed how sessions started. Instead of describing work from memory, I could say *"what's the next open task under gvu.1?"* and have Claude pick it up with full context. The issue tracker became the session boundary — work was defined before the session began, not discovered during it.
+
+Beads data is backed up as JSONL files committed to the repository, so the issue state travels with the code. On a new machine, `bd backup restore` rebuilds the full database from the committed exports — 168 issues, 538 events, 163 dependencies, all recoverable.
+
+### Gap Analysis as Planning Infrastructure
+
+The frontend lowering gap analysis document (`docs/frontend-lowering-gaps.md`) became a living planning artefact. It wasn't just a one-time audit; it was the source of truth that fed the issue tracker. Each P1 gap had a row in the document with language, node type, description, and status. As gaps were resolved, the status flipped to DONE. As new gaps were discovered through testing, they were added.
+
+The gap analysis also exposed a structural insight: many P1 gaps clustered thematically. Pattern matching was a gap in 6 languages simultaneously. Class/OOP features were missing in 5. This meant the right unit of work wasn't "fix Go's missing `iota`" — it was "implement pattern matching across all 6 languages that need it." The themed epics emerged from the data, not from upfront planning.
+
+The analysis also forced honest assessment of what "done" meant. Early on, I'd have Claude classify some gaps as "no-ops" — node types that could be safely ignored. When I challenged this, asking Claude to verify each claimed no-op against the actual tree-sitter AST, most turned out to contain meaningful content. TypeScript's `ambient_declaration` had full type signatures. C#'s `unsafe_statement` wrapped executable blocks. Pascal's `implementation` section contained procedure definitions. Out of 8 claimed no-ops, only 2 were genuine. The lesson: **verify against the AST, not against assumptions about what a node type name implies.**
+
+### The Type System as Architectural Maturation
+
+The most significant post-sprint development was the type system. RedDragon started with string-based type hints — `"Int"`, `"String"`, `"List<Int>"` — threaded through the IR as operand annotations. This worked for simple inference but couldn't represent parameterised types, union types, or subtype relationships.
+
+The evolution happened in phases, each driven by a concrete limitation:
+
+**Phase 1: TypeExpr ADT.** Replaced string type hints with a proper algebraic data type: `ScalarType("Int")`, `ParameterizedType("List", (ScalarType("Int"),))`, `UnknownType`. A `parse_type()` function handled roundtripping from legacy strings. The entire type environment was migrated to store `TypeExpr` values, with string-compatible equality preserved for backward compatibility.
+
+**Phase 2: TypeGraph.** An 11-node directed acyclic graph encoding subtype relationships (`Int <: Number <: Object`, `String <: Object`). Covariant `is_subtype_expr()` for parameterised types. `common_supertype_expr()` for join operations. This laid the groundwork for type narrowing and assignment compatibility.
+
+**Phase 3: Interface-aware inference.** When the type inference engine encountered `animal.speak()` where `animal` was typed as interface `Animal`, it couldn't resolve the return type — the method was defined on `Dog`, not on `Animal`. The fix was a chain walk: if a class implements interfaces, check their method types when the class's own methods don't have type information. This required seeding `interface_implementations` from 5 frontends (Java, C#, Kotlin, TypeScript, Go) and walking the chain during inference.
+
+Each phase was documented as an ADR, tested with both unit and integration tests, and committed independently. The type system alone accounts for ~1,500 tests and 34 ADRs.
+
+### Memory Files: Cross-Session Continuity
+
+With 237 sessions, context continuity became a real problem. Each new conversation started fresh. Claude didn't know that the TypeExpr migration was complete, or that Pascal `declLabels` was already handled, or that `poetry run python -m pytest` was the correct test command (not `poetry run pytest`).
+
+The solution was a persistent memory directory (`.claude/projects/.../memory/MEMORY.md`) that Claude reads at the start of every session. It contains:
+
+- **Key references**: Links to audit results, gap analyses, and roadmaps
+- **Critical workflow reminders**: "ALWAYS run `poetry run python -m black .` on the entire codebase before committing"
+- **Project notes**: Current test count, resolved issues, known gotchas
+- **Type system state**: Which phases are complete, what the current TypeExpr API looks like
+
+The memory file is curated, not appended. Outdated information is removed. Entries are updated when facts change. It functions as a living project brief — the minimum context needed to start any session productively.
+
+### The Quick Win Trap
+
+A recurring temptation when managing 168 issues is to chase quick wins — tasks that appear trivial and can be closed fast. During the gap analysis breakdown, Claude identified ~16 "quick wins" including 8 claimed no-ops. When I asked Claude to verify each one against the actual AST structure, the list shrank dramatically.
+
+The pattern: **what looks like a no-op from the node type name often isn't.** `ambient_declaration` sounds like metadata. It's actually `declare const VERSION: string` — a full type signature that the inference engine needs. `unsafe_statement` sounds like a compiler pragma. It's actually a block wrapper around executable pointer operations.
+
+The verified quick-win list went from 16 items to 7, with only 2 genuine no-ops. The rest needed real handlers. This is a general lesson for AI-assisted project management: the AI will optimise for closing tickets, not for closing them correctly. The human's job is to challenge the classification before the work begins, not after.
+
+### The Management Layer Lessons
+
+**Issue trackers change how you direct the AI.** Before Beads, every session started with "here's what I want to do." After Beads, sessions start with "pick up the next task." The issue tracker externalises the planning, freeing the conversation for execution.
+
+**Gap analysis documents are more valuable than roadmaps.** A roadmap says "implement pattern matching." A gap analysis says "Python needs `class_pattern`, `complex_pattern`, `union_pattern`, `keyword_pattern`, `tuple_pattern`, `pattern_list`, `as_pattern`; C# needs `recursive_pattern`, `list_pattern`, `var_pattern`, `type_pattern`, `and_pattern`, `or_pattern`, `negated_pattern`, `relational_pattern`, `parenthesized_pattern`, `tuple_pattern`." The gap analysis is actionable. The roadmap is aspirational.
+
+**Themed epics beat per-language epics.** Implementing pattern matching across 6 languages in one themed push means each language's implementation informs the next. The pattern for `or_pattern` in C# is structurally similar to `union_pattern` in Python and `alternative_pattern` in Scala. Per-language epics miss these cross-cutting patterns.
+
+**Backup your issue state with your code.** Beads stores its data in a Dolt database next to the repo. JSONL backups are committed to git, so `bd backup restore` on a new machine reconstructs the full issue tree. The issue state and the code travel together.
+
+**The project management layer is itself a product of the AI workflow.** I didn't plan to need an issue tracker. The need emerged from the project's growth. The gap analysis, the themed epics, the priority classifications — all of these were produced collaboratively with Claude, then curated by me. The AI is good at generating the raw breakdown; the human is good at spotting when the breakdown is wrong (the quick win trap) and restructuring it.
 
 ---
 
@@ -581,6 +683,8 @@ Midway through the project, I changed the workflow to: **Brainstorm -> Discuss t
 
 Building non-trivial systems with an AI pair programmer is not about "prompting"; it's about *architectural direction*. The human's role is strategic: choosing problems, evaluating approaches empirically, making pivot decisions, and encoding quality standards. The AI's role is tactical: implementing plans, auditing for completeness, applying patterns at breadth, and maintaining consistency.
 
-The workflow I converged on (brainstorm, discuss trade-offs, plan, test-first, implement, clean up) emerged through trial and error across 400 sessions. It's not the only way to work with AI, but it produced working systems: tested, documented, formatted, and internally consistent.
+The workflow I converged on (brainstorm, discuss trade-offs, plan, test-first, implement, clean up) emerged through trial and error across 400+ sessions. It's not the only way to work with AI, but it produced working systems: tested, documented, formatted, and internally consistent.
 
-If I had to point to one file that mattered across all three repositories, it would be `CLAUDE.md`.
+What changed between session 100 and session 237 was the *management layer*. The early sessions were sprints — intense, exploratory, driven by momentum. The later sessions were systematic — driven by gap analyses, issue trackers, and priority classifications. The AI's role expanded from "implement this feature" to "break down 187 gaps into themed epics, then verify the quick wins aren't shortcuts." The human's role expanded from architect to project manager: defining work, challenging classifications, and curating the persistent memory that makes each session productive.
+
+If I had to point to two things that mattered most across 600+ sessions, they would be `CLAUDE.md` (the rules that keep every session consistent) and the gap analysis (the data that keeps every session directed). The rules prevent drift. The data prevents waste. Everything else — the issue tracker, the memory files, the ADRs — is infrastructure that keeps those two things honest.
