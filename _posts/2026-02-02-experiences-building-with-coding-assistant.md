@@ -19,7 +19,7 @@ draft: false
   - [The Concretisation Problem (Feb 18 – Feb 25)](#the-concretisation-problem-feb-18--feb-25)
   - [Engineering Maturity (Feb 20 – Mar 2)](#engineering-maturity-feb-20--mar-2)
   - [What I Learned: Steering](#what-i-learned-steering)
-- [Part 2: RedDragon, The 18-Hour Marathon (Feb 25–26)](#part-2-reddragon-the-18-hour-marathon-feb-2526)
+- [Part 2: RedDragon (Feb 25–26)](#part-2-reddragon-feb-2526)
   - [The Starting Point](#the-starting-point)
   - [How the Architecture Took Shape](#how-the-architecture-took-shape)
   - [The Implementation Rhythm](#the-implementation-rhythm)
@@ -61,7 +61,7 @@ Over January–March 2026, I built three open-source projects almost entirely th
 - **[RedDragon](https://github.com/avishek-sen-gupta/red-dragon)**: A multi-language code analysis engine with a universal IR, deterministic VM, and iterative dataflow analysis
 - **[Rev-Eng TUI](https://github.com/avishek-sen-gupta/reddragon-codescry-tui)**: A terminal UI integrating the two
 
-Codescry has ~195 conversation sessions (101 under its original name "Cartographer", the rest as Codescry). RedDragon was built in an 18-hour session, then refined across 237+ more sessions. The llm-symbolic-interpreter (RedDragon's precursor) added another 73. That's roughly 600+ human-AI conversation sessions.
+Codescry has ~195 conversation sessions (101 under its original name "Cartographer", the rest as Codescry). RedDragon was built in an initial session, then refined across 237+ more sessions. The llm-symbolic-interpreter (RedDragon's precursor) added another 73. That's roughly 600+ human-AI conversation sessions.
 
 Here's what I learned about directing an AI to build non-trivial systems, and where the process surprised me.
 
@@ -149,7 +149,7 @@ The scale of experimentation was unusual: 5 embedding backends tested, 7 classif
 
 ---
 
-## Part 2: RedDragon, The 18-Hour Marathon (Feb 25–26)
+## Part 2: RedDragon (Feb 25–26)
 
 ### The Starting Point
 
@@ -175,7 +175,7 @@ Each decision emerged from testing the previous one on real code. I didn't plan 
 
 ### The Implementation Rhythm
 
-The 18-hour session followed a repeating cycle:
+The initial session followed a repeating cycle:
 
 1. **Implement a feature** (30–60 minutes)
 2. **Run it on real code** and inspect the output
@@ -237,7 +237,7 @@ Early prompts were detailed and cautious. By mid-project, I was saying *"do all 
 
 ### Pattern 6: Context Window as Session Boundary
 
-The 18-hour marathon exhausted the context window 5–6 times. Each continuation carried a structured summary of what was done and what remained. This forced a natural "checkpoint" discipline. I couldn't rely on Claude remembering earlier decisions, so I had to be explicit about state. In hindsight, this was healthy: it prevented architectural drift and kept each session focused.
+The initial session exhausted the context window 5–6 times. Each continuation carried a structured summary of what was done and what remained. This forced a natural "checkpoint" discipline. I couldn't rely on Claude remembering earlier decisions, so I had to be explicit about state. In hindsight, this was healthy: it prevented architectural drift and kept each session focused.
 
 ---
 
@@ -271,7 +271,7 @@ RedDragon's evolution followed a clear pattern of phases, each triggered by test
 
 **Phase 2: The determinism pivot (Hour 2 to 4).** The key insight: execution should be deterministic. Ripped out all LLM calls from the VM. Added symbolic value creation. Once the VM was deterministic, everything became testable.
 
-**Phase 3: Multi-language frontends (Hour 4 to 8).** Asked: *"How hard is it to write deterministic logic to lower ASTs for 15 languages?"* The answer: not that hard, with tree-sitter and a dispatch table engine. 15 frontends generated in a single marathon session. 346 tests.
+**Phase 3: Multi-language frontends (Hour 4 to 8).** Asked: *"How hard is it to write deterministic logic to lower ASTs for 15 languages?"* The answer: not that hard, with tree-sitter and a dispatch table engine. 15 frontends generated in a single session. 346 tests.
 
 **Phase 4: Analysis and tooling (Hour 8 to 14).** Added iterative dataflow analysis, chunked LLM frontend, Mermaid CFG visualisation with subgraphs and call edges, source location traceability. Extracted CLI into composable API.
 
