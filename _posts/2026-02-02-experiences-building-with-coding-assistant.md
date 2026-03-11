@@ -2,6 +2,7 @@
 title: "Building Non-Trivial Systems with an AI Coding Assistant"
 author: avishek
 usemathjax: false
+mermaid: true
 tags: ["Software Engineering", "Compilers", "Program Analysis", "AI-Assisted Development"]
 draft: false
 ---
@@ -150,11 +151,11 @@ The classification heuristic itself went through three iterations:
 
 The audit loop ran dozens of times:
 
-```
-Audit -> 34 gaps found -> implement all 34 (57 new tests)
-Re-audit -> 19 gaps found -> implement all 19 (28 new tests)
-Re-audit -> 12 gaps found -> implement all 12 (18 new tests)
-Re-audit -> 0 gaps, 0 SYMBOLIC
+```mermaid
+flowchart LR
+    A["Audit all<br>frontends"] --> G{"Gaps<br>found?"}
+    G -- "Yes (34 → 19 → 12 → ...)" --> I["Batch-implement<br>all gaps"] --> T["Add tests"] --> A
+    G -- "No: 0 gaps,<br>0 SYMBOLIC" --> D["Done"]
 ```
 
 This pattern (audit, batch-fix, re-audit) was more effective than trying to enumerate every missing feature upfront.
@@ -269,9 +270,27 @@ The file that had the most impact on consistency wasn't any Python module. It wa
 
 ### The Workflow Evolution
 
-The workflow encoded in CLAUDE.md changed over time. Early: **Brainstorm -> Plan -> Implement -> Test.** Tests came after implementation. This was the root cause of the weak assertion patterns the audit uncovered — when the AI writes tests *after* the code exists, it tends to assert what the code *does* rather than what it *should do*. The test becomes a description of current behaviour, not a specification of correct behaviour.
+The workflow encoded in CLAUDE.md changed over time:
 
-The assertion audit made this cost concrete. After spending two days fixing ~75 violations — OR-fallbacks, existence-only checks, silent parametrised passes — I changed the workflow to test-first: **Brainstorm -> Discuss trade-offs -> Plan -> Write unit tests -> Implement -> Fix tests -> Commit -> Refactor.** The AI writes tests that encode expected behaviour *before* implementation. It then writes code to make them pass. This inverts the incentive: the test defines the target, and the code adapts to meet it, rather than the test adapting to describe whatever the code produced.
+```mermaid
+flowchart LR
+    subgraph before ["Early workflow"]
+        direction LR
+        B1["Brainstorm"] --> P1["Plan"] --> I1["Implement"] --> T1["Test"]
+    end
+```
+
+```mermaid
+flowchart LR
+    subgraph after ["Revised workflow (TDD)"]
+        direction LR
+        B2["Brainstorm"] --> D2["Discuss<br>trade-offs"] --> P2["Plan"] --> T2["Write<br>tests"] --> I2["Implement"] --> F2["Fix<br>tests"] --> C2["Commit"] --> R2["Refactor"]
+    end
+```
+
+Early: **Brainstorm -> Plan -> Implement -> Test.** Tests came after implementation. This was the root cause of the weak assertion patterns the audit uncovered — when the AI writes tests *after* the code exists, it tends to assert what the code *does* rather than what it *should do*. The test becomes a description of current behaviour, not a specification of correct behaviour.
+
+The assertion audit made this cost concrete. After spending two days fixing ~75 violations — OR-fallbacks, existence-only checks, silent parametrised passes — I changed the workflow to test-first. The AI writes tests that encode expected behaviour *before* implementation. It then writes code to make them pass. This inverts the incentive: the test defines the target, and the code adapts to meet it, rather than the test adapting to describe whatever the code produced.
 
 The type system work (Phase 3 onward) was built entirely under this TDD workflow. The difference was visible — the type inference tests asserted specific return types for specific expressions, not just "inference produced a result."
 
@@ -349,6 +368,18 @@ The memory file is curated, not appended. Outdated information is removed. Entri
 
 The distinction between the memory file and `CLAUDE.md`: `CLAUDE.md` encodes *rules*. The memory file encodes *state*. Together with the gap analysis (*plan*) and the issue tracker (*work queue*), they form a four-layer structured memory:
 
+```mermaid
+flowchart TB
+    S["New session starts"] --> R["Read CLAUDE.md<br><i>Rules: how to behave</i>"]
+    S --> M["Read MEMORY.md<br><i>State: what's been done</i>"]
+    S --> G["Read gap analysis<br><i>Plan: what's left to do</i>"]
+    S --> B["Query Beads issues<br><i>Work queue: what to do next</i>"]
+    R --> O["Agent is oriented"]
+    M --> O
+    G --> O
+    B --> O
+```
+
 | Layer | Artefact | Purpose | Update frequency |
 |-------|----------|---------|-----------------|
 | Rules | `CLAUDE.md` | How to behave | When failure modes are discovered |
@@ -379,6 +410,20 @@ The AI will optimise for closing tickets, not for closing them correctly. The hu
 **Empirical validation over specification.** I rarely specified exact behaviour upfront. I implemented a feature, ran it on real code, and judged the results. The AI made this feedback loop fast enough to be practical.
 
 **Terse directives after trust.** Early prompts were detailed. By mid-project: *"do all of them"*, *"push"*, *"commit and push this"*. Trust built through consistent execution.
+
+```mermaid
+flowchart LR
+    subgraph early ["Sessions 1–20"]
+        E["Detailed specs<br>with full context<br>and constraints"]
+    end
+    subgraph mid ["Sessions 20–100"]
+        M["Short directives<br>with implicit context<br><i>'implement all the<br>critical and common ones'</i>"]
+    end
+    subgraph late ["Sessions 100+"]
+        L["Minimal prompts<br><i>'do all of them'</i><br><i>'push'</i>"]
+    end
+    early --> mid --> late
+```
 
 **The AI hallucinated audit findings.** During the assertion audit, the AI reported violations that didn't exist or had already been fixed. Different parallel agents flagged different things, inconsistently applied priority criteria, and re-reported fixed items with different wording. The reconciliation pass caught this. The auditor itself needs auditing.
 
