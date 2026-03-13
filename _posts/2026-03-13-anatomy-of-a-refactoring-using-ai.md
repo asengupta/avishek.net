@@ -31,7 +31,6 @@ draft: false
   - [BinopCoercionStrategy Return Type](#binopcoercionstrategy-return-type)
   - [UnopCoercionStrategy](#unopcoercionstrategy)
   - [Demo Scripts and LLM Path Leaks](#demo-scripts-and-llm-path-leaks)
-  - [A PHP Enum and a Bare String](#a-php-enum-and-a-bare-string)
   - [The Question That Came After](#the-question-that-came-after)
 - [The Shape of the Work](#the-shape-of-the-work)
 - [Takeaways](#takeaways)
@@ -46,7 +45,7 @@ The VM stored values as raw Python primitives — `int`, `str`, `float`, `bool`.
 
 This created an obvious problem. When Java code did `"int:" + 42`, Python raised `TypeError` because it can't concatenate `str` and `int`. The VM caught the exception and degraded the result to a `SymbolicValue` — a placeholder meaning "I don't know what this is." The concrete information was gone. Java, C#, Kotlin, and Scala all auto-stringify non-string operands in string concatenation. The VM had no way to implement this because type information was absent at the point of operation.
 
-The fix looked straightforward: make type information available to operators. What followed was a refactoring that touched almost every layer of the VM, exposed hidden assumptions in constructor handling, revealed that builtins were bypassing the state management contract, and prompted half a dozen side detours into coercion protocols, demo scripts, PHP enums, and the question of whether two separate type-tracking mechanisms were still both necessary.
+The fix looked straightforward: make type information available to operators. What followed was a refactoring that touched almost every layer of the VM, exposed hidden assumptions in constructor handling, revealed that builtins were bypassing the state management contract, and prompted several side detours into coercion protocols, demo scripts, and the question of whether two separate type-tracking mechanisms were still both necessary.
 
 This post traces that arc. It's written partly as documentation and partly because the shape of the work — the way a focused fix expanded into a system-wide migration, the side detours, the bugs that only surfaced because something else changed — is characteristic of refactoring work in general. The AI didn't change the nature of that work. It changed the speed.
 
@@ -275,12 +274,6 @@ This prompted creating an external test infrastructure: a pytest marker `@pytest
 
 A separate leak was found in `LLMPlausibleResolver._parse_llm_response`, which parsed LLM JSON responses into `StateUpdate` values. The parser produced bare values — not `TypedValue` — which entered the now-TypedValue-only pipeline. I'd asked *"Are there still any bare values passed around anywhere else in the system?"* and the audit found three sites in the LLM resolver. The main migration had been so focused on the local execution path that the LLM fallback path was missed.
 
-### A PHP Enum and a Bare String
-
-While working through the issue tracker, a bug surfaced in the PHP frontend: `lower_php_enum_case` emitted `STORE_FIELD` with the bare string `"self"` as the object operand instead of loading `self` into a register first. This is a frontend bug, not a TypedValue issue, but it was in the tracker alongside TypedValue work and was a quick fix. The pattern was already established by `lower_php_property_declaration`, which does it correctly.
-
----
-
 ### The Question That Came After
 
 After the migration was done, the documentation updated, and the detours resolved, I looked at the codebase and asked: *"We're now storing types alongside every value in TypedValue. Are the separate `register_types` and `var_types` dictionaries in `TypeEnvironment` still required?"*
@@ -313,7 +306,6 @@ flowchart TD
     D3["Detour: Demo scripts"]
     D4["Detour: LLM path leak"]
     D5["Detour: External tests"]
-    D6["Detour: PHP enum bare string"]
     DOC["Doc: Type system update"]
 
     P1 --> P2
@@ -355,7 +347,7 @@ Some numbers:
 |---|---|
 | Duration | ~2 days |
 | Sessions | ~12 |
-| Phases | 9 major + 6 detours |
+| Phases | 9 major + 5 detours |
 | Commits | ~60 |
 | Test count (start) | ~11,274 |
 | Test count (end) | ~11,545 |
@@ -379,7 +371,7 @@ Some numbers:
 
 **The brainstorm → spec → plan → implement pipeline prevented false starts.** Every phase that went through the brainstorming skill produced a spec before any code was written. The spec forced me to articulate what was changing, what the boundary conditions were, and what the migration path looked like. Twice, the brainstorming skill proposed an approach I hadn't considered that turned out to be simpler (the serialize/deserialize split, the `BuiltinResult` design). The discipline of writing down the design before implementing it is not new — but having a tool that *enforces* the step, asks the right questions, and proposes alternatives makes it harder to skip when you're tempted to just start coding.
 
-**A local issue tracker changes how you handle surprises.** Detours are the normal shape of a refactoring. The question is whether they derail you or get absorbed into the work. Beads made it trivial to file a new task the moment a detour surfaced, set its dependencies, and continue with the current work. When the current task was done, `bd ready` surfaced whatever was next — planned phase or newly-filed detour. The tracker turned "I should also fix this other thing I just noticed" from a context-switching hazard into a two-second operation. Over a dozen sessions and six detours, that added up.
+**A local issue tracker changes how you handle surprises.** Detours are the normal shape of a refactoring. The question is whether they derail you or get absorbed into the work. Beads made it trivial to file a new task the moment a detour surfaced, set its dependencies, and continue with the current work. When the current task was done, `bd ready` surfaced whatever was next — planned phase or newly-filed detour. The tracker turned "I should also fix this other thing I just noticed" from a context-switching hazard into a two-second operation. Over a dozen sessions and five detours, that added up.
 
 **The AI didn't change the nature of the work. It changed the throughput.** The design decisions, the boundary table, the phase ordering, the detour triaging — all of that is the same work a human would do. The AI handled the mechanical parts: updating 40+ builtins to accept `TypedValue` args, threading kwargs through five layers of function signatures, updating test assertions across eight test files. The refactoring took two days. Without the AI, the same refactoring would have taken longer, but the intellectual structure would have been identical. The bottleneck was never typing speed. It was understanding what needed to change and in what order.
 
