@@ -4,7 +4,7 @@ author: avishek
 usemathjax: false
 mermaid: true
 tags: ["Software Engineering", "Compilers", "Program Analysis", "AI-Assisted Development"]
-draft: true
+draft: false
 ---
 
 *Notes from building a multi-language code analysis engine across 400+ conversation sessions with Claude Code.*
@@ -154,9 +154,17 @@ The audit loop ran dozens of times:
 
 ```mermaid
 flowchart LR
-    A["Audit all<br>frontends"] --> G{"Gaps<br>found?"}
-    G -- "Yes (34 → 19 → 12 → ...)" --> I["Batch-implement<br>all gaps"] --> T["Add tests"] --> A
-    G -- "No: 0 gaps,<br>0 SYMBOLIC" --> D["Done"]
+    A("🔍 Audit all<br/>frontends"):::audit --> G{"Gaps<br/>found?"}:::decide
+    G -- "Yes (34 → 19 → 12 → ...)" --> I("🔧 Batch-implement<br/>all gaps"):::impl
+    I --> T("✅ Add tests"):::test
+    T --> A
+    G -- "No: 0 gaps,<br/>0 SYMBOLIC" --> D("🏁 Done"):::done
+
+    classDef audit fill:#e8f4fd,stroke:#4a90d9,stroke-width:2px,color:#1a3a5c
+    classDef decide fill:#fff3e0,stroke:#e8a735,stroke-width:2px,color:#5c3a0a
+    classDef impl fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#3a0a3a
+    classDef test fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
+    classDef done fill:#e8f5e9,stroke:#2e7d32,stroke-width:3px,color:#1a3a1a
 ```
 
 This pattern (audit, batch-fix, re-audit) was more effective than trying to enumerate every missing feature upfront.
@@ -273,20 +281,29 @@ The file that had the most impact on consistency wasn't any Python module. It wa
 
 The workflow encoded in CLAUDE.md changed over time:
 
-```mermaid
-flowchart LR
-    subgraph before ["Early workflow"]
-        direction LR
-        B1["Brainstorm"] --> P1["Plan"] --> I1["Implement"] --> T1["Test"]
-    end
-```
+**Early workflow:**
 
 ```mermaid
 flowchart LR
-    subgraph after ["Revised workflow (TDD)"]
-        direction LR
-        B2["Brainstorm"] --> D2["Discuss<br>trade-offs"] --> P2["Plan"] --> T2["Write<br>tests"] --> I2["Implement"] --> F2["Fix<br>tests"] --> C2["Commit"] --> R2["Refactor"]
-    end
+    B1("🧠 Brainstorm"):::phase1 --> P1("📐 Plan"):::phase2 --> I1("⚙️ Implement"):::phase3 --> T1("🧪 Test"):::phase4
+
+    classDef phase1 fill:#e8f4fd,stroke:#4a90d9,stroke-width:2px,color:#1a3a5c
+    classDef phase2 fill:#fff3e0,stroke:#e8a735,stroke-width:2px,color:#5c3a0a
+    classDef phase3 fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#3a0a3a
+    classDef phase4 fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
+```
+
+**Revised workflow (TDD):**
+
+```mermaid
+flowchart LR
+    B2("🧠 Brainstorm"):::phase1 --> D2("⚖️ Discuss<br/>trade-offs"):::phase1 --> P2("📐 Plan"):::phase2 --> T2("🧪 Write<br/>tests"):::test --> I2("⚙️ Implement"):::phase3 --> F2("🔧 Fix<br/>tests"):::test --> C2("✅ Commit"):::done --> R2("♻️ Refactor"):::done
+
+    classDef phase1 fill:#e8f4fd,stroke:#4a90d9,stroke-width:2px,color:#1a3a5c
+    classDef phase2 fill:#fff3e0,stroke:#e8a735,stroke-width:2px,color:#5c3a0a
+    classDef phase3 fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#3a0a3a
+    classDef test fill:#fce4ec,stroke:#c62828,stroke-width:2px,color:#5c0a0a
+    classDef done fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
 ```
 
 Early: **Brainstorm -> Plan -> Implement -> Test.** Tests came after implementation. This was the root cause of the weak assertion patterns the audit uncovered — when the AI writes tests *after* the code exists, it tends to assert what the code *does* rather than what it *should do*. The test becomes a description of current behaviour, not a specification of correct behaviour.
@@ -373,14 +390,22 @@ The distinction between the memory file and `CLAUDE.md`: `CLAUDE.md` encodes *ru
 
 ```mermaid
 flowchart TB
-    S["New session starts"] --> R["Read CLAUDE.md<br><i>Rules: how to behave</i>"]
-    S --> M["Read MEMORY.md<br><i>State: what's been done</i>"]
-    S --> G["Read gap analysis<br><i>Plan: what's left to do</i>"]
-    S --> B["Query Beads issues<br><i>Work queue: what to do next</i>"]
-    R --> O["Agent is oriented"]
-    M --> O
-    G --> O
-    B --> O
+    S(("🚀 New session")):::start
+    R("📜 CLAUDE.md<br/><i>Rules: how to behave</i>"):::rules
+    M("🧠 MEMORY.md<br/><i>State: what's been done</i>"):::state
+    G("📊 Gap analysis<br/><i>Plan: what's left to do</i>"):::plan
+    B("📋 Beads issues<br/><i>Work queue: what to do next</i>"):::queue
+    O("✅ Agent is oriented"):::done
+
+    S --> R & M & G & B
+    R & M & G & B --> O
+
+    classDef start fill:#e8f4fd,stroke:#4a90d9,stroke-width:3px,color:#1a3a5c
+    classDef rules fill:#fce4ec,stroke:#c62828,stroke-width:2px,color:#5c0a0a
+    classDef state fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#3a0a3a
+    classDef plan fill:#fff3e0,stroke:#e8a735,stroke-width:2px,color:#5c3a0a
+    classDef queue fill:#e8f4fd,stroke:#4a90d9,stroke-width:2px,color:#1a3a5c
+    classDef done fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
 ```
 
 | Layer | Artefact | Purpose | Update frequency |
@@ -416,16 +441,15 @@ The AI will optimise for closing tickets, not for closing them correctly. The hu
 
 ```mermaid
 flowchart LR
-    subgraph early ["Sessions 1–20"]
-        E["Detailed specs<br>with full context<br>and constraints"]
-    end
-    subgraph mid ["Sessions 20–100"]
-        M["Short directives<br>with implicit context<br><i>'implement all the<br>critical and common ones'</i>"]
-    end
-    subgraph late ["Sessions 100+"]
-        L["Minimal prompts<br><i>'do all of them'</i><br><i>'push'</i>"]
-    end
-    early --> mid --> late
+    E("📝 Sessions 1–20<br/><b>Detailed specs</b><br/><i>full context + constraints</i>"):::early
+    M("💬 Sessions 20–100<br/><b>Short directives</b><br/><i>'implement all the<br/>critical and common ones'</i>"):::mid
+    L("⚡ Sessions 100+<br/><b>Minimal prompts</b><br/><i>'do all of them'</i><br/><i>'push'</i>"):::late
+
+    E --> M --> L
+
+    classDef early fill:#fce4ec,stroke:#c62828,stroke-width:2px,color:#5c0a0a
+    classDef mid fill:#fff3e0,stroke:#e8a735,stroke-width:2px,color:#5c3a0a
+    classDef late fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
 ```
 
 **The AI hallucinated audit findings.** During the assertion audit, the AI reported violations that didn't exist or had already been fixed. Different parallel agents flagged different things, inconsistently applied priority criteria, and re-reported fixed items with different wording. The reconciliation pass caught this. The auditor itself needs auditing.

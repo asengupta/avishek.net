@@ -14,6 +14,10 @@ draft: false
 ## Table of Contents
 
 - [The Problem](#the-problem)
+- [The Tools](#the-tools)
+  - [Superpowers: Enforced Design Discipline](#superpowers-enforced-design-discipline)
+  - [Beads: Local-First Task Tracking](#beads-local-first-task-tracking)
+  - [Code Simplifier: Automated Cleanup After Every Change](#code-simplifier-automated-cleanup-after-every-change)
 - [Phase 1: TypedValue and BinopCoercionStrategy](#phase-1-typedvalue-and-binopcoercionstrategy)
   - [The Design Decision That Shaped Everything](#the-design-decision-that-shaped-everything)
   - [The Boundary Table](#the-boundary-table)
@@ -49,11 +53,97 @@ The fix looked straightforward: make type information available to operators. Wh
 
 This post traces that arc. It's written partly as documentation and partly because the shape of the work — the way a focused fix expanded into a system-wide migration, the side detours, the bugs that only surfaced because something else changed — is characteristic of refactoring work in general. The AI didn't change the nature of that work. It changed the speed.
 
-All of this was done through conversations with Claude Code, using the [Superpowers](https://github.com/anthropics/claude-code-plugins) skill system. Each major phase started with the *brainstorming* skill — a structured dialogue that forces you to articulate the design before touching code. The brainstorming skill doesn't let you skip ahead to implementation; it walks through clarifying questions, proposes alternative approaches with trade-offs, and only produces a design spec after you've agreed on the direction. From there, the *writing-plans* skill breaks the spec into granular TDD steps, and *subagent-driven development* dispatches fresh agents per task with two-stage review. The discipline of that pipeline — brainstorm, spec, plan, implement, review — shaped the migration as much as the code decisions did.
-
-Task tracking ran through [Beads](https://github.com/anthropics/beads), a local-first issue tracker that lives alongside the repo. Every phase, every detour, every discovered bug got its own Beads task. When I finished a phase and asked *"what next?"*, the answer often came from running `bd ready` — Beads surfacing the next unblocked task. When a detour emerged mid-session (the constructor bug, the builtin side-effect problem), it got filed as a new Beads task immediately, triaged against the existing work, and either addressed in sequence or deferred. The tracker made it possible to context-switch between the main migration and its detours without losing track of what was done and what remained.
+All of this was done through conversations with Claude Code, using three tools that shaped the work as much as the code decisions did: [Superpowers](https://github.com/anthropics/claude-code-plugins) for enforced design discipline, [Beads](https://github.com/anthropics/beads) for local-first task tracking, and [Code Simplifier](https://github.com/anthropics/claude-code-plugins) for automated post-implementation cleanup. The next section describes all three.
 
 The refactoring spanned about a dozen sessions over two days. I'm including specific moments from those conversations — places where I had to course-correct, where I got frustrated with the codebase or the AI's approach, where a question I asked led to discovering something unexpected — because the texture of those interactions is part of the story.
+
+---
+
+## The Tools
+
+Three tools ran alongside Claude Code throughout this migration. None are part of Claude Code itself — they're open-source plugins that layer structure on top of it. I'm describing them here because the post references them repeatedly, and their constraints shaped how the work unfolded.
+
+### Superpowers: Enforced Design Discipline
+
+[Superpowers](https://github.com/anthropics/claude-code-plugins) is a skill system for Claude Code. Skills are structured prompts that activate automatically based on the task at hand. They don't add capabilities the AI doesn't have — they enforce workflows the AI would otherwise skip.
+
+The skills that mattered for this migration:
+
+**Brainstorming.** Every major phase started here. The brainstorming skill runs a structured dialogue: it asks one clarifying question at a time, proposes alternative approaches with explicit trade-offs, and refuses to produce a design spec until you've agreed on the direction. It won't let you skip to implementation. This is the skill that caught the serialize/deserialize split (Phase 2) and the `BuiltinResult` design (Detour) — cases where the obvious approach wasn't the best one, and the skill's insistence on proposing alternatives surfaced something simpler.
+
+The brainstorming pipeline looks like this:
+
+```mermaid
+flowchart LR
+    Q("🔍 Clarifying<br/>questions<br/><i>one at a time</i>"):::ask --> A("⚖️ Alternative<br/>approaches<br/><i>with trade-offs</i>"):::think
+    A --> D{"🎯 Design<br/>decision<br/><i>user chooses</i>"}:::decide
+    D -- "more questions" --> Q
+    D -- "agreed" --> S("📋 Design spec"):::output
+
+    classDef ask fill:#e8f4fd,stroke:#4a90d9,stroke-width:2px,color:#1a3a5c
+    classDef think fill:#fff3e0,stroke:#e8a735,stroke-width:2px,color:#5c3a0a
+    classDef decide fill:#fce4ec,stroke:#c62828,stroke-width:2px,color:#5c0a0a
+    classDef output fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
+
+    linkStyle 2 stroke:#2e7d32,stroke-width:2px
+```
+
+The early phases (1–3) had longer brainstorming cycles — eight questions in Phase 1 before any code was discussed. By the later phases, the cycles were shorter because the patterns were established: the skill would propose an approach, I'd confirm it matched the established pattern, and we'd move to planning.
+
+**Writing-plans.** Takes the design spec from brainstorming and breaks it into granular TDD steps — test first, then implementation, then verification. Each step is small enough to be a single commit. The plan for Phase 5 (heap fields) had 12 steps; the plan for the builtin args migration (Detour) explicitly mandated zero intermediate commits because the interface change was atomic.
+
+**Subagent-driven development.** Dispatches fresh Claude Code agents per task from the plan, each with its own context window. The dispatching agent reviews each sub-agent's work before accepting it. This is where the review caught the `value is not None` guard in Phase 3 — a sub-agent had taken a shortcut that violated the design spec, and the reviewing agent flagged it. Without the two-stage review, that shortcut would have shipped.
+
+The full pipeline:
+
+```mermaid
+flowchart LR
+    B("🧠 Brainstorm"):::phase1 --> SP("📋 Spec"):::phase2
+    SP --> PL("📐 Plan<br/><i>TDD steps</i>"):::phase2
+    PL --> SA("🤖 Sub-agents<br/><i>one per task</i>"):::phase3
+    SA --> RV("🔎 Review<br/><i>two-stage</i>"):::phase4
+    RV --> CM("✅ Commit"):::phase5
+
+    classDef phase1 fill:#e8f4fd,stroke:#4a90d9,stroke-width:2px,color:#1a3a5c
+    classDef phase2 fill:#fff3e0,stroke:#e8a735,stroke-width:2px,color:#5c3a0a
+    classDef phase3 fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#3a0a3a
+    classDef phase4 fill:#fce4ec,stroke:#c62828,stroke-width:2px,color:#5c0a0a
+    classDef phase5 fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
+```
+
+The discipline this pipeline enforces is not novel — brainstorm, spec, plan, implement, review is how careful engineering has always worked. What's different is that a tool *enforces* the steps. When you're twelve sessions into a migration and tempted to just start coding the next phase, the skill doesn't let you. It asks its questions first.
+
+### Beads: Local-First Task Tracking
+
+[Beads](https://github.com/anthropics/beads) is a local-first issue tracker that lives alongside the repo as flat files. No server, no web UI, no syncing. Tasks are created and queried from the command line: `bd create`, `bd ready`, `bd update <id> --status closed`.
+
+The features that mattered:
+
+**Dependencies.** Every Beads task can declare dependencies on other tasks. `bd ready` shows only tasks whose dependencies are all closed — the next unblocked work. This turned the dependency graph in [The Shape of the Work](#the-shape-of-the-work) from a diagram into an operational tool. After closing a phase, `bd ready` surfaced whatever was next — the next planned phase or a detour that had just become unblocked.
+
+**Instant triage.** When a detour surfaced mid-session — the constructor bug in Phase 3, the builtin side-effect problem after Phase 7 — it got filed as a new Beads task in two seconds: `bd create "BuiltinResult: builtins bypass apply_update" --dep red-dragon-xyz`. The dependency was set, and the task appeared in `bd ready` at the right time. Without this, mid-session discoveries would have been either fixed immediately (derailing the current work) or forgotten.
+
+**Mid-session pivots.** The clearest example: midway through brainstorming the heap fields migration (`red-dragon-f6i`), I realized handlers needed to be migrated first. I interrupted, ran `bd update red-dragon-f6i --status deferred`, created the handler migration task, and pivoted. When the handler migration was done and closed, `bd ready` surfaced the deferred heap fields task automatically. The tracker absorbed the pivot without losing the deferred work.
+
+**Session boundaries.** Each Beads task has an ID (like `red-dragon-gsl`) that appears in commit messages and in the brainstorming/planning conversations. When a new Claude Code session starts, the first thing I do is `bd ready` — the task list is the handoff between sessions. The AI doesn't need to remember what happened last session; the tracker tells it what's next.
+
+Over a dozen sessions and five detours, the pattern was: close a task → `bd ready` → claim the next one → brainstorm → plan → implement → commit → close. The tracker turned "I should also fix this other thing I just noticed" from a context-switching hazard into a two-second operation.
+
+### Code Simplifier: Automated Cleanup After Every Change
+
+[Code Simplifier](https://github.com/anthropics/claude-code-plugins) is a Claude Code plugin that runs as a dedicated review agent after implementation work completes. It focuses on code that was just modified — not the entire codebase — and refines it for clarity, consistency, and maintainability without changing behaviour.
+
+In a migration like this, where sub-agents are churning out handler-by-handler changes across dozens of files, the code that lands is functional but not always clean. A sub-agent focused on migrating `_handle_store_field` to produce `TypedValue` will get the types right but might leave behind redundant intermediate variables, unnecessarily verbose conditionals, or naming inconsistencies with the surrounding code. Code Simplifier catches this.
+
+What it does:
+
+- **Reduces unnecessary complexity.** Nested ternaries become `if`/`else` chains. Three-line variable assignments that exist only to be passed once get inlined. Guard clauses replace deep nesting.
+- **Eliminates redundant code.** During the transition phases, handlers accumulated isinstance checks, temporary unwrap/rewrap sequences, and defensive guards that were necessary mid-migration but dead after the phase completed. Code Simplifier flagged many of these before Phase 7's explicit cleanup pass.
+- **Enforces consistency.** When 15 handler groups are migrated one at a time across multiple sessions, naming conventions drift. One handler might call the coerced value `lhs_coerced`, another `coerced_lhs`, another `left`. Code Simplifier normalises these.
+
+The key constraint: it only touches recently modified code. It won't "improve" stable code you didn't ask about. This prevents the scope creep that happens when cleanup tools audit everything — you end up with a 200-file diff when you wanted a 3-file fix.
+
+In practice, I invoked it after each major phase commit. The simplifier would produce a small follow-up diff — typically 10–30 lines changed — that tightened the code the sub-agents had just written. These were fast reviews because the behavioural correctness was already established by the tests; the simplifier was only adjusting form, not function.
 
 ---
 
@@ -96,6 +186,52 @@ class BinopCoercionStrategy(Protocol):
 
 `coerce()` transforms operands before the operator runs. `result_type()` infers the output type. The executor calls both, wraps the result in `TypedValue`, and stores it.
 
+Here's the full round trip of a binary operation like `"int:" + 42` in Java:
+
+```mermaid
+flowchart TD
+    subgraph read ["① Read"]
+        R1("%r1 → TypedValue('int:', String)"):::reg --> RESOLVE1("_resolve_binop_operand"):::fn
+        R2("%r2 → TypedValue(42, Int)"):::reg --> RESOLVE2("_resolve_binop_operand"):::fn
+    end
+
+    subgraph coerce ["② Coerce"]
+        RESOLVE1 --> LHS("lhs: TypedValue('int:', String)"):::tv
+        RESOLVE2 --> RHS("rhs: TypedValue(42, Int)"):::tv
+        LHS --> COERCE("⚖️ BinopCoercionStrategy.coerce('+', lhs, rhs)<br/><i>JavaBinopCoercion: stringify rhs</i>"):::strategy
+        RHS --> COERCE
+        COERCE --> COERCED_L("TypedValue('int:', String)"):::tv
+        COERCE --> COERCED_R("TypedValue('42', String)"):::tvchanged
+    end
+
+    subgraph compute ["③ Compute"]
+        COERCED_L -- ".value" --> EVAL("Operators.eval_binop('+', 'int:', '42')"):::fn
+        COERCED_R -- ".value" --> EVAL
+        EVAL --> RESULT("result = 'int:42'"):::raw
+    end
+
+    subgraph typeinfer ["④ Type + Wrap"]
+        LHS --> RTYPE("BinopCoercionStrategy.result_type()"):::strategy
+        RHS --> RTYPE
+        RTYPE --> TYPE("String"):::type
+        RESULT --> WRAP("typed('int:42', String)"):::fn
+        TYPE --> WRAP
+    end
+
+    subgraph store ["⑤ Store"]
+        WRAP --> STORE("%r3 → TypedValue('int:42', String)"):::reg
+        STORE --> APPLY("apply_update()"):::fn
+    end
+
+    classDef reg fill:#e8f4fd,stroke:#4a90d9,stroke-width:2px,color:#1a3a5c
+    classDef fn fill:#f5f5f5,stroke:#616161,stroke-width:1px,color:#212121
+    classDef tv fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
+    classDef tvchanged fill:#fff9c4,stroke:#f9a825,stroke-width:2px,color:#5c3a0a
+    classDef strategy fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#3a0a3a
+    classDef raw fill:#fff3e0,stroke:#e8a735,stroke-width:1px,color:#5c3a0a
+    classDef type fill:#fce4ec,stroke:#c62828,stroke-width:1px,color:#5c0a0a
+```
+
 `DefaultBinopCoercion` is a no-op — it passes operands through unchanged and infers types from operator categories (comparisons return `Bool`, arithmetic follows numeric promotion rules). `JavaBinopCoercion` overrides `coerce()` to auto-stringify non-string operands when `+` is used with a `String`.
 
 ### The Design Decision That Shaped Everything
@@ -106,7 +242,39 @@ The other critical decision: **every value is `TypedValue`, even when the type i
 
 ### The Boundary Table
 
-The spec documented five boundary crossings where values moved between storage locations (register-to-heap, heap-to-register, local-var-to-closure, closure-to-local-var, register-to-function-arg) and what wrapping/unwrapping happened at each. This table became the roadmap for every subsequent phase. Each phase was essentially: pick a boundary, push TypedValue one layer deeper, update the read sites, run the tests.
+The spec documented five boundary crossings where values moved between storage locations and what wrapping/unwrapping happened at each. This table became the roadmap for every subsequent phase. Each phase was essentially: pick a boundary, push TypedValue one layer deeper, update the read sites, run the tests.
+
+```mermaid
+flowchart LR
+    subgraph Frame ["Stack Frame"]
+        direction TB
+        REG("📦 Registers<br/><code>%r1 → TypedValue</code>"):::reg
+        VAR("📌 Local Vars<br/><code>x → TypedValue</code>"):::var
+    end
+
+    subgraph Heap ["Heap"]
+        OBJ("🗄️ HeapObject.fields<br/><code>name → TypedValue</code>"):::heap
+    end
+
+    subgraph Closure ["Closure Environment"]
+        BIND("🔗 Bindings<br/><code>captured_x → TypedValue</code>"):::closure
+    end
+
+    REG -- "STORE_FIELD" --> OBJ
+    OBJ -- "LOAD_FIELD" --> REG
+    VAR -- "capture" --> BIND
+    BIND -- "function entry" --> VAR
+    REG -- "CALL_FUNCTION" --> VAR
+    VAR -- "STORE_VAR" --> VAR
+    REG -- "LOAD_VAR" --> REG
+
+    classDef reg fill:#e8f4fd,stroke:#4a90d9,stroke-width:2px,color:#1a3a5c
+    classDef var fill:#fff3e0,stroke:#e8a735,stroke-width:2px,color:#5c3a0a
+    classDef heap fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
+    classDef closure fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#3a0a3a
+```
+
+Each arrow is a boundary crossing. Before the migration, values were unwrapped to raw primitives and re-wrapped at each crossing. After: `TypedValue` flows through intact.
 
 After this phase: ~11,274 tests passing.
 
@@ -127,6 +295,39 @@ The brainstorming for the `apply_update` split was another case where I had to p
 The fix split `apply_update` into two paths:
 - **Local path:** Handlers produce `TypedValue` directly. `apply_update` stores them with lightweight type coercion.
 - **LLM path:** A new `materialize_raw_update` function takes raw values from LLM JSON responses, deserializes them, coerces them, and wraps them in `TypedValue`.
+
+**Before:** serialize → deserialize roundtrip
+
+```mermaid
+flowchart LR
+    H1("Handler"):::fn -- "_serialize_value()" --> SU1("StateUpdate<br/><i>raw/JSON</i>"):::raw
+    SU1 -- "_deserialize_value()" --> AU1("apply_update()"):::fn
+    AU1 -- "wrap" --> VM1("VM State"):::state
+
+    classDef fn fill:#f5f5f5,stroke:#616161,stroke-width:1px,color:#212121
+    classDef raw fill:#fce4ec,stroke:#c62828,stroke-width:1px,color:#5c0a0a
+    classDef state fill:#e8f4fd,stroke:#4a90d9,stroke-width:2px,color:#1a3a5c
+```
+
+**After:** dual path — local handlers and LLM backends converge on the same `apply_update()`
+
+```mermaid
+flowchart TD
+    H2("🖥️ Local Handler"):::local -- "produces TypedValue" --> SU2("StateUpdate<br/><i>TypedValue</i>"):::tv
+    LLM("🌐 LLM Backend"):::llm -- "JSON response" --> RAW("Raw StateUpdate"):::raw
+    RAW -- "materialize_raw_update()" --> SU2
+    SU2 -- "coerce_local_update()" --> AU2("apply_update()"):::fn
+    AU2 --> VM2("VM State"):::state
+
+    classDef fn fill:#f5f5f5,stroke:#616161,stroke-width:1px,color:#212121
+    classDef raw fill:#fce4ec,stroke:#c62828,stroke-width:1px,color:#5c0a0a
+    classDef tv fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
+    classDef state fill:#e8f4fd,stroke:#4a90d9,stroke-width:2px,color:#1a3a5c
+    classDef local fill:#e8f5e9,stroke:#2e7d32,stroke-width:1px,color:#1a3a1a
+    classDef llm fill:#fff3e0,stroke:#e8a735,stroke-width:1px,color:#5c3a0a
+```
+
+The local path — the common case — is a direct pipeline with no serialization overhead. The LLM path gets its own materialization function that handles the JSON-to-TypedValue conversion before merging into the same `StateUpdate`.
 
 The migration touched every handler in the executor — about 15 handler groups — done one at a time in dependency order: simple value handlers first (`_handle_const`, `_handle_store_var`), then loads (`_handle_load_var`, `_handle_load_field`), then objects, then operators, then the call chain. Each group was a separate commit.
 
@@ -169,6 +370,31 @@ The fix introduced a three-state return type:
 - `typed(None, UNKNOWN)` — explicit `return None`
 - `typed(42, scalar("Int"))` — concrete return value
 
+```mermaid
+flowchart TD
+    RET("_handle_return()"):::fn
+
+    RET --> CTOR{"🏗️ Constructor?<br/><i>frame.is_ctor</i>"}:::decide
+    CTOR -- "yes" --> VOID("TypedValue(None, Void)"):::void
+    CTOR -- "no, has operand" --> RESOLVE("_resolve_reg(operand)"):::fn
+    CTOR -- "no, no operand" --> VOID
+
+    RESOLVE --> TV("typed_from_runtime(val)"):::fn
+    TV --> SU("StateUpdate<br/><i>return_value + call_pop</i>"):::state
+    VOID --> SU
+
+    SU --> POP("⬆️ Pop frame"):::fn
+    POP --> FLOW{"_handle_return_flow()"}:::decide
+    FLOW -- "Void" --> SKIP("🚫 Skip result_reg write"):::void
+    FLOW -- "concrete" --> WRITE("✅ caller.registers[result_reg]<br/>= TypedValue"):::tv
+
+    classDef fn fill:#f5f5f5,stroke:#616161,stroke-width:1px,color:#212121
+    classDef decide fill:#fff3e0,stroke:#e8a735,stroke-width:2px,color:#5c3a0a
+    classDef void fill:#fce4ec,stroke:#c62828,stroke-width:1px,color:#5c0a0a
+    classDef state fill:#e8f4fd,stroke:#4a90d9,stroke-width:2px,color:#1a3a5c
+    classDef tv fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
+```
+
 After this phase: ~11,449 tests, plus the constructor fix.
 
 ---
@@ -195,6 +421,30 @@ typed_from_runtime(TypedValue(42, Int))
 ```
 
 Every read site that previously called `typed_from_runtime(raw_value)` unconditionally had to get an isinstance guard to prevent double-wrapping. The plan warned about intermediate breakage: tasks 1–4 changed write sites to store `TypedValue`, but read sites still called `typed_from_runtime()` unconditionally until tasks 5–7. The test suite was broken between those groups. This was acceptable because both groups were committed atomically.
+
+```mermaid
+flowchart TD
+    subgraph write ["Write Site (Phase 4–5)"]
+        HANDLER("Handler"):::fn -- "typed_from_runtime(val)" --> TV1("TypedValue(42, Int)"):::tv
+        TV1 -- "HeapWrite" --> HEAP("🗄️ heap.fields['x']<br/>= TypedValue(42, Int)"):::heap
+    end
+
+    HEAP --> SPLIT{"Read site calls<br/>typed_from_runtime()?"}:::decide
+
+    subgraph bad ["❌ Before fix: double-wrapped"]
+        SPLIT -- "yes" --> DOUBLE("TypedValue(<br/>  value = TypedValue(42, Int),<br/>  type = UNKNOWN<br/>)"):::danger
+    end
+
+    subgraph good ["✅ After fix: pass-through"]
+        SPLIT -- "no" --> PASS("TypedValue(42, Int)<br/><i>intact</i>"):::tv
+    end
+
+    classDef fn fill:#f5f5f5,stroke:#616161,stroke-width:1px,color:#212121
+    classDef tv fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
+    classDef heap fill:#e8f4fd,stroke:#4a90d9,stroke-width:2px,color:#1a3a5c
+    classDef decide fill:#fff3e0,stroke:#e8a735,stroke-width:2px,color:#5c3a0a
+    classDef danger fill:#ffcdd2,stroke:#c62828,stroke-width:3px,color:#b71c1c
+```
 
 After Phase 6: ~11,481 tests passing.
 
@@ -229,6 +479,34 @@ class BuiltinResult:
 ```
 
 All builtins return `BuiltinResult`. The executor unpacks it into the `StateUpdate`. No builtin directly mutates `vm.heap`.
+
+**Before:** builtins bypass StateUpdate
+
+```mermaid
+flowchart LR
+    B1("_builtin_array_of()"):::fn -- "⚡ direct write" --> HEAP1("vm.heap"):::danger
+    B1 -- "raw value" --> H1("Handler"):::fn
+    H1 -- "StateUpdate<br/><i>value only</i>" --> AU1("apply_update()"):::fn
+    AU1 --> VM1("VM State"):::state
+
+    classDef fn fill:#f5f5f5,stroke:#616161,stroke-width:1px,color:#212121
+    classDef danger fill:#ffcdd2,stroke:#c62828,stroke-width:3px,color:#b71c1c
+    classDef state fill:#e8f4fd,stroke:#4a90d9,stroke-width:2px,color:#1a3a5c
+```
+
+**After:** all effects are declarative
+
+```mermaid
+flowchart LR
+    B2("_builtin_array_of()"):::fn --> BR("📋 BuiltinResult<br/><i>value + new_objects<br/>+ heap_writes</i>"):::builtin
+    BR --> H2("Handler unpacks"):::fn
+    H2 --> AU2("apply_update()"):::fn
+    AU2 --> VM2("VM State<br/><i>atomic update</i>"):::state
+
+    classDef fn fill:#f5f5f5,stroke:#616161,stroke-width:1px,color:#212121
+    classDef state fill:#e8f4fd,stroke:#4a90d9,stroke-width:2px,color:#1a3a5c
+    classDef builtin fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
+```
 
 The migration was done in eight commits, with an isinstance bridge during the transition so that old-style builtins (returning raw values) and new-style builtins (returning `BuiltinResult`) could coexist. The bridge was removed in the last commit.
 
@@ -292,37 +570,38 @@ Here's what the migration looked like as a dependency graph:
 
 ```mermaid
 flowchart TD
-    P1["Phase 1: TypedValue + BinopCoercion"]
-    P2["Phase 2: Handler migration"]
-    P3["Phase 3: Return values"]
-    P4["Phase 4: HeapWrite.value"]
-    P5["Phase 5: HeapObject.fields"]
-    P6["Phase 6: Closure bindings"]
-    P7["Phase 7: Guard cleanup"]
-    B1["Detour: BuiltinResult"]
-    B2["Detour: Builtin TypedValue args"]
-    D1["Detour: BinopCoercion return type"]
-    D2["Detour: UnopCoercionStrategy"]
-    D3["Detour: Demo scripts"]
-    D4["Detour: LLM path leak"]
-    D5["Detour: External tests"]
-    DOC["Doc: Type system update"]
+    P1("Phase 1<br/>TypedValue + BinopCoercion"):::main
+    P2("Phase 2<br/>Handler migration"):::main
+    P3("Phase 3<br/>Return values"):::main
+    P4("Phase 4<br/>HeapWrite.value"):::main
+    P5("Phase 5<br/>HeapObject.fields"):::main
+    P6("Phase 6<br/>Closure bindings"):::main
+    P7("Phase 7<br/>Guard cleanup"):::main
 
-    P1 --> P2
-    P2 --> P3
-    P3 --> P4
-    P4 --> P5
-    P5 --> P6
-    P6 --> P7
-    P5 --> B1
-    B1 --> B2
-    P1 --> D1
-    D1 --> D2
-    P5 --> D3
+    B1("Detour<br/>BuiltinResult"):::detour
+    B2("Detour<br/>Builtin TypedValue args"):::detour
+    D1("Detour<br/>BinopCoercion return type"):::detour
+    D2("Detour<br/>UnopCoercionStrategy"):::detour
+    D3("Detour<br/>Demo scripts"):::detour
+    D4("Detour<br/>LLM path leak"):::detour
+    D5("Detour<br/>External tests"):::detour
+
+    DOC("📄 Doc<br/>Type system update"):::doc
+
+    P1 --> P2 --> P3 --> P4 --> P5 --> P6 --> P7
+    P5 --> B1 --> B2
+    P1 --> D1 --> D2
+    P5 --> D3 --> D5
     B2 --> D4
-    D3 --> D5
     P7 --> DOC
     D2 --> DOC
+
+    classDef main fill:#e8f4fd,stroke:#4a90d9,stroke-width:2px,color:#1a3a5c
+    classDef detour fill:#fff3e0,stroke:#e8a735,stroke-width:2px,color:#5c3a0a
+    classDef doc fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
+
+    linkStyle 0,1,2,3,4,5 stroke:#4a90d9,stroke-width:3px
+    linkStyle 6,7,8,9,10,11 stroke:#e8a735,stroke-width:2px,stroke-dasharray:5
 ```
 
 The main sequence (Phases 1–7) was planned. The detours were not. Most of them started with me asking *"what next?"* or *"what else?"* after a phase completed — essentially asking the AI to audit the codebase for things I hadn't thought of. This is a pattern I use a lot: finish a unit of work, commit, then ask the AI to look for fallout. It's more effective than trying to anticipate everything upfront.

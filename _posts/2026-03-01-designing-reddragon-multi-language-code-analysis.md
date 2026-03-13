@@ -11,7 +11,7 @@ draft: false
 
 **GitHub**: [avishek-sen-gupta/red-dragon](https://github.com/avishek-sen-gupta/red-dragon)
 
-![RedDragon TUI Demo](/assets/red-dragon-tui.gif)
+![RedDragon Pipeline Demo](/assets/pipeline-viz.gif)
 
 ---
 
@@ -72,18 +72,24 @@ RedDragon follows a classic compiler pipeline:
 ```mermaid
 %%{ init: { "flowchart": { "curve": "stepBefore" } } }%%
 flowchart TD
-src["Source Code (15 languages)"]-->frontend["Frontend<br/>(deterministic or LLM-based)"]
-frontend-->|"list[IRInstruction]"|cfg["CFG Builder"]
-frontend-->|"list[IRInstruction]"|typeinf["Type Inference"]
-typeinf-->|"TypeEnvironment"|vm["VM"]
-cfg-->vm
-cfg-->dataflow["Dataflow Analysis"]
-style src fill:#4a90d9,stroke:#000,stroke-width:2px,color:#fff
-style frontend fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
-style cfg fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
-style vm fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
-style typeinf fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
-style dataflow fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
+    src("📄 Source Code<br/><i>15 languages</i>"):::input
+    frontend("🔧 Frontend<br/><i>deterministic or LLM-based</i>"):::transform
+    cfg("🔀 CFG Builder"):::analysis
+    typeinf("🏷️ Type Inference"):::analysis
+    vm("⚙️ VM"):::engine
+    dataflow("📊 Dataflow Analysis"):::engine
+
+    src --> frontend
+    frontend -->|"list[IRInstruction]"| cfg
+    frontend -->|"list[IRInstruction]"| typeinf
+    typeinf -->|"TypeEnvironment"| vm
+    cfg --> vm
+    cfg --> dataflow
+
+    classDef input fill:#e8f4fd,stroke:#4a90d9,stroke-width:2px,color:#1a3a5c
+    classDef transform fill:#fff3e0,stroke:#e8a735,stroke-width:2px,color:#5c3a0a
+    classDef analysis fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#3a0a3a
+    classDef engine fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
 ```
 
 Every stage operates on the same flat IR. The type inference pass, VM, and dataflow analysis are all language-agnostic. They don't know whether the instructions came from Python, Rust, or COBOL.
@@ -148,27 +154,25 @@ The CFG builder splits the IR at every `LABEL` and after every `BRANCH`/`BRANCH_
 
 ```mermaid
 flowchart TD
-    entry(["<b>entry</b><br>BRANCH end_classify_0"])
-    func["<b>func_classify_0</b><br>SYMBOLIC param:x · STORE x<br>LOAD x · CONST 0 · BINOP ><br>BRANCH_IF"]
-    if_true["<b>if_true_0</b><br>CONST &quot;positive&quot;<br>STORE label · BRANCH"]
-    if_false["<b>if_false_0</b><br>CONST &quot;negative&quot;<br>STORE label · BRANCH"]
-    if_end(["<b>if_end_0</b><br>LOAD label<br>RETURN"])
-    end_classify["<b>end_classify_0</b><br>CONST function · STORE classify<br>CONST 5 · STORE x<br>CALL classify · STORE result"]
+    entry(["<b>entry</b><br/>BRANCH end_classify_0"]):::entry
+    func("<b>func_classify_0</b><br/>SYMBOLIC param:x · STORE x<br/>LOAD x · CONST 0 · BINOP ><br/>BRANCH_IF"):::block
+    if_true("<b>if_true_0</b><br/>CONST &quot;positive&quot;<br/>STORE label · BRANCH"):::branch
+    if_false("<b>if_false_0</b><br/>CONST &quot;negative&quot;<br/>STORE label · BRANCH"):::branch
+    if_end(["<b>if_end_0</b><br/>LOAD label<br/>RETURN"]):::exit
+    end_classify("<b>end_classify_0</b><br/>CONST function · STORE classify<br/>CONST 5 · STORE x<br/>CALL classify · STORE result"):::block
 
     entry --> end_classify
     entry -.->|"skip"| func
-    func -- T --> if_true
-    func -- F --> if_false
+    func -- "T" --> if_true
+    func -- "F" --> if_false
     if_true --> if_end
     if_false --> if_end
     end_classify -.->|"call"| func
 
-    style entry fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
-    style func fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
-    style if_true fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
-    style if_false fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
-    style if_end fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
-    style end_classify fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
+    classDef entry fill:#e8f4fd,stroke:#4a90d9,stroke-width:2px,color:#1a3a5c
+    classDef block fill:#fff3e0,stroke:#e8a735,stroke-width:2px,color:#5c3a0a
+    classDef branch fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#3a0a3a
+    classDef exit fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
 ```
 
 ### Stage 3: VM Execution (0 LLM calls)
@@ -322,28 +326,31 @@ The AST repair facility recovers that information. It's implemented as a decorat
 ```mermaid
 %%{ init: { "flowchart": { "curve": "stepBefore" } } }%%
 flowchart TD
-    parse["Parse source with tree-sitter"]-->check{"has_error?"}
-    check-->|No|delegate["Delegate to inner frontend"]
-    check-->|Yes|extract["Extract error spans"]
-    extract-->prompt["Build repair prompt"]
-    prompt-->llm["Send to LLM"]
-    llm-->patch["Patch source at error spans"]
-    patch-->reparse["Re-parse patched source"]
-    reparse-->recheck{"has_error?"}
-    recheck-->|No|delegate
-    recheck-->|"Yes (retries left)"|extract
-    recheck-->|"Yes (exhausted)"|fallback["Fall back to original source"]
-    fallback-->delegate
-    style parse fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
-    style check fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
-    style delegate fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
-    style extract fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
-    style prompt fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
-    style llm fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
-    style patch fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
-    style reparse fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
-    style recheck fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
-    style fallback fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
+    parse("📄 Parse source<br/><i>tree-sitter</i>"):::step
+    check{"has_error?"}:::decide
+    delegate("✅ Delegate to<br/>inner frontend"):::success
+    extract("🔍 Extract<br/>error spans"):::step
+    prompt("📝 Build<br/>repair prompt"):::step
+    llm("🤖 Send to LLM"):::llm
+    patch("🩹 Patch source<br/><i>at error spans</i>"):::step
+    reparse("📄 Re-parse<br/><i>patched source</i>"):::step
+    recheck{"has_error?"}:::decide
+    fallback("⚠️ Fall back to<br/>original source"):::fallback
+
+    parse --> check
+    check -->|"No"| delegate
+    check -->|"Yes"| extract
+    extract --> prompt --> llm --> patch --> reparse --> recheck
+    recheck -->|"No"| delegate
+    recheck -->|"Yes (retries left)"| extract
+    recheck -->|"Yes (exhausted)"| fallback
+    fallback --> delegate
+
+    classDef step fill:#fff3e0,stroke:#e8a735,stroke-width:2px,color:#5c3a0a
+    classDef decide fill:#e8f4fd,stroke:#4a90d9,stroke-width:2px,color:#1a3a5c
+    classDef llm fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#3a0a3a
+    classDef success fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
+    classDef fallback fill:#fce4ec,stroke:#c62828,stroke-width:1px,color:#5c0a0a
 ```
 
 The loop has four stages, each implemented as a pure function:
@@ -493,15 +500,16 @@ The lowering dispatch chain:
 ```mermaid
 %%{ init: { "flowchart": { "curve": "stepBefore" } } }%%
 flowchart TD
-lower["lower(root)"]-->block["_lower_block(root)<br/><i>iterate named children</i>"]
-block-->stmt["_lower_stmt(child)<br/><i>skip noise/comments; try STMT_DISPATCH</i>"]
-stmt-->expr["_lower_expr(child)<br/><i>fallback: try EXPR_DISPATCH</i>"]
-expr-->sym["SYMBOLIC('unsupported:X')<br/><i>final fallback</i>"]
-style lower fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
-style block fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
-style stmt fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
-style expr fill:#2c3e50,stroke:#000,stroke-width:2px,color:#fff
-style sym fill:#8f0f00,stroke:#000,stroke-width:2px,color:#fff
+    lower("lower(root)"):::fn
+    block("_lower_block(root)<br/><i>iterate named children</i>"):::fn
+    stmt("_lower_stmt(child)<br/><i>skip noise/comments; try STMT_DISPATCH</i>"):::fn
+    expr("_lower_expr(child)<br/><i>fallback: try EXPR_DISPATCH</i>"):::fn
+    sym("⚠️ SYMBOLIC('unsupported:X')<br/><i>final fallback</i>"):::fallback
+
+    lower --> block --> stmt --> expr --> sym
+
+    classDef fn fill:#fff3e0,stroke:#e8a735,stroke-width:2px,color:#5c3a0a
+    classDef fallback fill:#fce4ec,stroke:#c62828,stroke-width:2px,color:#5c0a0a
 ```
 
 Common constructs (`if/else`, `while`, `for`, `for-each` with destructuring, `return`, `function_definition`, `class_definition`, `try/catch`) are handled in the base class. For-loop destructuring (`for (const [k, v] of arr)` in JS/TS, `for ((k, v) in map)` in Kotlin, structured bindings in C++) decomposes binding patterns into individual `LOAD_INDEX`/`LOAD_FIELD` + `STORE_VAR` instructions per iteration. Language-specific constructs override or extend. Overridable constants handle the small but persistent differences across grammars:
@@ -585,6 +593,69 @@ class VMState:
 Each `StackFrame` has a **two-level namespace**: `registers` for IR temporaries (`%0`, `%1`, ...) and `local_vars` for source-level named variables. This separation keeps the three-address code machinery invisible to the analysis layer, which only cares about named variables.
 
 The heap is a flat dictionary mapping addresses (`"obj_0"`, `"arr_1"`) to `HeapObject` instances. Each `HeapObject` stores a `type_hint` and a `fields` dictionary. Arrays use stringified indices as field keys. This uniform representation means the VM doesn't distinguish between object field access and array indexing at the storage level.
+
+### The Execution Loop
+
+The VM executes one instruction per step in a bounded loop. Each step fetches, dispatches, coerces, applies, and resolves control flow:
+
+```mermaid
+flowchart TD
+    START(("🔄 Step N")):::start
+
+    FETCH("Fetch instruction<br/><i>block.instructions[ip]</i>"):::step
+    LABEL{"LABEL?"}:::decide
+    DISPATCH("🔧 LocalExecutor.execute()<br/><i>dispatch table → handler</i>"):::step
+    HANDLED{"handled?"}:::decide
+    LLM("🤖 LLM Backend<br/><i>interpret_instruction()</i>"):::llm
+    COERCE_L("coerce_local_update()"):::coerce
+    COERCE_M("materialize_raw_update()<br/><i>deserialize + coerce + wrap</i>"):::coerce
+
+    CALL{"call_push<br/>+ next_label?"}:::decide
+    CALL_SETUP("⬇️ Push frame<br/><i>save return_label, return_ip,<br/>result_reg</i>"):::step
+    APPLY("apply_update()<br/><i>registers, vars, heap,<br/>closures, objects</i>"):::apply
+
+    RET{"RETURN<br/>or THROW?"}:::decide
+    RETFLOW("⬆️ Pop frame<br/><i>write return value to<br/>caller's result_reg</i>"):::step
+    STOP(("🛑 End")):::stop
+    JUMP{"next_label<br/>set?"}:::decide
+    NEXT_BLOCK("Jump to block<br/><i>ip = 0</i>"):::step
+    NEXT_IP("ip += 1"):::step
+
+    START --> FETCH
+    FETCH --> LABEL
+    LABEL -- "yes" --> NEXT_IP
+    LABEL -- "no" --> DISPATCH
+    DISPATCH --> HANDLED
+    HANDLED -- "yes" --> COERCE_L
+    HANDLED -- "no" --> LLM
+    LLM --> COERCE_M
+    COERCE_L --> CALL
+    COERCE_M --> CALL
+    CALL -- "yes" --> CALL_SETUP
+    CALL_SETUP --> APPLY
+    CALL -- "no" --> APPLY
+    APPLY --> RET
+    RET -- "yes" --> RETFLOW
+    RETFLOW -- "top-level" --> STOP
+    RETFLOW -- "has caller" --> NEXT_BLOCK
+    RET -- "no" --> JUMP
+    JUMP -- "yes" --> NEXT_BLOCK
+    JUMP -- "no" --> NEXT_IP
+    NEXT_IP --> START
+    NEXT_BLOCK --> START
+
+    classDef start fill:#e8f4fd,stroke:#4a90d9,stroke-width:3px,color:#1a3a5c
+    classDef stop fill:#fce4ec,stroke:#c62828,stroke-width:3px,color:#5c0a0a
+    classDef step fill:#fff3e0,stroke:#e8a735,stroke-width:2px,color:#5c3a0a
+    classDef decide fill:#e8f4fd,stroke:#4a90d9,stroke-width:2px,color:#1a3a5c
+    classDef llm fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#3a0a3a
+    classDef coerce fill:#fff9c4,stroke:#f9a825,stroke-width:2px,color:#5c3a0a
+    classDef apply fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
+```
+
+The critical design point: **every path converges on `apply_update()`**. Whether the instruction was executed locally or by the LLM backend, the state change flows through the same single mutator. The LLM path adds a materialization step (deserialize JSON, coerce types, wrap in `TypedValue`), but the state application is identical.
+
+The call dispatch path saves the return address (`return_label`, `return_ip`) and result register on the new frame *before* `apply_update` runs, so parameter bindings land in the callee's frame automatically. On return, the saved metadata tells the loop where to resume in the caller.
 
 ### Opcode Dispatch
 
@@ -938,15 +1009,16 @@ The direct dependency graph:
 
 ```mermaid
 flowchart BT
-    a["a"]
-    b["b"]
-    c["c"]
-    d["d"]
-    e["e"]
-    f["f"]
-    g["g"]
-    h["h"]
-    total["total"]
+    a("a"):::source
+    b("b"):::source
+    c("c"):::mid
+    d("d"):::mid
+    e("e"):::mid
+    f("f"):::mid
+    g("g<br/><i>square(c)</i>"):::mid
+    h("h"):::mid
+    total("total"):::sink
+
     a --> c
     b --> c
     a --> d
@@ -961,6 +1033,10 @@ flowchart BT
     b --> total
     e --> total
     h --> total
+
+    classDef source fill:#e8f4fd,stroke:#4a90d9,stroke-width:2px,color:#1a3a5c
+    classDef mid fill:#fff3e0,stroke:#e8a735,stroke-width:2px,color:#5c3a0a
+    classDef sink fill:#e8f5e9,stroke:#2e7d32,stroke-width:3px,color:#1a3a1a
 ```
 
 `total` directly depends on `h`, `e`, and `b`. The transitive closure adds `a`, `c`, `d`, `f`, and `g`, giving `total → {a, b, c, d, e, f, g, h}`. This means a change to any of these variables could affect `total`.
@@ -1126,19 +1202,22 @@ The full pipeline from source to typed environment looks like this:
 %%{ init: { "flowchart": { "curve": "stepBefore" } } }%%
 flowchart LR
     subgraph Frontend ["Frontend (per-language)"]
-        SRC["Source Code"] --> PARSE["tree-sitter<br/>Parse"]
-        PARSE --> LOWER["Lower to IR"]
-        LOWER --> SEED["Seed Type<br/>Environment<br/>Builder"]
+        SRC("📄 Source Code"):::input --> PARSE("🌳 tree-sitter Parse"):::step
+        PARSE --> LOWER("⬇️ Lower to IR"):::step
+        LOWER --> SEED("🌱 Seed Type<br/>Environment Builder"):::step
     end
     subgraph Inference ["Type Inference (language-agnostic)"]
-        SEED --> MERGE["Merge Seeds"]
-        MERGE --> WALK["Fixpoint Loop<br/>over IR"]
-        WALK --> ENV["Frozen<br/>TypeEnvironment"]
+        SEED --> MERGE("🔗 Merge Seeds"):::infer
+        MERGE --> WALK("🔄 Fixpoint Loop<br/><i>over IR</i>"):::infer
+        WALK --> ENV("❄️ Frozen<br/>TypeEnvironment"):::output
     end
-    ENV --> VM["VM<br/>(type-aware<br/>coercion)"]
+    ENV --> VM("⚙️ VM<br/><i>type-aware coercion</i>"):::engine
 
-    style Frontend fill:#2d3748,stroke:#4a5568,color:#e2e8f0
-    style Inference fill:#1a365d,stroke:#2a4a7f,color:#e2e8f0
+    classDef input fill:#e8f4fd,stroke:#4a90d9,stroke-width:2px,color:#1a3a5c
+    classDef step fill:#fff3e0,stroke:#e8a735,stroke-width:2px,color:#5c3a0a
+    classDef infer fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#3a0a3a
+    classDef output fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
+    classDef engine fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
 ```
 
 The critical contract: **frontends must produce IR that the inference pass can consume**. If a frontend drops a return value, the inference pass has nothing to propagate. If a field access is lowered as a variable load instead of a field load, field tracking breaks.
@@ -1150,15 +1229,16 @@ Eight OOP languages (Python, Java, C#, C++, JavaScript, TypeScript, PHP, Scala) 
 ```mermaid
 %%{ init: { "flowchart": { "curve": "stepBefore" } } }%%
 flowchart TD
-    STORE["STORE_FIELD %this 'age' %val<br/><i>%this typed as Dog, %val typed as Int</i>"]
-    STORE --> FT["field_types['Dog']['age'] = Int"]
-    FT --> LOAD["LOAD_FIELD %this 'age'<br/><i>%this typed as Dog</i>"]
-    LOAD --> RESULT["%result typed as Int"]
+    STORE("STORE_FIELD %this 'age' %val<br/><i>%this typed as Dog, %val typed as Int</i>"):::ir
+    FT("🏷️ field_types['Dog']['age'] = Int"):::infer
+    LOAD("LOAD_FIELD %this 'age'<br/><i>%this typed as Dog</i>"):::ir
+    RESULT("✅ %result typed as Int"):::output
 
-    style STORE fill:#2d3748,stroke:#4a5568,color:#e2e8f0
-    style FT fill:#1a365d,stroke:#2a4a7f,color:#e2e8f0
-    style LOAD fill:#2d3748,stroke:#4a5568,color:#e2e8f0
-    style RESULT fill:#22543d,stroke:#276749,color:#e2e8f0
+    STORE --> FT --> LOAD --> RESULT
+
+    classDef ir fill:#fff3e0,stroke:#e8a735,stroke-width:2px,color:#5c3a0a
+    classDef infer fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#3a0a3a
+    classDef output fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
 ```
 
 This only works if:
@@ -1172,17 +1252,17 @@ Return backfill infers a function's return type from its `RETURN` instructions:
 ```mermaid
 %%{ init: { "flowchart": { "curve": "stepBefore" } } }%%
 flowchart LR
-    CONST["%0 = CONST 42<br/><i>typed as Int</i>"]
-    CONST --> RET["RETURN %0"]
-    RET --> BF["Backfill:<br/>func_return_types['f'] = Int"]
-    BF --> CALL["result = f()<br/>CALL_FUNCTION"]
-    CALL --> TYPED["%result typed as Int"]
+    CONST("%0 = CONST 42<br/><i>typed as Int</i>"):::ir
+    RET("RETURN %0"):::ir
+    BF("🔄 Backfill<br/>func_return_types['f'] = Int"):::infer
+    CALL("result = f()<br/>CALL_FUNCTION"):::ir
+    TYPED("✅ %result typed as Int"):::output
 
-    style CONST fill:#2d3748,stroke:#4a5568,color:#e2e8f0
-    style RET fill:#2d3748,stroke:#4a5568,color:#e2e8f0
-    style BF fill:#1a365d,stroke:#2a4a7f,color:#e2e8f0
-    style CALL fill:#2d3748,stroke:#4a5568,color:#e2e8f0
-    style TYPED fill:#22543d,stroke:#276749,color:#e2e8f0
+    CONST --> RET --> BF --> CALL --> TYPED
+
+    classDef ir fill:#fff3e0,stroke:#e8a735,stroke-width:2px,color:#5c3a0a
+    classDef infer fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#3a0a3a
+    classDef output fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
 ```
 
 This works for explicit `return` statements. But three languages have idioms where the return value is implicit:
