@@ -29,9 +29,15 @@ The twist: I wanted to handle *incomplete* programs gracefully. Real-world code 
 
 [RedDragon](https://github.com/avishek-sen-gupta/red-dragon) is the result. It parses source in 15 languages, lowers it to a universal intermediate representation, builds control flow graphs, performs iterative dataflow analysis, and executes programs via a deterministic virtual machine. All with **zero LLM calls** for programs with concrete inputs. RedDragon is a work in progress.
 
-RedDragon is part of a family of three tools: [Codescry](https://github.com/avishek-sen-gupta/codescry) (a repo surveying toolkit that detects integration points using regex, ML classifiers, code embeddings, and LLM classification) and [RedDragon-Codescry TUI](https://github.com/avishek-sen-gupta/reddragon-codescry-tui) (a terminal UI integrating the two). The TUI demo is shown above.
-
 This post covers how the system is designed: the IR, the frontends, the VM, type inference, and the dataflow analysis.
+
+### Motivation
+
+RedDragon is the natural extension of my earlier work on [Cobol-REKT](https://github.com/avishek-sen-gupta/cobol-rekt), a COBOL reverse engineering toolkit. That project taught me the value of building analysis tools for legacy code, and left me wanting to generalise the approach across languages. I'd also built a small VM in Prolog previously, and wanted to attempt a more complete one — with a proper type system, dataflow analysis, and multi-language support.
+
+Beyond the technical goals, this project was also a deliberate exercise in AI-assisted software development. I wanted to actively practise and improve my skills in directing an AI to build non-trivial systems — understanding where it works well, where it doesn't, and how to structure the collaboration. The [companion post](/2026/03/12/experiences-building-with-coding-assistant) covers that side of the experience.
+
+RedDragon is a work in progress, and this post is a snapshot of where it stands today. My understanding of compiler design, type systems, and program analysis continues to evolve alongside the project.
 
 ### Core Theses
 
@@ -679,17 +685,56 @@ Every handler receives the instruction, the VM state, the CFG, and a function re
 
 ```python
 class StateUpdate:
-    register_writes: dict[str, Any]      # %0 = value
-    var_writes: dict[str, Any]           # x = value
-    heap_writes: list[HeapWrite]         # obj.field = value
-    new_objects: list[NewObject]         # allocate on heap
-    call_push: StackFramePush | None     # push new frame
-    call_pop: bool                       # pop frame on return
-    path_condition: str | None           # branch assumption
-    next_label: str | None               # jump target
+    register_writes: dict[str, TypedValue]  # %0 = TypedValue(42, Int)
+    var_writes: dict[str, TypedValue]       # x = TypedValue("hello", String)
+    heap_writes: list[HeapWrite]            # obj.field = TypedValue(...)
+    new_objects: list[NewObject]            # allocate on heap
+    call_push: StackFramePush | None        # push new frame
+    call_pop: bool                          # pop frame on return
+    path_condition: str | None              # branch assumption
+    next_label: str | None                  # jump target
 ```
 
+All values flowing through `StateUpdate` are `TypedValue` objects — frozen dataclasses pairing a raw Python value with its `TypeExpr` type. This means type information is carried alongside every value throughout the execution pipeline, from handler output through state mutation to subsequent reads.
+
 This separation of *computation* (handlers) from *mutation* (`apply_update`) is a deliberate **functional core / imperative shell** split. The handlers are pure functions that return data. The mutation is centralised in one place.
+
+### TypedValue: Runtime Type Propagation
+
+Every runtime value in the VM is a `TypedValue` — a frozen dataclass pairing a raw value with its inferred type:
+
+```python
+@dataclass(frozen=True)
+class TypedValue:
+    value: Any       # int, str, SymbolicValue, Pointer, ...
+    type: TypeExpr   # ScalarType("Int"), ParameterizedType("Array", ...), ...
+```
+
+Registers, local variables, heap fields, and closure bindings all store `TypedValue`. This bridges the static type inference pass (which runs before execution) with runtime coercion: when a `BINOP` operates on two `TypedValue` operands, it can inspect their types to apply language-specific coercion rules (e.g., Java's `String + int` auto-stringification) without consulting the `TypeEnvironment` at every step.
+
+Three helpers simplify construction: `typed(value, type_expr)` for explicit typing, `typed_from_runtime(value)` for inferring type from a Python value, and `VOID_RETURN` (a canonical `TypedValue(None, Void)`) for procedures that return nothing.
+
+### Two-Layer Type Coercion
+
+Type coercion operates at two points:
+
+**Layer 1 (Pre-operation):** Pluggable `BinopCoercionStrategy` and `UnopCoercionStrategy` coerce operands *before* evaluation. The default strategies are no-ops, but language-specific strategies override them — `JavaBinopCoercion` auto-stringifies when one operand of `+` is a `String`. Each strategy also infers the result type.
+
+**Layer 2 (Write-time):** `TypeConversionRules` coerce values when storing into typed registers (Int → Float widening, Float → Int narrowing, Bool → Int promotion). This layer operates inside `apply_update()`.
+
+### BuiltinResult
+
+Built-in functions return a `BuiltinResult` — a uniform type distinguishing pure builtins from those with side effects:
+
+```python
+@dataclass
+class BuiltinResult:
+    value: Any
+    new_objects: list[NewObject] = field(default_factory=list)
+    heap_writes: list[HeapWrite] = field(default_factory=list)
+```
+
+Pure builtins (`len`, `abs`, `max`) return `BuiltinResult(value=result)` with empty side-effect lists. Heap-mutating builtins (`list.append`, `array_of`) express mutations as structured `new_objects` and `heap_writes` that the executor applies through the same `apply_update()` path. This eliminated the previous inconsistency where some builtins returned bare values and others returned tuples with side effects.
 
 ### `apply_update()`: The Single Mutator
 
@@ -1150,9 +1195,11 @@ The `RETURN` backfill deserves mention: when the pass encounters a `RETURN` inst
 
 ### Type-Aware Coercion in the VM
 
-The inference pass produces a frozen `TypeEnvironment` (backed by `MappingProxyType` for immutability). The VM's `apply_update()` uses this environment at write time: when a value is written to a register, `_coerce_value()` checks the declared type and applies a coercion function if needed.
+The inference pass produces a frozen `TypeEnvironment` (backed by `MappingProxyType` for immutability). Since all VM values are `TypedValue` objects carrying their type alongside their value, coercion operates at two layers (described in more detail in the [Two-Layer Type Coercion](#two-layer-type-coercion) section above):
 
-The coercion rules are encapsulated in a pluggable `TypeConversionRules` interface. The default rules (`DefaultTypeConversionRules`) handle:
+**Layer 1 (Pre-operation):** Pluggable `BinopCoercionStrategy` and `UnopCoercionStrategy` coerce operands before evaluation. Language-specific strategies (e.g., `JavaBinopCoercion` for `String + int` auto-stringification) override the defaults.
+
+**Layer 2 (Write-time):** The `TypeConversionRules` interface coerces values when storing into typed registers. The default rules (`DefaultTypeConversionRules`) handle:
 
 - **Widening**: Int → Float (lossless promotion)
 - **Narrowing**: Float → Int (truncate toward zero, matching C/Java/COBOL semantics)
@@ -1160,7 +1207,7 @@ The coercion rules are encapsulated in a pluggable `TypeConversionRules` interfa
 - **Arithmetic result types**: Int ÷ Int → Int (floor division), Int + Float → Float
 - **Comparison results**: any comparison → Bool
 
-This coercion at write time means the VM produces correct typed results for cross-language programs. A Go program that declares `var x int = 7 / 2` gets `3` (integer division), not `3.5`. A COBOL program with PIC 9(4) fields truncates float assignments. The type system makes this automatic rather than requiring per-language special cases in the VM.
+This two-layer coercion means the VM produces correct typed results for cross-language programs. A Go program that declares `var x int = 7 / 2` gets `3` (integer division), not `3.5`. A COBOL program with PIC 9(4) fields truncates float assignments. The type system makes this automatic rather than requiring per-language special cases in the VM.
 
 ### Self/This Typing
 
@@ -1356,7 +1403,7 @@ The Exercism suite surfaced more bugs than any other test approach. Each exercis
 |--------|-------|
 | Supported languages | 15 (deterministic) + COBOL (ProLeap) + any (LLM) |
 | IR opcodes | 28 |
-| Tests (all passing) | 11,377 |
+| Tests (all passing) | 11,575 |
 | LLM calls at test time | 0 |
 | Exercism exercises | 18 (across 15 languages) |
 | Rosetta algorithms | 15 (across 15 languages) |
@@ -1366,7 +1413,7 @@ The Exercism suite surfaced more bugs than any other test approach. Each exercis
 
 ## Conclusion
 
-RedDragon started as a question: *"Can I build a single system that analyses code in any language?"* It evolved into a compiler pipeline with 15 deterministic frontends, a COBOL frontend via ProLeap, LLM-assisted AST repair, a structured type system (an algebraic TypeExpr ADT with generics, unions, function types, tuples, type aliases, interface/trait typing, variance annotations, and bounded type variables), static type inference with fixpoint convergence, interface-aware chain walk, and structural generic extraction across 12 statically-typed languages, a deterministic VM with class hierarchy support (inherited method dispatch via linearized parent chains across 10 OOP languages), cross-language slicing, rest pattern destructuring, byte-addressed memory regions and named continuations, and cross-language verification.
+RedDragon started as a question: *"Can I build a single system that analyses code in any language?"* It evolved into a compiler pipeline with 15 deterministic frontends, a COBOL frontend via ProLeap, LLM-assisted AST repair, a structured type system (an algebraic TypeExpr ADT with generics, unions, function types, tuples, type aliases, interface/trait typing, variance annotations, and bounded type variables), static type inference with fixpoint convergence, interface-aware chain walk, and structural generic extraction across 12 statically-typed languages, a deterministic VM with class hierarchy support (inherited method dispatch via linearized parent chains across 10 OOP languages), `TypedValue`-based runtime type propagation with two-layer coercion, cross-language slicing, rest pattern destructuring, byte-addressed memory regions and named continuations, and cross-language verification.
 
 **None of the individual components are novel.** TAC IR, dispatch tables, worklist dataflow, and forward type inference are all textbook techniques. The value, if any, is in applying them together to a practical multi-language analysis tool.
 
