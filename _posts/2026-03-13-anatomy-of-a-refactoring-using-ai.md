@@ -60,7 +60,19 @@ The refactoring spanned about a dozen sessions over two days. I'm including spec
 
 ## Phase 1: TypedValue and BinopCoercionStrategy
 
-The first design session used the brainstorming skill to work through the problem space. The skill asked what the actual failure mode was (Java `"int:" + 42` crashing), what constraints existed (15 language frontends, ~11,000 tests), and proposed three approaches: patching operators to check types ad hoc, building a type-aware wrapper, or making coercion injectable per language. Each came with trade-offs. The third approach won because it kept the VM language-agnostic — the same design principle the rest of the system follows.
+The first design session used the brainstorming skill to work through the problem space. The skill's process is structured: it asks one clarifying question at a time, proposes approaches with trade-offs, and won't let you skip to implementation until a design is approved. In this case, the dialogue went through eight questions before code was discussed.
+
+The skill started with motivation: *"What's the primary goal — language-correct operators, eliminating the side-car type system, or both?"* I said both. Then it asked whether `TypedValue` should wrap everything (even values with unknown types) or only values with known types. It recommended wrapping everything — even with `UNKNOWN` — to eliminate all "is this typed or raw?" branching. I agreed, and this turned out to be the single most important design decision of the entire migration.
+
+The next questions drilled into specifics. Should `TypedValue` subsume `SymbolicValue` and `Pointer`, or wrap them? The skill proposed wrapping — keeping `SymbolicValue` as a value inside `TypedValue` rather than replacing it — which preserved the existing constraint-tracking machinery without duplication. Then: how should BINOP consume types? The skill proposed two approaches: (A) unwrap, operate on raw values, rewrap with inferred type, or (B) full type-driven dispatch where operators receive `TypedValue` throughout. It recommended A as the simpler path. I agreed, but added a requirement: *"BINOP should have access to a pluggable language-specific TypeConversionStrategy."* That addition — mine, not the skill's — became `BinopCoercionStrategy`.
+
+The skill then proposed three migration approaches:
+
+1. **Big Bang** — change everything at once. Rejected as too risky.
+2. **Incremental with accessor protocol** — wrap at `apply_update`, migrate handlers one by one. Recommended and chosen.
+3. **Transparent wrapper with magic methods** — `TypedValue.__add__` delegates to the underlying value. The skill flagged this as violating the simplest-mechanism principle: `isinstance(val, int)` checks throughout the codebase would silently fail.
+
+The last question was about scope: *"Where should language information live — on the value or on the strategy?"* The skill recommended the strategy: *"A Java Int and a C# Int are the same value with the same type; the difference is in the coercion rules applied to them."* I agreed.
 
 That session produced two things: `TypedValue` and `BinopCoercionStrategy`.
 
@@ -107,7 +119,11 @@ Phase 1 wrapped values in `TypedValue` at the `apply_update` boundary — the fu
 
 This worked but created a pointless roundtrip. Handlers called `_serialize_value()` to flatten objects into JSON-compatible structures, then `apply_update` called `_deserialize_value()` to reconstruct them. For locally-executed instructions (the vast majority), this was a no-op. The serialization path only existed for the LLM fallback, where an LLM returns a JSON `StateUpdate` that needs deserialization.
 
+This phase had an interesting origin. I was partway through brainstorming the heap fields migration (Phase 5) when I realized that handlers were still producing raw values — the heap fields work would be building on a half-migrated foundation. I interrupted: *"I think then we pause this plan for now, and do red-dragon-132, so that values always arrive as TypedValue."* The heap fields task was deferred in Beads (`bd update red-dragon-f6i --status deferred`), and the handler migration jumped the queue. This is one of those moments where the issue tracker earned its keep — deferring a task mid-brainstorm without losing it.
+
 ### The Serialize/Deserialize Roundtrip
+
+The brainstorming for the `apply_update` split was another case where I had to push back on the AI's first instinct. The AI proposed a dual-path `apply_update` with isinstance branching — check if the incoming value is `TypedValue` and take one path, otherwise take the raw path. I said: *"I think `apply_update` should be split into `apply_update` (which accepts only TypedValue) and `apply_update_raw` (the path which LLMs take)."* Then, on reflection: *"On second thoughts, what should probably happen is that in the else clause (the LLM path), the raw update should be transformed into a TypedValue update... that way, the updates from both clauses are the canonical TypedValue update."* The AI adopted this — a `materialize_raw_update` function that converts LLM responses into `TypedValue` updates before they enter the standard pipeline.
 
 The fix split `apply_update` into two paths:
 - **Local path:** Handlers produce `TypedValue` directly. `apply_update` stores them with lightweight type coercion.
@@ -129,7 +145,7 @@ The migration exposed a conflation that had been hiding in the return value sema
 
 ### The Constructor Bug
 
-This was the most frustrating part of the migration. Tests started failing in ways that didn't make sense — constructor calls were returning void instead of the constructed object. It took a while to understand why.
+This was the most frustrating part of the migration, and the brainstorming conversation around it was contentious.
 
 Before TypedValue, `return_value = None` meant two different things: "this instruction doesn't have a return value" and "the function returned None/null." These were indistinguishable. For most code this didn't matter. For constructors, it did.
 
@@ -137,13 +153,19 @@ Constructors in RedDragon work by allocating a heap object, running the construc
 
 When `return_value` became a `TypedValue`, the guard broke. `TypedValue(None, Void)` is not `None` — the isinstance check passes, and the constructor's result register gets overwritten with a void value.
 
-The fix came in two commits:
+The brainstorming for the fix started with me pushing on the void/None distinction. The AI's initial proposal had a `value is not None` guard on the return path — essentially preserving the old ambiguity under a new name. I pushed back: *"Why is there a None check though?"* This forced an explicit discussion of void vs null semantics. Then: *"I'm not comfortable with passing a naked None back."* And finally: *"I want the 'no return value is possible because it is void' scenario to also be represented by a different TypedValue."* This led to adding `VOID` to the type system.
+
+But the real frustration came after implementation. The implementer agent had used `value is not None` as a guard anyway — silently discarding both Void and None TypedValues. I caught this in review: *"So you completely discarded creating Void and None TypedValues?"* followed by *"Produce a plan which accommodates the proper behaviour of using TypedValue, and not your coding convenience."* The fix was redesigned from scratch.
+
+The eventual fix came in two commits:
 1. Constructor detection via scope chain inspection — if the current frame is a constructor, skip return value writes to the result register.
 2. Replace the `result_reg=None` hack (constructors had been setting their result register to `None` to prevent writes) with a clean `is_ctor` flag on `StackFrame`.
 
-This was a classic refactoring discovery: the old code worked, but only because of an accidental coupling between "None means no value" and "constructors shouldn't write return values." TypedValue made the coupling visible by removing the ambiguity.
+The `is_ctor` idea came from me during the brainstorming: *"Tentative idea: `_try_class_constructor_call` pushes `is_ctor` onto the constructor frame... the `_handle_return_flow` guard only assigns the return value if it is not Void."* The AI refined this into the implementation pattern.
 
-The fix also introduced a three-state return type:
+This was a classic refactoring discovery: the old code worked, but only because of an accidental coupling between "None means no value" and "constructors shouldn't write return values." TypedValue made the coupling visible by removing the ambiguity. But it was also a case where the brainstorming process — the back-and-forth about what void means, the insistence on not taking shortcuts — produced a cleaner design than either party would have reached alone.
+
+The fix introduced a three-state return type:
 - `typed(None, scalar("Void"))` — void return (no value to write)
 - `typed(None, UNKNOWN)` — explicit `return None`
 - `typed(42, scalar("Int"))` — concrete return value
@@ -191,7 +213,9 @@ The TypedValue migration was "done" after Phase 7. But the work exposed two more
 
 ### BuiltinResult: Side Effects Should Be Declarative
 
-This detour started with me asking *"what else?"* after the main migration was done. The AI ran an audit and flagged the builtins. The fix went through another round of brainstorming — a shorter one this time, since the pattern was established. The brainstorming skill proposed two approaches: making builtins return `StateUpdate` directly (too heavyweight — most builtins are pure functions), or introducing a lightweight `BuiltinResult` that captures both the return value and any side effects. The second approach won. A Beads task was filed, and the plan was generated from the spec.
+This detour started with me asking *"what else?"* after the main migration was done. The AI ran an audit and flagged the builtins. The fix went through another round of brainstorming — a shorter one this time, since the pattern was established. The brainstorming skill proposed three approaches: (A) builtins return `ExecutionResult` directly, (B) a lightweight `BuiltinResult` dataclass with value + side effects, or (C) split builtins into two tables (pure vs heap-mutating). I chose B.
+
+But the interesting moment was a correction I made to the AI's initial proposal. It had suggested that only the heap-mutating builtins return `BuiltinResult`, while pure builtins continue returning raw values. I pushed back: *"Pure builtins should also return BuiltinResult."* The point was uniform interface — the caller shouldn't need isinstance branching to figure out what a builtin returned. This was the same principle that drove the "every value is TypedValue, even when the type is UNKNOWN" decision in Phase 1. A Beads task was filed (`red-dragon-vva`), and the plan was generated from the spec.
 
 RedDragon has about 40 built-in functions (`len`, `range`, `print`, `slice`, plus 25 COBOL-specific byte manipulation builtins). Most are pure — they take arguments and return a value. Two are not: `_builtin_array_of` creates a heap object, and `_builtin_object_rest` copies fields from an existing heap object. These two wrote directly to `vm.heap` as a side effect, bypassing the `apply_update` pipeline.
 
@@ -311,7 +335,9 @@ flowchart TD
 
 The main sequence (Phases 1–7) was planned. The detours were not. Most of them started with me asking *"what next?"* or *"what else?"* after a phase completed — essentially asking the AI to audit the codebase for things I hadn't thought of. This is a pattern I use a lot: finish a unit of work, commit, then ask the AI to look for fallout. It's more effective than trying to anticipate everything upfront.
 
-Beads kept this manageable. Each node in the graph above was a Beads task. When a detour surfaced — the constructor bug, the builtin side-effect problem, the PHP enum — it got filed immediately as a new task with its dependencies. Running `bd ready` after closing a task showed me the next unblocked item, which might be the next planned phase or a detour that had just become unblocked. Without the tracker, the detours would have been sticky notes in my head. With it, they were just tasks in a queue, triaged and ordered alongside the main work.
+Beads kept this manageable. Each node in the graph above was a Beads task — `red-dragon-gsl` for the initial TypedValue design, `red-dragon-132` for handler migration, `red-dragon-vva` for BuiltinResult, `red-dragon-x9r` for builtin args, `red-dragon-d5c` for the BinopCoercion return type fix, and so on. When a detour surfaced — the constructor bug, the builtin side-effect problem, the PHP enum — it got filed immediately as a new task with its dependencies. Running `bd ready` after closing a task showed me the next unblocked item, which might be the next planned phase or a detour that had just become unblocked.
+
+There was a concrete example of this working well. Midway through brainstorming the heap fields migration (`red-dragon-f6i`), I realized handlers needed to be migrated first. I interrupted the brainstorming, ran `bd update red-dragon-f6i --status deferred`, created the handler migration task, and pivoted. When the handler migration was done and closed, `bd ready` surfaced the deferred heap fields task automatically. Without the tracker, that kind of mid-session pivot would have meant losing track of the deferred work.
 
 Each major phase also went through the brainstorming skill before implementation began. The early phases (1–3) had longer brainstorming cycles because the patterns weren't established yet. By the later phases, the brainstorming rounds were shorter — the skill would propose an approach, I'd confirm it matched the established pattern, and we'd move to planning. The skill's insistence on proposing alternatives before committing to a direction caught at least two cases where the obvious approach wasn't the best one (the serialize/deserialize split in Phase 2, and the `BuiltinResult` design over direct `StateUpdate` returns).
 
