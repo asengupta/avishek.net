@@ -7,7 +7,7 @@ tags: ["Software Engineering", "Compilers", "Program Analysis", "AI-Assisted Dev
 draft: false
 ---
 
-*A universal IR, 15 deterministic frontends, LLM-assisted repair/lowering/execution, a deterministic VM with class hierarchy support, a structured type system with generics/unions/variance/traits, and iterative dataflow analysis.*
+*A universal IR, 15 deterministic frontends, LLM-assisted repair/lowering/execution, a deterministic VM with class hierarchy support and cross-language slicing, a structured type system with generics/unions/variance/traits and interface-aware inference, and iterative dataflow analysis.*
 
 **GitHub**: [avishek-sen-gupta/red-dragon](https://github.com/avishek-sen-gupta/red-dragon)
 
@@ -588,7 +588,7 @@ The heap is a flat dictionary mapping addresses (`"obj_0"`, `"arr_1"`) to `HeapO
 
 ### Opcode Dispatch
 
-The `LocalExecutor` maps each of the 27 `Opcode` enum values to a handler function via a static dispatch table:
+The `LocalExecutor` maps each of the 28 `Opcode` enum values to a handler function via a static dispatch table:
 
 ```python
 DISPATCH: dict[Opcode, Any] = {
@@ -702,6 +702,39 @@ store_field ptr "value" %2       # *ptr = 99; x is now 99
 ```
 
 The model supports nested pointers (`int **pp`), pointer arithmetic (`ptr + 1` offsets into arrays), pointer subtraction (returns the offset difference between same-base pointers), pointer relational comparisons (`<`, `>`, `==` on offsets within the same base), struct pointers (arrow operator via `LOAD_FIELD`), and array pointer decay. The C and Rust frontends emit `ADDRESS_OF` for `&identifier` expressions.
+
+### Slicing
+
+All 15 languages support array and string slicing in execution. Each language's slice syntax is lowered to the same `SLICE` IR operation, and the VM handles the semantics uniformly:
+
+- **Python:** `a[1:3]`, `a[::2]`, `a[-2:]`
+- **Ruby:** `arr[1..3]` (inclusive range), `arr[1...3]` (exclusive), `arr[start, length]` (positional)
+- **Rust:** `arr[1..3]` (exclusive), `arr[1..=3]` (inclusive)
+- **Go:** `a[1:3]`, `a[2:]`, string slicing
+- **Kotlin:** `subList()` and `substring()` via `METHOD_TABLE` dispatch
+
+### Rest Patterns and Variadic Parameters
+
+JavaScript and TypeScript support rest patterns in destructuring and function parameters:
+
+**Array destructuring:** `const [a, ...rest] = arr` — the frontend emits a `SLICE` operation to extract remaining elements into the rest variable.
+
+**Object destructuring:** `const {a, ...rest} = obj` — remaining properties are spread into a new object on the heap.
+
+**Function rest parameters:** `function f(a, ...args)` — the frontend injects an `arguments` array into the function's local scope and emits a `SLICE` to extract the variadic portion into the rest parameter.
+
+### Anonymous Class Resolution
+
+TypeScript and JavaScript allow assigning anonymous classes to variables: `const MyClass = class { ... }`. When `new MyClass()` is encountered, the VM resolves it by checking the variable store if the name isn't in the class registry:
+
+```python
+if class_name not in self.class_registry:
+    resolved = self.current_frame.lookup(class_name)
+    if isinstance(resolved, str):
+        class_name = resolved
+```
+
+This reuses the existing variable store as the lookup table — no new data structures needed.
 
 ### Built-in Functions
 
@@ -1057,6 +1090,16 @@ This coercion at write time means the VM produces correct typed results for cros
 
 Inside class definitions, the inference pass recognises `self`, `this`, and `$this` parameter names and assigns them the enclosing class type. This enables method return type resolution: when `self.method()` is called, the pass knows the receiver's class and can look up the method's return type in the class-scoped method type map.
 
+### Interface-Aware Inference
+
+When a variable is typed as an interface (`Animal animal = ...`) and a method is called on it (`animal.speak()`), the inference pass needs to resolve the return type without knowing the concrete class. The solution is a chain walk: when class method lookup fails, the pass walks the `interface_implementations` map to find the interface that the variable's type implements, then looks up the method's return type from the interface's method definitions.
+
+Five frontends (Java, C#, TypeScript, Kotlin, Go) seed `interface_implementations` during lowering. Interfaces are lowered as `CLASS` blocks with method definitions, so their return types are available in the function registry.
+
+### Method Signatures
+
+Class methods are stored in a `method_signatures` dictionary keyed by `ScalarType`, with a `FunctionKind` enum (`UNBOUND`, `INSTANCE`, `STATIC`) distinguishing method types. This class-scoped storage eliminates method name collisions — the same method name in different classes no longer overwrites a single flat entry — and supports method overload accumulation.
+
 ### Design Properties
 
 **Pure function.** `infer_types()` takes a list of IR instructions and a `TypeResolver`, returns a `TypeEnvironment`. No mutation of the input instructions. No side effects.
@@ -1065,7 +1108,7 @@ Inside class definitions, the inference pass recognises `self`, `this`, and `$th
 
 **Pluggable ontology.** The `TypeGraph`, `TypeConversionRules`, and `TypeResolver` are all injected. A different language family (e.g., one with unsigned integers or decimal types) can supply its own rules without changing the inference engine.
 
-**Structured types end-to-end.** The entire type pipeline — from frontend extraction through inference, coercion, and environment output — operates on `TypeExpr` objects. There are no string serialization boundaries: frontends parse type text into `TypeExpr` at extraction time, and all downstream consumers (inference context, type resolver, conversion rules) work with the structured representation directly.
+**Structured types end-to-end.** The entire type pipeline — from frontend extraction through inference, coercion, and environment output — operates on `TypeExpr` objects exclusively. The `str | TypeExpr` union that existed during the migration has been fully removed: all seed sites, all 15 frontends, and all downstream consumers (inference context, type resolver, conversion rules) work with the structured representation directly. There are no string serialization boundaries.
 
 ---
 
@@ -1205,6 +1248,7 @@ With all three gaps fixed, the integration test suite verifies type inference sc
 | NEW_OBJECT typing | JavaScript, TypeScript, PHP, Ruby, Scala |
 | Builtin method return types | Python, JavaScript, Java, Ruby, Kotlin |
 | Forward reference resolution | Python, JavaScript, Ruby |
+| Interface method return types | Java, C#, TypeScript, Kotlin, Go |
 
 Each cell is a parametrized pytest fixture — a failure in one language doesn't mask failures in others.
 
@@ -1232,17 +1276,17 @@ The Exercism suite surfaced more bugs than any other test approach. Each exercis
 |--------|-------|
 | Supported languages | 15 (deterministic) + COBOL (ProLeap) + any (LLM) |
 | IR opcodes | 28 |
-| Tests (all passing) | 9,298 |
+| Tests (all passing) | 11,377 |
 | LLM calls at test time | 0 |
 | Exercism exercises | 18 (across 15 languages) |
 | Rosetta algorithms | 15 (across 15 languages) |
-| Type inference scenarios | 11 (verified across up to 15 languages each) |
+| Type inference scenarios | 12 (verified across up to 15 languages each) |
 
 ---
 
 ## Conclusion
 
-RedDragon started as a question: *"Can I build a single system that analyses code in any language?"* It evolved into a compiler pipeline with 15 deterministic frontends, a COBOL frontend via ProLeap, LLM-assisted AST repair, a structured type system (an algebraic TypeExpr ADT with generics, unions, function types, tuples, type aliases, interface/trait typing, variance annotations, and bounded type variables), static type inference with fixpoint convergence and structural generic extraction across 12 statically-typed languages, a deterministic VM with class hierarchy support (inherited method dispatch via linearized parent chains across 10 OOP languages), byte-addressed memory regions and named continuations, and cross-language verification.
+RedDragon started as a question: *"Can I build a single system that analyses code in any language?"* It evolved into a compiler pipeline with 15 deterministic frontends, a COBOL frontend via ProLeap, LLM-assisted AST repair, a structured type system (an algebraic TypeExpr ADT with generics, unions, function types, tuples, type aliases, interface/trait typing, variance annotations, and bounded type variables), static type inference with fixpoint convergence, interface-aware chain walk, and structural generic extraction across 12 statically-typed languages, a deterministic VM with class hierarchy support (inherited method dispatch via linearized parent chains across 10 OOP languages), cross-language slicing, rest pattern destructuring, byte-addressed memory regions and named continuations, and cross-language verification.
 
 **None of the individual components are novel.** TAC IR, dispatch tables, worklist dataflow, and forward type inference are all textbook techniques. The value, if any, is in applying them together to a practical multi-language analysis tool.
 
@@ -1260,7 +1304,7 @@ Design documents and detailed specs from the RedDragon repository:
 - [VM Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/notes-on-vm-design.md) — VM internals: state model, opcode dispatch, symbolic propagation, closures, class hierarchy
 - [Dataflow Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/notes-on-dataflow-design.md) — Reaching definitions, def-use chains, and dependency graph construction
 - [Type System Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/type-system.md) — Type ontology, inference algorithm, coercion rules, and cross-language type extraction
-- [Architectural Decision Records](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/architectural-design-decisions.md) — Chronological log of key design decisions (ADR-001 through ADR-083)
+- [Architectural Decision Records](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/architectural-design-decisions.md) — Chronological log of key design decisions (ADR-001 through ADR-102)
 - [IR Lowering Gaps](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/ir-lowering-gaps.md) — Tracking document for cross-language type inference lowering gaps
 - [Project Philosophy](https://github.com/avishek-sen-gupta/red-dragon/blob/main/PHILOSOPHY.md) — Design principles and engineering values
 - [Contributing Guide](https://github.com/avishek-sen-gupta/red-dragon/blob/main/CONTRIBUTING.md) — How to contribute to the project

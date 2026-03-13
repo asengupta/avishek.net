@@ -355,6 +355,8 @@ The evolution happened in phases, each driven by a concrete limitation:
 
 Each phase was documented as an ADR, tested with both unit and integration tests, and committed independently. The type system alone accounts for ~1,500 tests and 34 ADRs.
 
+A later phase of type system work — migrating every runtime value to carry its type via a `TypedValue` wrapper — became a multi-phase refactoring that exposed hidden assumptions in constructor handling, revealed that builtins were bypassing the state management contract, and prompted half a dozen side detours. I wrote about that migration separately in [Anatomy of a Refactoring Using AI]({% post_url 2026-03-13-anatomy-of-a-refactoring-using-ai %}).
+
 ### Memory Files
 
 Claude Code supports a persistent memory directory (`.claude/projects/.../memory/MEMORY.md`) loaded at session start. My memory file contains:
@@ -498,3 +500,4 @@ The limiting factor in AI-assisted development is not the AI's capability — it
 - [Frontend Lowering Gaps](https://github.com/avishek-sen-gupta/red-dragon/blob/master/docs/frontend-lowering-gaps.md) — Gap analysis across 15 languages
 - [IR Lowering Gaps](https://github.com/avishek-sen-gupta/red-dragon/blob/master/docs/ir-lowering-gaps.md) — IR-level lowering gaps
 - [Architectural Decision Records](https://github.com/avishek-sen-gupta/red-dragon/blob/master/docs/architectural-design-decisions.md) — 100+ ADRs documenting design decisions
+- [Anatomy of a Refactoring Using AI]({% post_url 2026-03-13-anatomy-of-a-refactoring-using-ai %}) — The TypedValue migration: a multi-phase refactoring traced in detail
