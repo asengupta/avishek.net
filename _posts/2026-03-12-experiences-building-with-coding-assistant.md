@@ -433,6 +433,12 @@ The AI will optimise for closing tickets, not for closing them correctly. The hu
 
 **The plan document as interface.** After brainstorming and discussing trade-offs, I'd formulate a plan document covering context, phases, file-by-file changes, and verification steps. The plan is specific enough for unambiguous execution but high-level enough to retain architectural control. This happened ~15 times.
 
+**Brainstorming with Superpowers.** Later in the project, I started using the [Superpowers](https://github.com/nicobailey/claude-code-superpowers) plugin for Claude Code, specifically its brainstorming skill. Why it fit my workflow:
+
+- **I'm not used to writing large upfront specs.** I prefer to explore the design space before committing to a choice, and Superpowers' brainstorming mode let me describe a problem and have it explore multiple approaches interactively.
+- **Design through small focused decisions.** I want the design to evolve through a series of yes/no decisions on individual aspects, not a single monolithic plan. The brainstorming skill converges on a design through exactly this kind of incremental refinement.
+- **Customising how information is presented.** For larger refactorings, instead of handing me a full implementation spec to review (which I would skim), I asked it to show me the salient aspects of the final design — the key trade-offs, the data structures that would change, the migration strategy — as a list of focused questions I could approve or reject individually. This turned spec review from a passive reading exercise into an active decision-making process.
+
 **Breadth over depth.** Tasks like "generate frontends for 14 languages" or "audit all 130 test files for weak assertions" are where the AI works well. These breadth tasks — applying a consistent pattern across many targets — would have taken days. Where it needed more guidance was depth: closure capture semantics (snapshot vs. shared environment), when to use `SYMBOLIC` fallback vs. crash, whether an assertion is vacuous. These required me to probe with specific test cases.
 
 **Empirical validation over specification.** I rarely specified exact behaviour upfront. I implemented a feature, ran it on real code, and judged the results. The AI made this feedback loop fast enough to be practical.
