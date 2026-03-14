@@ -1,5 +1,5 @@
 ---
-title: "Building Non-Trivial Systems with an AI Coding Assistant"
+title: "Building Non-Trivial Systems with an AI Coding Assistant: A Practitioner's Account"
 author: avishek
 usemathjax: false
 mermaid: true
@@ -181,15 +181,11 @@ When an AI writes your tests, you get volume and coverage breadth. What you don'
 
 Over two days and 11 audit passes, I had Claude scan every test file, comparing each test's name against its actual assertions. The patterns that emerged:
 
-**OR-fallback assertions.** Tests like `assert Opcode.BRANCH_IF in opcodes or Opcode.BRANCH in opcodes` — where `BRANCH` (unconditional jump) exists in virtually every program, making the assertion tautologically true. 23+ instances across Scala match/case, C# switch expressions, COBOL PERFORM ordering, and IR stats tests.
-
-**Existence-only checks.** `assert len(writes) >= 1` on WRITE_REGION, satisfied by DATA DIVISION initial-value writes, leaving the PROCEDURE statement under test untested. The strengthened version decoded the EBCDIC bytes and checked specific values.
-
-**Cross-product matching.** `assert any(bi < pi for bi in branch_if_indices for pi in print_indices)` — `any()` over a cross-product matches if *any* `BRANCH_IF` appears before *any* print, even from unrelated parts of the program.
-
-**Silent parametrised passes.** Bare `return` in parametrised tests for excluded languages — 11 languages were showing as green in the closure test report with zero assertions executed. The fix was `pytest.skip()` with a reason string.
-
-**Tautological guards.** `if "x" in result.definitions:` where `result.definitions` was a list of `Definition` objects, not a dict. The `in` check always returned `False`, so the assertion never fired.
+- **OR-fallback assertions.** Tests like `assert Opcode.BRANCH_IF in opcodes or Opcode.BRANCH in opcodes` — where `BRANCH` (unconditional jump) exists in virtually every program, making the assertion tautologically true. 23+ instances across Scala match/case, C# switch expressions, COBOL PERFORM ordering, and IR stats tests.
+- **Existence-only checks.** `assert len(writes) >= 1` on WRITE_REGION, satisfied by DATA DIVISION initial-value writes, leaving the PROCEDURE statement under test untested. The strengthened version decoded the EBCDIC bytes and checked specific values.
+- **Cross-product matching.** `assert any(bi < pi for bi in branch_if_indices for pi in print_indices)` — `any()` over a cross-product matches if *any* `BRANCH_IF` appears before *any* print, even from unrelated parts of the program.
+- **Silent parametrised passes.** Bare `return` in parametrised tests for excluded languages — 11 languages were showing as green in the closure test report with zero assertions executed. The fix was `pytest.skip()` with a reason string.
+- **Tautological guards.** `if "x" in result.definitions:` where `result.definitions` was a list of `Definition` objects, not a dict. The `in` check always returned `False`, so the assertion never fired.
 
 ### The Audit Process
 
@@ -241,41 +237,28 @@ The file that had the most impact on consistency wasn't any Python module. It wa
 
 ### Build Rules
 
-**"Before committing anything, run all tests, fixing them if necessary."** This prevented test count regression across 292 commits. If test assertions are being *removed*, ask for human review first.
-
-**"Before committing anything, run `poetry run black` on the full codebase."** CI enforces this.
-
-**"Before committing anything, update the README based on the diffs."** Without this, the README would have drifted within the first week.
-
-**"For each feature, treat it as an independent commit / push, with its own testing."** Atomic, reviewable commits. Combined with "do not start a new task until the current one is committed," this prevented half-finished features from accumulating across sessions.
-
-**"Once a design is finalised, document it as an ADR."** This produced 100+ architectural decision records that serve as the project's institutional memory.
+- **"Before committing anything, run all tests, fixing them if necessary."** This prevented test count regression across 292 commits. If test assertions are being *removed*, ask for human review first.
+- **"Before committing anything, run `poetry run black` on the full codebase."** CI enforces this.
+- **"Before committing anything, update the README based on the diffs."** Without this, the README would have drifted within the first week.
+- **"For each feature, treat it as an independent commit / push, with its own testing."** Atomic, reviewable commits. Combined with "do not start a new task until the current one is committed," this prevented half-finished features from accumulating across sessions.
+- **"Once a design is finalised, document it as an ADR."** This produced 100+ architectural decision records that serve as the project's institutional memory.
 
 ### Testing Rules
 
-**"When fixing tests, do not blindly change test assertions to make the test pass."** Without this, the AI's default behaviour is to modify the assertion to match whatever the code produces, regardless of whether the code is correct.
-
-**"Make sure you are not creating any special implementation behaviour just to get the tests to pass."** Without this, the AI occasionally added if-branches in production code solely to satisfy a test expectation.
-
-**"Do not use `unittest.mock.patch`. Use proper dependency injection."** This forced every external dependency to be injectable. The entire VM, all 15 frontends, and all analysis passes are testable in isolation.
-
-**"For every bug you fix, make sure you have a test that fails without the bug fix."**
+- **"When fixing tests, do not blindly change test assertions to make the test pass."** Without this, the AI's default behaviour is to modify the assertion to match whatever the code produces, regardless of whether the code is correct.
+- **"Make sure you are not creating any special implementation behaviour just to get the tests to pass."** Without this, the AI occasionally added if-branches in production code solely to satisfy a test expectation.
+- **"Do not use `unittest.mock.patch`. Use proper dependency injection."** This forced every external dependency to be injectable. The entire VM, all 15 frontends, and all analysis passes are testable in isolation.
+- **"For every bug you fix, make sure you have a test that fails without the bug fix."**
 
 ### Programming Rules
 
-**"STOP USING FOR LOOPS WITH MUTATIONS IN THEM."** This forced a functional style: list comprehensions, `map`, `filter`, `reduce` instead of mutable accumulators.
-
-**"Categorically avoid defensive programming."** Defensive code hides bugs. A `None` check that silently returns an empty list masks the fact that a value should never have been `None`. Without this rule, the AI adds defensive checks reflexively.
-
-**"If a function has a non-None return type, never return None."** Use null object pattern instead.
-
-**"When writing `if` conditions, prefer early return."** Without this, the AI nests the happy path inside increasingly deep conditionals.
-
-**"Do not use static methods."** Static methods resist dependency injection and create hidden coupling.
-
-**"Use a ports-and-adapter type architecture. Adhere to 'Functional Core, Imperative Shell'."** The VM handlers are pure functions returning `StateUpdate` data objects. The dataflow module is a pure analysis pass. I/O lives at the edges.
-
-**"Parameters in functions, if they must have default values, must have those values as empty structures corresponding to the non-empty types."** Empty dicts, empty lists, never `None`.
+- **"STOP USING FOR LOOPS WITH MUTATIONS IN THEM."** This forced a functional style: list comprehensions, `map`, `filter`, `reduce` instead of mutable accumulators.
+- **"Categorically avoid defensive programming."** Defensive code hides bugs. A `None` check that silently returns an empty list masks the fact that a value should never have been `None`. Without this rule, the AI adds defensive checks reflexively.
+- **"If a function has a non-None return type, never return None."** Use null object pattern instead.
+- **"When writing `if` conditions, prefer early return."** Without this, the AI nests the happy path inside increasingly deep conditionals.
+- **"Do not use static methods."** Static methods resist dependency injection and create hidden coupling.
+- **"Use a ports-and-adapter type architecture. Adhere to 'Functional Core, Imperative Shell'."** The VM handlers are pure functions returning `StateUpdate` data objects. The dataflow module is a pure analysis pass. I/O lives at the edges.
+- **"Parameters in functions, if they must have default values, must have those values as empty structures corresponding to the non-empty types."** Empty dicts, empty lists, never `None`.
 
 ### The Workflow Evolution
 
@@ -429,21 +412,20 @@ The AI will optimise for closing tickets, not for closing them correctly. The hu
 
 ## Patterns and Observations
 
-**Brainstorm, probe, crystallise.** I didn't start with fixed architectures. I started with a problem, brainstormed approaches with Claude, then implemented each and tested on real data. The deterministic VM emerged from asking "shouldn't this be deterministic?" after seeing the LLM-based approach work.
+- **Brainstorm, probe, crystallise.** I didn't start with fixed architectures. I started with a problem, brainstormed approaches with Claude, then implemented each and tested on real data. The deterministic VM emerged from asking "shouldn't this be deterministic?" after seeing the LLM-based approach work.
 
-**The plan document as interface.** After brainstorming and discussing trade-offs, I'd formulate a plan document covering context, phases, file-by-file changes, and verification steps. The plan is specific enough for unambiguous execution but high-level enough to retain architectural control. This happened ~15 times.
+- **The plan document as interface.** After brainstorming and discussing trade-offs, I'd formulate a plan document covering context, phases, file-by-file changes, and verification steps. The plan is specific enough for unambiguous execution but high-level enough to retain architectural control. This happened ~15 times.
 
-**Brainstorming with Superpowers.** Later in the project, I started using the [Superpowers](https://github.com/nicobailey/claude-code-superpowers) plugin for Claude Code, specifically its brainstorming skill. Why it fit my workflow:
+- **Brainstorming with Superpowers.** Later in the project, I started using the [Superpowers](https://github.com/nicobailey/claude-code-superpowers) plugin for Claude Code, specifically its brainstorming skill. Why it fit my workflow:
+  - **I'm not used to writing large upfront specs.** I prefer to explore the design space before committing to a choice, and Superpowers' brainstorming mode let me describe a problem and have it explore multiple approaches interactively.
+  - **Design through small focused decisions.** I want the design to evolve through a series of yes/no decisions on individual aspects, not a single monolithic plan. The brainstorming skill converges on a design through exactly this kind of incremental refinement.
+  - **Customising how information is presented.** For larger refactorings, instead of handing me a full implementation spec to review (which I would skim), I asked it to show me the salient aspects of the final design — the key trade-offs, the data structures that would change, the migration strategy — as a list of focused questions I could approve or reject individually. This turned spec review from a passive reading exercise into an active decision-making process.
 
-- **I'm not used to writing large upfront specs.** I prefer to explore the design space before committing to a choice, and Superpowers' brainstorming mode let me describe a problem and have it explore multiple approaches interactively.
-- **Design through small focused decisions.** I want the design to evolve through a series of yes/no decisions on individual aspects, not a single monolithic plan. The brainstorming skill converges on a design through exactly this kind of incremental refinement.
-- **Customising how information is presented.** For larger refactorings, instead of handing me a full implementation spec to review (which I would skim), I asked it to show me the salient aspects of the final design — the key trade-offs, the data structures that would change, the migration strategy — as a list of focused questions I could approve or reject individually. This turned spec review from a passive reading exercise into an active decision-making process.
+- **Breadth over depth.** Tasks like "generate frontends for 14 languages" or "audit all 130 test files for weak assertions" are where the AI works well. These breadth tasks — applying a consistent pattern across many targets — would have taken days. Where it needed more guidance was depth: closure capture semantics (snapshot vs. shared environment), when to use `SYMBOLIC` fallback vs. crash, whether an assertion is vacuous. These required me to probe with specific test cases.
 
-**Breadth over depth.** Tasks like "generate frontends for 14 languages" or "audit all 130 test files for weak assertions" are where the AI works well. These breadth tasks — applying a consistent pattern across many targets — would have taken days. Where it needed more guidance was depth: closure capture semantics (snapshot vs. shared environment), when to use `SYMBOLIC` fallback vs. crash, whether an assertion is vacuous. These required me to probe with specific test cases.
+- **Empirical validation over specification.** I rarely specified exact behaviour upfront. I implemented a feature, ran it on real code, and judged the results. The AI made this feedback loop fast enough to be practical.
 
-**Empirical validation over specification.** I rarely specified exact behaviour upfront. I implemented a feature, ran it on real code, and judged the results. The AI made this feedback loop fast enough to be practical.
-
-**Terse directives after trust.** Early prompts were detailed. By mid-project: *"do all of them"*, *"push"*, *"commit and push this"*. Trust built through consistent execution.
+- **Terse directives after trust.** Early prompts were detailed. By mid-project: *"do all of them"*, *"push"*, *"commit and push this"*. Trust built through consistent execution.
 
 ```mermaid
 flowchart LR
@@ -458,11 +440,11 @@ flowchart LR
     classDef late fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
 ```
 
-**The AI hallucinated audit findings.** During the assertion audit, the AI reported violations that didn't exist or had already been fixed. Different parallel agents flagged different things, inconsistently applied priority criteria, and re-reported fixed items with different wording. The reconciliation pass caught this. The auditor itself needs auditing.
+- **The AI hallucinated audit findings.** During the assertion audit, the AI reported violations that didn't exist or had already been fixed. Different parallel agents flagged different things, inconsistently applied priority criteria, and re-reported fixed items with different wording. The reconciliation pass caught this. The auditor itself needs auditing.
 
-**CLAUDE.md rules are reactive.** Every rule was added in response to a specific failure. They accumulate over time, and each one represents a mistake that happened at least once.
+- **CLAUDE.md rules are reactive.** Every rule was added in response to a specific failure. They accumulate over time, and each one represents a mistake that happened at least once.
 
-**Screenshot-driven debugging.** For the CFG visualisation work, I'd generate a diagram, screenshot it, paste it into the conversation, and ask "why does it look so disjointed?" Claude could see the rendering and diagnose layout issues. The visualisation went through five rounds.
+- **Screenshot-driven debugging.** For the CFG visualisation work, I'd generate a diagram, screenshot it, paste it into the conversation, and ask "why does it look so disjointed?" Claude could see the rendering and diagnose layout issues. The visualisation went through five rounds.
 
 ### The Anonymous Class Story, or, Why the AI Reaches for New Infrastructure
 
@@ -500,11 +482,11 @@ The fix isn't a CLAUDE.md rule (though I added one). It's a conversational habit
 
 ## What I Would Change
 
-**Start with the audit earlier.** The two-pass dispatch audit should have existed from the first batch of frontends, not after 50 sessions.
+- **Start with the audit earlier.** The two-pass dispatch audit should have existed from the first batch of frontends, not after 50 sessions.
 
-**Invest in cross-language tests from day one.** The Rosetta and Exercism suites exposed more bugs than all the language-specific unit tests combined. A single exercise tested across 15 languages covers more surface area than 50 unit tests in one language.
+- **Invest in cross-language tests from day one.** The Rosetta and Exercism suites exposed more bugs than all the language-specific unit tests combined. A single exercise tested across 15 languages covers more surface area than 50 unit tests in one language.
 
-**Be more aggressive about the functional core.** Even with the FP rules in CLAUDE.md, some mutation crept in, especially in the VM executor. The dataflow module is almost purely functional and is the easiest module to test. The correlation is not a coincidence.
+- **Be more aggressive about the functional core.** Even with the FP rules in CLAUDE.md, some mutation crept in, especially in the VM executor. The dataflow module is almost purely functional and is the easiest module to test. The correlation is not a coincidence.
 
 ---
 
