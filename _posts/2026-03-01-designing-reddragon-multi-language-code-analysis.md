@@ -7,7 +7,7 @@ tags: ["Software Engineering", "Compilers", "Program Analysis", "AI-Assisted Dev
 draft: false
 ---
 
-*A universal IR, 15 deterministic frontends, LLM-assisted repair/lowering/execution, a deterministic VM with class hierarchy support and cross-language slicing, a structured type system with generics/unions/variance/traits and interface-aware inference, and iterative dataflow analysis.*
+*A universal IR, 15 deterministic frontends, LLM-assisted repair/lowering/execution, a deterministic VM with class hierarchy support, overload resolution, and cross-language slicing, a structured type system with generics/unions/variance/traits and interface-aware inference, and iterative dataflow analysis.*
 
 **GitHub**: [avishek-sen-gupta/red-dragon](https://github.com/avishek-sen-gupta/red-dragon)
 
@@ -216,18 +216,18 @@ The [LLM-Assisted VM Execution](#llm-assisted-vm-execution) section shows what h
 
 ---
 
-## The IR: 28 Opcodes to Rule Them All
+## The IR: 29 Opcodes to Rule Them All
 
 *See also: [IR Reference](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/ir-reference.md)*
 
-The intermediate representation is a **flattened three-address code** with 28 opcodes, grouped by role:
+The intermediate representation is a **flattened three-address code** with 29 opcodes, grouped by role:
 
 ```
 Value producers:   CONST, LOAD_VAR, LOAD_FIELD, LOAD_INDEX,
                    NEW_OBJECT, NEW_ARRAY, BINOP, UNOP,
                    CALL_FUNCTION, CALL_METHOD, CALL_UNKNOWN
 
-Value consumers:   STORE_VAR, STORE_FIELD, STORE_INDEX
+Value consumers:   STORE_VAR, STORE_FIELD, STORE_INDEX, DECL_VAR
 
 Control flow:      BRANCH, BRANCH_IF, LABEL, RETURN, THROW,
                    TRY_PUSH, TRY_POP
@@ -241,7 +241,9 @@ Continuations:     SET_CONTINUATION, RESUME_CONTINUATION
 Escape hatch:      SYMBOLIC
 ```
 
-The first 19 opcodes handle all general-purpose lowering across 15 languages. `TRY_PUSH` and `TRY_POP` model structured exception handling (pushing/popping handler labels onto the VM's exception stack). `ADDRESS_OF` supports pointer aliasing: `&x` on a primitive promotes the variable to a heap object and returns a typed `Pointer(base, offset)`, enabling `*ptr = 99` to update the original variable through the alias (see [Pointer Aliasing](#pointer-aliasing)). The three region opcodes (`ALLOC_REGION`, `WRITE_REGION`, `LOAD_REGION`) provide byte-addressed memory for COBOL-style overlays, REDEFINES, and packed data layouts. The two continuation opcodes (`SET_CONTINUATION`, `RESUME_CONTINUATION`) model COBOL's PERFORM return semantics, where control transfers to a named paragraph and returns to the caller on completion. The extended opcodes are language-agnostic in the IR and VM; they happen to be emitted by specific frontends but could serve broader use cases.
+`DECL_VAR` is a recent addition that separates variable *declarations* from *assignments*. Previously, `STORE_VAR` handled both, always writing to the current stack frame. This meant assignments inside nested functions could never modify outer-scope variables — a fundamental scope chain bug. `DECL_VAR` writes only to the current frame (for `let x = ...`, `var x = ...`), while `STORE_VAR` now walks the scope chain to find existing bindings. All 15 frontends emit `DECL_VAR` for declarations and `STORE_VAR` for assignments.
+
+The first 20 opcodes handle all general-purpose lowering across 15 languages. `TRY_PUSH` and `TRY_POP` model structured exception handling (pushing/popping handler labels onto the VM's exception stack). `ADDRESS_OF` supports pointer aliasing: `&x` on a primitive promotes the variable to a heap object and returns a typed `Pointer(base, offset)`, enabling `*ptr = 99` to update the original variable through the alias (see [Pointer Aliasing](#pointer-aliasing)). The three region opcodes (`ALLOC_REGION`, `WRITE_REGION`, `LOAD_REGION`) provide byte-addressed memory for COBOL-style overlays, REDEFINES, and packed data layouts. The two continuation opcodes (`SET_CONTINUATION`, `RESUME_CONTINUATION`) model COBOL's PERFORM return semantics, where control transfers to a named paragraph and returns to the caller on completion. The extended opcodes are language-agnostic in the IR and VM; they happen to be emitted by specific frontends but could serve broader use cases.
 
 Every instruction is a flat dataclass: an opcode, a list of operands, a destination register, and a source location tracing it back to the original code. No nested expressions. `a + b * c` decomposes into:
 
@@ -665,7 +667,7 @@ The call dispatch path saves the return address (`return_label`, `return_ip`) an
 
 ### Opcode Dispatch
 
-The `LocalExecutor` maps each of the 28 `Opcode` enum values to a handler function via a static dispatch table:
+The `LocalExecutor` maps each of the 29 `Opcode` enum values to a handler function via a static dispatch table:
 
 ```python
 DISPATCH: dict[Opcode, Any] = {
@@ -673,7 +675,7 @@ DISPATCH: dict[Opcode, Any] = {
     Opcode.BINOP: _handle_binop,
     Opcode.CALL_FUNCTION: _handle_call_function,
     Opcode.LOAD_FIELD: _handle_load_field,
-    # ... all 28 opcodes
+    # ... all 29 opcodes
 }
 ```
 
@@ -801,6 +803,17 @@ Method override works naturally: the child's method table is checked first, so a
 
 Ten OOP frontends extract parent classes: Java, Python, C#, Kotlin, Ruby, JavaScript, TypeScript, Scala, PHP, and C++. Each uses a shared `make_class_ref` helper to encode parents into the class reference string, keeping the language-specific code minimal. The five non-OOP frontends (C, Go, Rust, Lua, Pascal) are unaffected.
 
+### Overload Resolution
+
+When a class defines multiple methods with the same name but different parameter types (common in Java, C#, Kotlin, Scala, C++), the VM needs to select the right overload at call time. The `OverloadResolver` uses a composable strategy pattern:
+
+**`ArityThenTypeStrategy`** ranks candidates in two passes:
+
+1. **Arity distance**: how many parameters differ from the call site's argument count
+2. **Type compatibility score**: exact match (2 points), coercion or subtype match (1 point), mismatch (-1 point)
+
+The type scoring uses `TypeGraph.is_subtype_expr()` for inheritance-aware dispatch: passing a `Dog` to `foo(Dog)` scores higher than `foo(Animal)`. Primitive coercions (Int → Float, Bool → Int) score as compatible but below exact matches. Since the resolver receives `list[TypedValue]` arguments, full type metadata is available without consulting the `TypeEnvironment`.
+
 ### Pointer Aliasing
 
 C and Rust programs use `&x` to take the address of a variable. In most analysis tools, this creates an aliasing relationship that's tracked through a separate alias analysis pass. RedDragon handles it directly in the VM through a KLEE-inspired **promote-on-address-of** model.
@@ -851,6 +864,17 @@ if class_name not in self.class_registry:
 ```
 
 This reuses the existing variable store as the lookup table — no new data structures needed.
+
+### Language Prelude Classes
+
+Some languages have standard library types that are integral to idiomatic code but don't exist as user-defined classes in the source. Rust's `Box<T>` and `Option<T>` are examples: linked list implementations use `Box::new(node)` and `Some(value)` pervasively.
+
+Rather than adding VM-level special cases, each frontend can override an `_emit_prelude` hook to emit synthetic class definitions during lowering:
+
+- **`Box::new(expr)`** is a pass-through — it returns its argument directly. In RedDragon's reference-based VM, all values are already heap-allocated, so `Box` adds no indirection. This matches Rust's auto-deref semantics transparently.
+- **`Option`** is emitted as a real class with `__init__(self, value)`, `unwrap(self)`, and `as_ref(self)` methods. `Some(expr)` lowers to `CALL_FUNCTION "Option"`.
+
+The prelude hook is a no-op by default. Only the Rust frontend overrides it. The registry recognises prelude class labels via a prefix constant, so prelude classes participate in method dispatch and type inference like any user-defined class.
 
 ### Built-in Functions
 
@@ -1167,7 +1191,7 @@ Type information enters the system through two paths:
 
 ### The Inference Algorithm
 
-The inference walk runs to fixpoint over the flat IR. A dispatch table maps 19 of the 28 opcodes to handler functions (the remaining 9 are control flow and pointer instructions with no typeable results). Each handler is a pure function that reads from and writes to an `_InferenceContext` — a mutable bundle of maps storing `TypeExpr` values:
+The inference walk runs to fixpoint over the flat IR. A dispatch table maps 20 of the 29 opcodes to handler functions (the remaining 9 are control flow and pointer instructions with no typeable results). Each handler is a pure function that reads from and writes to an `_InferenceContext` — a mutable bundle of maps storing `TypeExpr` values:
 
 - `register_types`: `%0` → `ScalarType("Int")`, `%3` → `ScalarType("Bool")`, ...
 - `var_types`: `x` → `ScalarType("Int")`, `items` → `ParameterizedType("Array", [ScalarType("String")])`, ...
@@ -1402,8 +1426,8 @@ The Exercism suite surfaced more bugs than any other test approach. Each exercis
 | Metric | Value |
 |--------|-------|
 | Supported languages | 15 (deterministic) + COBOL (ProLeap) + any (LLM) |
-| IR opcodes | 28 |
-| Tests (all passing) | 11,575 |
+| IR opcodes | 29 |
+| Tests (all passing) | 11,680 |
 | LLM calls at test time | 0 |
 | Exercism exercises | 18 (across 15 languages) |
 | Rosetta algorithms | 15 (across 15 languages) |
@@ -1413,7 +1437,7 @@ The Exercism suite surfaced more bugs than any other test approach. Each exercis
 
 ## Conclusion
 
-RedDragon started as a question: *"Can I build a single system that analyses code in any language?"* It evolved into a compiler pipeline with 15 deterministic frontends, a COBOL frontend via ProLeap, LLM-assisted AST repair, a structured type system (an algebraic TypeExpr ADT with generics, unions, function types, tuples, type aliases, interface/trait typing, variance annotations, and bounded type variables), static type inference with fixpoint convergence, interface-aware chain walk, and structural generic extraction across 12 statically-typed languages, a deterministic VM with class hierarchy support (inherited method dispatch via linearized parent chains across 10 OOP languages), `TypedValue`-based runtime type propagation with two-layer coercion, cross-language slicing, rest pattern destructuring, byte-addressed memory regions and named continuations, and cross-language verification.
+RedDragon started as a question: *"Can I build a single system that analyses code in any language?"* It evolved into a compiler pipeline with 15 deterministic frontends, a COBOL frontend via ProLeap, LLM-assisted AST repair, a structured type system (an algebraic TypeExpr ADT with generics, unions, function types, tuples, type aliases, interface/trait typing, variance annotations, and bounded type variables), static type inference with fixpoint convergence, interface-aware chain walk, and structural generic extraction across 12 statically-typed languages, a deterministic VM with class hierarchy support (inherited method dispatch via linearized parent chains across 10 OOP languages), `TypedValue`-based runtime type propagation with two-layer coercion, type-aware overload resolution, cross-language slicing, rest pattern destructuring, byte-addressed memory regions and named continuations, and cross-language verification.
 
 **None of the individual components are novel.** TAC IR, dispatch tables, worklist dataflow, and forward type inference are all textbook techniques. The value, if any, is in applying them together to a practical multi-language analysis tool.
 
@@ -1425,13 +1449,13 @@ All three projects are open source: [RedDragon](https://github.com/avishek-sen-g
 
 Design documents and detailed specs from the RedDragon repository:
 
-- [IR Reference](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/ir-reference.md) — Full specification of all 28 opcodes, instruction format, and lowering conventions
+- [IR Reference](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/ir-reference.md) — Full specification of all 29 opcodes, instruction format, and lowering conventions
 - [Frontend Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/notes-on-frontend-design.md) — Architecture of the frontend subsystem: dispatch tables, AST repair, LLM frontends
 - [Per-Language Frontend Docs](https://github.com/avishek-sen-gupta/red-dragon/tree/main/docs/frontend-design) — Exhaustive per-file documentation for all 15 language frontends and the base frontend
 - [VM Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/notes-on-vm-design.md) — VM internals: state model, opcode dispatch, symbolic propagation, closures, class hierarchy
 - [Dataflow Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/notes-on-dataflow-design.md) — Reaching definitions, def-use chains, and dependency graph construction
 - [Type System Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/type-system.md) — Type ontology, inference algorithm, coercion rules, and cross-language type extraction
-- [Architectural Decision Records](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/architectural-design-decisions.md) — Chronological log of key design decisions (ADR-001 through ADR-102)
+- [Architectural Decision Records](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/architectural-design-decisions.md) — Chronological log of key design decisions (ADR-001 through ADR-103)
 - [IR Lowering Gaps](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/ir-lowering-gaps.md) — Tracking document for cross-language type inference lowering gaps
 - [Project Philosophy](https://github.com/avishek-sen-gupta/red-dragon/blob/main/PHILOSOPHY.md) — Design principles and engineering values
 - [Contributing Guide](https://github.com/avishek-sen-gupta/red-dragon/blob/main/CONTRIBUTING.md) — How to contribute to the project
