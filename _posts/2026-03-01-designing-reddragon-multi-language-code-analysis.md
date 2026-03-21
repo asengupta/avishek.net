@@ -55,7 +55,7 @@ RedDragon explores three ideas about analysing frequently-incomplete code, the k
 
 1. [Architecture Overview](#architecture-overview)
 2. [A Worked Example: Source to Execution](#a-worked-example-source-to-execution)
-3. [The IR: 28 Opcodes to Rule Them All](#the-ir-28-opcodes-to-rule-them-all)
+3. [The IR: 32 Opcodes to Rule Them All](#the-ir-29-opcodes-to-rule-them-all)
 4. [Frontends: Four Strategies, One Output](#frontends-four-strategies-one-output)
 5. [LLM-Assisted AST Repair](#llm-assisted-ast-repair)
 6. [LLM Frontend: Lowering Unknown Languages](#llm-frontend-lowering-unknown-languages)
@@ -127,29 +127,29 @@ The Python tree-sitter frontend parses this and emits flat three-address code. T
 branch end_classify_0                    # skip over body
 func_classify_0:                         # entry point
   %0 = symbolic param:x                  # parameter binding
-  store_var x %0
+  decl_var x %0
   %1 = load_var x                        # if x > 0
   %2 = const 0
   %3 = binop > %1 %2
   branch_if %3 if_true_0,if_false_0
 if_true_0:
   %4 = const "positive"
-  store_var label %4
+  decl_var label %4
   branch if_end_0
 if_false_0:
   %5 = const "negative"
-  store_var label %5
+  store_var label %5                     # assignment to existing var
   branch if_end_0
 if_end_0:
   %6 = load_var label
   return %6
 end_classify_0:
   %7 = const <function:classify@func_classify_0>
-  store_var classify %7
+  decl_var classify %7
   %8 = const 5
-  store_var x %8
+  decl_var x %8
   %9 = call_function classify %8         # classify(5)
-  store_var result %9
+  decl_var result %9
 ```
 
 Every instruction is a flat dataclass with an opcode, operands, a destination register, and a source location tracing it back to the original line and column. No nested expressions. `x > 0` decomposes into `LOAD_VAR`, `CONST`, `BINOP`.
@@ -199,11 +199,11 @@ step 10: const 0                         → %2 = 0
 step 11: binop > %1 %2                   → %3 = True (5 > 0)
 step 12: branch_if %3 if_true,if_false   → True, jump to if_true_0
 step 13: const "positive"                → %4 = "positive"
-step 14: store_var label %4              → label = "positive"
+step 14: decl_var label %4               → label = "positive"
 step 15: branch if_end_0                 → jump to if_end_0
 step 16: load_var label                  → %6 = "positive"
 step 17: return %6                       → pop frame, return "positive"
-step 18: store_var result %9             → result = "positive"
+step 18: decl_var result %9              → result = "positive"
 
 Final state: result = "positive"  (18 steps, 0 LLM calls)
 ```
@@ -216,11 +216,11 @@ The [LLM-Assisted VM Execution](#llm-assisted-vm-execution) section shows what h
 
 ---
 
-## The IR: 29 Opcodes to Rule Them All
+## The IR: 32 Opcodes to Rule Them All
 
 *See also: [IR Reference](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/ir-reference.md)*
 
-The intermediate representation is a **flattened three-address code** with 29 opcodes, grouped by role:
+The intermediate representation is a **flattened three-address code** with 32 opcodes, grouped by role:
 
 ```
 Value producers:   CONST, LOAD_VAR, LOAD_FIELD, LOAD_INDEX,
@@ -232,7 +232,8 @@ Value consumers:   STORE_VAR, STORE_FIELD, STORE_INDEX, DECL_VAR
 Control flow:      BRANCH, BRANCH_IF, LABEL, RETURN, THROW,
                    TRY_PUSH, TRY_POP
 
-Pointers:          ADDRESS_OF
+Pointers:          ADDRESS_OF, LOAD_INDIRECT, LOAD_FIELD_INDIRECT,
+                   STORE_INDIRECT
 
 Regions:           ALLOC_REGION, WRITE_REGION, LOAD_REGION
 
@@ -411,7 +412,7 @@ The 15 deterministic frontends cover a fixed set of languages. For everything el
 The LLM frontend works by constraining the LLM to a **mechanical translation task**. The system prompt is a specification containing:
 
 1. **The instruction format**: every IR instruction is a JSON object with `opcode`, `result_reg`, `operands`, `label`, and `source_location` fields.
-2. **All 27 opcode definitions**: grouped into value producers (`CONST`, `LOAD_VAR`, `BINOP`, `CALL_FUNCTION`, ...), consumers/control flow (`STORE_VAR`, `BRANCH_IF`, `RETURN`, ...), and special instructions (`SYMBOLIC`, `LABEL`).
+2. **All 29 opcode definitions**: grouped into value producers (`CONST`, `LOAD_VAR`, `BINOP`, `CALL_FUNCTION`, ...), consumers/control flow (`STORE_VAR`, `BRANCH_IF`, `RETURN`, ...), and special instructions (`SYMBOLIC`, `LABEL`).
 3. **Critical patterns**: exact lowering templates for function definitions (the skip-over pattern with `BRANCH`/`LABEL`/`SYMBOLIC param:`/implicit `RETURN None`), class definitions, constructor calls, method calls, and if/elif/else chains.
 4. **A complete worked example**: a `fib(n)` function lowered to 30 IR instructions, showing every convention in context.
 5. **Rules**: the first instruction is always `LABEL "entry"`, every expression is flattened into registers, string literals include quotes in the operand, booleans are `"True"`/`"False"`, return only the JSON array with no markdown fences.
@@ -550,7 +551,7 @@ The lowering equivalence tests verify this directly. For each algorithm, the tes
 The iterative factorial is implemented in all 15 languages using the same structure: initialise `result = 1` and `i = 2`, loop while `i <= n`, multiply `result *= i`, increment `i`, return `result`. Despite the syntactic differences (Python's `while`, Go's `for`, Rust's `loop` with `break`, Pascal's `while...do`), all 15 frontends produce the identical opcode sequence:
 
 ```
-SYMBOLIC, STORE_VAR, CONST, STORE_VAR, CONST, STORE_VAR,
+SYMBOLIC, DECL_VAR, CONST, DECL_VAR, CONST, DECL_VAR,
 LOAD_VAR, LOAD_VAR, BINOP, BRANCH_IF, LOAD_VAR, LOAD_VAR,
 BINOP, STORE_VAR, LOAD_VAR, CONST, BINOP, STORE_VAR, BRANCH,
 LOAD_VAR, RETURN, CONST, RETURN
@@ -667,7 +668,7 @@ The call dispatch path saves the return address (`return_label`, `return_ip`) an
 
 ### Opcode Dispatch
 
-The `LocalExecutor` maps each of the 29 `Opcode` enum values to a handler function via a static dispatch table:
+The `LocalExecutor` maps each of the 32 `Opcode` enum values to a handler function via a static dispatch table:
 
 ```python
 DISPATCH: dict[Opcode, Any] = {
@@ -675,7 +676,7 @@ DISPATCH: dict[Opcode, Any] = {
     Opcode.BINOP: _handle_binop,
     Opcode.CALL_FUNCTION: _handle_call_function,
     Opcode.LOAD_FIELD: _handle_load_field,
-    # ... all 29 opcodes
+    # ... all 32 opcodes
 }
 ```
 
@@ -1201,7 +1202,7 @@ Type information enters the system through two paths:
 
 ### The Inference Algorithm
 
-The inference walk runs to fixpoint over the flat IR. A dispatch table maps 20 of the 29 opcodes to handler functions (the remaining 9 are control flow and pointer instructions with no typeable results). Each handler is a pure function that reads from and writes to an `_InferenceContext` — a mutable bundle of maps storing `TypeExpr` values:
+The inference walk runs to fixpoint over the flat IR. A dispatch table maps 20 of the 32 opcodes to handler functions (the remaining 12 are control flow, pointer, region, and continuation instructions with no typeable results). Each handler is a pure function that reads from and writes to an `_InferenceContext` — a mutable bundle of maps storing `TypeExpr` values:
 
 - `register_types`: `%0` → `ScalarType("Int")`, `%3` → `ScalarType("Bool")`, ...
 - `var_types`: `x` → `ScalarType("Int")`, `items` → `ParameterizedType("Array", [ScalarType("String")])`, ...
@@ -1436,7 +1437,7 @@ The Exercism suite surfaced more bugs than any other test approach. Each exercis
 | Metric | Value |
 |--------|-------|
 | Supported languages | 15 (deterministic) + COBOL (ProLeap) + any (LLM) |
-| IR opcodes | 29 |
+| IR opcodes | 32 |
 | Tests (all passing) | 12,293 |
 | LLM calls at test time | 0 |
 | Exercism exercises | 18 (across 15 languages) |
@@ -1459,7 +1460,7 @@ All three projects are open source: [RedDragon](https://github.com/avishek-sen-g
 
 Design documents and detailed specs from the RedDragon repository:
 
-- [IR Reference](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/ir-reference.md) — Full specification of all 29 opcodes, instruction format, and lowering conventions
+- [IR Reference](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/ir-reference.md) — Full specification of all 32 opcodes, instruction format, and lowering conventions
 - [Frontend Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/notes-on-frontend-design.md) — Architecture of the frontend subsystem: dispatch tables, AST repair, LLM frontends
 - [Per-Language Frontend Docs](https://github.com/avishek-sen-gupta/red-dragon/tree/main/docs/frontend-design) — Exhaustive per-file documentation for all 15 language frontends and the base frontend
 - [VM Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/notes-on-vm-design.md) — VM internals: state model, opcode dispatch, symbolic propagation, closures, class hierarchy
