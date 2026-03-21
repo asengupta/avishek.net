@@ -814,6 +814,16 @@ When a class defines multiple methods with the same name but different parameter
 
 The type scoring uses `TypeGraph.is_subtype_expr()` for inheritance-aware dispatch: passing a `Dog` to `foo(Dog)` scores higher than `foo(Animal)`. Primitive coercions (Int → Float, Bool → Int) score as compatible but below exact matches. Since the resolver receives `list[TypedValue]` arguments, full type metadata is available without consulting the `TypeEnvironment`.
 
+### Symbol Table
+
+The `SymbolTable` is a pre-execution data structure extracted from the IR by each frontend during lowering. It maps class names to their fields, methods, static fields, and parent classes — information that was previously recovered at runtime by scanning IR instructions.
+
+The symbol table is populated via a `_extract_symbols` pre-pass hook on `BaseFrontend`. All 15 language frontends implement symbol extraction. The executor receives the symbol table at construction time and uses it for:
+
+- **Cross-class field resolution**: `SymbolTable.resolve_field` walks the class hierarchy to find which class owns a field, enabling field access in subclass constructors without explicit `this.parent_field` qualification.
+- **Implicit-this field access**: In Java, C#, and C++, methods can reference fields without `this.` — `age = 10` inside a constructor means `this.age = 10`. The executor checks the symbol table to determine whether an unqualified name refers to a class field, and if so, rewrites the access as a `STORE_FIELD`/`LOAD_FIELD` on the implicit `this` parameter.
+- **Static method dispatch**: `Class::method()` calls (PHP, C++, Rust) are lowered with a `ClassRef` marker in the `CALL_METHOD` instruction. The executor uses the symbol table to verify the target is a static method and dispatches without requiring an object instance.
+
 ### Pointer Aliasing
 
 C and Rust programs use `&x` to take the address of a variable. In most analysis tools, this creates an aliasing relationship that's tracked through a separate alias analysis pass. RedDragon handles it directly in the VM through a KLEE-inspired **promote-on-address-of** model.
@@ -1427,7 +1437,7 @@ The Exercism suite surfaced more bugs than any other test approach. Each exercis
 |--------|-------|
 | Supported languages | 15 (deterministic) + COBOL (ProLeap) + any (LLM) |
 | IR opcodes | 29 |
-| Tests (all passing) | 11,680 |
+| Tests (all passing) | 12,293 |
 | LLM calls at test time | 0 |
 | Exercism exercises | 18 (across 15 languages) |
 | Rosetta algorithms | 15 (across 15 languages) |
@@ -1437,7 +1447,7 @@ The Exercism suite surfaced more bugs than any other test approach. Each exercis
 
 ## Conclusion
 
-RedDragon started as a question: *"Can I build a single system that analyses code in any language?"* It evolved into a compiler pipeline with 15 deterministic frontends, a COBOL frontend via ProLeap, LLM-assisted AST repair, a structured type system (an algebraic TypeExpr ADT with generics, unions, function types, tuples, type aliases, interface/trait typing, variance annotations, and bounded type variables), static type inference with fixpoint convergence, interface-aware chain walk, and structural generic extraction across 12 statically-typed languages, a deterministic VM with class hierarchy support (inherited method dispatch via linearized parent chains across 10 OOP languages), `TypedValue`-based runtime type propagation with two-layer coercion, type-aware overload resolution, cross-language slicing, rest pattern destructuring, byte-addressed memory regions and named continuations, and cross-language verification.
+RedDragon started as a question: *"Can I build a single system that analyses code in any language?"* It evolved into a compiler pipeline with 15 deterministic frontends, a COBOL frontend via ProLeap, LLM-assisted AST repair, a structured type system (an algebraic TypeExpr ADT with generics, unions, function types, tuples, type aliases, interface/trait typing, variance annotations, and bounded type variables), static type inference with fixpoint convergence, interface-aware chain walk, and structural generic extraction across 12 statically-typed languages, a deterministic VM with class hierarchy support (inherited method dispatch via linearized parent chains across 10 OOP languages), `TypedValue`-based runtime type propagation with two-layer coercion, type-aware overload resolution, a symbol table with cross-class field resolution and implicit-this support, cross-language slicing, rest pattern destructuring, byte-addressed memory regions and named continuations, and cross-language verification.
 
 **None of the individual components are novel.** TAC IR, dispatch tables, worklist dataflow, and forward type inference are all textbook techniques. The value, if any, is in applying them together to a practical multi-language analysis tool.
 
@@ -1455,7 +1465,7 @@ Design documents and detailed specs from the RedDragon repository:
 - [VM Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/notes-on-vm-design.md) — VM internals: state model, opcode dispatch, symbolic propagation, closures, class hierarchy
 - [Dataflow Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/notes-on-dataflow-design.md) — Reaching definitions, def-use chains, and dependency graph construction
 - [Type System Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/type-system.md) — Type ontology, inference algorithm, coercion rules, and cross-language type extraction
-- [Architectural Decision Records](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/architectural-design-decisions.md) — Chronological log of key design decisions (ADR-001 through ADR-103)
+- [Architectural Decision Records](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/architectural-design-decisions.md) — Chronological log of key design decisions (ADR-001 through ADR-116)
 - [IR Lowering Gaps](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/ir-lowering-gaps.md) — Tracking document for cross-language type inference lowering gaps
 - [Project Philosophy](https://github.com/avishek-sen-gupta/red-dragon/blob/main/PHILOSOPHY.md) — Design principles and engineering values
 - [Contributing Guide](https://github.com/avishek-sen-gupta/red-dragon/blob/main/CONTRIBUTING.md) — How to contribute to the project
