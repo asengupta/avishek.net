@@ -55,7 +55,7 @@ RedDragon explores three ideas about analysing frequently-incomplete code, the k
 
 1. [Architecture Overview](#architecture-overview)
 2. [A Worked Example: Source to Execution](#a-worked-example-source-to-execution)
-3. [The IR: 32 Opcodes to Rule Them All](#the-ir-29-opcodes-to-rule-them-all)
+3. [The IR: 32 Opcodes to Rule Them All](#the-ir-32-opcodes-to-rule-them-all)
 4. [Frontends: Four Strategies, One Output](#frontends-four-strategies-one-output)
 5. [LLM-Assisted AST Repair](#llm-assisted-ast-repair)
 6. [LLM Frontend: Lowering Unknown Languages](#llm-frontend-lowering-unknown-languages)
@@ -161,11 +161,11 @@ The CFG builder splits the IR at every `LABEL` and after every `BRANCH`/`BRANCH_
 ```mermaid
 flowchart TD
     entry(["<b>entry</b><br/>BRANCH end_classify_0"]):::entry
-    func("<b>func_classify_0</b><br/>SYMBOLIC param:x · STORE x<br/>LOAD x · CONST 0 · BINOP ><br/>BRANCH_IF"):::block
-    if_true("<b>if_true_0</b><br/>CONST &quot;positive&quot;<br/>STORE label · BRANCH"):::branch
-    if_false("<b>if_false_0</b><br/>CONST &quot;negative&quot;<br/>STORE label · BRANCH"):::branch
+    func("<b>func_classify_0</b><br/>SYMBOLIC param:x · DECL_VAR x<br/>LOAD x · CONST 0 · BINOP ><br/>BRANCH_IF"):::block
+    if_true("<b>if_true_0</b><br/>CONST &quot;positive&quot;<br/>DECL_VAR label · BRANCH"):::branch
+    if_false("<b>if_false_0</b><br/>CONST &quot;negative&quot;<br/>STORE_VAR label · BRANCH"):::branch
     if_end(["<b>if_end_0</b><br/>LOAD label<br/>RETURN"]):::exit
-    end_classify("<b>end_classify_0</b><br/>CONST function · STORE classify<br/>CONST 5 · STORE x<br/>CALL classify · STORE result"):::block
+    end_classify("<b>end_classify_0</b><br/>CONST function · DECL_VAR classify<br/>CONST 5 · DECL_VAR x<br/>CALL classify · DECL_VAR result"):::block
 
     entry --> end_classify
     entry -.->|"skip"| func
@@ -188,12 +188,12 @@ The deterministic VM executes step by step. When it hits `CALL_FUNCTION classify
 ```
 step  1: branch end_classify_0          → skip to end_classify_0
 step  2: const <function:classify>       → %7 = <function:classify@func_classify_0>
-step  3: store_var classify %7           → classify = <function>
+step  3: decl_var classify %7            → classify = <function>
 step  4: const 5                         → %8 = 5
-step  5: store_var x %8                  → x = 5
+step  5: decl_var x %8                   → x = 5
 step  6: call_function classify %8       → push frame, jump to func_classify_0
 step  7: symbolic param:x               → %0 = 5 (bound from caller)
-step  8: store_var x %0                  → x = 5
+step  8: decl_var x %0                   → x = 5
 step  9: load_var x                      → %1 = 5
 step 10: const 0                         → %2 = 0
 step 11: binop > %1 %2                   → %3 = True (5 > 0)
@@ -320,7 +320,7 @@ All four frontend strategies produce the same `list[IRInstruction]`. They differ
 
 **2. COBOL frontend (ProLeap bridge):** COBOL source is parsed by the ProLeap COBOL parser (a Java-based parser producing an Abstract Syntax Graph), bridged to Python via a shaded JAR that emits JSON ASGs. The frontend includes a complete type system: PIC clause parsing (zoned decimal, COMP/COMP-1/COMP-2, packed decimal, alphanumeric, EBCDIC), REDEFINES overlays with byte-addressed memory regions, OCCURS arrays with subscript resolution, level-88 condition names with value ranges, and paragraph-based control flow via named continuations. COBOL-specific IR is emitted using the region and continuation opcodes.
 
-**3. LLM frontend:** For languages without a deterministic frontend. The source is sent to an LLM constrained by a formal schema: all 27 opcode specs, concrete patterns, and worked examples. The LLM acts as a mechanical compiler frontend, not a reasoning engine. This distinction matters: the prompt doesn't ask *"what does this code do?"* It asks *"translate this into these specific opcodes."*
+**3. LLM frontend:** For languages without a deterministic frontend. The source is sent to an LLM constrained by a formal schema: all 32 opcode specs, concrete patterns, and worked examples. The LLM acts as a mechanical compiler frontend, not a reasoning engine. This distinction matters: the prompt doesn't ask *"what does this code do?"* It asks *"translate this into these specific opcodes."*
 
 **4. Chunked LLM frontend:** For large files that overflow context windows. Tree-sitter decomposes the file into per-function chunks, each is LLM-lowered independently, registers and labels are renumbered to avoid collisions, and the chunks are reassembled into a single IR.
 
@@ -412,7 +412,7 @@ The 15 deterministic frontends cover a fixed set of languages. For everything el
 The LLM frontend works by constraining the LLM to a **mechanical translation task**. The system prompt is a specification containing:
 
 1. **The instruction format**: every IR instruction is a JSON object with `opcode`, `result_reg`, `operands`, `label`, and `source_location` fields.
-2. **All 29 opcode definitions**: grouped into value producers (`CONST`, `LOAD_VAR`, `BINOP`, `CALL_FUNCTION`, ...), consumers/control flow (`STORE_VAR`, `BRANCH_IF`, `RETURN`, ...), and special instructions (`SYMBOLIC`, `LABEL`).
+2. **All 32 opcode definitions**: grouped into value producers (`CONST`, `LOAD_VAR`, `BINOP`, `CALL_FUNCTION`, ...), consumers/control flow (`STORE_VAR`, `BRANCH_IF`, `RETURN`, ...), and special instructions (`SYMBOLIC`, `LABEL`).
 3. **Critical patterns**: exact lowering templates for function definitions (the skip-over pattern with `BRANCH`/`LABEL`/`SYMBOLIC param:`/implicit `RETURN None`), class definitions, constructor calls, method calls, and if/elif/else chains.
 4. **A complete worked example**: a `fib(n)` function lowered to 30 IR instructions, showing every convention in context.
 5. **Rules**: the first instruction is always `LABEL "entry"`, every expression is flattened into registers, string literals include quotes in the operand, booleans are `"True"`/`"False"`, return only the JSON array with no markdown fences.
@@ -468,7 +468,7 @@ entry:
 
 func_factorial_0:
   %0 = symbolic "param:n"
-  store_var n %0
+  decl_var n %0
   %1 = load_var n
   %2 = const 0
   %3 = binop == %1 %2
@@ -491,10 +491,10 @@ if_false_3:
 
 end_factorial_1:
   %12 = const "<function:factorial@func_factorial_0>"
-  store_var factorial %12
+  decl_var factorial %12
 ```
 
-The top-level bindings follow the same pattern: `CONST` + `CALL_FUNCTION` + `STORE_VAR` for each assignment. At execution time, `factorial(5)` resolves to 120 deterministically (concrete recursive call). `toUpper('a')` and `ord(ch)` are unresolved `Data.Char` functions, handled by the `UnresolvedCallResolver`: the default `SymbolicResolver` traces dependencies through symbolic placeholders; the opt-in `LLMPlausibleResolver` produces concrete values (`'A'`, `65`, `total = 185`). From Haskell source to executed VM state, with **zero language-specific code**.
+The top-level bindings follow the same pattern: `CONST` + `CALL_FUNCTION` + `DECL_VAR` for each declaration. At execution time, `factorial(5)` resolves to 120 deterministically (concrete recursive call). `toUpper('a')` and `ord(ch)` are unresolved `Data.Char` functions, handled by the `UnresolvedCallResolver`: the default `SymbolicResolver` traces dependencies through symbolic placeholders; the opt-in `LLMPlausibleResolver` produces concrete values (`'A'`, `65`, `total = 185`). From Haskell source to executed VM state, with **zero language-specific code**.
 
 ---
 
@@ -833,9 +833,9 @@ When the VM encounters `ADDRESS_OF`, it promotes the target variable from a prim
 
 ```
 %0 = const 42
-store_var x %0
+decl_var x %0
 %1 = address_of x               # promote x to heap, return Pointer
-store_var ptr %1
+decl_var ptr %1
 %2 = const 99
 store_field ptr "value" %2       # *ptr = 99; x is now 99
 %3 = load_var x                  # %3 = 99 (reads through heap)
@@ -886,6 +886,36 @@ Rather than adding VM-level special cases, each frontend can override an `_emit_
 - **`Option`** is emitted as a real class with `__init__(self, value)`, `unwrap(self)`, and `as_ref(self)` methods. `Some(expr)` lowers to `CALL_FUNCTION "Option"`.
 
 The prelude hook is a no-op by default. Only the Rust frontend overrides it. The registry recognises prelude class labels via a prefix constant, so prelude classes participate in method dispatch and type inference like any user-defined class.
+
+### Structural Pattern Matching
+
+Languages like Python, Rust, C#, and Scala have structural pattern matching constructs (`match`/`switch` with destructuring), where a subject value is tested against a sequence of patterns that can bind variables, decompose structures, and guard with conditions. RedDragon handles these through a common **Pattern ADT** (`interpreter/frontends/common/patterns.py`) shared across frontends.
+
+The ADT defines pattern types that compose recursively:
+
+```
+LiteralPattern(value)                    # 42, "hello", true
+WildcardPattern()                        # _
+CapturePattern(name)                     # x (bind to variable)
+OrPattern(alternatives)                  # 1 | 2 | 3
+SequencePattern(elements)               # (a, b, _) — tuple destructuring
+ClassPattern(class_name, positional, keyword)  # Point { x, y } or Some(x)
+ValuePattern(parts)                      # Color::Red, Color.Red
+AsPattern(inner, name)                   # x: Int (isinstance + bind)
+```
+
+Two shared compiler functions translate patterns into IR without any new opcodes:
+
+- **`compile_pattern_test(ctx, subject_reg, pattern)`** emits a chain of `BINOP ==`, `LOAD_FIELD`, `LOAD_INDEX`, and `BRANCH_IF` instructions that evaluate to a boolean test register. Nested patterns recurse and AND the results together.
+- **`compile_pattern_bindings(ctx, subject_reg, pattern)`** emits `LOAD_FIELD`/`LOAD_INDEX` + `DECL_VAR` instructions that extract and bind matched components to local variables.
+
+Each frontend maps its language's tree-sitter AST nodes to the Pattern ADT through a `parse_<lang>_pattern` function:
+
+- **Python** maps `match_statement` cases: `case_pattern`, `class_pattern`, `as_pattern`, `or_pattern`.
+- **C#** maps `switch_expression` arms: `constant_pattern`, `declaration_pattern`, `var_pattern`, `property_pattern`, `discard_pattern`.
+- **Rust** maps `match_expression` arms: `integer_literal` → `LiteralPattern`, `identifier` → `CapturePattern`, `tuple_struct_pattern` → `ClassPattern` (with prelude variant resolution: `Some(x)` becomes `ClassPattern("Option", ...)`), `struct_pattern` → `ClassPattern` with keyword args, `or_pattern`, `tuple_pattern`, `scoped_identifier` → `ValuePattern`. Rust `match` is expression-style (returns a value), so the frontend uses `compile_pattern_test`/`compile_pattern_bindings` directly rather than the statement-level `compile_match`, storing each arm's result into a shared result variable.
+
+Because the Pattern ADT compiles down to existing IR opcodes (`BINOP`, `LOAD_FIELD`, `LOAD_INDEX`, `BRANCH_IF`, `DECL_VAR`), no VM changes are needed. The VM, CFG builder, and dataflow analysis all handle pattern matching transparently.
 
 ### Built-in Functions
 
@@ -1448,7 +1478,7 @@ The Exercism suite surfaced more bugs than any other test approach. Each exercis
 
 ## Conclusion
 
-RedDragon started as a question: *"Can I build a single system that analyses code in any language?"* It evolved into a compiler pipeline with 15 deterministic frontends, a COBOL frontend via ProLeap, LLM-assisted AST repair, a structured type system (an algebraic TypeExpr ADT with generics, unions, function types, tuples, type aliases, interface/trait typing, variance annotations, and bounded type variables), static type inference with fixpoint convergence, interface-aware chain walk, and structural generic extraction across 12 statically-typed languages, a deterministic VM with class hierarchy support (inherited method dispatch via linearized parent chains across 10 OOP languages), `TypedValue`-based runtime type propagation with two-layer coercion, type-aware overload resolution, a symbol table with cross-class field resolution and implicit-this support, cross-language slicing, rest pattern destructuring, byte-addressed memory regions and named continuations, and cross-language verification.
+RedDragon started as a question: *"Can I build a single system that analyses code in any language?"* It evolved into a compiler pipeline with 15 deterministic frontends, a COBOL frontend via ProLeap, LLM-assisted AST repair, a structured type system (an algebraic TypeExpr ADT with generics, unions, function types, tuples, type aliases, interface/trait typing, variance annotations, and bounded type variables), static type inference with fixpoint convergence, interface-aware chain walk, and structural generic extraction across 12 statically-typed languages, a deterministic VM with class hierarchy support (inherited method dispatch via linearized parent chains across 10 OOP languages), `TypedValue`-based runtime type propagation with two-layer coercion, type-aware overload resolution, a symbol table with cross-class field resolution and implicit-this support, cross-language slicing, rest pattern destructuring, structural pattern matching via a shared Pattern ADT, byte-addressed memory regions and named continuations, and cross-language verification.
 
 **None of the individual components are novel.** TAC IR, dispatch tables, worklist dataflow, and forward type inference are all textbook techniques. The value, if any, is in applying them together to a practical multi-language analysis tool.
 
