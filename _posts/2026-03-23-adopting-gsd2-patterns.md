@@ -25,9 +25,7 @@ Then I looked at [GSD 2](https://github.com/gsd-build/gsd-2).
 
 GSD 2 is a standalone CLI built on the Pi SDK that controls a coding agent's session programmatically. It's the evolution of the original Get Shit Done prompt framework — from markdown prompts injected into Claude Code to a TypeScript application that manages context windows, dispatches work, tracks cost, detects stuck loops, and recovers from crashes.
 
-I'm not using GSD 2 as my agent. I'm using Claude Code directly. But GSD 2's *workflow model* — the dispatch pipeline, the complexity classification, the fresh-session-per-task discipline, the crash-safe state-on-disk pattern — those are ideas that apply regardless of which agent you're using.
-
-The question was: which of these ideas could I steal?
+I use GSD 2 as my agent harness — it runs the sessions, manages context, and provides the tooling. But the *workflow patterns* I'm describing here — enforced phases, complexity classification, verification gates, fresh-context discipline, state-on-disk — are not GSD-2-specific. They're engineering discipline that applies to any AI coding assistant: Claude Code directly, Cursor, Windsurf, Codex, or whatever comes next. The patterns are about how you structure work, not which tool runs it.
 
 ---
 
@@ -197,6 +195,10 @@ After shipping multi-file support for all 16 languages, I discovered that 9 of t
 This was a violation of the self-review checklist that I'd just added. The checklist says "weak assertions" is an anti-pattern to scan for. The tests were written before the checklist existed.
 
 Strengthening them exposed two additional bugs: a Pascal frontend gap (`begin...end.` block not lowered) and a Pascal function return bug (`Result` variable not returned). Both were pre-existing single-file bugs, not linker issues — but the weak multi-file assertions had masked them.
+
+This prompted two new rules. First: **after writing tests, review every assertion for specificity.** Replace `assert x is not None` and `assert "name" in result` with concrete value assertions like `assert result == 30`. If a concrete assertion isn't possible, document why. Weak assertions that would pass even when the feature is broken are worse than no assertions — they give false confidence.
+
+Second: **every `xfail` must have a corresponding Beads issue**, and the `xfail` reason string must reference the issue ID. An `xfail` without a tracked issue is a gap that never gets fixed — it just sits there, green in the test report, invisible in the backlog.
 
 ### The Theoretical Bug Trap
 
