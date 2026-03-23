@@ -1,5 +1,5 @@
 ---
-title: "Adopting GSD 2 Patterns for AI-Assisted Development"
+title: "Evolving Workflow Patterns: Borrowing from GSD 2"
 author: avishek
 usemathjax: false
 mermaid: true
@@ -23,7 +23,7 @@ I looked at [GSD 2](https://github.com/gsd-build/gsd-2) for ideas.
 
 ## What GSD 2 Is
 
-I've started using [GSD 2](https://github.com/gsd-build/gsd-2) as my agent framework — not as part of my day-to-day workflow yet, but enough to see how its patterns work in practice. GSD 2 is a standalone CLI built on the Pi SDK that controls a coding agent's session programmatically. It's the evolution of the original Get Shit Done prompt framework — from markdown prompts injected into Claude Code to a TypeScript application that manages context windows, dispatches work, tracks cost, detects stuck loops, and recovers from crashes.
+I'd been aware of the original [Get Shit Done prompt framework](https://github.com/gsd-build/gsd) for a while, and had started using it lightly through Claude Code — but I'd never fully embraced it. GSD 2 gave me the opportunity to try the framework whole-heartedly. [GSD 2](https://github.com/gsd-build/gsd-2) is a standalone CLI built on the Pi SDK that controls a coding agent's session programmatically. It's the evolution of the original GSD — from markdown prompts injected into Claude Code to a TypeScript application that manages context windows, dispatches work, tracks cost, detects stuck loops, and recovers from crashes. Importantly, GSD 2 let me keep using my existing infrastructure — my own ADR documents, Beads for issue tracking, and the CLAUDE.md conventions I'd built up over months — while layering its workflow discipline on top.
 
 The *workflow patterns* I'm describing here — enforced phases, complexity classification, verification gates, fresh-context discipline, state-on-disk — are not GSD-2-specific. They're engineering discipline that applies to any AI coding assistant: Claude Code directly, Cursor, Windsurf, Codex, or whatever comes next. The patterns are about how you structure work, not which tool runs it.
 
