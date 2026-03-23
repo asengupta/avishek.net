@@ -23,9 +23,9 @@ I looked at [GSD 2](https://github.com/gsd-build/gsd-2) for ideas.
 
 ## What GSD 2 Is
 
-GSD 2 is a standalone CLI built on the Pi SDK that controls a coding agent's session programmatically. It's the evolution of the original Get Shit Done prompt framework — from markdown prompts injected into Claude Code to a TypeScript application that manages context windows, dispatches work, tracks cost, detects stuck loops, and recovers from crashes.
+I've started using [GSD 2](https://github.com/gsd-build/gsd-2) as my agent framework — not as part of my day-to-day workflow yet, but enough to see how its patterns work in practice. GSD 2 is a standalone CLI built on the Pi SDK that controls a coding agent's session programmatically. It's the evolution of the original Get Shit Done prompt framework — from markdown prompts injected into Claude Code to a TypeScript application that manages context windows, dispatches work, tracks cost, detects stuck loops, and recovers from crashes.
 
-I use GSD 2 as my agent harness — it runs the sessions, manages context, and provides the tooling. But the *workflow patterns* I'm describing here — enforced phases, complexity classification, verification gates, fresh-context discipline, state-on-disk — are not GSD-2-specific. They're engineering discipline that applies to any AI coding assistant: Claude Code directly, Cursor, Windsurf, Codex, or whatever comes next. The patterns are about how you structure work, not which tool runs it.
+The *workflow patterns* I'm describing here — enforced phases, complexity classification, verification gates, fresh-context discipline, state-on-disk — are not GSD-2-specific. They're engineering discipline that applies to any AI coding assistant: Claude Code directly, Cursor, Windsurf, Codex, or whatever comes next. The patterns are about how you structure work, not which tool runs it.
 
 Here's what I took from it.
 
