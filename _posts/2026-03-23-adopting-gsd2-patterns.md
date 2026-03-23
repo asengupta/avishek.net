@@ -17,7 +17,7 @@ I've been building [RedDragon](https://github.com/avishek-sen-gupta/red-dragon) 
 
 What I didn't have was a *systematic* workflow framework. My CLAUDE.md was a collection of individually sensible rules, accumulated reactively over months. It worked, but it was disorganised — duplicate rules scattered across sections, no enforced phase ordering, no complexity-aware ceremony.
 
-Then I looked at [GSD 2](https://github.com/gsd-build/gsd-2).
+I looked at [GSD 2](https://github.com/gsd-build/gsd-2) for ideas.
 
 ---
 
@@ -26,6 +26,8 @@ Then I looked at [GSD 2](https://github.com/gsd-build/gsd-2).
 GSD 2 is a standalone CLI built on the Pi SDK that controls a coding agent's session programmatically. It's the evolution of the original Get Shit Done prompt framework — from markdown prompts injected into Claude Code to a TypeScript application that manages context windows, dispatches work, tracks cost, detects stuck loops, and recovers from crashes.
 
 I use GSD 2 as my agent harness — it runs the sessions, manages context, and provides the tooling. But the *workflow patterns* I'm describing here — enforced phases, complexity classification, verification gates, fresh-context discipline, state-on-disk — are not GSD-2-specific. They're engineering discipline that applies to any AI coding assistant: Claude Code directly, Cursor, Windsurf, Codex, or whatever comes next. The patterns are about how you structure work, not which tool runs it.
+
+Here's what I took from it.
 
 ---
 
@@ -87,7 +89,7 @@ GSD 2 runs automated verification (lint, test, typecheck) with auto-fix retries 
 
 My CLAUDE.md had "run black" and "run tests" as separate bullet points in different sections. The `.importlinter` check wasn't mentioned at all — which is how the CI pipeline broke silently with stale module paths for who knows how long.
 
-The new rule: **three checks in order before every commit — `black`, `lint-imports`, `pytest`. Non-negotiable. All three must pass.**
+The new rule: **three checks in order before every commit — `black`, `lint-imports`, `pytest`. All three must pass.**
 
 ```bash
 poetry run python -m black .         # formatting
@@ -145,7 +147,7 @@ flowchart TB
 
 ### The Patch-on-Patch Problem
 
-The biggest lesson from this adoption was the linker. The original design promised "zero downstream changes" — namespace labels, merge IR, and the existing VM/CFG/registry would just work. It didn't.
+The linker was where this adoption was most tested. The original design promised "zero downstream changes" — namespace labels, merge IR, and the existing VM/CFG/registry would just work. It didn't.
 
 The VM resolves function calls by looking up variable names in the scope chain, not by label. The VM's CONST handler converts label strings into `BoundFuncRef`/`ClassRef` via symbol tables. Constructor dispatch uses the class name from ClassRef to look up methods. None of this is label-based. The design document didn't account for any of it.
 
@@ -204,7 +206,7 @@ Second: **every `xfail` must have a corresponding Beads issue**, and the `xfail`
 
 One of the review findings (`red-dragon-lzae`) was about a fragile state machine in the import stub dropper. After brainstorming, we determined the bug was theoretical — no frontend currently produces the problematic instruction pattern, and adding "just in case" code would violate the "no speculative code without tests" principle. We closed it as won't-fix with a documentation note.
 
-This was the right call, but it took a brainstorming session to reach it. The first instinct (mine and the AI's) was to write a test and fix it. The discipline of brainstorming first — "is this actually a bug?" — saved time.
+It took a brainstorming session to reach that conclusion. The first instinct (mine and the AI's) was to write a test and fix it. Brainstorming first — "is this actually a bug?" — saved time.
 
 ---
 
@@ -261,4 +263,4 @@ flowchart LR
     classDef default fill:#f5f5f5,stroke:#999,stroke-width:1px,color:#333
 ```
 
-The AI writes code faster than I can. It doesn't write *better* code without guardrails. The guardrails are the practice.
+The AI writes code faster than I can. It doesn't write better code without guardrails.
