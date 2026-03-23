@@ -2,7 +2,7 @@
 title: "Adopting GSD 2 Patterns for AI-Assisted Development"
 author: avishek
 usemathjax: false
-mermaid: false
+mermaid: true
 tags: ["Software Engineering", "AI-Assisted Development", "Developer Tooling", "Workflow"]
 draft: false
 ---
@@ -41,6 +41,19 @@ My previous CLAUDE.md had "The workflow is Brainstorm → Discuss → Plan → W
 
 The new rule: **every non-trivial task goes through brainstorm → plan → test-first → implement → self-review → verify → commit, in that order. Do not skip phases.**
 
+```mermaid
+flowchart LR
+    B("🧠 Brainstorm"):::phase1 --> P("📐 Plan"):::phase2 --> T("🧪 Test first"):::test --> I("⚙️ Implement"):::phase3 --> R("🔍 Self-review"):::review --> V("✅ Verify gate"):::gate --> C("📦 Commit"):::done
+
+    classDef phase1 fill:#e8f4fd,stroke:#4a90d9,stroke-width:2px,color:#1a3a5c
+    classDef phase2 fill:#fff3e0,stroke:#e8a735,stroke-width:2px,color:#5c3a0a
+    classDef test fill:#fce4ec,stroke:#c62828,stroke-width:2px,color:#5c0a0a
+    classDef phase3 fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#3a0a3a
+    classDef review fill:#fff9c4,stroke:#f9a825,stroke-width:2px,color:#5c4a0a
+    classDef gate fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
+    classDef done fill:#e8f5e9,stroke:#2e7d32,stroke-width:3px,color:#1a3a1a
+```
+
 I also added a self-review step between implement and verify — scan your own diff for workaround guards, weak assertions, mutation in loops, stale docs, and missing tests before running the verification gate.
 
 ### 2. Complexity Classification
@@ -54,6 +67,21 @@ I adapted this for ceremony level:
 - **Heavy** (300+ lines, new abstractions, multiple subsystems) — brainstorm must produce a written design with trade-offs before any code. Break into independently-committable units. Do not attempt in a single pass.
 
 The multi-file linker was Heavy (500+ lines, new package, touched VM, registry, API, MCP). It should have been broken into smaller units from the start. Instead it was attempted as one continuous stream, which led to the patch-on-patch problem.
+
+```mermaid
+flowchart TD
+    T("📋 New task"):::start --> C{"Classify<br/>complexity"}:::decide
+
+    C -- "< 50 lines,<br/>single file" --> L("💡 Light<br/><i>Brief brainstorm</i><br/><i>e.g., add node to dispatch table</i>"):::light
+    C -- "50–300 lines,<br/>2–5 files" --> S("📦 Standard<br/><i>Identify pattern being followed</i><br/><i>e.g., import extraction for new lang</i>"):::standard
+    C -- "300+ lines,<br/>new abstractions" --> H("🏗️ Heavy<br/><i>Written design + trade-offs</i><br/><i>Break into committable units</i><br/><i>Re-read code before each phase</i>"):::heavy
+
+    classDef start fill:#e8f4fd,stroke:#4a90d9,stroke-width:2px,color:#1a3a5c
+    classDef decide fill:#fff3e0,stroke:#e8a735,stroke-width:2px,color:#5c3a0a
+    classDef light fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
+    classDef standard fill:#fff9c4,stroke:#f9a825,stroke-width:2px,color:#5c4a0a
+    classDef heavy fill:#fce4ec,stroke:#c62828,stroke-width:2px,color:#5c0a0a
+```
 
 ### 3. Verification Gate
 
@@ -87,6 +115,32 @@ I already had Beads for issue tracking and ADRs for decisions. What I was missin
 
 The new rule: **`bd backup` before every commit. Issues filed before work starts. Prefer committed partial results over uncommitted complete attempts.** If a session might end, commit with a `WIP:` prefix and file an issue for the remainder.
 
+```mermaid
+flowchart TB
+    S(("🚀 Session start")):::start
+    S --> R("📜 CLAUDE.md<br/><i>Rules: how to behave</i>"):::rules
+    S --> A("📚 ADRs<br/><i>Why past decisions<br/>were made</i>"):::adrs
+    S --> B("📋 Beads issues<br/><i>What to work on next</i>"):::issues
+    S --> D("📊 Docs<br/><i>Living design docs</i>"):::docs
+    R & A & B & D --> O("✅ Agent is oriented"):::done
+
+    O --> W("⚙️ Work"):::work
+    W --> BK("💾 bd backup"):::backup
+    BK --> CM("📦 git commit + push"):::commit
+    CM -->|"more work"| W
+    CM -->|"session ending"| END("🏁 Clean state on disk"):::done
+
+    classDef start fill:#e8f4fd,stroke:#4a90d9,stroke-width:3px,color:#1a3a5c
+    classDef rules fill:#fce4ec,stroke:#c62828,stroke-width:2px,color:#5c0a0a
+    classDef adrs fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#3a0a3a
+    classDef issues fill:#fff3e0,stroke:#e8a735,stroke-width:2px,color:#5c3a0a
+    classDef docs fill:#e8f4fd,stroke:#4a90d9,stroke-width:2px,color:#1a3a5c
+    classDef done fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
+    classDef work fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#3a0a3a
+    classDef backup fill:#fff9c4,stroke:#f9a825,stroke-width:2px,color:#5c4a0a
+    classDef commit fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
+```
+
 ---
 
 ## Teething Issues
@@ -100,6 +154,23 @@ The VM resolves function calls by looking up variable names in the scope chain, 
 What followed: patch 1 (rewrite import stubs as CONST label bindings), patch 2 (pass symbol tables to ExecutionStrategies), patch 3 (keep bare names in symbol tables, not namespaced), patch 4 (insert BRANCH instructions to chain module entries), patch 5 (drop variable import stubs so they don't overwrite concrete values).
 
 Five patches. Each one "fixed" the immediate symptom. The underlying problem was that the design was wrong — linking at the label level doesn't work when the VM dispatches at the scope level.
+
+```mermaid
+flowchart TD
+    D("📄 Design:<br/>namespace labels,<br/>rewrite references"):::design
+    D --> P1("🩹 Patch 1:<br/>rewrite import stubs<br/>as CONST bindings"):::patch
+    P1 --> P2("🩹 Patch 2:<br/>pass symbol tables<br/>to ExecutionStrategies"):::patch
+    P2 --> P3("🩹 Patch 3:<br/>bare names in<br/>symbol tables"):::patch
+    P3 --> P4("🩹 Patch 4:<br/>BRANCH chains<br/>between modules"):::patch
+    P4 --> P5("🩹 Patch 5:<br/>drop variable<br/>import stubs"):::patch
+    P5 --> STOP("🛑 Stop.<br/>The design is wrong."):::stop
+    STOP --> RW("♻️ Rewrite:<br/>499 → 311 lines<br/>one clean model"):::rewrite
+
+    classDef design fill:#e8f4fd,stroke:#4a90d9,stroke-width:2px,color:#1a3a5c
+    classDef patch fill:#fce4ec,stroke:#c62828,stroke-width:2px,color:#5c0a0a
+    classDef stop fill:#ffcdd2,stroke:#b71c1c,stroke-width:3px,color:#5c0a0a
+    classDef rewrite fill:#e8f5e9,stroke:#2e7d32,stroke-width:3px,color:#1a3a1a
+```
 
 The fix was a rewrite: strip per-module entry labels, concatenate in dependency order, drop import stubs, emit one shared entry label. 499 lines → 311 lines. One clean model instead of five compensating transforms.
 
@@ -170,5 +241,22 @@ GSD 2 is a purpose-built agent framework. I didn't adopt the framework — I ado
 | State on disk | Missing backups → lost issue state on session crash |
 
 The patterns are tool-agnostic. They work whether you're using GSD 2, Claude Code directly, Cursor, or any other AI coding assistant. The common thread is treating AI-assisted development as an engineering practice that needs the same discipline as human development — phase gates, complexity awareness, verification, and persistent state.
+
+```mermaid
+flowchart LR
+    subgraph Before["❌ Before: ad-hoc"]
+        direction TB
+        B1("idea") --> I1("implement") --> F1("fix") --> F2("fix") --> F3("fix") --> T1("test<br/>+ commit")
+    end
+
+    subgraph After["✅ After: structured"]
+        direction TB
+        B2("brainstorm<br/>+ classify") --> P2("plan") --> T2("test first") --> I2("implement") --> R2("self-review") --> V2("verify gate") --> C2("commit")
+    end
+
+    Before -.->|"GSD 2<br/>patterns"| After
+
+    classDef default fill:#f5f5f5,stroke:#999,stroke-width:1px,color:#333
+```
 
 The AI writes code faster than I can. It doesn't write *better* code without guardrails. The guardrails are the practice.
