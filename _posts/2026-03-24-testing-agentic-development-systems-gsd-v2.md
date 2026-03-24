@@ -1,5 +1,5 @@
 ---
-title: "Testing agentic development systems: GSD v2 vs Superpowers"
+title: "Experience Report: Testing agentic coding workflows via Large Refactorings"
 author: avishek
 usemathjax: false
 mermaid: true
@@ -7,7 +7,9 @@ tags: ["Software Engineering", "AI-Assisted Development", "Developer Tooling", "
 draft: false
 ---
 
-*Two agentic development frameworks applied to the same multi-layer type migration across a 13,000-test compiler pipeline. The first provided process discipline but stalled after the hardest commit. The second completed the work because it planned more thoroughly and stopped to ask.*
+*Two agentic development frameworks applied to the same multi-layer type migration across a 13,000-test compiler pipeline. The first provided process discipline but stalled partway through. The second completed the work because it planned more thoroughly and stopped to ask.*
+
+*The code is at [avishek-sen-gupta/red-dragon](https://github.com/avishek-sen-gupta/red-dragon). RedDragon's design is described in [Designing RedDragon]({% post_url 2026-03-01-designing-reddragon-multi-language-code-analysis %}). The completed elimination plan is at [the design document](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/design/eliminate-irinstruction-plan.md). Previous posts in this series: [Building Non-Trivial Systems with an AI Coding Assistant]({% post_url 2026-03-12-experiences-building-with-coding-assistant %}), [Anatomy of a Refactoring Using AI]({% post_url 2026-03-13-anatomy-of-a-refactoring-using-ai %}).*
 
 ---
 
@@ -26,7 +28,7 @@ draft: false
   - [Brainstorm Wasn't Enforced](#brainstorm-wasnt-enforced)
   - [Retroactive Issue Filing](#retroactive-issue-filing)
   - [Weak Integration Test Assertions](#weak-integration-test-assertions)
-  - [The Theoretical Bug Trap](#the-theoretical-bug-trap)
+  - [The Theoretical Bug](#the-theoretical-bug)
 - [The Reorganised CLAUDE.md](#the-reorganised-claudemd)
 - [The Test: Replacing a Stringly-Typed IR with Domain Types](#the-test-replacing-a-stringly-typed-ir-with-domain-types)
   - [The Problem: Strings All the Way Down](#the-problem-strings-all-the-way-down)
@@ -36,22 +38,27 @@ draft: false
   - [What Actually Shipped](#what-actually-shipped)
   - [The Coercion Validator Mistake](#the-coercion-validator-mistake)
   - [The Refactoring Principles That Crystallised](#the-refactoring-principles-that-crystallised)
-- [Chapter 2: Register, The Pydantic Trap](#chapter-2-register-the-pydantic-trap)
-  - [The Boolean Landmine](#the-boolean-landmine)
-  - [The BRANCH_IF Comma Hack](#the-branch_if-comma-hack)
-- [Chapter 3: Typed Instructions, Replacing operands: list\[Any\]](#chapter-3-typed-instructions-replacing-operands-listany)
+- [Chapter 2: Register, The Pydantic Problem](#chapter-2-register-the-pydantic-problem)
+  - [The Boolean Truthiness Problem](#the-boolean-truthiness-problem)
+  - [The BRANCH_IF Comma Convention](#the-branch_if-comma-convention)
+- [Chapter 3: Typed Instructions](#chapter-3-typed-instructions)
+  - [The Decision: One Class Per Opcode](#the-decision-one-class-per-opcode)
   - [The Original Four-Phase Plan](#the-original-four-phase-plan)
   - [The Plan That Replaced the Plan](#the-plan-that-replaced-the-plan)
   - [The Missing Length Field](#the-missing-length-field)
-  - [Layer 1: The 12,924-Test Gauntlet](#layer-1-the-12924-test-gauntlet)
+  - [Layer 1 Execution](#layer-1-execution)
 - [Chapter 4: Completing the Migration with Superpowers](#chapter-4-completing-the-migration-with-superpowers)
   - [Why GSD v2 Stalled After Layer 1](#why-gsd-v2-stalled-after-layer-1)
   - [What Superpowers Did Differently](#what-superpowers-did-differently)
-  - [The Audit That Rewrote the Plan](#the-audit-that-rewrote-the-plan)
+  - [The Audit That Revised the Plan](#the-audit-that-revised-the-plan)
   - [Layers 2 Through 5: Execution](#layers-2-through-5-execution)
   - [Layer 5 Was Not Cleanup](#layer-5-was-not-cleanup)
-- [What Went Wrong, Catalogued](#what-went-wrong-catalogued)
-- [What I'd Do Differently](#what-id-do-differently)
+- [Learnings](#learnings)
+  - [On Type Hints in Python](#on-type-hints-in-python)
+  - [On Scope](#on-scope)
+  - [On Type Migrations](#on-type-migrations)
+  - [On Plans](#on-plans)
+  - [On Tooling](#on-tooling)
 - [Takeaways](#takeaways)
 
 ---
@@ -62,9 +69,13 @@ I've been building [RedDragon](https://github.com/avishek-sen-gupta/red-dragon),
 
 What I didn't have was a *systematic* workflow framework. My CLAUDE.md was a collection of individually sensible rules, accumulated reactively over months. It worked, but it was disorganised: duplicate rules scattered across sections, no enforced phase ordering, no complexity-aware ceremony.
 
-I looked at [GSD 2](https://github.com/gsd-build/gsd-2) for ideas. Then I stress-tested those ideas against the hardest refactoring the project had seen: replacing every raw string in the IR with domain types.
+The entire refactoring started because I turned on **Pyright**. I come from statically typed languages (Java, C#, C++), and writing a 13,000-line Python project without a type checker had been bothering me. When I enabled Pyright with strict settings, the IR layer lit up with errors. `label: str | None` caused 83+ narrowing failures at sites that assumed non-None. `operands: list[Any]` was a black hole that Pyright couldn't reason about at all. `result_reg: str` with `""` as a sentinel meant every presence check was invisible to the type checker. The type errors weren't bugs in the running code. They were a *map of every place where the code was fragile*, where a wrong assumption would pass silently.
 
-This post covers both: what I adopted from GSD 2, and what happened when those patterns met a 13,000-test type migration.
+Fixing those errors properly meant replacing the stringly-typed IR with domain types and per-opcode instruction classes. That became *the* refactoring.
+
+I'd been using Claude Code with Superpowers for most of the project's development. I wanted to try something different, both to evaluate [GSD 2](https://github.com/gsd-build/gsd-2) as a tool and to see what workflow ideas I could take away from it. Then I stress-tested those ideas against the refactoring: replacing the single flat instruction class with a union of 31 per-opcode typed dataclasses, and migrating registers and labels from raw strings to domain types.
+
+This post covers both: what I adopted from GSD 2 and later from Superpowers, and what happened when those patterns met a 13,000-test type migration.
 
 ---
 
@@ -249,7 +260,7 @@ This prompted two new rules. First: **after writing tests, review every assertio
 
 Second: **every `xfail` must have a corresponding Beads issue**, and the `xfail` reason string must reference the issue ID. An `xfail` without a tracked issue is a gap that never gets fixed. It just sits there, green in the test report, invisible in the backlog.
 
-### The Theoretical Bug Trap
+### The Theoretical Bug
 
 One of the review findings (`red-dragon-lzae`) was about a fragile state machine in the import stub dropper. After brainstorming, we determined the bug was theoretical: no frontend currently produces the problematic instruction pattern, and adding "just in case" code would violate the "no speculative code without tests" principle. We closed it as won't-fix with a documentation note.
 
@@ -269,7 +280,7 @@ I rewrote it from scratch: deduplicated, restructured into a logical reading ord
 
 ## The Test: Replacing a Stringly-Typed IR with Domain Types
 
-With the GSD 2 patterns in place, the next major piece of work was the hardest refactoring the project had seen. This was the real test of whether the patterns held up under pressure.
+With the GSD 2 patterns in place, the next major piece of work was replacing the IR's instruction representation. This was where the patterns would be tested under sustained pressure.
 
 By late March 2026, RedDragon had ~12,900 tests, 121 architectural decision records, 550+ tracked issues, and a problem: the IR was stringly-typed. Every instruction was an `IRInstruction` with an `opcode: Opcode` enum and `operands: list[Any]`. Labels were `str | None`. Registers were bare strings like `"%r0"`. Field names, variable names, function names, operator symbols, and register references were all `str`, distinguished only by position in the operands list.
 
@@ -293,9 +304,9 @@ The `label` field was `str | None`. 72% of instructions had `label=None`, causin
 
 This stringly-typed design had served the project well through rapid prototyping. 15 frontends were built against it, plus a VM, a CFG builder, a dataflow analysis engine, a type inference system, an interprocedural analysis pipeline, a multi-file linker, and an MCP server. But as pyright and import-linter tightened the quality gates, the strings became the dominant source of type errors, and every new feature required the same positional-indexing boilerplate.
 
-The goal: replace `IRInstruction` entirely with a union of per-opcode frozen dataclasses, where every register is a `Register` object, every label is a `CodeLabel` object, and every field is named. The migration was planned as five layers, each independently committable, with a compatibility bridge (`Register.__eq__(str)`, `to_typed()`/`to_flat()` converters) that would be removed only in the final layer.
+The goal: replace `IRInstruction` entirely with a union of per-opcode frozen dataclasses, where every register is a `Register` object, every label is a `CodeLabel` object, and every field is named.
 
-What actually happened was messier.
+What actually happened was messier. The migration proceeded in three chapters, each teaching its own lessons.
 
 ---
 
@@ -364,7 +375,7 @@ These principles were extracted from the CodeLabel work and written into `CLAUDE
 
 ---
 
-## Chapter 2: Register, The Pydantic Trap
+## Chapter 2: Register, The Pydantic Problem
 
 With `CodeLabel` done, the next target was `result_reg: str`. The pattern was established: introduce `Register(name: str)` and `NoRegister` singleton, replace `str`, push through adjacents.
 
@@ -386,7 +397,7 @@ class Register:
 
 `NoRegister` was the null object: `__str__` returned `""`, `is_present()` returned `False`.
 
-### The Boolean Landmine
+### The Boolean Truthiness Problem
 
 `IRInstruction.result_reg` was `str`, and the empty string `""` was the sentinel for "no result register." Throughout the codebase, truthiness checks like `if inst.result_reg:` were used to test whether an instruction produced a result.
 
@@ -407,11 +418,11 @@ The `__bool__` method was added, used as a temporary bridge, and then removed in
 
 The `CodeLabel` principles applied directly: push semantics to the domain type, don't rely on Python's implicit protocols.
 
-### The BRANCH_IF Comma Hack
+### The BRANCH_IF Comma Convention
 
 `BRANCH_IF` stored its branch targets as `operands = ["%r0", "L_true,L_false"]`. Two labels concatenated with a comma in a single string. Callers split on comma to recover the label list.
 
-This was not a design choice. It was an accidental constraint from the early days when `operands` was `list[Any]` and nobody thought about it. The comma string had survived 10 months and 12,000+ tests because it worked.
+This was not a design choice. It was an accidental constraint from the early days when `operands` was `list[Any]` and nobody thought about it. The comma string had survived hundreds of sessions and 12,000+ tests because it worked.
 
 Replacing it was the right time, since we were already touching `BRANCH_IF` for the `Register` migration. The fix introduced a `branch_targets: tuple[CodeLabel, ...]` field on the typed `BranchIf` instruction, eliminating the comma-separated string entirely.
 
@@ -428,13 +439,60 @@ for target in inst.operands[-1].split(","):
 branches = inst.operands[-1].split(",") if "," in str(inst.operands[-1]) else [inst.operands[-1]]
 ```
 
-Three files, three variations, one hack. The structured `branch_targets` field eliminated all of them.
+Three files, three variations, one undocumented convention. The structured `branch_targets` field eliminated all of them.
 
 ---
 
-## Chapter 3: Typed Instructions, Replacing operands: list\[Any\]
+## Chapter 3: Typed Instructions
 
-With `CodeLabel` and `Register` established for the metadata fields (`label`, `result_reg`), the next target was the core problem: `operands: list[Any]`.
+Chapters 1 and 2 had fixed the *metadata* fields on `IRInstruction`: `label` became `CodeLabel`, `result_reg` became `Register`. But the actual payload of each instruction, the thing that made a `BINOP` different from a `STORE_FIELD`, still lived in `operands: list[Any]`.
+
+This was the field that Pyright couldn't reason about at all. It accepted anything: strings, ints, `CodeLabel` objects, lists of `CodeLabel` objects, `SpreadArguments` wrappers. The type checker saw `list[Any]` and gave up. Every read from `operands` was untyped, every write was unchecked, and every positional convention was invisible to static analysis.
+
+The `operands` bag was also the source of the most insidious class of bugs: *silent positional swaps*. A `STORE_FIELD` had `operands = [obj_reg, field_name, value_reg]`. If a frontend accidentally emitted `operands = [field_name, obj_reg, value_reg]`, the type system had nothing to say. All three values were strings. The bug would surface as wrong runtime behaviour, not a type error. Every consumer of the IR had its own positional destructuring logic, and every one was a potential source of index bugs that no tool could catch statically.
+
+### The Decision: One Class Per Opcode
+
+The IR had a single `IRInstruction` class carrying every instruction in the system. A `CONST` loading a literal, a `CALL_METHOD` dispatching to an object, a `TRY_PUSH` setting up an exception handler: all the same class, distinguished only by the `opcode` enum and the contents of the `operands` bag. Every consumer had to destructure positionally:
+
+```python
+# What is operands[0]? Depends on the opcode.
+if inst.opcode == Opcode.BINOP:
+    operator = inst.operands[0]   # str: "+"
+    left_reg = inst.operands[1]   # str: "%r0"
+    right_reg = inst.operands[2]  # str: "%r1"
+elif inst.opcode == Opcode.STORE_FIELD:
+    obj_reg = inst.operands[0]    # str: "%r0"
+    field_name = inst.operands[1] # str: "name"
+    value_reg = inst.operands[2]  # str: "%r1"
+```
+
+The same index meant different things depending on the opcode. Swap two operands in a `STORE_FIELD` and the error is silent: both are strings, both fit in `operands[2]`, and the type system has nothing to say about it.
+
+The alternative was a discriminated union: one frozen dataclass per opcode, each with named fields of the correct type. A `Binop` has `operator: str`, `left: Register`, `right: Register`. A `StoreField` has `obj_reg: Register`, `field_name: str`, `value_reg: Register`. Swapping `obj_reg` and `value_reg` is still possible, but swapping `field_name` and `value_reg` is a type error because one is `str` and the other is `Register`.
+
+The trade-off was migration cost. A single `IRInstruction` class was the interface for every frontend (15 tree-sitter frontends, an LLM frontend, a COBOL frontend), every handler (28 VM handlers), the CFG builder, the dataflow engine, the type inference system, the interprocedural analysis pipeline, the linker, and the MCP server. Replacing it required touching all of them. The compatibility bridge (`to_typed()`/`to_flat()` converters, `Register.__eq__(str)`, `operands` properties on the typed classes) existed to make this migration incremental rather than big-bang.
+
+The design produced 31 frozen dataclasses sharing a common `InstructionBase` with `source_location`, plus per-class fields for registers, labels, operators, names, and branch targets. The `Instruction` union type was the discriminant:
+
+```python
+Instruction = (
+    Const | LoadVar | DeclVar | StoreVar | Symbolic |
+    Binop | Unop |
+    CallFunction | CallMethod | CallUnknown |
+    LoadField | StoreField | LoadFieldIndirect |
+    LoadIndex | StoreIndex |
+    LoadIndirect | StoreIndirect | AddressOf |
+    NewObject | NewArray |
+    Label_ | Branch | BranchIf |
+    Return_ | Throw_ |
+    TryPush | TryPop |
+    AllocRegion | LoadRegion | WriteRegion |
+    SetContinuation | ResumeContinuation
+)
+```
+
+Consumer dispatch changed from `dict[Opcode, handler]` to `dict[type, handler]`, and opcode checks from `inst.opcode == Opcode.LABEL` to `isinstance(inst, Label_)`. Generic transformations (register rebasing in the linker, label namespacing in multi-file compilation) went from operand-by-operand iteration to `inst.map_registers(fn)` and `inst.map_labels(fn)`, which introspect the dataclass fields and return a new frozen instance via `dataclasses.replace()`.
 
 ### The Original Four-Phase Plan
 
@@ -504,7 +562,7 @@ Commit message: *"fix: LoadRegion typed instruction, add missing length field."*
 
 The lesson: **generated code that passes a round-trip test is not necessarily correct; the test verifies internal consistency, not completeness.** A class with 3 fields that round-trips perfectly to a 3-operand instruction is still wrong if the real instruction has 4 operands.
 
-### Layer 1: The 12,924-Test Gauntlet
+### Layer 1 Execution
 
 Layer 1 was the riskiest single commit: changing 31 fields across 21 instruction classes from `str` to `Register`, plus updating all `operands` properties, `to_typed()` converters, and `to_flat()` converters.
 
@@ -526,11 +584,11 @@ All 12,924 tests passed. 22 xfailed. 1 skipped.
 
 ## Chapter 4: Completing the Migration with Superpowers
 
-After Layer 1 shipped, the five-layer plan sat at roughly 15% complete. Layers 2 through 5 still needed ~2,200 sites migrated across ~100 files. The GSD v2 patterns had gotten me through the hardest single commit, but the remaining work stalled.
+Layer 1 was the riskiest single commit, and the GSD v2 workflow patterns had gotten me through it. But the five-layer plan sat at roughly 15% complete. Layers 2 through 5 still needed ~2,200 sites migrated across ~100 files. The GSD v2 patterns had gotten me through the riskiest single commit, but the remaining work stalled.
 
 ### Why GSD v2 Stalled After Layer 1
 
-The GSD v2 patterns I'd adopted were *rules in CLAUDE.md*: enforce phases, classify complexity, run the verification gate. They worked as guardrails. But they didn't help with the orchestration problem: who breaks down the next 4 layers into sub-issues? Who dispatches work? Who reviews each piece before moving to the next?
+The GSD v2 patterns I'd adopted were *rules in CLAUDE.md*: enforce phases, classify complexity, run the verification gate. They worked as guardrails. But they didn't help with the *orchestration* problem: who breaks down the next 4 layers into sub-issues? Who dispatches work? Who reviews each piece before moving to the next?
 
 With GSD v2 patterns, the agent was too eager. It would see the five-layer plan, start implementing Layer 2, hit an edge case, make a judgment call without consulting me, then discover the judgment was wrong three layers later. The "stop and consult when patching" rule was in CLAUDE.md, but the agent treated it as a suggestion, not a gate.
 
@@ -542,13 +600,13 @@ A caveat: I did not investigate all of GSD v2's configuration options in depth. 
 
 ### What Superpowers Did Differently
 
-I switched to the [Superpowers](https://github.com/anthropics/claude-code/tree/main/plugins/superpowers) plugin for Claude Code.
+I switched back to the [Superpowers](https://github.com/anthropics/claude-code/tree/main/plugins/superpowers) plugin for Claude Code, which I'd used for much of the project's earlier development.
 
 **Brainstorming was a real gate.** Superpowers' brainstorming skill forced a structured conversation before any implementation. When I said "execute this plan," it first asked five clarifying questions, one at a time, with multiple choice options and a recommendation. Layer 4 decomposition strategy? One sub-issue per frontend (option A), grouped by size tier (B), or grouped by language family (C)? I picked A. The `lower_expr()` signature change: bundled with frontend migration or separate atomic commit? I picked separate. These decisions shaped the entire execution.
 
 With GSD v2 patterns alone, the agent would have made these decisions silently and started coding.
 
-**Two-stage review after every task.** Superpowers dispatched a fresh subagent per task, then ran a spec compliance review ("did you build what was requested?") followed by a code quality review ("is it well-built?"). The spec reviewer caught the Layer 1 `StoreIndex.value_reg` `SpreadArguments` guard issue. The code quality reviewer caught the `types.UnionType` vs `typing.Union` problem for Python 3.13 that would have broken `map_registers()`.
+**Two-stage review after every task.** Superpowers dispatched a fresh subagent per task, then ran a spec compliance review ("did you build what was requested?") followed by a code quality review ("is it well-built?"). The spec reviewer caught the Layer 1 `StoreIndex.value_reg` `SpreadArguments` guard issue. The code quality reviewer caught the `types.UnionType` vs `typing.Union` problem for Python 3.13 that would have *broken `map_registers()` at runtime*.
 
 With GSD v2, self-review was a checklist item. With Superpowers, review was a separate agent with adversarial instructions.
 
@@ -562,7 +620,7 @@ The session started with an audit. I asked the agent to examine `red-dragon-0ibe
 
 The audit revealed that the design doc's estimates were wrong in both directions. Handlers had 0 `to_typed()` calls (not the estimated 72). COBOL `ir_encoders.py` had 106 `IRInstruction` constructions (not counted in the original plan at all). Type inference had a full Opcode-keyed dispatch table that needed replacement (described as "~30 sites, annotation changes only").
 
-This upfront survey took 10 minutes. It saved hours of mid-implementation replanning.
+This upfront survey took **10 minutes**. It saved hours of mid-implementation replanning.
 
 ### Layers 2 Through 5: Execution
 
@@ -580,39 +638,44 @@ With the revised plan, execution was systematic:
 
 **Layer 5** (3 commits): Delete `emit()` methods. Add standalone `__str__` (replacing `to_flat()` delegation). Delete `to_flat()` and all flat-to-typed converters. Remove `Register.__eq__(str)` — which broke ~300 test sites that were fixed in a single commit. Delete `IRInstruction` class.
 
-Total: ~32 commits. ~100 files modified. Zero test regressions at any point. 12,944 tests passing throughout.
+Total: **~32 commits, ~100 files modified, zero test regressions** at any point. 12,944 tests passing throughout.
+
+The subagent execution times (including test suite runs after each change) give a sense of effort per layer:
+
+| Layer | Subagent time | Notes |
+|-------|--------------|-------|
+| Layer 1 (Register fields) | ~64 min | Riskiest commit; 4 edge cases discovered |
+| Layer 2a+2b (rebase, map_registers) | ~19 min | Small, well-specified |
+| Layer 3 (5 sub-issues) | ~94 min | 3b and 3e ran in parallel; 3e dominated at 22 min |
+| Layer 4a (signatures) | ~15 min | Mechanical find-and-replace |
+| Layer 4 (15 frontends) | ~64 min | Three batches; largest frontends took longest |
+| Prerequisites (pyww, oczk, b6m4, j1o6) | ~68 min | pyww dominated at 57 min |
+| Layer 5a-E (delete emit, to_flat) | ~49 min | |
+| Layer 5F (Register.__eq__ removal) | ~107 min | 300+ test sites fixed in one pass |
+| Layer 5G (delete IRInstruction) | ~53 min | 100 files, type annotation cascade |
+| **Total subagent time** | **~533 min (~9 hours)** | Single session, wall clock ~12 hours with review/planning |
+
+The wall clock time was longer than the subagent time because of the planning, brainstorming, review, and consultation work between subagent dispatches. The brainstorming conversation at the start of the session (decomposing layers, choosing strategies, resolving open questions) took roughly an hour before any code was written.
 
 ```mermaid
-gantt
-    title IRInstruction Elimination — Execution Timeline
-    dateFormat X
-    axisFormat %s
-
-    section Layer 1-2
-    L1: Register fields (33 fields)     :done, l1, 0, 1
-    L2a: Register.rebase()              :done, l2a, 1, 2
-    L2b: map_registers/map_labels       :done, l2b, 2, 3
-
-    section Layer 3
-    3c: CFG/dataflow isinstance         :done, l3c, 3, 4
-    3b: Type inference dispatch          :done, l3b, 3, 4
-    3d: Linker map_registers            :done, l3d, 3, 4
-    3e: LLM/COBOL/registry (128 sites)  :done, l3e, 3, 5
-
-    section Layer 4
-    4a: lower_expr -> Register          :done, l4a, 5, 6
-    4: 15 frontends (~1300 sites)       :done, l4, 6, 9
-
-    section Prerequisites
-    COBOL literal operands              :done, p1, 9, 10
-    COBOL frontend emit()              :done, p2, 10, 11
-    Registry + boundary cleanup         :done, p3, 9, 10
-
-    section Layer 5
-    5a: Refactor inline_ir              :done, l5a, 11, 12
-    5C-E: Delete emit/to_flat/__str__   :done, l5ce, 12, 13
-    5F: Remove Register.__eq__(str)     :done, l5f, 13, 14
-    5G: Delete IRInstruction            :done, l5g, 14, 15
+timeline
+    title IRInstruction Elimination
+    Layer 1-2 : L1 Register fields, 33 fields
+               : L2a rebase method
+               : L2b map_registers, map_labels
+    Layer 3   : 3b type inference dispatch
+               : 3c CFG, dataflow isinstance
+               : 3d linker map_registers
+               : 3e LLM, COBOL, registry, 128 sites
+    Layer 4   : 4a lower_expr to Register
+               : 15 frontends, 1300 sites
+    Prerequisites : COBOL literal operands
+                  : COBOL frontend emit
+                  : registry cleanup
+    Layer 5   : inline_ir refactor
+               : delete emit, to_flat
+               : remove Register eq str
+               : delete IRInstruction
 ```
 
 ### Layer 5 Was Not Cleanup
@@ -621,7 +684,7 @@ The plan described Layer 5 as "remove the bridge." The actual scope was larger.
 
 The plan said "delete IRInstruction, to_typed/to_flat, operands properties, Register.__eq__(str)." The survey said ~100 sites. The reality was that `IRInstruction` was referenced in 116 imports across 36 files. `to_typed()` was called at 6 normalization entry points. `Register.__eq__(str)` was load-bearing in ~300 test assertions and ~100 production sites.
 
-Removing `Register.__eq__(str)` was the hardest single step. Every `assert inst.left == "%r0"` became `assert inst.left == Register("%r0")`. Every `frame.registers["%r0"]` became `frame.registers[Register("%r0")]`. The agent fixed 300+ sites across 46 test files in a single commit — a mechanical migration, but one that required understanding each comparison's context to choose the right fix pattern (`.name` extraction vs `Register()` wrapping vs dict key normalisation).
+Removing `Register.__eq__(str)` was the most labour-intensive step. Every `assert inst.left == "%r0"` became `assert inst.left == Register("%r0")`. Every `frame.registers["%r0"]` became `frame.registers[Register("%r0")]`. The agent fixed 300+ sites across 46 test files in a single commit — a mechanical migration, but one that required understanding each comparison's context to choose the right fix pattern (`.name` extraction vs `Register()` wrapping vs dict key normalisation).
 
 The `IRInstruction` class itself was replaced with a factory function of the same name: callers keep the same `IRInstruction(opcode=Opcode.X, operands=[...])` interface, but the return value is now a typed `InstructionBase` subclass. This preserved backward compatibility for ~50 remaining construction sites (mostly in test helpers and COBOL `inline_ir`) while eliminating the class.
 
@@ -629,57 +692,21 @@ The remaining work — converting those ~50 construction sites to direct typed i
 
 ---
 
-## What Went Wrong, Catalogued
+## Learnings
 
-Looking back across the full arc (adopting GSD 2 patterns, then stress-testing them against the CodeLabel/Register/typed instructions migration) here's what went wrong and what each failure taught.
+### On Type Hints in Python
 
-### 1. The Scope Underestimation Cascade
+I spent years writing Java, C#, C, C++, and Ruby before this project, and tried Scala and Haskell along the way. In the statically typed ones, the compiler catches the kind of errors that were invisible in this codebase for months: passing a variable name where a register was expected, comparing a label to None without narrowing, indexing into a bag of Any and hoping the position was right. Python's dynamism made the rapid prototyping phase fast. Fifteen frontends, a VM, a type inference engine, an interprocedural analysis pipeline, all built in a few months. But the cost *accumulated silently*.
 
-**What happened:** Every step was individually small. Changing `BasicBlock.label` from `str` to `CodeLabel` was 5 lines. But that change cascaded into 40 files because `BasicBlock.label` was used as a dict key, a lookup value, a comparison target, and a format string argument in every layer of the architecture.
+Turning on Pyright made that cost visible. The 83+ errors in the IR layer were not bugs in the running code. They were a *map of fragility*: every place where a wrong assumption would pass at runtime and corrupt data quietly. Fixing them properly required domain types, not just annotations. `str` with `""` as a sentinel became `Register` with a `NoRegister` null object. `str | None` became `CodeLabel` with `NoCodeLabel`. `operands: list[Any]` became 31 frozen dataclasses with named typed fields.
 
-**The failure:** Treating a 40-file cascade as "lots of small changes" instead of Heavy work.
+The investment was significant: 32 commits, 100 files, two days of migration. The type hint tightening is still a work in progress; 18 primitive `str` and `int` fields remain on the instruction classes, and the broader codebase has areas where annotations are loose or absent. But the return is already visible: Pyright now catches at the edit site what previously surfaced as a wrong value three layers deep in the VM. For a project of this size, built primarily through AI-assisted development where the AI generates most of the code, that static safety net is worth more than any number of runtime tests. **Tests verify behaviour you thought to check. Types prevent mistakes you didn't think to check for.**
 
-**The lesson:** Scope is not measured by the size of the initial change. It's measured by the size of the cascade. If a type change propagates through more than one architectural layer (frontend → IR → CFG → VM → analysis), it's Heavy by definition, regardless of how small each individual change is.
+### On Scope
 
-### 2. The Coercion Validator Anti-Pattern
+**Scope is measured by the cascade, not the initial change.** Changing `BasicBlock.label` from `str` to `CodeLabel` was 5 lines. That change cascaded into 40 files because the label was used as a dict key, a lookup value, a comparison target, and a format string argument across every architectural layer. I treated it as "lots of small changes" and attempted it in one session. The session was reverted. The same work, decomposed into four rings with separate issues and separate sessions, shipped cleanly.
 
-**What happened:** Adding a Pydantic validator that auto-converted `str` to `CodeLabel` made all tests pass immediately. It also masked every call site that needed manual updating.
-
-**The failure:** Optimising for green tests instead of correctness.
-
-**The lesson:** In a type migration, a failing test at a call site is *information*. It tells you the caller hasn't been updated. Silencing it with auto-coercion destroys that information. Let the caller fail. Fix the caller.
-
-### 3. The Plan-Replanning Problem
-
-**What happened:** The original four-phase typed instruction plan didn't account for operand-level register migration. The plan had to be replaced mid-execution with a five-layer plan that was itself decomposed into 28 sub-issues.
-
-**The failure:** Planning from the end state backward without mapping the current state forward.
-
-**The lesson:** A refactoring plan should start from a precise inventory of the *current* state, not from a vision of the *desired* state. The current state inventory for IRInstruction should have been: "30 typed classes exist, but operand fields are `str`, frontends still use `emit(Opcode.X, ...)`, instruction lists are `list[IRInstruction]`, and `to_typed()`/`to_flat()` serve as the bridge." Working forward from this inventory would have revealed all five layers immediately.
-
-### 4. The Missing Field Bug
-
-**What happened:** `LoadRegion` was defined with 3 fields. The actual instruction had 4 operands. The AI generated the class from pattern inference without checking the handler.
-
-**The failure:** Trusting generated code that passes a self-consistency test.
-
-**The lesson:** Round-trip tests verify internal consistency, not completeness. A class with the wrong number of fields round-trips perfectly, to and from the wrong representation. The verification should include cross-referencing against the authoritative source (the handler, the IR spec, or both).
-
-### 5. The Boolean Truthiness Trap
-
-**What happened:** Replacing `str` result registers with `Register` objects broke every `if inst.result_reg:` check because dataclass instances are always truthy.
-
-**The failure:** Relying on Python's implicit truthiness protocol for domain semantics.
-
-**The lesson:** When you replace a primitive with a domain type, audit all implicit protocol usages: `bool()`, `len()`, `in`, `[]`, comparison operators, string formatting. Each one is a potential semantic break that passes silently.
-
-### 6. The "Just This One More Ring" Temptation
-
-**What happened:** After completing CodeLabel in `IRInstruction.label`, I immediately tried to propagate it into `BasicBlock`, `CFG`, `StateUpdate`, and everything else. In one session.
-
-**The failure:** Treating adjacents as part of the current scope.
-
-**The lesson:** File issues for the next ring. The CodeLabel migration into `IRInstruction.label` was one commit. The propagation into `BasicBlock` and `cfg.blocks` was a separate issue, separate session, separate commit. The propagation into `FuncRef.label` and `ClassRef.label` was a third issue. Each ring is a bounded unit of work.
+**File issues for the next ring.** The CodeLabel migration into `IRInstruction.label` was one commit. Propagation into `BasicBlock` and `cfg.blocks` was a separate issue. Propagation into `FuncRef.label` and `ClassRef.label` was a third. Each ring was bounded, independently committable, and went through the verification gate on its own.
 
 ```mermaid
 flowchart TD
@@ -698,33 +725,39 @@ flowchart TD
     classDef ring3 fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1a3a1a
 ```
 
-Each ring was a session. Each session went through the verification gate independently. The total elapsed time was longer than a single pass would have been *if it had worked*. But the single pass didn't work. The ring approach did.
+**Classify complexity before starting, not after.** The multi-file linker was obviously Heavy (500+ lines, new package, touched VM, registry, API, MCP). It was treated as a single unbroken implementation session. Breaking it into independently-committable units from the start would have produced cleaner history and caught issues earlier.
 
-### 7. The Comma Hack Survival
+### On Type Migrations
 
-**What happened:** `BRANCH_IF` stored branch targets as a comma-separated string. This survived 10 months and 12,000+ tests.
+**Never auto-coerce during a migration.** A Pydantic validator that auto-converted `str` to `CodeLabel` made all tests pass immediately. It also masked every call site that needed updating. A failing test at a call site is *information*: the caller hasn't been migrated. Silencing it with auto-coercion destroys that information.
 
-**The failure:** Not a failure of the refactoring, but a failure of the original design that the refactoring uncovered.
+**Audit implicit protocol usages.** Replacing `str` result registers with `Register` objects broke every `if inst.result_reg:` check because dataclass instances are always truthy in Python. When replacing a primitive with a domain type, audit `bool()`, `len()`, `in`, `[]`, comparison operators, and string formatting. Each one is a potential semantic break that passes silently.
 
-**The lesson:** Stringly-typed representations accumulate hidden conventions that become load-bearing. The comma convention wasn't documented anywhere. It worked because three files independently agreed on the same split logic. Discovering it during a refactoring is how it was always going to be discovered.
+**Edge cases cluster at boundaries.** The four Layer 1 edge cases (COBOL literals in call operands, `_resolve_reg` fallback, `_is_temporary_register` subscripting, SpreadArguments in StoreIndex) all occurred where the type change met a convention or assumption from a different subsystem. The type change itself was mechanical. The *boundary interactions* were where the bugs lived.
 
----
+**Stringly-typed representations accumulate hidden conventions.** `BRANCH_IF` stored branch targets as a comma-separated string. This survived 10 months and 12,000+ tests. Three files independently implemented the same split logic. None of it was documented. Discovering it during a refactoring is how it was always going to be discovered.
 
-## What I'd Do Differently
+### On Plans
+
+**The end state was clear; the intermediate steps were not.** The original four-phase plan correctly described the goal (typed instructions with Register fields, no IRInstruction). What it underestimated was the number of intermediate layers needed to get there safely. Operand-level register migration was a whole layer the plan didn't account for. The plan had to be replaced mid-execution with a five-layer plan decomposed into 28 sub-issues. Getting the destination right is the easy part. Mapping the route, with each step *independently committable and testable*, is where the planning effort belongs.
+
+**Round-trip tests verify consistency, not completeness.** `LoadRegion` was defined with 3 fields. The actual instruction had 4 operands. The round-trip test passed perfectly because a 3-field class round-trips correctly to a 3-operand instruction. The bug was that the real instruction has 4 operands. Verification should cross-reference against the authoritative source (the handler, the IR spec), not just test internal consistency.
+
+**Start with an audit, not implementation.** The Superpowers session started by surveying every `to_typed()` call, every `inst.operands[` access, every `opcode==` comparison, every `IRInstruction(` construction. This took 10 minutes and revealed that the design doc's estimates were wrong in both directions: handlers had 0 `to_typed()` calls (not 72), COBOL `ir_encoders.py` had 106 constructions (not counted at all). The upfront survey saved hours of mid-implementation replanning.
+
+### On Tooling
 
 **Start with the verification gate from day one.** The `.importlinter` failure was avoidable. Having "run black" and "run tests" as separate loose rules instead of a single named gate made it easy to skip lint-imports entirely.
 
-**Enforce brainstorm-before-implement from session one.** The linker patch-on-patch problem cost more time than the proper rewrite. A brainstorm phase that reads the actual code, not just designs on paper, would have caught the VM dispatch mismatch immediately.
+**Enforce brainstorm-before-implement from session one.** The linker patch-on-patch problem cost more time than the proper rewrite. A brainstorm phase that reads actual code, not just designs on paper, would have caught the VM dispatch mismatch immediately.
 
-**Classify complexity before starting.** The multi-file project was obviously Heavy from the start, but was treated as a single unbroken implementation session. Breaking it into independently-committable Light/Standard units would have produced cleaner history and caught issues earlier.
-
-**File issues before work, not after.** Retroactive issue filing is better than no issue filing, but it loses the intent: why was this work started? What was the expected outcome? Issues filed before work serve as specifications. Issues filed after are just bookkeeping.
+**File issues before work, not after.** Retroactive issue filing loses the intent: why was this work started? What was the expected outcome? Issues filed before work serve as specifications. Issues filed after are bookkeeping.
 
 ---
 
 ## Takeaways
 
-**The GSD 2 patterns held up as guardrails.** Five workflow patterns adopted from GSD 2, then tested against the hardest refactoring in the project:
+**The GSD 2 patterns held up as guardrails.** Five workflow patterns adopted from GSD 2, then tested against the largest refactoring in the project:
 
 | Pattern | What It Solved |
 |---------|---------------|
@@ -749,43 +782,26 @@ The distinction matters. GSD v2 tells the agent *what to do* (brainstorm, then p
 
 **They serve different sweet spots.** I would still reach for GSD v2 for greenfield work of moderate complexity where I want to move fast: adding a new frontend, building a new analysis pass, scaffolding a new module. GSD v2's autonomous dispatch is an advantage when the work is well-understood and doesn't require mid-stream design decisions. For Heavy refactoring work that crosses architectural boundaries and accumulates edge cases, Superpowers' consultation model is the better fit.
 
-The patterns are tool-agnostic. They work whether you're using GSD 2, Superpowers, Cursor, or any other AI coding assistant. The common thread is treating AI-assisted development as an engineering practice that needs the same discipline as human development: phase gates, complexity awareness, verification, and persistent state.
+**The patterns are tool-agnostic.** They work whether you're using GSD 2, Superpowers, Cursor, or any other AI coding assistant. The common thread is treating AI-assisted development as an engineering practice that needs the same discipline as human development: phase gates, complexity awareness, verification, and persistent state.
 
-```mermaid
-flowchart LR
-    subgraph Before["❌ Before: ad-hoc"]
-        direction TB
-        B1("idea") --> I1("implement") --> F1("fix") --> F2("fix") --> F3("fix") --> T1("test<br/>+ commit")
-    end
+| Moment in the refactoring | Ad-hoc (before either framework) | With GSD v2 patterns | With Superpowers |
+|--------------------------|----------------------------------|---------------------|-----------------|
+| Linker design was wrong | 5 patches before realising | Would have stopped at patch 2 ("stop and consult" rule) | Would not have started: brainstorming gate asks "have you read the VM dispatch code?" |
+| Layer 4 decomposition (17 frontends) | One long session, hoping for the best | Classified as Heavy, broken into units manually | Agent proposed 3 options (per-frontend, by size tier, by family), I picked one |
+| COBOL literal operands discovered during Layer 1 | Noted in commit message, forgotten | Filed as issue retroactively after I noticed | Agent asked "are there issues filed for follow-up work?", filed 4 issues with dependency links |
+| Layer 3 site counts were wrong (~40 estimated, 128 actual) | Discovered mid-implementation, improvised | Discovered mid-implementation, adjusted manually | Discovered by upfront audit before implementation started |
+| `types.UnionType` vs `typing.Union` bug in `map_registers` | Would have surfaced as a runtime crash in Layer 3 | Self-review checklist might have caught it | Code quality reviewer (separate agent) caught it during plan review |
+| Removing `Register.__eq__(str)` (300+ sites) | Would not have attempted incrementally | Would have attempted, likely stalled on scope | Agent fixed 300+ sites in one pass, choosing the right fix pattern per site |
 
-    subgraph After["✅ After: structured"]
-        direction TB
-        B2("brainstorm<br/>+ classify") --> P2("plan") --> T2("test first") --> I2("implement") --> R2("self-review") --> V2("verify gate") --> C2("commit")
-    end
-
-    Before -.->|"GSD 2<br/>patterns"| After
-
-    classDef default fill:#f5f5f5,stroke:#999,stroke-width:1px,color:#333
-```
-
-**Type migrations cascade. Budget for it.** A single `str → CodeLabel` change in one field cascaded through 40 files. A `str → Register` change in 31 fields required compensating changes in the VM fallback path, the dataflow analysis, the COBOL frontend, and the spread-arguments convention. The cascade is the work. The type change is the trigger.
+**Compatibility bridges make incremental migration possible.** `Register.__eq__(str)` was a deliberate compatibility bridge: it made `Register` compare equal to raw strings, letting 12,924 tests pass without modification during the migration. The plan explicitly called for removing it in Layer 5, after all consumers had been updated. Without the bridge, every layer would have been a big-bang change.
 
 **Reverts are progress.** The abandoned CodeLabel cascade, attempted, reverted, and documented in the Beads issue, was not wasted time. It produced the scope analysis that made the ring-by-ring approach possible.
 
-**Compatibility bridges make incremental migration possible.** `Register.__eq__(str)` was a deliberate hack: it made `Register` compare equal to raw strings, letting 12,924 tests pass without modification during the migration. The plan explicitly called for removing it in Layer 5, after all consumers had been updated. Without the bridge, every layer would have been a big-bang change.
+**The plan will be wrong. Plan for that.** The four-phase plan became a five-layer plan with 28 sub-issues. The CodeLabel single-pass attempt became a four-ring incremental approach. In both cases, the revised plan was better than the original, not because planning was futile, but because the first attempt revealed the *real shape of the work*.
 
-**The plan will be wrong. Plan for that.** The four-phase plan became a five-layer plan with 28 sub-issues. The CodeLabel single-pass attempt became a four-ring incremental approach. In both cases, the revised plan was better than the original, not because planning was futile, but because the first attempt revealed the real shape of the work.
+**Write down your refactoring principles before the next refactoring.** The "Refactoring Principles" section of CLAUDE.md, written after the CodeLabel experience, prevented at least three of the same mistakes during the Register migration. Rules extracted from failures and codified before the next attempt compound over time.
 
-**Never auto-coerce during a migration.** Pydantic validators, `__post_init__` converters, isinstance-guard wrappers: anything that silently converts the old type to the new type destroys the signal you need. A failing call site is the information. Preserve it.
+**The AI writes the code. You manage the scope.** Across this entire migration, the AI's code was overwhelmingly correct at the mechanical level: updating 31 fields, threading kwargs, updating converters, formatting with Black. Where it failed was scope: generating a class without checking the handler spec, proposing coercion validators that masked call sites, not flagging that operand fields needed their own migration layer. The human's job in a type migration is not typing. It's asking *"what does this cascade into?"* at every step.
 
-**Edge cases cluster at the boundaries.** The four Layer 1 edge cases (COBOL literals in call operands, `_resolve_reg` fallback, `_is_temporary_register` subscripting, SpreadArguments in StoreIndex) all occurred at boundaries where the type change met a convention or assumption from a different subsystem. The type change itself was mechanical. The boundary interactions were where the bugs lived.
+The AI writes code faster than I can. It doesn't write *better* code without guardrails.
 
-**Refactoring principles should be written down before the next refactoring, not during it.** The "Refactoring Principles" section of CLAUDE.md, written after the CodeLabel experience, prevented at least three of the same mistakes during the Register migration. Rules extracted from failures and codified before the next attempt compound over time.
-
-**The AI writes the code. You manage the scope.** Across this entire migration, the AI's code was overwhelmingly correct at the mechanical level: updating 31 fields, threading kwargs, updating converters, formatting with Black. Where it failed was scope: generating a class without checking the handler spec (missing length field), proposing coercion validators that masked call sites, not flagging that operand fields needed their own migration layer. The human's job in a type migration is not typing. It's asking "what does this cascade into?" at every step.
-
-The AI writes code faster than I can. It doesn't write better code without guardrails.
-
----
-
-*The code is at [avishek-sen-gupta/red-dragon](https://github.com/avishek-sen-gupta/red-dragon). The completed elimination plan (with post-implementation findings) is at `docs/design/eliminate-irinstruction-plan.md`. Previous posts in this series: [Building Non-Trivial Systems with an AI Coding Assistant]({% post_url 2026-03-12-experiences-building-with-coding-assistant %}), [Anatomy of a Refactoring Using AI]({% post_url 2026-03-13-anatomy-of-a-refactoring-using-ai %}).*
