@@ -7,7 +7,7 @@ tags: ["Software Engineering", "Compilers", "Program Analysis", "AI-Assisted Dev
 draft: false
 ---
 
-*A universal IR, 15 deterministic frontends, LLM-assisted repair/lowering/execution, a deterministic VM with class hierarchy support, overload resolution, and cross-language slicing, a structured type system with generics/unions/variance/traits and interface-aware inference, and iterative dataflow analysis.*
+*A universal IR with per-opcode typed instructions, 15 deterministic frontends, LLM-assisted repair/lowering/execution, a deterministic VM with class hierarchy support, overload resolution, and cross-language slicing, a structured type system with generics/unions/variance/traits and interface-aware inference, and iterative dataflow analysis.*
 
 **GitHub**: [avishek-sen-gupta/red-dragon](https://github.com/avishek-sen-gupta/red-dragon)
 
@@ -55,7 +55,7 @@ RedDragon explores three ideas about analysing frequently-incomplete code, the k
 
 1. [Architecture Overview](#architecture-overview)
 2. [A Worked Example: Source to Execution](#a-worked-example-source-to-execution)
-3. [The IR: 32 Opcodes to Rule Them All](#the-ir-32-opcodes-to-rule-them-all)
+3. [The IR: 33 Opcodes to Rule Them All](#the-ir-33-opcodes-to-rule-them-all)
 4. [Frontends: Four Strategies, One Output](#frontends-four-strategies-one-output)
 5. [LLM-Assisted AST Repair](#llm-assisted-ast-repair)
 6. [LLM Frontend: Lowering Unknown Languages](#llm-frontend-lowering-unknown-languages)
@@ -86,8 +86,8 @@ flowchart TD
     dataflow("📊 Dataflow Analysis"):::engine
 
     src --> frontend
-    frontend -->|"list[IRInstruction]"| cfg
-    frontend -->|"list[IRInstruction]"| typeinf
+    frontend -->|"list[TypedInstruction]"| cfg
+    frontend -->|"list[TypedInstruction]"| typeinf
     typeinf -->|"TypeEnvironment"| vm
     cfg --> vm
     cfg --> dataflow
@@ -216,16 +216,17 @@ The [LLM-Assisted VM Execution](#llm-assisted-vm-execution) section shows what h
 
 ---
 
-## The IR: 32 Opcodes to Rule Them All
+## The IR: 33 Opcodes to Rule Them All
 
 *See also: [IR Reference](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/ir-reference.md)*
 
-The intermediate representation is a **flattened three-address code** with 32 opcodes, grouped by role:
+The intermediate representation is a **flattened three-address code** with 33 opcodes, grouped by role:
 
 ```
 Value producers:   CONST, LOAD_VAR, LOAD_FIELD, LOAD_INDEX,
                    NEW_OBJECT, NEW_ARRAY, BINOP, UNOP,
-                   CALL_FUNCTION, CALL_METHOD, CALL_UNKNOWN
+                   CALL_FUNCTION, CALL_METHOD, CALL_UNKNOWN,
+                   CALL_CTOR
 
 Value consumers:   STORE_VAR, STORE_FIELD, STORE_INDEX, DECL_VAR
 
@@ -244,9 +245,9 @@ Escape hatch:      SYMBOLIC
 
 `DECL_VAR` is a recent addition that separates variable *declarations* from *assignments*. Previously, `STORE_VAR` handled both, always writing to the current stack frame. This meant assignments inside nested functions could never modify outer-scope variables — a fundamental scope chain bug. `DECL_VAR` writes only to the current frame (for `let x = ...`, `var x = ...`), while `STORE_VAR` now walks the scope chain to find existing bindings. All 15 frontends emit `DECL_VAR` for declarations and `STORE_VAR` for assignments.
 
-The first 20 opcodes handle all general-purpose lowering across 15 languages. `TRY_PUSH` and `TRY_POP` model structured exception handling (pushing/popping handler labels onto the VM's exception stack). `ADDRESS_OF` supports pointer aliasing: `&x` on a primitive promotes the variable to a heap object and returns a typed `Pointer(base, offset)`, enabling `*ptr = 99` to update the original variable through the alias (see [Pointer Aliasing](#pointer-aliasing)). The three region opcodes (`ALLOC_REGION`, `WRITE_REGION`, `LOAD_REGION`) provide byte-addressed memory for COBOL-style overlays, REDEFINES, and packed data layouts. The two continuation opcodes (`SET_CONTINUATION`, `RESUME_CONTINUATION`) model COBOL's PERFORM return semantics, where control transfers to a named paragraph and returns to the caller on completion. The extended opcodes are language-agnostic in the IR and VM; they happen to be emitted by specific frontends but could serve broader use cases.
+The first 21 opcodes handle all general-purpose lowering across 15 languages. `TRY_PUSH` and `TRY_POP` model structured exception handling (pushing/popping handler labels onto the VM's exception stack). `ADDRESS_OF` supports pointer aliasing: `&x` on a primitive promotes the variable to a heap object and returns a typed `Pointer(base, offset)`, enabling `*ptr = 99` to update the original variable through the alias (see [Pointer Aliasing](#pointer-aliasing)). The three region opcodes (`ALLOC_REGION`, `WRITE_REGION`, `LOAD_REGION`) provide byte-addressed memory for COBOL-style overlays, REDEFINES, and packed data layouts. The two continuation opcodes (`SET_CONTINUATION`, `RESUME_CONTINUATION`) model COBOL's PERFORM return semantics, where control transfers to a named paragraph and returns to the caller on completion. The extended opcodes are language-agnostic in the IR and VM; they happen to be emitted by specific frontends but could serve broader use cases.
 
-Every instruction is a flat dataclass: an opcode, a list of operands, a destination register, and a source location tracing it back to the original code. No nested expressions. `a + b * c` decomposes into:
+Every instruction is a frozen dataclass with named fields: an opcode, typed operands (registers as `Register` objects, labels as `CodeLabel` objects, operators as `BinopKind`/`UnopKind` enums), a destination register, and a source location tracing it back to the original code. Each opcode has its own dataclass (e.g., `Binop`, `LoadVar`, `CallFunction`) rather than a generic container with positional operands. No nested expressions. `a + b * c` decomposes into:
 
 ```
 %0 = const b
@@ -270,17 +271,18 @@ This means any IR instruction, any VM execution step, any dataflow dependency ca
 
 ### Control Flow and Functions
 
-All control flow is explicit: labels, conditional branches, and unconditional jumps. There are no structured `if`/`while`/`for` constructs. `BRANCH_IF` encodes both targets in its label field (comma-separated). The CFG builder splits the IR into basic blocks at every `LABEL` and after every `BRANCH`/`BRANCH_IF`/`RETURN`/`THROW`, then wires edges based on the branch targets. Loops become back-edges: a `while` loop's `BRANCH` at the end of the body points back to the condition's label. Function definitions use the **skip-over pattern** shown in the [worked example](#a-worked-example-source-to-execution): a `BRANCH` jumps past the body at definition time, and a `FunctionRegistry` scans the IR for `SYMBOLIC "param:"` markers to extract parameter names, map class names to method labels, and build linearized parent chains for class inheritance (see [Class Hierarchy and Inherited Method Dispatch](#class-hierarchy-and-inherited-method-dispatch)).
+All control flow is explicit: labels, conditional branches, and unconditional jumps. There are no structured `if`/`while`/`for` constructs. `BRANCH_IF` carries its branch targets as a typed `branch_targets: tuple[CodeLabel, ...]` field. The CFG builder splits the IR into basic blocks at every `LABEL` and after every `BRANCH`/`BRANCH_IF`/`RETURN`/`THROW`, then wires edges based on the branch targets. Loops become back-edges: a `while` loop's `BRANCH` at the end of the body points back to the condition's label. Function definitions use the **skip-over pattern** shown in the [worked example](#a-worked-example-source-to-execution): a `BRANCH` jumps past the body at definition time, and a `FunctionRegistry` scans the IR for `SYMBOLIC "param:"` markers to extract parameter names, map class names to method labels, and build linearized parent chains for class inheritance (see [Class Hierarchy and Inherited Method Dispatch](#class-hierarchy-and-inherited-method-dispatch)).
 
-### Three Call Variants
+### Four Call Variants
 
-The IR distinguishes three kinds of calls by their operand layout:
+The IR distinguishes four kinds of calls:
 
-- **`CALL_FUNCTION`**: static calls where the target is a known name. Operands: `[func_name, arg0, arg1, ...]`
-- **`CALL_METHOD`**: method calls on objects. Operands: `[obj_reg, method_name, arg0, arg1, ...]`
-- **`CALL_UNKNOWN`**: dynamic calls where the target is a computed expression (a variable holding a function reference, or a closure). Operands: `[target_reg, arg0, arg1, ...]`
+- **`CALL_FUNCTION`**: static calls where the target is a known name. Fields: `func_name`, `args`.
+- **`CALL_METHOD`**: method calls on objects. Fields: `obj_reg`, `method_name`, `args`.
+- **`CALL_UNKNOWN`**: dynamic calls where the target is a computed expression (a variable holding a function reference, or a closure). Fields: `target_reg`, `args`.
+- **`CALL_CTOR`**: explicit constructor calls, separating `new ClassName(args)` from regular function calls. Fields: `class_name`, `args`. This avoids the need for runtime heuristics to distinguish constructor calls from function calls, and gives the VM a clean dispatch path for object allocation + initialisation.
 
-The frontend decides which to emit based on the AST: `foo(x)` emits `CALL_FUNCTION`, `obj.foo(x)` emits `CALL_METHOD`, and `some_var(x)` where `some_var` isn't a known function emits `CALL_UNKNOWN`.
+The frontend decides which to emit based on the AST: `foo(x)` emits `CALL_FUNCTION`, `obj.foo(x)` emits `CALL_METHOD`, `some_var(x)` where `some_var` isn't a known function emits `CALL_UNKNOWN`, and `new Foo(x)` emits `CALL_CTOR`.
 
 ### Object and Array Construction
 
@@ -314,13 +316,13 @@ Over time, `unsupported:` emissions get replaced with real IR as frontends gain 
 
 *See also: [Frontend Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/notes-on-frontend-design.md) · [Per-Language Frontend Docs](https://github.com/avishek-sen-gupta/red-dragon/tree/main/docs/frontend-design)*
 
-All four frontend strategies produce the same `list[IRInstruction]`. They differ in speed, coverage, and determinism:
+All four frontend strategies produce the same list of typed instructions. They differ in speed, coverage, and determinism:
 
 **1. Deterministic frontends (15 languages):** Python, JavaScript, TypeScript, Java, Ruby, Go, PHP, C#, C, C++, Rust, Kotlin, Scala, Lua, Pascal. These use tree-sitter for parsing and a dispatch-table-based recursive descent for lowering. **Sub-millisecond. Zero LLM calls. Fully testable.** Each frontend is modularised into separate files for expressions, control flow, and declarations, inheriting from a shared `BaseFrontend`. An optional **AST repair decorator** can wrap any deterministic frontend to handle malformed source (see the next section).
 
 **2. COBOL frontend (ProLeap bridge):** COBOL source is parsed by the ProLeap COBOL parser (a Java-based parser producing an Abstract Syntax Graph), bridged to Python via a shaded JAR that emits JSON ASGs. The frontend includes a complete type system: PIC clause parsing (zoned decimal, COMP/COMP-1/COMP-2, packed decimal, alphanumeric, EBCDIC), REDEFINES overlays with byte-addressed memory regions, OCCURS arrays with subscript resolution, level-88 condition names with value ranges, and paragraph-based control flow via named continuations. COBOL-specific IR is emitted using the region and continuation opcodes.
 
-**3. LLM frontend:** For languages without a deterministic frontend. The source is sent to an LLM constrained by a formal schema: all 32 opcode specs, concrete patterns, and worked examples. The LLM acts as a mechanical compiler frontend, not a reasoning engine. This distinction matters: the prompt doesn't ask *"what does this code do?"* It asks *"translate this into these specific opcodes."*
+**3. LLM frontend:** For languages without a deterministic frontend. The source is sent to an LLM constrained by a formal schema: all 33 opcode specs, concrete patterns, and worked examples. The LLM acts as a mechanical compiler frontend, not a reasoning engine. This distinction matters: the prompt doesn't ask *"what does this code do?"* It asks *"translate this into these specific opcodes."*
 
 **4. Chunked LLM frontend:** For large files that overflow context windows. Tree-sitter decomposes the file into per-function chunks, each is LLM-lowered independently, registers and labels are renumbered to avoid collisions, and the chunks are reassembled into a single IR.
 
@@ -412,7 +414,7 @@ The 15 deterministic frontends cover a fixed set of languages. For everything el
 The LLM frontend works by constraining the LLM to a **mechanical translation task**. The system prompt is a specification containing:
 
 1. **The instruction format**: every IR instruction is a JSON object with `opcode`, `result_reg`, `operands`, `label`, and `source_location` fields.
-2. **All 32 opcode definitions**: grouped into value producers (`CONST`, `LOAD_VAR`, `BINOP`, `CALL_FUNCTION`, ...), consumers/control flow (`STORE_VAR`, `BRANCH_IF`, `RETURN`, ...), and special instructions (`SYMBOLIC`, `LABEL`).
+2. **All 33 opcode definitions**: grouped into value producers (`CONST`, `LOAD_VAR`, `BINOP`, `CALL_FUNCTION`, ...), consumers/control flow (`STORE_VAR`, `BRANCH_IF`, `RETURN`, ...), and special instructions (`SYMBOLIC`, `LABEL`).
 3. **Critical patterns**: exact lowering templates for function definitions (the skip-over pattern with `BRANCH`/`LABEL`/`SYMBOLIC param:`/implicit `RETURN None`), class definitions, constructor calls, method calls, and if/elif/else chains.
 4. **A complete worked example**: a `fib(n)` function lowered to 30 IR instructions, showing every convention in context.
 5. **Rules**: the first instruction is always `LABEL "entry"`, every expression is flattened into registers, string literals include quotes in the operand, booleans are `"True"`/`"False"`, return only the JSON array with no markdown fences.
@@ -668,7 +670,7 @@ The call dispatch path saves the return address (`return_label`, `return_ip`) an
 
 ### Opcode Dispatch
 
-The `LocalExecutor` maps each of the 32 `Opcode` enum values to a handler function via a static dispatch table:
+The `LocalExecutor` maps each of the 33 `Opcode` enum values to a handler function via a static dispatch table:
 
 ```python
 DISPATCH: dict[Opcode, Any] = {
@@ -676,7 +678,7 @@ DISPATCH: dict[Opcode, Any] = {
     Opcode.BINOP: _handle_binop,
     Opcode.CALL_FUNCTION: _handle_call_function,
     Opcode.LOAD_FIELD: _handle_load_field,
-    # ... all 32 opcodes
+    # ... all 33 opcodes
 }
 ```
 
@@ -1178,10 +1180,13 @@ The type inference module (`interpreter/type_inference.py`) is a **static analys
 
 ### Type Representation: The TypeExpr ADT
 
-Types are represented as an algebraic data type (`TypeExpr`) with six variants:
+Types are represented as an algebraic data type (`TypeExpr`) with nine variants:
 
 ```
 ScalarType(name)                          # Int, String, Bool, MyClass
+EnumType(name)                            # Color, Direction (enum declarations)
+AnnotationType(name)                      # @Override, @Deprecated (annotation types)
+StructPatternType(name)                   # Point { x, y } (struct pattern matching)
 ParameterizedType(constructor, arguments) # Array[Int], Map[String, Int], Pointer[Pointer[Float]]
 FunctionType(params, return_type)         # Fn(Int, String) -> Bool
 UnionType(members)                        # Union[Int, String], Optional = Union[T, Null]
@@ -1232,7 +1237,7 @@ Type information enters the system through two paths:
 
 ### The Inference Algorithm
 
-The inference walk runs to fixpoint over the flat IR. A dispatch table maps 20 of the 32 opcodes to handler functions (the remaining 12 are control flow, pointer, region, and continuation instructions with no typeable results). Each handler is a pure function that reads from and writes to an `_InferenceContext` — a mutable bundle of maps storing `TypeExpr` values:
+The inference walk runs to fixpoint over the flat IR. A dispatch table maps opcodes to handler functions (control flow, pointer, region, and continuation instructions with no typeable results are skipped). Each handler is a pure function that reads from and writes to an `_InferenceContext` — a mutable bundle of maps storing `TypeExpr` values:
 
 - `register_types`: `%0` → `ScalarType("Int")`, `%3` → `ScalarType("Bool")`, ...
 - `var_types`: `x` → `ScalarType("Int")`, `items` → `ParameterizedType("Array", [ScalarType("String")])`, ...
@@ -1467,8 +1472,8 @@ The Exercism suite surfaced more bugs than any other test approach. Each exercis
 | Metric | Value |
 |--------|-------|
 | Supported languages | 15 (deterministic) + COBOL (ProLeap) + any (LLM) |
-| IR opcodes | 32 |
-| Tests (all passing) | 12,293 |
+| IR opcodes | 33 |
+| Tests (all passing) | 13,005 |
 | LLM calls at test time | 0 |
 | Exercism exercises | 18 (across 15 languages) |
 | Rosetta algorithms | 15 (across 15 languages) |
@@ -1478,7 +1483,7 @@ The Exercism suite surfaced more bugs than any other test approach. Each exercis
 
 ## Conclusion
 
-RedDragon started as a question: *"Can I build a single system that analyses code in any language?"* It evolved into a compiler pipeline with 15 deterministic frontends, a COBOL frontend via ProLeap, LLM-assisted AST repair, a structured type system (an algebraic TypeExpr ADT with generics, unions, function types, tuples, type aliases, interface/trait typing, variance annotations, and bounded type variables), static type inference with fixpoint convergence, interface-aware chain walk, and structural generic extraction across 12 statically-typed languages, a deterministic VM with class hierarchy support (inherited method dispatch via linearized parent chains across 10 OOP languages), `TypedValue`-based runtime type propagation with two-layer coercion, type-aware overload resolution, a symbol table with cross-class field resolution and implicit-this support, cross-language slicing, rest pattern destructuring, structural pattern matching via a shared Pattern ADT, byte-addressed memory regions and named continuations, and cross-language verification.
+RedDragon started as a question: *"Can I build a single system that analyses code in any language?"* It evolved into a compiler pipeline with 15 deterministic frontends, a COBOL frontend via ProLeap, LLM-assisted AST repair, a fully typed instruction set (33 per-opcode frozen dataclasses with `Register`, `CodeLabel`, `BinopKind`/`UnopKind`, and `TypeExpr` domain types replacing all raw strings), a structured type system (an algebraic TypeExpr ADT with generics, unions, function types, enums, annotation types, struct patterns, tuples, type aliases, interface/trait typing, variance annotations, and bounded type variables), static type inference with fixpoint convergence, interface-aware chain walk, and structural generic extraction across 12 statically-typed languages, a deterministic VM with class hierarchy support (inherited method dispatch via linearized parent chains across 10 OOP languages), `TypedValue`-based runtime type propagation with two-layer coercion, type-aware overload resolution, a symbol table with cross-class field resolution and implicit-this support, cross-language slicing, rest pattern destructuring, structural pattern matching via a shared Pattern ADT, byte-addressed memory regions and named continuations, and cross-language verification.
 
 **None of the individual components are novel.** TAC IR, dispatch tables, worklist dataflow, and forward type inference are all textbook techniques. The value, if any, is in applying them together to a practical multi-language analysis tool.
 
@@ -1488,13 +1493,13 @@ RedDragon started as a question: *"Can I build a single system that analyses cod
 
 Design documents and detailed specs from the RedDragon repository:
 
-- [IR Reference](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/ir-reference.md) — Full specification of all 32 opcodes, instruction format, and lowering conventions
+- [IR Reference](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/ir-reference.md) — Full specification of all 33 opcodes, per-opcode typed instruction classes, and lowering conventions
 - [Frontend Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/notes-on-frontend-design.md) — Architecture of the frontend subsystem: dispatch tables, AST repair, LLM frontends
 - [Per-Language Frontend Docs](https://github.com/avishek-sen-gupta/red-dragon/tree/main/docs/frontend-design) — Exhaustive per-file documentation for all 15 language frontends and the base frontend
 - [VM Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/notes-on-vm-design.md) — VM internals: state model, opcode dispatch, symbolic propagation, closures, class hierarchy
 - [Dataflow Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/notes-on-dataflow-design.md) — Reaching definitions, def-use chains, and dependency graph construction
 - [Type System Design](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/type-system.md) — Type ontology, inference algorithm, coercion rules, and cross-language type extraction
-- [Architectural Decision Records](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/architectural-design-decisions.md) — Chronological log of key design decisions (ADR-001 through ADR-116)
+- [Architectural Decision Records](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/architectural-design-decisions.md) — Chronological log of key design decisions (ADR-001 through ADR-121)
 - [IR Lowering Gaps](https://github.com/avishek-sen-gupta/red-dragon/blob/main/docs/ir-lowering-gaps.md) — Tracking document for cross-language type inference lowering gaps
 - [Project Philosophy](https://github.com/avishek-sen-gupta/red-dragon/blob/main/PHILOSOPHY.md) — Design principles and engineering values
 - [Contributing Guide](https://github.com/avishek-sen-gupta/red-dragon/blob/main/CONTRIBUTING.md) — How to contribute to the project
