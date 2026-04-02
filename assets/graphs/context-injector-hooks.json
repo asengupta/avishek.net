@@ -1,0 +1,19 @@
+{
+  "nodes": [
+    {"data": {"id": "CTX",  "label": "🔒 /tmp/ctx-locks/<md5>\nctx toggle",             "type": "lock"}},
+    {"data": {"id": "UPS",  "label": "📨 UserPromptSubmit\nuser-prompt-submit.sh",       "type": "hook"}},
+    {"data": {"id": "PTU",  "label": "🔧 PreToolUse\npre-tool-use.sh",                  "type": "hook"}},
+    {"data": {"id": "SS",   "label": "🚀 SessionStart\nsession-start.sh",               "type": "hook"}},
+    {"data": {"id": "CORE", "label": "📁 .claude/core/*.md\nalways injected",            "type": "core"}},
+    {"data": {"id": "COND", "label": "📂 .claude/conditional/*.md\nkeyword-matched",    "type": "cond"}}
+  ],
+  "edges": [
+    {"data": {"source": "CTX", "target": "UPS",  "label": "ctx on?"}},
+    {"data": {"source": "CTX", "target": "PTU",  "label": "ctx on?"}},
+    {"data": {"source": "CTX", "target": "SS",   "label": "ctx on?"}},
+    {"data": {"source": "UPS", "target": "CORE", "label": "inject"}},
+    {"data": {"source": "UPS", "target": "COND", "label": "classify keywords → inject"}},
+    {"data": {"source": "PTU", "target": "COND", "label": "code-review agent? → inject"}},
+    {"data": {"source": "SS",  "target": "CORE", "label": "inject once at start"}}
+  ]
+}
