@@ -71,3 +71,9 @@ fileignoreconfig:
   checksum: b37648cb8e5834298fa9d982e4dcbd2b3bf01cd1fa341b7ac893f2c2eb0de58b
 - filename: assets/resume/avishek-sen-gupta-resume-2025-jun.md
   checksum: b41fa4663f5f899c51ba6c010680b9135370b85bf77f8662ae40cbe1326a3cb4
+- filename: _layouts/default.html
+  checksum: a3fc692a172894c5c244f73a66ea1941f1ec261eee759b2add6da9daac9b6504
+- filename: assets/graphs/context-injector-hooks.json
+  checksum: 3926bdd75dee26f4fb65d3f55abf08c5b90dc1415cf187423559cb6513f32df8
+- filename: _posts/2026-04-02-claude-md-setup-context-injection-gates-skills.md
+  checksum: 04278b0afcf956d3eba62fa5fc6300db03a15ef76922513b238516f835e6014f
