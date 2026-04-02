@@ -8,7 +8,7 @@ tags: ["Software Engineering", "AI-Assisted Development", "Developer Tooling", "
 draft: false
 ---
 
-*How I structure CLAUDE.md, hooks, skills, and a context-injector plugin to keep a 13,000-test Python codebase under control with Claude Code.*
+*How I structure CLAUDE.md, hooks, skills, and a context-injector plugin for a 13,000-test Python codebase with Claude Code.*
 
 ---
 
@@ -43,7 +43,7 @@ CLAUDE.md started as a single file. It worked well for a few weeks. Then it grew
 
 2. **The context was wasteful.** A prompt asking to fix a formatting issue didn't need the design principles section. A refactoring session didn't need the COBOL-specific project context. Everything was injected unconditionally, every time.
 
-The response was a layered architecture: split CLAUDE.md into *core* (always needed) and *conditional* (injected only when the current task requires it), and enforce quality through deterministic pre-commit gates that don't depend on the model following instructions at all.
+The response was a layered architecture: split CLAUDE.md into *core* (always needed) and *conditional* (injected only when the current task requires it), and enforce quality through deterministic pre-commit gates rather than model instructions.
 
 ---
 
@@ -104,7 +104,7 @@ The design principles file contains the coding conventions (functional style, no
 
 ## Deterministic Gates
 
-The single most important decision in this setup: **quality is enforced by a deterministic pre-commit hook, not by model instructions.**
+Quality is enforced by a pre-commit hook, not by model instructions.
 
 ```
 .claude/hooks/pre-commit
@@ -118,7 +118,7 @@ On every `git commit`, the hook runs automatically:
 4. **pytest** — full test suite, 13,254 tests across unit and integration
 5. **bd backup** — Beads issue tracker backup
 
-If any gate fails, the commit is rejected. The model is instructed: *"When ready to commit, just commit."* The gate enforces what the model cannot be reliably trusted to remember.
+If any gate fails, the commit is rejected. The model is instructed: *"When ready to commit, just commit."* The hook handles the checks.
 
 This means instructions like "always run Black before committing" and "always run the full test suite" are redundant — they're replaced by a gate that cannot be bypassed without `--no-verify`. The CLAUDE.md rules for formatting and testing are there for awareness, not enforcement.
 
@@ -126,7 +126,7 @@ The gates that *are not* in the hook — Pyright type checking — are called ou
 
 > **Pyright is not in the pre-commit hook** — run it manually when working on type annotations.
 
-Distinguishing "enforced by gate" from "enforced by instruction" matters. If it's in the hook, you don't need to remind the model. If it's only in CLAUDE.md, you do.
+If a check is in the hook, there's no need to remind the model. If it's only in CLAUDE.md, there is.
 
 ---
 
@@ -181,13 +181,13 @@ flowchart TD
 
 The main hook. When ctx mode is on, it:
 
-1. Reads the prompt from JSON stdin (using `sed`, not `jq`)
+1. Reads the prompt from JSON stdin (using `sed`)
 2. Lowercases it for case-insensitive matching
 3. Classifies into five boolean flags: DESIGN, TESTING, REVIEW, REFACTORING, SKILLS
 4. Always injects core context
 5. Injects whichever conditional files match
 
-The classification is keyword-based, not semantic. This is intentional — shell scripts that run on every keypress cannot afford LLM calls or even heavy regex. A few dozen `grep -qiEw` invocations on a lowercase string are fast enough to be imperceptible.
+The classification is keyword-based, not semantic — a few dozen `grep -qiEw` invocations on a lowercase string. False positives (injecting design-principles when only a test is needed) waste tokens but are harmless. False negatives (not injecting testing-patterns when TDD is required) lead to the model skipping test-first. The keyword lists are broad rather than precise.
 
 The keyword groupings:
 
@@ -213,8 +213,6 @@ TESTING / SKILLS also triggered by:
   gate, black, lint-imports
 ```
 
-The tradeoff: false positives (injecting design-principles when only a test is needed) waste tokens but are harmless. False negatives (not injecting testing-patterns when TDD is required) lead to the model skipping test-first. The keyword lists are therefore broad rather than precise.
-
 A sample of what the model sees at the start of a prompt:
 
 ```
@@ -229,7 +227,7 @@ A sample of what the model sees at the start of a prompt:
 
 ### PreToolUse: Agent-Triggered Injection
 
-When Claude Code invokes the `Agent` tool with a `subagent_type` containing `code-review`, the hook intercepts the call and prepends `code-review.md` and `design-principles.md` to the agent's context. This ensures code-review subagents apply the project's review rubric rather than generic review heuristics.
+When Claude Code invokes the `Agent` tool with a `subagent_type` containing `code-review`, the hook prepends `code-review.md` and `design-principles.md` to the agent's context, so code-review subagents apply the project's review rubric rather than generic heuristics.
 
 ```sh
 if [ "$TOOL" = "Agent" ] && printf '%s' "$SUBAGENT" | grep -qi "code-review"; then
@@ -252,7 +250,7 @@ The `/ctx` command is a global Claude Code command installed at `~/.claude/comma
 /ctx       # toggle
 ```
 
-The command itself is a skill that runs a shell one-liner and reports the new state. Installing the plugin into a project wires the hooks but doesn't automatically enable ctx — the first `/ctx on` or `/ctx` starts injection.
+Installing the plugin into a project wires the hooks but doesn't automatically enable ctx — the first `/ctx on` or `/ctx` starts injection.
 
 ---
 
@@ -262,7 +260,7 @@ Claude Code skills are markdown files that expand into structured prompts when i
 
 ### Workflow Skills (Superpowers)
 
-The [Superpowers plugin](https://github.com/crmne/claude-superpowers) provides a suite of workflow skills that enforce process discipline at specific decision points:
+The [Superpowers plugin](https://github.com/crmne/claude-superpowers) provides a suite of workflow skills that introduce pause points at specific decision moments:
 
 | Skill | When I use it |
 |-------|--------------|
@@ -275,7 +273,7 @@ The [Superpowers plugin](https://github.com/crmne/claude-superpowers) provides a
 | `superpowers:verification-before-completion` | Before claiming work is done. Catches "it passes locally" assumptions. |
 | `superpowers:finishing-a-development-branch` | End-of-branch checklist: tests, docs, issues filed. |
 
-The key property of these skills is that they impose *stopping points* — moments where the model pauses and asks before proceeding. For complex work, the stopping points are where real decisions happen.
+These skills are most useful not for the content they inject but for the pauses they introduce — points where the model stops and checks before proceeding.
 
 ### Domain Skills
 
@@ -289,17 +287,17 @@ Project-local skills live in `.claude/skills/` and override or supplement the gl
 
 - **`improve-codebase-architecture`** — explores a scoped module for architectural opportunities. Used when a subsystem has accumulated enough technical debt to warrant a dedicated session.
 
-- **`grill-me`** — interviews me relentlessly about a design until we reach shared understanding. Useful when a feature is underspecified.
+- **`grill-me`** — interviews me about a design until the approach is well-defined. Useful when a feature is underspecified.
 
 - **`documentation`** — project-specific documentation update skill. Knows which living documents (README, ADRs, type-system.md, linker-design.md) need updating when specific kinds of changes are made.
 
 ### Code Review Skills
 
-- **`code-review:review-local-changes`** — comprehensive review of uncommitted changes using specialised subagents (contracts reviewer, security auditor, bug hunter, test coverage reviewer).
+- **`code-review:review-local-changes`** — review of uncommitted changes using specialised subagents (contracts reviewer, security auditor, bug hunter, test coverage reviewer).
 - **`code-review:review-pr`** — same, for a named branch or PR.
 - **`code-review-graph:review-delta`** — token-efficient delta review using the code knowledge graph, limited to changes since the last commit.
 
-The `ast-grep` skill deserves a mention here too: it's not a workflow skill but a decision guide. A `PreToolUse` hook on the `Grep` tool reminds the model to check whether the search pattern is structural (use `ast-grep`) or keyword-only (Grep is fine). This prevents the common failure mode of grep-based searches missing multi-line patterns or indentation variations.
+The `ast-grep` skill is also worth mentioning: a `PreToolUse` hook on the `Grep` tool reminds the model to check whether the search pattern is structural (use `ast-grep`) or keyword-only (Grep is fine). This prevents grep-based searches missing multi-line patterns or indentation variations.
 
 ---
 
@@ -352,14 +350,14 @@ Three hook points, four active hooks. The Grep hook is the only one not from the
 
 ## Learnings
 
-**Separate "enforced by gate" from "enforced by instruction."** If a quality check is important enough to put in CLAUDE.md, it's important enough to put in a pre-commit hook. Instructions drift; hooks don't. The verification gate replaced a long list of "always run X before committing" rules with a single fact: committing runs everything.
+**Separate "enforced by gate" from "enforced by instruction."** If a quality check matters enough to put in CLAUDE.md, put it in a pre-commit hook too. The hook runs unconditionally; the instruction doesn't. The verification gate replaced a list of "always run X before committing" rules with a single mechanism.
 
-**Conditional injection beats unconditional injection.** Injecting 8,000 tokens of context on every prompt is wasteful and can crowd out the actual task. Keyword classification is crude but effective: a prompt that says "add a test for the COBOL frontend" reliably triggers TESTING injection; a prompt that says "what does this function return?" reliably doesn't.
+**Conditional injection reduces noise.** Injecting everything on every prompt crowds out the actual task. Keyword classification is crude but works well enough: a prompt containing "add a test for the COBOL frontend" reliably triggers TESTING injection; "what does this function return?" reliably doesn't.
 
-**The lockfile approach keeps the project clean.** Putting toggle state in `/tmp/` with an MD5-keyed filename was the right call. No `.gitignore` entry needed, no project file to track, no risk of accidentally committing toggle state. Each project on the same machine gets its own lockfile automatically.
+**The lockfile approach keeps the project directory clean.** Storing toggle state in `/tmp/` with an MD5-keyed filename means no `.gitignore` entry, no project file to track, and no risk of accidentally committing toggle state.
 
-**Skills encode process, not just content.** The most valuable skills aren't ones that inject information — they're ones that enforce *when to stop*. `superpowers:brainstorming` stops the model from implementing before reading the relevant code. `superpowers:systematic-debugging` stops it from patching before diagnosing. The value is the pause, not the content.
+**Skills are useful for the pauses they introduce, not just the content.** `superpowers:brainstorming` stops the model from implementing before reading the relevant code. `superpowers:systematic-debugging` stops it from patching before diagnosing.
 
-**Plugin extraction is worth doing.** The context-injector started as ad-hoc hooks directly in `settings.json`. Extracting it into a standalone plugin with an install script meant the same injection logic could be applied to multiple projects without copy-pasting shell code. The project provides `.claude/core/` and `.claude/conditional/`; the plugin does the wiring.
+**Plugin extraction pays off across projects.** The context-injector started as ad-hoc hooks in `settings.json`. Extracting it into a plugin with an install script meant the same logic could be applied to other projects. The project provides `.claude/core/` and `.claude/conditional/`; the plugin does the wiring.
 
-**The pre-commit hook is the single most reliable quality signal.** In 400+ sessions with Claude Code, the gate has caught: Black violations that the model introduced while editing adjacent code, import-linter violations from shortcut imports added during a refactoring, and test regressions from changes that "obviously couldn't break anything." The model's self-review is a supplement, not a substitute.
+**The pre-commit hook catches things the model misses.** The gate has caught Black violations introduced while editing adjacent code, import-linter violations from shortcut imports added during a refactoring, and test regressions from changes that appeared safe. The model's self-review is a useful check, but the hook is the reliable one.
