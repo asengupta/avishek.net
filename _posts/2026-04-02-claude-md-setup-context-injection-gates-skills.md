@@ -2,9 +2,8 @@
 title: "My CLAUDE.md Setup: Context Injection, Deterministic Gates, and Skills"
 author: avishek
 usemathjax: false
-mermaid: false
-cytoscape: true
-graph_file: context-injector-hooks.json
+mermaid: true
+cytoscape: false
 tags: ["Software Engineering", "AI-Assisted Development", "Developer Tooling", "Workflow", "Claude Code"]
 draft: false
 ---
@@ -147,60 +146,36 @@ The toggle state is stored in `/tmp/ctx-locks/<md5-of-project-path>`. The MD5 of
 
 ### Hook Overview
 
-<div id="cy-context-injector" style="width:100%;height:460px;background:#fafafa;border:1px solid #e5e7eb;border-radius:8px;"></div>
-<script>
-fetch('{{ "/assets/graphs/" | append: page.graph_file | relative_url }}')
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    cytoscape({
-      container: document.getElementById('cy-context-injector'),
-      elements: data.nodes.concat(data.edges),
-      userZoomingEnabled: false,
-      userPanningEnabled: false,
-      boxSelectionEnabled: false,
-      layout: { name: 'dagre', rankDir: 'TB', nodeSep: 60, rankSep: 80, padding: 24 },
-      style: [
-        {
-          selector: 'node',
-          style: {
-            'shape': 'roundrectangle',
-            'label': 'data(label)',
-            'text-valign': 'center',
-            'text-halign': 'center',
-            'text-wrap': 'wrap',
-            'text-max-width': '160px',
-            'font-size': '13px',
-            'font-family': 'monospace',
-            'width': 'label',
-            'height': 'label',
-            'padding': '14px',
-            'border-width': 2
-          }
-        },
-        { selector: 'node[type="hook"]', style: { 'background-color': '#dbeafe', 'border-color': '#3b82f6', 'color': '#1e3a5f' } },
-        { selector: 'node[type="lock"]', style: { 'background-color': '#fef9c3', 'border-color': '#ca8a04', 'color': '#713f12' } },
-        { selector: 'node[type="core"]', style: { 'background-color': '#dcfce7', 'border-color': '#16a34a', 'color': '#14532d' } },
-        { selector: 'node[type="cond"]', style: { 'background-color': '#fce7f3', 'border-color': '#db2777', 'color': '#831843' } },
-        {
-          selector: 'edge',
-          style: {
-            'curve-style': 'taxi',
-            'target-arrow-shape': 'triangle',
-            'target-arrow-color': '#9ca3af',
-            'line-color': '#9ca3af',
-            'label': 'data(label)',
-            'font-size': '11px',
-            'font-family': 'monospace',
-            'color': '#374151',
-            'text-background-color': '#fafafa',
-            'text-background-opacity': 1,
-            'text-background-padding': '3px'
-          }
-        }
-      ]
-    });
-  });
-</script>
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'edgeLabelBackground': '#ffffff'}, 'flowchart': {'curve': 'basis'}}}%%
+flowchart TD
+    CTX["🔒 /tmp/ctx-locks/&ltmd5&gt\n<i>ctx toggle</i>"]:::lock
+
+    subgraph hooks["Claude Code Hooks"]
+        UPS["📨 UserPromptSubmit\n<i>user-prompt-submit.sh</i>"]:::hook
+        PTU["🔧 PreToolUse\n<i>pre-tool-use.sh</i>"]:::hook
+        SS["🚀 SessionStart\n<i>session-start.sh</i>"]:::hook
+    end
+
+    subgraph content["Project Context"]
+        CORE["📁 .claude/core/*.md\n<i>always injected</i>"]:::core
+        COND["📂 .claude/conditional/*.md\n<i>keyword-matched</i>"]:::cond
+    end
+
+    CTX -->|"ctx on?"| UPS
+    CTX -->|"ctx on?"| PTU
+    CTX -->|"ctx on?"| SS
+
+    UPS -->|"inject"| CORE
+    UPS -->|"classify keywords → inject"| COND
+    PTU -->|"code-review agent? → inject"| COND
+    SS -->|"inject once at start"| CORE
+
+    classDef hook fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    classDef lock fill:#fef9c3,stroke:#ca8a04,color:#713f12
+    classDef core fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef cond fill:#fce7f3,stroke:#db2777,color:#831843
+```
 
 ### UserPromptSubmit: Keyword Classification
 
