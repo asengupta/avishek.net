@@ -77,4 +77,4 @@ fileignoreconfig:
 - filename: assets/graphs/context-injector-hooks.json
   checksum: 3926bdd75dee26f4fb65d3f55abf08c5b90dc1415cf187423559cb6513f32df8
 - filename: _posts/2026-04-02-claude-md-setup-context-injection-gates-skills.md
-  checksum: e7602818780db113c113d250f10223ce8b76a3729f4484a4670c06847556b967
+  checksum: 0e5f1d2bcb12f6eb9be54dfdab47d9397f96f931a2c847adfa41ca66e1a09a90
