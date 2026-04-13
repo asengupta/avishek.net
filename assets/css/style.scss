@@ -136,3 +136,21 @@ tbody tr:nth-child(even) {
   padding: 10px;
   max-height: 150px; /* Even more limited height in sidebar */
 }
+
+@media print {
+  header, footer {
+    display: none !important;
+  }
+
+  .wrapper {
+    margin: 0;
+    width: 100%;
+  }
+
+  section {
+    width: 100%;
+    border: none;
+    padding: 0;
+    margin: 0;
+  }
+}
