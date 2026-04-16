@@ -1,5 +1,5 @@
 ---
-title: "Building Non-Trivial Systems with an AI Coding Assistant: A Practitioner's Account"
+title: "Engineering Log: Building Non-Trivial Systems with an AI Coding Assistant"
 author: avishek
 usemathjax: false
 mermaid: true
