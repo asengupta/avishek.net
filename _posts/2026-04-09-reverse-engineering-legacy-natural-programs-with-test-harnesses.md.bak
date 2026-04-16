@@ -4,7 +4,7 @@ author: avishek
 usemathjax: false
 mermaid: true
 tags: ["Software Engineering", "Legacy Modernisation", "Reverse Engineering", "AI-Assisted Development", "Testing", "Java", "JOBOL", "COBOL"]
-draft: false
+draft: true
 ---
 
 *A ten-day account of building a test harness and analysis pipeline for a JOBOL codebase (Java code mechanistically transpiled from COBOL, then decompiled from CLASS files). From initial compilation failures through DDM operation capture, autonomous coverage gap closing, runtime tracing, and LLM-driven documentation. The goal: extract enough understanding from legacy code to support modernisation decisions, without access to the original runtime environment.*
