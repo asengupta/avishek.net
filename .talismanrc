@@ -78,3 +78,5 @@ fileignoreconfig:
   checksum: 3926bdd75dee26f4fb65d3f55abf08c5b90dc1415cf187423559cb6513f32df8
 - filename: _posts/2026-04-02-claude-md-setup-context-injection-gates-skills.md
   checksum: 0e5f1d2bcb12f6eb9be54dfdab47d9397f96f931a2c847adfa41ca66e1a09a90
+- filename: _posts/2026-04-16-engineering-log-reddragon-testing-harness.md
+  checksum: d2b2cf5b45133080d0c119fbddb7c9c7a8e4b4f88ea3f27e238e5b0482f14501
