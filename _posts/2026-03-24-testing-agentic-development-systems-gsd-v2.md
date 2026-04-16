@@ -1,5 +1,5 @@
 ---
-title: "Experience Report: Testing agentic coding workflows via Large Refactorings"
+title: "Engineering Log: Testing agentic coding workflows via Large Refactorings"
 author: avishek
 usemathjax: false
 mermaid: true
