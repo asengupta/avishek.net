@@ -1,5 +1,5 @@
 ---
-title: "Anatomy of a Refactoring Using AI"
+title: "Engineering Log: Anatomy of a Refactoring Using AI"
 author: avishek
 usemathjax: false
 mermaid: true
