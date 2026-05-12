@@ -11,7 +11,7 @@ There is an optimistic and a pessimistic reading of what GenAI does to the probl
 
 The optimistic reading: the model can read Java faster than you can, it knows the framework idioms, and it can generate a plausible test stub in seconds. True.
 
-The pessimistic reading: the model will trace a ten-layer call chain, confidently conclude that some domain flag has a specific value at the point your test reaches the validation service, and be completely wrong. There was a null check at layer three that short-circuits, a swallowed `catch` at layer five that logs silently, and a database-driven flag at layer eight that flips the branch. The test will compile, run, pass, and test nothing.
+The pessimistic reading: the model will trace a ten-layer call chain, confidently conclude that some domain flag has a specific value at the point your test reaches the validation service, and be completely wrong. There was a null check at layer three that short-circuits, a swallowed `catch` at layer five that logs silently, and a database-driven flag at layer eight that flips the branch. **The test will compile, run, pass, and test nothing.**
 
 The pessimistic reading is also true.
 
@@ -51,7 +51,7 @@ That argument was made in the context of human developers. In the GenAI context,
 
 **Failing tests as precise diagnostic reports.** A test failure is not "something is broken somewhere." It is a specific assertion, a stack trace, a set of actual vs expected values, and, if you instrument correctly, a log of every service call that was or was not made. This is far more information-dense than a bug report.
 
-The shift is this: in the pre-AI era, tests were primarily for human confidence. In the AI era, they are also infrastructure for machine navigation. A codebase with good test coverage is a codebase with a navigable map.
+The shift is this: in the pre-AI era, tests were primarily for human confidence. In the AI era, they are also infrastructure for machine navigation. **A codebase with good test coverage is a codebase with a navigable map.**
 
 ---
 
@@ -83,7 +83,7 @@ catch (Exception e) {
 
 The exception is swallowed. The method returns `null` or a default object. The test checks the return value, gets `null`, and the model's first instinct is to conclude that the method is supposed to return null in this case. It is not. The test is measuring a broken execution path and recording it as expected behaviour.
 
-The problem with all of the above is that the model has no ground truth about *what actually executed*. It is reasoning from source text, which is a model of what the code might do, not a record of what it did.
+The problem with all of the above is that **the model has no ground truth about *what actually executed*.** It is reasoning from source text, which is a model of what the code might do, not a record of what it did.
 
 ```mermaid
 flowchart TD
@@ -105,7 +105,7 @@ flowchart TD
 
 ## The Ralph Loop as a Context-Engineering Harness
 
-Stepping back, the Ralph loop is not primarily a test generation tool. It is a context-engineering harness. Each step in the loop replaces a reasoning burden on the model with a tool call that produces a structured artifact.
+Stepping back, the Ralph loop is not primarily a test generation tool. It is a context-engineering harness. Each step in the loop **replaces a reasoning burden on the model with a tool call that produces a structured artifact.**
 
 ```mermaid
 flowchart TD
@@ -154,7 +154,7 @@ flowchart TD
 
 At every stage, the model's role shifts from *derivation* to *application*. It is given facts and asked to generate code that encodes those facts as test setup. That is a task it does well. Deriving the facts from scratch, under attention drift and token pressure, is a task it does poorly.
 
-The underlying issue is not the model's intelligence. It is information quality. A model operating on structured, pre-computed program analysis artifacts is a different instrument from a model operating on source text and being asked to perform the analysis internally. Classical program analysis tools (CFG extractors, dataflow analyzers, bytecode agents) exist precisely because these computations are too important to leave to informal reasoning. That was true before LLMs. It is still true.
+**The underlying issue is not the model's intelligence. It is information quality.** A model operating on structured, pre-computed program analysis artifacts is a different instrument from a model operating on source text and being asked to perform the analysis internally. Classical program analysis tools (CFG extractors, dataflow analyzers, bytecode agents) exist precisely because these computations are too important to leave to informal reasoning. That was true before LLMs. It is still true.
 
 ---
 
@@ -194,7 +194,7 @@ Coverage tells the model *what* to cover. CFG analysis tells it *how*.
 
 For a given target line, the inner loop uses `intra-proc-cfg` to extract the method's CFG, then `flat-cfg-path-to-line` to compute the flat statement sequence from method entry to that line.
 
-The output is a sequence of statements (with line numbers) that must execute, in order, to reach the target. Each conditional statement in the sequence implies a constraint: a mock must return a particular value, or a field must be set to a particular state. The model reads this sequence and translates it directly into arrange-act-assert structure. It is not reasoning about the code; it is executing a recipe.
+The output is a sequence of statements (with line numbers) that must execute, in order, to reach the target. Each conditional statement in the sequence implies a constraint: a mock must return a particular value, or a field must be set to a particular state. The model reads this sequence and translates it directly into arrange-act-assert structure. **It is not reasoning about the code; it is executing a recipe.**
 
 ```mermaid
 flowchart TD
@@ -240,6 +240,8 @@ graph TD
 The inner loop generates one calltree per action method. The `--pattern` flag prunes the callgraph to methods whose class names match the pattern. This eliminates JDK internals, third-party library internals, and framework machinery, which are typically not mockable and not relevant to test construction. What remains is the application's own call structure, which is exactly what the model needs.
 
 The two tools behind this are `buildcg`, which generates `callgraph.json` from the compiled JAR in a single pass (no source required, no running process), and `fw-calltree`, which queries the pre-built graph per action, per session. The split matters: `buildcg` is expensive and runs once, offline; `fw-calltree` is cheap and runs on demand.
+
+Both tools are built on [SootUp](https://soot-oss.github.io/SootUp/) and [Qilin](https://github.com/QilinPTA/Qilin). SootUp is a rewrite of the Soot Java bytecode analysis framework. It parses the compiled JAR and produces a Jimple intermediate representation that is the shared substrate for CFG extraction (`intra-proc-cfg`), def-use chain computation (`ddg-slice`), and reaching conditions. Qilin contributes the points-to analysis: it computes, for each call site, which concrete methods the virtual dispatch can resolve to given the actual dataflow, rather than every method compatible with the declared type. This matters because class hierarchy analysis (CHA), the naive alternative, adds call graph edges from every virtual call site to every method that could conceivably be dispatched, producing call graphs that are far too dense to be useful as LLM context. Qilin's context-sensitive analysis narrows each call site to the reachable targets. The callgraph is still a conservative over-approximation (points-to analysis is sound, not exact), but the reduction in spurious edges is substantial.
 
 **A note on polymorphic dispatch artifacts.** Static callgraphs resolve virtual method calls to *all* possible callees across the codebase, not just the ones that will be dispatched at runtime. A `catch (Exception e) { e.getMessage() }` will appear in the callgraph as edges to `getMessage()` on every Exception subclass ever loaded. These entries are spurious. The inner loop excludes them from coverage accounting via `--exclude-pattern '\.exception\.'` and logs them to a glitches file for later review. Allowing them to inflate the coverage denominator would make the coverage numbers meaningless.
 
@@ -376,7 +378,7 @@ flowchart TD
 
 The AspectJ CatchRecorder weaves `after-throwing` advice onto every catch block in the application code. When an exception is caught, it logs the exception type, message, and catch site (class, method, line), without modifying a single source file. This is the difference between "the method returned null, I don't know why" and "the method returned null because a `NullPointerException` was caught at line 87 of `ModificationServiceImpl.doModify()` before the expected service call was reached." The first leaves the model guessing. The second gives it a precise starting point.
 
-The CatchRecorder has a blind spot: it only sees exceptions that land in user-code catch blocks. JVM-thrown implicit NPEs, `ArrayIndexOutOfBoundsException`, and exceptions caught inside Hibernate or Struts internals are invisible to it. The JFR Exception Recorder fills this gap. It captures every `jdk.JavaExceptionThrow` event at the throw site (before any catch block runs) with a full stack trace, filtered to application class prefixes. Implicit NPEs that were previously invisible become structured entries in `jfr-throws.json`. The combination means that no exception, thrown or swallowed anywhere in the execution, can escape unrecorded.
+The CatchRecorder has a blind spot: it only sees exceptions that land in user-code catch blocks. JVM-thrown implicit NPEs, `ArrayIndexOutOfBoundsException`, and exceptions caught inside Hibernate or Struts internals are invisible to it. The JFR Exception Recorder fills this gap. It captures every `jdk.JavaExceptionThrow` event at the throw site (before any catch block runs) with a full stack trace, filtered to application class prefixes. Implicit NPEs that were previously invisible become structured entries in `jfr-throws.json`. The combination means that **no exception, thrown or swallowed anywhere in the execution, can escape unrecorded.**
 
 **Level 3: Per-test JaCoCo.** Enable coverage for the failing test in isolation and compare the executed blocks against the CFG path the test was designed to exercise. The first block that appears in the CFG path but not in the coverage report is the divergence point: the test did not reach it. The branch just before that block determines why. This resolves failures where the test data or mock return values drove execution down the wrong branch.
 
@@ -399,7 +401,7 @@ The `prefix=` parameter confines instrumentation to the classes of interest. The
 [Exit]  ValidationServiceImpl::validateAttributes
 ```
 
-Absent entries are as informative as present ones. If `validateAttributes` does not appear, the code never reached it, not as a hypothesis, but as a fact. Sometimes stubs, mocks, and test data all look correct but the test still exercises the wrong branch. Without the trace you are guessing which path was taken. The agent proves it.
+**Absent entries are as informative as present ones.** If `validateAttributes` does not appear, the code never reached it, not as a hypothesis, but as a fact. Sometimes stubs, mocks, and test data all look correct but the test still exercises the wrong branch. Without the trace you are guessing which path was taken. The agent proves it.
 
 The governing principle across all four levels is: **prefer observation over inference**. Do not reason from source code when a test fails unexpectedly. Use the appropriate instrumentation tool to get the actual runtime record. That is not a fallback; it is a first-class debugging technique.
 
@@ -434,7 +436,21 @@ The clearest way to state the division of labour is this: the static and dynamic
 | What is the test's business scenario? | Claude | Mapping structural facts to domain narrative |
 | What stubs and assertions follow? | Claude | Code generation from structured evidence |
 
-The boundary between the two columns is the boundary between what a compiler can know and what requires language. Static tools produce verifiable facts. Claude produces synthesis — the layer where structured data becomes actionable understanding. The error in most naive LLM-for-legacy-code approaches is to ask Claude to do both. The result is that it does neither well.
+The boundary between the two columns is the boundary between what a compiler can know and what requires language. Static tools produce verifiable facts. Claude produces synthesis — the layer where structured data becomes actionable understanding. **The error in most naive LLM-for-legacy-code approaches is to ask Claude to do both.** The result is that it does neither well.
+
+---
+
+## Caveats
+
+The toolchain described here substantially reduces what the LLM needs to derive on its own. It does not eliminate the need for human judgment, and the loop is not fire-and-forget.
+
+**The model still drifts.** Even with pre-computed artifacts available, models will revert to familiar patterns: grepping source files instead of querying the coverage JSON, reading a method body manually instead of using `ast-emit`, reasoning about paths instead of invoking `intra-proc-cfg`. The Ralph loop prompt required iterative refinement to establish consistent tool-use discipline — explicit instructions about which tools to call first, in what order, and when to stop exploring and start generating. **Getting a model to use a structured artifact rather than fall back to open-ended source reading is a prompt engineering problem in its own right**, and one that needs revisiting whenever the model's behaviour regresses.
+
+**The loop itself needed maintenance.** New failure modes prompted updates to the outer loop prompt and diagnostic protocol. A new class of swallowed exception needed a new diagnostic step. Framework patterns produced callgraph artifacts that the `--exclude-pattern` heuristic missed. The loop converged on its current form through iteration, not design upfront.
+
+**Other techniques can be brought to bear.** The seven techniques described here are the ones that proved most useful in practice. Others are available depending on the failure mode. Dominator analysis computes which nodes every path to a target must pass through: the mandatory checkpoints that any test for a given target must exercise, regardless of which branch is taken. This is useful for identifying which mock setups are non-negotiable. Escape analysis can determine which objects cross method boundaries and therefore which fields cannot be independently mocked. Alias analysis — which reads of a variable refer to the same heap location — is already present in `ddg-slice`: the current implementation uses a conservative may-alias approximation (every pair of references is assumed to potentially alias), which is sound but imprecise; full Qilin-backed alias resolution is available when greater precision is needed. These were not needed at full precision in this campaign, but the infrastructure (SootUp's analysis passes) is the same; the level of precision can be dialled up without replacing anything already there.
+
+**Human judgment is still in the loop.** The model generates tests from structured artifacts, but someone has to decide which action flows are worth targeting, what coverage threshold is meaningful, and whether a passing test is testing the right thing. **The tools provide facts. Deciding which facts matter is not automated.**
 
 ---
 
@@ -443,6 +459,8 @@ The boundary between the two columns is the boundary between what a compiler can
 - [Tests increase our Knowledge of the System: A Proof from Probability](/2023-01-10-tests-proof-probability.html)
 - [Datalog for CFG analysis: How and Why](/2025-06-22-datalog-for-graph-analysis.html)
 - [java-bytecode-tools](https://github.com/avishek-sen-gupta/java-bytecode-tools) — bytecode agent, calltree analysis, CFG path extraction, ddg-slice, reaching-conditions
+- [SootUp](https://soot-oss.github.io/SootUp/) — modern Java bytecode analysis framework; provides the Jimple IR used for CFG extraction, def-use analysis, and call graph construction
+- [Qilin](https://github.com/QilinPTA/Qilin) — context-sensitive points-to analysis for Java; resolves virtual dispatch in call graph construction
 - [JaCoCo: Java Code Coverage Library](https://www.jacoco.org/jacoco/)
 - [AspectJ Load-Time Weaving](https://www.eclipse.org/aspectj/doc/released/devguide/ltw.html)
 - [Universal Ctags](https://ctags.io/) — symbol indexing for source lookup
