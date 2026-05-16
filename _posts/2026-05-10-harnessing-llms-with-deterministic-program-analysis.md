@@ -1,5 +1,5 @@
 ---
-title: "Harnessing LLMs with Deterministic Program Analysis"
+title: "Harnessing LLMs with Deterministic Program Analysis for Legacy Code"
 author: avishek
 usemathjax: false
 mermaid: true
@@ -17,7 +17,11 @@ The pessimistic reading is also true.
 
 This post is about that gap: what goes wrong when you use an LLM to reason about a ~2M-line J2EE codebase, and which classical program analysis techniques help by supplying structured, pre-computed facts instead of asking the model to derive them from source text.
 
-The running example is the **Ralph Loop**: an AI-orchestrated test coverage campaign over a large legacy J2EE codebase with approximately two million lines of code, zero pre-existing unit tests, and no test harness. The outer loop iterates over action methods in a request-processing flow, measuring cumulative JaCoCo coverage and picking the next highest-value target. The inner loop takes one action method, generates its interprocedural calltree, drives coverage from some initial percentage toward 90%, and commits the tests. The model is the engine; the program analysis tools are the guardrails.
+The running example is the **Ralph Loop**: an AI-orchestrated test coverage campaign over a large legacy J2EE codebase with approximately two million lines of code, zero pre-existing unit tests, and no test harness.
+
+The codebase is actively maintained, but it has grown into a monolith spanning JSF, Spring, JMS, Hibernate, raw JDBC, and more. Documentation exists at the flow level; what is not documented is the code itself — the cross-layer interactions, the edge cases, the conditions under which a particular DAO actually emits SQL. The goal is an **executable specification**: tests that capture what each flow does at a level of precision no design document reaches, and that break the moment the behaviour changes.
+
+At two million lines with no existing harness, manual test writing is not a credible option. The outer loop iterates over action methods — entry points in the request-processing framework — measuring cumulative JaCoCo coverage and ranking the next highest-value target. The inner loop takes one action method, generates its interprocedural calltree, drives coverage toward 90%, and commits the tests. Ninety percent is the practical ceiling: the remainder is unreachable exception paths, dead code, and framework lifecycle methods that cannot be exercised outside a running container. The model is the engine; the program analysis tools are the guardrails.
 
 ```mermaid
 flowchart LR
@@ -355,16 +359,16 @@ flowchart TD
 
 The key point is simple: **the LLM does not need to derive the path. It needs to follow a pre-computed path.** This turns an open-ended reasoning problem into constrained instruction-following.
 
-The diagrams below show two views of the same idea: the left isolates the target subgraph as a bounded region, the right highlights the specific path through it as a single traversal.
+The diagrams below show two views of the same idea: the left isolates the target subgraph as a bounded region (`xtrace`), the right highlights the specific path through it as a single traversal (`ftrace-slice`).
 
 <div style="display:flex; gap:1rem; justify-content:center; margin:1.5rem 0;">
   <figure style="text-align:center; margin:0;">
-    <img src="/assets/images/cfg-path-region.png" alt="CFG with target subgraph highlighted in a red bounding box" style="max-height:420px;">
-    <figcaption style="font-size:0.85em; color:#666;">Target region bounded in the CFG</figcaption>
+    <img src="/assets/images/cfg-xtrace.png" alt="CFG with target subgraph highlighted in a red bounding box" style="max-height:420px;">
+    <figcaption style="font-size:0.85em; color:#666;"><code>xtrace</code>: target region bounded in the CFG</figcaption>
   </figure>
   <figure style="text-align:center; margin:0;">
-    <img src="/assets/images/cfg-path-selection.png" alt="CFG with a single selected path circled in red" style="max-height:420px;">
-    <figcaption style="font-size:0.85em; color:#666;">Single path selected through the region</figcaption>
+    <img src="/assets/images/cfg-ftrace-slice.png" alt="CFG with a single selected path circled in red" style="max-height:420px;">
+    <figcaption style="font-size:0.85em; color:#666;"><code>ftrace-slice</code>: single path selected through the region</figcaption>
   </figure>
 </div>
 
