@@ -4,5 +4,5 @@ title: Art
 
 <a href="https://gofund.me/4f3fa47e">Support Human Artists</a>
 <br/>
-<a href="https://gofund.me/4f3fa47e"><img src="assets/images/no-ai-art.png"/>></a>
+<a href="https://gofund.me/4f3fa47e"><img src="assets/images/no-ai-art.png"/></a>
 {% include art_include.html %}
