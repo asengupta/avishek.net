@@ -3,7 +3,7 @@ title: "Harnessing LLMs with Deterministic Program Analysis for Legacy Code"
 author: avishek
 usemathjax: false
 mermaid: true
-tags: ["Software Engineering", "GenAI", "Program Analysis", "Testing", "Control Flow", "Dataflow Analysis" "Harness Engineering"]
+tags: ["Software Engineering", "GenAI", "Program Analysis", "Testing", "Control Flow", "Dataflow Analysis", "Harness Engineering"]
 draft: false
 ---
 
@@ -24,8 +24,8 @@ Aside: The Ralph loop is your basic `while` loop, where the condition is a fitne
 The codebase is actively maintained, but it has grown into a monolith spanning JSF, Spring, JMS, Hibernate, raw JDBC, and more. Documentation exists at the flow level; what is not documented is the code itself: the cross-layer interactions, the edge cases, and the conditions under which a particular DAO actually emits SQL. The goal is an **executable specification**: tests that capture what each flow does at a level of precision no design document reaches, and that break the moment the behaviour changes.
 
 At two million lines with no existing harness, manual test writing is not a credible option (well, it is, what else were you going to do pre-LLM, anyway? But any sort of automation would have always reduced the tedium). The exercise consisted of the following loops:
-- Two Ralph loops, one nested in the other. The outer loop iterates over action methods, which are entry points in the request-processing framework, measuring cumulative JaCoCo coverage and ranking the next highest-value target. The inner loop takes one action method, drives coverage toward 90%, and commits the tests. For the purposes of this post, we will stick to the execution of this inner loop.
-- A Ralph loop to build tests to exercise the DAO layer, in order to capture the emitted SQL (through JDBC-level tracing or Hibernate mechanisms).
+- **Two Ralph loops, one nested in the other;** the outer loop iterates over action methods, which are entry points in the request-processing framework, measuring cumulative JaCoCo coverage and ranking the next highest-value target. The inner loop takes one action method, drives coverage toward 90%, and commits the tests. For the purposes of this post, we will stick to the execution of this inner loop.
+- **A Ralph loop to build tests to exercise the DAO layer**, in order to capture the emitted SQL (through JDBC-level tracing or Hibernate mechanisms).
 
 
 ```mermaid
@@ -68,9 +68,9 @@ The seven techniques described in this post rely on the following tools. Each li
 | `ctags` + `ast-emit` [➔](#technique-3-source-extraction-with-ctags-and-ast-emit) | Symbol indexing and batch source-body extraction |
 | `ast-grep` [➔](#technique-3-source-extraction-with-ctags-and-ast-emit) | Structural code search by AST pattern |
 | `CapturingConnection` [➔](#applying-techniques-dao-sql-capture) | JDBC-level SQL capture against H2 |
-| AspectJ CatchRecorder [➔](#technique-7-dynamic-tracing) | Swallowed-exception tracing at catch sites |
-| JFR Exception Recorder [➔](#technique-7-dynamic-tracing) | Throw-site capture for implicit JVM exceptions |
-| ASM Trace Agent [➔](#technique-7-dynamic-tracing) | Full method-entry/exit execution trace |
+| AspectJ CatchRecorder [➔](#technique-6-dynamic-tracing) | Swallowed-exception tracing at catch sites |
+| JFR Exception Recorder [➔](#technique-6-dynamic-tracing) | Throw-site capture for implicit JVM exceptions |
+| ASM Trace Agent [➔](#technique-6-dynamic-tracing) | Full method-entry/exit execution trace |
 
 ---
 
@@ -79,15 +79,15 @@ The seven techniques described in this post rely on the following tools. Each li
 1. [Tests as Specification and Harness](#tests-as-specification-and-harness)
 2. [The Problem: What Goes Wrong](#the-problem-what-goes-wrong)
 3. [The Ralph Loop as a Context-Engineering Harness](#the-ralph-loop-as-a-context-engineering-harness)
-4. [Why Not Just Use the IDE?](#why-not-just-use-an-lsp-server)
+4. [Why Not Just Use an LSP Server?](#why-not-just-use-an-lsp-server)
 5. [Technique 1: Coverage Statistics as a Deterministic Compass](#technique-1-coverage-statistics-as-a-deterministic-compass)
 6. [Technique 2: CFGs and Slicing](#technique-2-cfgs-and-slicing)
 7. [Technique 3: Source Extraction with ctags and ast-emit](#technique-3-source-extraction-with-ctags-and-ast-emit)
 8. [Technique 4: Dataflow Analysis](#technique-4-dataflow-analysis)
 9. [Technique 5: Reaching Conditions](#technique-5-reaching-conditions)
-10. [Applying Techniques: DAO SQL Capture](#applying-techniques-dao-sql-capture)
-11. [Technique 7: Dynamic Tracing](#technique-7-dynamic-tracing)
-12. [Why Tools, Not Just an LLM](#why-tools-not-just-an-llm)
+10. [Technique 6: Dynamic Tracing](#technique-6-dynamic-tracing)
+11. [Applying Techniques: DAO SQL Capture](#applying-techniques-dao-sql-capture)
+12. [Why Tools, Not Just an LLM?](#why-tools-not-just-an-llm)
 13. [Four Diagnostic Incidents](#four-diagnostic-incidents)
 14. [Where LLMs Fit In](#where-llms-fit-in)
 15. [Caveats](#caveats)
@@ -487,6 +487,75 @@ The diagram below shows a concrete example: the red-highlighted spine traces the
 
 ---
 
+## Technique 6: Dynamic Tracing
+
+All of the above techniques are static. They tell you what *should* happen based on the structure of the code. Legacy codebases have a habit of confounding static analysis.
+
+Runtime polymorphism, configuration loaded from a database at startup, feature flags in a properties file that nobody has updated since 2009, JNDI lookups that silently fail and return null: these are not visible in the CFG. The only way to know what actually executed is to observe it executing.
+
+When a test fails unexpectedly, the inner Ralph loop follows a four-level escalation protocol. Each level is more invasive than the last; you only escalate when the previous level cannot identify the root cause.
+
+```mermaid
+flowchart TD
+    FAIL([test fails]) --> L1[L1: Surefire XML\nread exception class and stack]
+    L1 --> Q1{exception visible?}
+    Q1 -->|yes| FIX1[fix stub or DAO setup]
+    Q1 -->|no: swallowed| L2[L2: AspectJ CatchRecorder\nfind catch site]
+    L2 --> Q1B{implicit NPE?}
+    Q1B -->|yes| L2B[L2: JFR Exception Recorder\nthrow-site capture]
+    Q1B -->|no| Q2{catch site found?}
+    L2B --> Q2
+    Q2 -->|yes| FIX2[fix at catch site]
+    Q2 -->|no| L3[L3: per-test JaCoCo\nfind divergence block]
+    L3 --> Q3{divergence found?}
+    Q3 -->|yes| FIX3[fix test data or mock]
+    Q3 -->|no| L4[L4: ASM Trace Agent\nfull method trace]
+    L4 --> FIX4[trace to root cause]
+
+    classDef default fill:#dde3f5,stroke:#6b7db3,color:#1a1f5e
+    classDef start fill:#fce7f3,stroke:#be185d,color:#831843
+    classDef diag fill:#fce7f3,stroke:#be185d,color:#831843
+    classDef fix fill:#d1fae5,stroke:#059669,color:#064e3b
+    class FAIL start
+    class L1,L2,L2B,L3,L4 diag
+    class FIX1,FIX2,FIX3,FIX4 fix
+```
+
+**Level 1: Surefire XML.** Zero overhead. The test report gives the exception class, message, and stack trace. This resolves most failures: wrong stub return type, missing mock setup, assertion on the wrong field. If the exception class is visible and the stack trace points somewhere useful, fix it here and never proceed to Level 2.
+
+**Level 2: AspectJ CatchRecorder and JFR Exception Recorder.** Two complementary tools for the class of failures where an exception is thrown somewhere inside application code and swallowed before it surfaces.
+
+The AspectJ CatchRecorder weaves `after-throwing` advice onto every catch block in the application code. When an exception is caught, it logs the exception type, message, and catch site (class, method, line), without modifying a single source file. This is the difference between "the method returned null, I don't know why" and "the method returned null because a `NullPointerException` was caught at line 87 of `AccountServiceImpl.updateAccount()` before the expected service call was reached." The first leaves the model guessing. The second gives it a precise starting point.
+
+The CatchRecorder has a blind spot: it only sees exceptions that land in user-code catch blocks. JVM-thrown implicit NPEs, `ArrayIndexOutOfBoundsException`, and exceptions caught inside Hibernate or Struts internals are invisible to it. The JFR Exception Recorder fills this gap. It captures every `jdk.JavaExceptionThrow` event at the throw site (before any catch block runs) with a full stack trace, filtered to application class prefixes. Implicit NPEs that were previously invisible become structured entries in `jfr-throws.json`. The combination means that **no exception, thrown or swallowed anywhere in the execution, can escape unrecorded.**
+
+**Level 3: Per-test JaCoCo.** Enable coverage for the failing test in isolation and compare the executed blocks against the CFG path the test was designed to exercise. The first block that appears in the CFG path but not in the coverage report is the divergence point: the test did not reach it. The branch just before that block determines why. This resolves failures where the test data or mock return values drove execution down the wrong branch.
+
+**Level 4: ASM Trace Agent.** The heaviest tool. A bytecode instrumentation agent rewrites class bytecode as it is loaded to insert `ENTRY` and `EXIT` probes at every method boundary. The resulting trace is a complete execution record: which methods ran, in what order, and which did not. Enabling it is a one-line Maven Surefire change:
+
+```xml
+<argLine>@{argLine}
+  -javaagent:${user.home}/tools/logging-agent.jar=prefix=com/example/app/web/ActionClass,com/example/app/service/ValidationServiceImpl
+  -Dlogging.agent.trace=true
+  -Dlogging.agent.branch=true</argLine>
+```
+
+The `prefix=` parameter confines instrumentation to the classes of interest. The resulting trace looks like:
+
+```
+[Enter] ActionClass::processRequest
+[Enter] BusinessLogicService::processRequest
+[Branch] BusinessLogicService::processRequest:LINE IFEQ val=0 → TAKEN
+[Enter] ValidationServiceImpl::validateAttributes
+[Exit]  ValidationServiceImpl::validateAttributes
+```
+
+**Absent entries are as informative as present ones.** If `validateAttributes` does not appear, the code never reached it, not as a hypothesis, but as a fact. Sometimes stubs, mocks, and test data all look correct but the test still exercises the wrong branch. Without the trace you are guessing which path was taken. The agent proves it.
+
+The governing principle across all four levels is: **prefer observation over inference**. When a test fails unexpectedly, use instrumentation to get the runtime record instead of reasoning from source.
+
+---
+
 ## Applying Techniques: DAO SQL Capture
 
 ### Finding the DAO Boundaries
@@ -588,76 +657,7 @@ How do we make sure that every SQL-emitting DAO is exercised correctly (i.e., ac
 
 ---
 
-## Technique 7: Dynamic Tracing
-
-All of the above techniques are static. They tell you what *should* happen based on the structure of the code. Legacy codebases have a habit of confounding static analysis.
-
-Runtime polymorphism, configuration loaded from a database at startup, feature flags in a properties file that nobody has updated since 2009, JNDI lookups that silently fail and return null: these are not visible in the CFG. The only way to know what actually executed is to observe it executing.
-
-When a test fails unexpectedly, the inner Ralph loop follows a four-level escalation protocol. Each level is more invasive than the last; you only escalate when the previous level cannot identify the root cause.
-
-```mermaid
-flowchart TD
-    FAIL([test fails]) --> L1[L1: Surefire XML\nread exception class and stack]
-    L1 --> Q1{exception visible?}
-    Q1 -->|yes| FIX1[fix stub or DAO setup]
-    Q1 -->|no: swallowed| L2[L2: AspectJ CatchRecorder\nfind catch site]
-    L2 --> Q1B{implicit NPE?}
-    Q1B -->|yes| L2B[L2: JFR Exception Recorder\nthrow-site capture]
-    Q1B -->|no| Q2{catch site found?}
-    L2B --> Q2
-    Q2 -->|yes| FIX2[fix at catch site]
-    Q2 -->|no| L3[L3: per-test JaCoCo\nfind divergence block]
-    L3 --> Q3{divergence found?}
-    Q3 -->|yes| FIX3[fix test data or mock]
-    Q3 -->|no| L4[L4: ASM Trace Agent\nfull method trace]
-    L4 --> FIX4[trace to root cause]
-
-    classDef default fill:#dde3f5,stroke:#6b7db3,color:#1a1f5e
-    classDef start fill:#fce7f3,stroke:#be185d,color:#831843
-    classDef diag fill:#fce7f3,stroke:#be185d,color:#831843
-    classDef fix fill:#d1fae5,stroke:#059669,color:#064e3b
-    class FAIL start
-    class L1,L2,L2B,L3,L4 diag
-    class FIX1,FIX2,FIX3,FIX4 fix
-```
-
-**Level 1: Surefire XML.** Zero overhead. The test report gives the exception class, message, and stack trace. This resolves most failures: wrong stub return type, missing mock setup, assertion on the wrong field. If the exception class is visible and the stack trace points somewhere useful, fix it here and never proceed to Level 2.
-
-**Level 2: AspectJ CatchRecorder and JFR Exception Recorder.** Two complementary tools for the class of failures where an exception is thrown somewhere inside application code and swallowed before it surfaces.
-
-The AspectJ CatchRecorder weaves `after-throwing` advice onto every catch block in the application code. When an exception is caught, it logs the exception type, message, and catch site (class, method, line), without modifying a single source file. This is the difference between "the method returned null, I don't know why" and "the method returned null because a `NullPointerException` was caught at line 87 of `AccountServiceImpl.updateAccount()` before the expected service call was reached." The first leaves the model guessing. The second gives it a precise starting point.
-
-The CatchRecorder has a blind spot: it only sees exceptions that land in user-code catch blocks. JVM-thrown implicit NPEs, `ArrayIndexOutOfBoundsException`, and exceptions caught inside Hibernate or Struts internals are invisible to it. The JFR Exception Recorder fills this gap. It captures every `jdk.JavaExceptionThrow` event at the throw site (before any catch block runs) with a full stack trace, filtered to application class prefixes. Implicit NPEs that were previously invisible become structured entries in `jfr-throws.json`. The combination means that **no exception, thrown or swallowed anywhere in the execution, can escape unrecorded.**
-
-**Level 3: Per-test JaCoCo.** Enable coverage for the failing test in isolation and compare the executed blocks against the CFG path the test was designed to exercise. The first block that appears in the CFG path but not in the coverage report is the divergence point: the test did not reach it. The branch just before that block determines why. This resolves failures where the test data or mock return values drove execution down the wrong branch.
-
-**Level 4: ASM Trace Agent.** The heaviest tool. A bytecode instrumentation agent rewrites class bytecode as it is loaded to insert `ENTRY` and `EXIT` probes at every method boundary. The resulting trace is a complete execution record: which methods ran, in what order, and which did not. Enabling it is a one-line Maven Surefire change:
-
-```xml
-<argLine>@{argLine}
-  -javaagent:${user.home}/tools/logging-agent.jar=prefix=com/example/app/web/ActionClass,com/example/app/service/ValidationServiceImpl
-  -Dlogging.agent.trace=true
-  -Dlogging.agent.branch=true</argLine>
-```
-
-The `prefix=` parameter confines instrumentation to the classes of interest. The resulting trace looks like:
-
-```
-[Enter] ActionClass::processRequest
-[Enter] BusinessLogicService::processRequest
-[Branch] BusinessLogicService::processRequest:LINE IFEQ val=0 → TAKEN
-[Enter] ValidationServiceImpl::validateAttributes
-[Exit]  ValidationServiceImpl::validateAttributes
-```
-
-**Absent entries are as informative as present ones.** If `validateAttributes` does not appear, the code never reached it, not as a hypothesis, but as a fact. Sometimes stubs, mocks, and test data all look correct but the test still exercises the wrong branch. Without the trace you are guessing which path was taken. The agent proves it.
-
-The governing principle across all four levels is: **prefer observation over inference**. When a test fails unexpectedly, use instrumentation to get the runtime record instead of reasoning from source.
-
----
-
-## Why Tools, Not Just an LLM
+## Why Tools, Not Just an LLM?
 
 | | Without tools | With tools |
 |---|---|---|
