@@ -29,7 +29,8 @@ plugins:
   - jekyll-sitemap
   - jekyll-seo-tag
 
-theme: jekyll-theme-boxy
+theme: observatory-editorial
+#theme: jekyll-theme-boxy
 title: Total Internal Reflection
 description: Technology and Art
 

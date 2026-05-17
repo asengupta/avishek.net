@@ -13,4 +13,4 @@
 **/pytorch-learn/plenoxels/output/reconstruction/*
 .idea/
 .superpowers/
-
+.playwright-mcp/

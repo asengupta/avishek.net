@@ -5,7 +5,8 @@ source "https://rubygems.org"
 git_source(:github) {|repo_name| "https://github.com/#{repo_name}" }
 
 gem "jekyll", "~> 4.4"
-gem "jekyll-theme-boxy", path: "../jekyll-theme-boxy"
+# gem "jekyll-theme-boxy", path: "../jekyll-theme-boxy"
+gem "observatory-editorial", path: "../observatory-editorial"
 gem "webrick"
 gem "csv"
 gem "base64"

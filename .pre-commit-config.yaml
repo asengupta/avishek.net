@@ -1,0 +1,8 @@
+repos:
+  - repo: local
+    hooks:
+      - id: talisman
+        name: talisman
+        entry: /Users/asgupta/.talisman/bin/talisman_darwin_amd64 --githook pre-commit
+        language: system
+        pass_filenames: false

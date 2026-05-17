@@ -1,11 +1,8 @@
 PATH
-  remote: ../jekyll-theme-boxy
+  remote: ../observatory-editorial
   specs:
-    jekyll-theme-boxy (0.1.0)
-      jekyll (>= 3.9)
-      jekyll-feed
-      jekyll-seo-tag
-      jekyll-sitemap
+    observatory-editorial (0.1.0)
+      jekyll (>= 3.5, < 5.0)
 
 GEM
   remote: https://rubygems.org/
@@ -117,7 +114,7 @@ DEPENDENCIES
   jekyll-gist
   jekyll-seo-tag
   jekyll-sitemap
-  jekyll-theme-boxy!
+  observatory-editorial!
   webrick
 
 BUNDLED WITH
