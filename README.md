@@ -10,11 +10,15 @@
 - To build, run ```bundle exec jekyll build```
 - To regenerate resume, run ```pandoc avishek.net/assets/resume/avishek-sen-gupta-resume-2026-feb.md -s -o avishek.net/assets/resume/avishek-sen-gupta-resume-2026-feb.pdf```
 
-To export a post to docx with Mermaid diagrams rendered:
+To export a post to docx with Mermaid diagrams rendered (run from site root):
 
 ```bash
-pandoc <post>.md -o <output>.docx -F mermaid-filter
+sed 's|](/assets/|](/path/to/avishek.net/assets/|g' _posts/<post>.md | \
+  MERMAID_FILTER_PUPPETEER_CONFIG="$HOME/.puppeteer.json" \
+  pandoc -o assets/<output>.docx -F ~/.nvm/versions/node/v26.1.0/bin/mermaid-filter
 ```
+
+The `sed` step rewrites root-relative image paths to absolute so pandoc can find them.
 
 `mermaid-filter` uses Puppeteer/Chrome to render diagrams. Create `~/.puppeteer.json` with your Chrome path:
 
