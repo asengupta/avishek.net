@@ -1,20 +1,23 @@
 <!DOCTYPE html>
 <html lang="{{ site.lang | default: "en-US" }}">
   <head>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-CECVND37FJ"></script>
-<!--    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>-->
     <script src="/assets/javascript/chart.js"></script>
+    {% if site.google_analytics %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ site.google_analytics }}"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', 'G-CECVND37FJ');
+      gtag('config', '{{ site.google_analytics }}');
     </script>
+    {% endif %}
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="google-site-verification" content="8offUCXeOrzChQ2APpK0zH0LNlD7oF6sARYqikIXK2I" />
-    <title>Total Internal Reflection : Musings on Machine Learning, Technology, and Art</title>
+    {% if site.google_site_verification %}
+    <meta name="google-site-verification" content="{{ site.google_site_verification }}" />
+    {% endif %}
+    <title>{{ site.title }}</title>
     {% feed_meta %}
     {% seo %}
 
@@ -52,10 +55,10 @@
 
         <div class="newsletter-container">
           <form
-                action="https://buttondown.com/api/emails/embed-subscribe/ettenmoor"
+                action="https://buttondown.com/api/emails/embed-subscribe/{{ site.buttondown_slug }}"
                 method="post"
                 target="popupwindow"
-                onsubmit="window.open('https://buttondown.com/ettenmoor', 'popupwindow')"
+                onsubmit="window.open('https://buttondown.com/{{ site.buttondown_slug }}', 'popupwindow')"
                 class="embeddable-buttondown-form"
           >
             <label for="bd-email">Enter your email to receive updates</label>

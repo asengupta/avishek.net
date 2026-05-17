@@ -32,6 +32,10 @@ plugins:
 theme: jekyll-theme-minimal
 title: Total Internal Reflection
 description: Technology and Art
+
+google_analytics: G-CECVND37FJ
+google_site_verification: 8offUCXeOrzChQ2APpK0zH0LNlD7oF6sARYqikIXK2I
+buttondown_slug: ettenmoor
 markdown: kramdown
 
 sass:
