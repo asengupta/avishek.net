@@ -85,7 +85,7 @@ The seven techniques described in this post rely on the following tools. Each li
 7. [Technique 3: Source Extraction with ctags and ast-emit](#technique-3-source-extraction-with-ctags-and-ast-emit)
 8. [Technique 4: Dataflow Analysis](#technique-4-dataflow-analysis)
 9. [Technique 5: Reaching Conditions](#technique-5-reaching-conditions)
-10. [Technique 6: DAO SQL Capture](#applying-techniques-dao-sql-capture)
+10. [Applying Techniques: DAO SQL Capture](#applying-techniques-dao-sql-capture)
 11. [Technique 7: Dynamic Tracing](#technique-7-dynamic-tracing)
 12. [Why Tools, Not Just an LLM](#why-tools-not-just-an-llm)
 13. [Four Diagnostic Incidents](#four-diagnostic-incidents)
