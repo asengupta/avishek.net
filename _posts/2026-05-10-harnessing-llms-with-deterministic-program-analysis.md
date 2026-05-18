@@ -4,7 +4,8 @@ author: avishek
 usemathjax: false
 mermaid: true
 tags: ["Software Engineering", "GenAI", "Program Analysis", "Testing", "Control Flow", "Dataflow Analysis", "Harness Engineering"]
-draft: false
+draft: true
+published: false
 ---
 
 There is an optimistic and a pessimistic reading of what GenAI does to the problem of large legacy codebases.
