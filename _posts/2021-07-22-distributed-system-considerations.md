@@ -4,6 +4,7 @@ author: avishek
 usemathjax: true
 tags: ["Distributed Systems", "Software Engineering", "Software Architecture"]
 draft: true
+published: false
 ---
 
 ## Business Characteristics

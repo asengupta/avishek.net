@@ -4,6 +4,7 @@ author: avishek
 usemathjax: false
 tags: ["Datalog", "Logic Programming", "Graph"]
 draft: true
+published: false
 ---
 
 ## Abstract

@@ -5,6 +5,7 @@ mermaid: true
 usemathjax: false
 tags: ["Software Engineering", "Reverse Engineering", "COBOL", "Transpilation"]
 draft: true
+published: false
 ---
 
 We will be talking about techniques in abstract, but will refer to concrete implementations in [Cobol-REKT](https://github.com/avishek-sen-gupta/cobol-rekt) as needed.

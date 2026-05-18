@@ -4,6 +4,7 @@ author: avishek
 usemathjax: true
 tags: ["Mathematics", "Proof", "Functional Analysis", "Pure Mathematics", "Kreyszig"]
 draft: true
+published: false
 ---
 
 This post lists solutions to the exercises in the **Bounded and Continuous Linear Operators section 2.7** of *Erwin Kreyszig's* **Introductory Functional Analysis with Applications**. This is a work in progress, and proofs may be refined over time.
