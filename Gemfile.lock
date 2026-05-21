@@ -1,5 +1,5 @@
 PATH
-  remote: ../observatory-editorial
+  remote: ../jekyll-theme-observatory-editorial
   specs:
     observatory-editorial (0.1.0)
       jekyll (>= 3.5, < 5.0)

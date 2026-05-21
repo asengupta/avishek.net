@@ -6,7 +6,7 @@ git_source(:github) {|repo_name| "https://github.com/#{repo_name}" }
 
 gem "jekyll", "~> 4.4"
 # gem "jekyll-theme-boxy", path: "../jekyll-theme-boxy"
-gem "observatory-editorial", path: "../observatory-editorial"
+gem "observatory-editorial", path: "../jekyll-theme-observatory-editorial"
 gem "webrick"
 gem "csv"
 gem "base64"
