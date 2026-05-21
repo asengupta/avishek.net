@@ -722,7 +722,6 @@ The toolchain described here substantially reduces what the LLM needs to derive 
 ## References
 
 - [Tests increase our Knowledge of the System: A Proof from Probability]({% post_url 2023-01-10-tests-proof-probability %})
-- [java-bytecode-tools](https://github.com/avishek-sen-gupta/java-bytecode-tools): bytecode agent, calltree analysis, CFG path extraction, ddg-slice, reaching-conditions
 - [SootUp](https://soot-oss.github.io/SootUp/): modern Java bytecode analysis framework; provides the Jimple IR used for CFG extraction, def-use analysis, and call graph construction
 - [Qilin](https://github.com/QilinPTA/Qilin): context-sensitive points-to analysis for Java; resolves virtual dispatch in call graph construction
 - [JaCoCo: Java Code Coverage Library](https://www.jacoco.org/jacoco/)
