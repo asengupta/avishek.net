@@ -4,8 +4,8 @@ author: avishek
 usemathjax: false
 mermaid: false
 tags: ["Software Engineering", "Architecture", "Open Source", "Philosophy", "Unix", "Composability"]
-draft: true
-published: false
+draft: false
+published: true
 ---
 
 *Software architecture is not politically neutral. The choice between a plugin-based platform and a set of composable small tools is a choice about who can enclose the result. This essay argues for composability as a structural act of resistance, not because it produces better software in every case, but because it produces software that cannot be captured.*
