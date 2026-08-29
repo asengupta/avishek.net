@@ -45,25 +45,25 @@ What got cheap in the last three years is exactly the labour that kept us down t
 
 ## Contents
 
-- [Curry-Howard in Ninety Seconds](#curry-howard-in-ninety-seconds)
+- [The Curry-Howard Isomorphism in Ninety Seconds](#the-curry-howard-isomorphism-in-ninety-seconds)
 - [The Program Is the Proof](#the-program-is-the-proof)
-- [The Behaviour Ladder](#the-behaviour-ladder)
-- [The Spec Ladder](#the-spec-ladder)
-- [Correct by Construction vs. Correct by Observation](#correct-by-construction-vs.-correct-by-observation)
+- [The Zoo of Behaviour Verification](#the-zoo-of-behaviour-verification)
+- [Correct by Construction vs. Correct by Observation](#correct-by-construction-vs-correct-by-observation)
 - [Markdown Specifications Are Bullshit](#markdown-specifications-are-bullshit)
+- [Flavours of Specifications](#flavours-of-specifications)
 - [A Specification You Can Interrogate](#a-specification-you-can-interrogate)
 - [Model the Domain, Not Just the Behaviour](#model-the-domain-not-just-the-behaviour)
 - [Both Ladders End in the Same Place](#both-ladders-end-in-the-same-place)
 - [What AI Actually Changed](#what-ai-actually-changed)
+- [The Fundamentals Matter More Now, Not Less](#the-fundamentals-matter-more-now-not-less)
 - [What You Inherited Sets Your Floor, Not Your Ceiling](#what-you-inherited-sets-your-floor-not-your-ceiling)
 - [AI Proposes; the Verifier Disposes](#ai-proposes-the-verifier-disposes)
 - [The Harness Is the Trust Boundary](#the-harness-is-the-trust-boundary)
 - [Where This Is Over-Engineering](#where-this-is-over-engineering)
-- [The Old Fundamentals Matter More Now, Not Less](#the-old-fundamentals-matter-more-now-not-less)
 
 ---
 
-## Curry-Howard in Ninety Seconds
+## The Curry-Howard Isomorphism in Ninety Seconds
 
 The Curry-Howard Isomorphism says that logic and programming are the same structure under two different names.
 
@@ -97,8 +97,6 @@ There is one catch, and it matters enormously in the languages most of us actual
 
 ## The Program Is the Proof
 
-Take Curry-Howard seriously for a moment and something uncomfortable follows.
-
 A proposition is a type. A proof of it is a program of that type. This is exact, not a metaphor. So your running code is already the most exact statement of what your system does. A type, a model, a test, a diagram, a paragraph of English: every one of them is an *approximation* of that program, and the only reason you buy an approximation is that it is cheaper than the thing it approximates.
 
 That gives you exactly one question to ask about every technique below. **How much of the proof does it buy, and what does it cost?**
@@ -107,17 +105,17 @@ Not "is this rigorous?", not "is this best practice?". How much of the proof, at
 
 ---
 
-## The Behaviour Ladder
+## The Zoo of Behaviour Verification
 
 Here are five ways to be sure your code does what you think, in descending order of certainty and ascending order of regret.
 
-| Rung | Techniques | What you actually get |
+| Technique | What it is | What you actually get |
 |---|---|---|
 | **Formal Verification** | Includes model checking, formal verification. Tools like TLA+, Dafny, etc. | proves a model, not your code |
-| **Static analysis (Reverse Engineering)** | control-flow graphs, data-flow analysis, def-use chains, call graphs | recovered, not encoded |
-| **Static analysis** | lint and immutability, cyclomatic complexity, architectural import constraints | commit and integration gates |
-| **Symbolic execution** | abstract interpretation, reaching conditions, taint analysis | works on actual code, depends upon tooling maturity |
 | **Correct by construction** | rich domain types, dependent types (Lean, Idris), illegal states made unrepresentable | depends upon type system and programmer discipline |
+| **Symbolic execution** | abstract interpretation, reaching conditions, taint analysis | works on actual code, depends upon tooling maturity |
+| **Static analysis** | lint and immutability, cyclomatic complexity, architectural import constraints | commit and integration gates |
+| **Static analysis (Reverse Engineering)** | control-flow graphs, data-flow analysis, def-use chains, call graphs | recovered, not encoded |
 | **Pre-Production Runtime** | Tests, assertions, ordinary business logic, coverage and assertion quality | instances of the proof, not the proof |
 | **Production Runtime Guardrails** | Monitors, Circuit Breakers, Rate Limiters, etc. | instances of the proof, not the proof |
 | **Prose / markdown** | verified by a human in code review, or by production, and by nothing else | nothing here can fail |
@@ -136,11 +134,10 @@ Static analysis (some standard, some depend upon tooling maturity) -> Pre-Produc
 
 Production Runtime Guardrails (Cross-Functional Requirements) -> Static analysis (Building Blocks) -> Pre-Production Runtime Guardrails (Both Behaviours and CFRs, but specific instances) -> Symbolic execution (Behaviours across multiple histories) -> Correct by Construction (General Program Correctness) -> Formal Verification (General Program Correctness, not Performance)
 
-
 There is an asymmetry in that table that I want to talk about.
 
 - **The 'Correct by Construction' rung is forward.** You encode the property while you are writing the code, and the compiler checks that you did not contradict yourself.
-- **'Static Analysis (Reverse Engineering)' is a somehwat special case, since it is mostly run when comprehending existing code.** You are recovering properties from code that somebody else wrote, years ago, without any conscious intention of making them recoverable. That's reverse engineering. Obviously, a lot of this analysis actually happens inside compilers when they are lowering code, but that is usually transparent to the program writer.
+- **'Static Analysis (Reverse Engineering)' is a somewhat special case, since it is mostly run when comprehending existing code.** You are recovering properties from code that somebody else wrote, years ago, without any conscious intention of making them recoverable. That's reverse engineering. Obviously, a lot of this analysis actually happens inside compilers when they are lowering code, but that is usually transparent to the program writer.
 - The remaining ones can usually be applied in either direction.
 - **Static analysis** and **Pre-Production Runtime Guardrails** are the cheapest rungs, and there is no excuse whatsoever for skipping them. If your review process consists of senior engineers reading diffs for style and cyclomatic complexity, you are paying six figures for a linter.
 
@@ -165,15 +162,38 @@ Here is the operational problem. **Nothing in that document can be checked.** No
 "But it's readable." Readable by whom, to decide what? A specification nobody can execute cannot fail. People hear that as a feature. A specification that cannot fail, can drift merrily from intent without any alarms.
 Prose sits *below* the bottom rung of the behaviour ladder. A test at least fails.
 
+---
+
+## Flavours of Specifications
+
 We still PREFER executable specifications, and this can mean several things depending upon the fidelity and effort you want to put into building:
 
-- The most faithful executable specification is the program itself. It does not always lend itself to easy reading and comprehension, but this becomes readable when constraints and rules are expressed readably as part of the code, i.e., a combination of the type system and the behaviours. In the most extreme case, if the code is highly readable, you could dispense with any other form of documentation: the code IS the spec. If the program's interfaces are defined by its types, the logic of the program is the proof that these interfaces are satisfied. This is Curry-Howard at its logical extreme. Code that is correct by construction is also cheaper to test, cheaper to change, and cheaper for a machine to reason about. Same property, showing up in three different places on the balance sheet.
-- The next form of executable specification are tests, and they are the current workhorse of the industry. They can be remarkably low-effort to implement, never drift, and double as a safety net for existing code, in the absence of strong type and behaviour guarantees. They also double as a useful design tool if you are practising TDD. Their disadvantages are that: they need to be maintained, they can become unreadable, and, most importantly, they represent instances of the proof of behaviour, not a general proof (most business logic is simple enough that this is not a deal-breaker). You can write tests showing that 2, 4 and 6 are even. That says precisely nothing about 8. A test is one instance of the proof, not the proof. This is not a reason to skip tests, it is a reason to be honest about what a green build is evidence *of*.
-- A lot of domain modelling emerges from prose. As stated before, prose cannot be checked. There has been a lot of interest in Domain Specific Languages (DSLs) for modelling business logic. Usually, we'd like DSLs to be machine-checkable for consistency, allow queries, and executable. In the extreme case, the actual code implements the DSL directly, but many times, logic may be better expressed in a more flexible language. One class of languages I've seen particularly suitable for this is Logic Programming: Prolog is the exemplar in this category. I have written about my experiments with extracting out a DSL from a law document in [here](/2026/08/24/a-statute-as-a-runnable-logic-program).
-- The next level of modelling involve various forms of static analysis. Examples are dataflow analysis, which can be used to prove that certain values are never null, or that certain functions are never called with certain arguments. These are useful for catching bugs, but they are not as powerful as a full proof system. Other examples include dominator analysis (does this code chunk always execute when reaching a certain region of functionality?), etc. These are used as building blocks to do more abstracted analysis, e.g., answering the question "which factors affect the interest rate?" might involve doing some dataflow analysis of the interest rate variable. Static analysis pays the same tax in a different currency. A control-flow graph is precise right up until it hits polymorphism, at which point the call edge is a guess wearing the costume of a fact. Every soundness/precision trade-off in an analyser is a place where the model and the code diverge quietly.
-- The next level of executable specification involve formal methods, which include model checking and program verification. For these, you typically model chunks of functionality, and assert invariants and certain properties of the program. Then, depending upon the tool and technique, these properties are verified to hold (or not hold). This is the space of tools like Dafny, TLA+, etc. These techniques are very powerful, but they require extra investment in learning them, require more careful thinking when deciding what properties are useful to prove (e.g., two users cannot log into the same account), and the usefulness / applicability of the proof is dependent upon the fidelity of the model, i.e., if a program is modelled incorrectly, the proof will not be applicable to the actual system. The part worth noting: different techniques in this category are used for modelling different aspects of logic, i.e., you'd write a TLA+ spec for verifying the safety / liveness of a particular piece of code, and maybe use Dafny to assert something sbout a data structure for another piece of logic. These are not usually used to model the full business domain of a program. TLA+ proves your model has no deadlock. Dafny proves the function you specified is correct. Neither of them has seen your production code. The proof is only ever as good as the model's resemblance to what you actually shipped, and that resemblance is maintained by hand, by humans, under deadline.
+### The Code is the Spec
+The most faithful executable specification is the program itself. It does not always lend itself to easy reading and comprehension, but this becomes readable when constraints and rules are expressed readably as part of the code, i.e., a combination of the type system and the behaviours.
 
-- 
+In the most extreme case, if the code is highly readable, you could dispense with any other form of documentation: the code IS the spec. If the program's interfaces are defined by its types, the logic of the program is the proof that these interfaces are satisfied. This is Curry-Howard at its logical extreme. Code that is correct by construction is also cheaper to test, cheaper to change, and cheaper for a machine to reason about. Same property, showing up in three different places on the balance sheet.
+
+### Tests
+The next form of executable specification are tests, and they are the current workhorse of the industry. They can be remarkably low-effort to implement, never drift, and double as a safety net for existing code, in the absence of strong type and behaviour guarantees. They also double as a useful design tool if you are practising TDD.
+
+Their disadvantages are that: they need to be maintained, they can become unreadable, and, most importantly, they represent instances of the proof of behaviour, not a general proof (most business logic is simple enough that this is not a deal-breaker). You can write tests showing that 2, 4 and 6 are even. That says precisely nothing about 8. A test is one instance of the proof, not the proof. This is not a reason to skip tests, it is a reason to be honest about what a green build is evidence *of*.
+
+### Domain Specific Languages (DSLs)
+A lot of domain modelling emerges from prose. As stated before, prose cannot be checked. There has been a lot of interest in Domain Specific Languages (DSLs) for modelling business logic. Usually, we'd like DSLs to be machine-checkable for consistency, allow queries, and executable. In the extreme case, the actual code implements the DSL directly, but many times, logic may be better expressed in a more flexible language.
+
+One class of languages I've seen particularly suitable for this is Logic Programming: Prolog is the exemplar in this category. I have written about my experiments with extracting out a DSL from a law document in [here](/2026/08/24/a-statute-as-a-runnable-logic-program).
+
+### Static Models
+The next level of modelling involve various forms of static analysis. Examples are dataflow analysis, which can be used to prove that certain values are never null, or that certain functions are never called with certain arguments. These are useful for catching bugs, but they are not as powerful as a full proof system. Other examples include dominator analysis (does this code chunk always execute when reaching a certain region of functionality?), etc.
+
+Static models are used as building blocks to do more abstracted analysis, e.g., answering the question "which factors affect the interest rate?" might involve doing some dataflow analysis of the interest rate variable. Static analysis pays the same tax in a different currency. A control-flow graph is precise right up until it hits polymorphism, at which point the call edges point to multiple futures, and further facts must be mined (e.g., dependency wiring configuration) to disambiguate. Every soundness/precision trade-off in an analyser is a place where the model and the code diverge quietly.
+
+### Formal Methods
+The next level of executable specification involve formal methods, which include model checking and program verification. For these, you typically model chunks of functionality, and assert invariants and certain properties of the program. Then, depending upon the tool and technique, these properties are verified to hold (or not hold).
+
+This is the space of tools like Dafny, TLA+, etc. These techniques are very powerful, but they require extra investment in learning them, require more careful thinking when deciding what properties are useful to prove (e.g., two users cannot log into the same account), and the usefulness / applicability of the proof is dependent upon the fidelity of the model, i.e., if a program is modelled incorrectly, the proof will not be applicable to the actual system.
+
+The part worth noting: different techniques in this category are used for modelling different aspects of logic, i.e., you'd write a TLA+ spec for verifying the safety / liveness of a particular piece of code, and maybe use Dafny to assert something sbout a data structure for another piece of logic. These are not usually used to model the full business domain of a program. TLA+ proves your model has no deadlock. Dafny proves the function you specified is correct. Neither of them has seen your production code. The proof is only ever as good as the model's resemblance to what you actually shipped, and that resemblance used to be maintained by hand, by humans, under deadline.
 
 ---
 
@@ -211,7 +231,7 @@ The limit is worth stating plainly: **this does not stop an LLM writing a wrong 
 
 It is also exactly why prose specs cannot be rescued by better models. A wall of text cannot fail, so the loop never closes, so a human has to sit in the middle of it reading everything. You automated the proposing and kept the expensive half.
 
-An experiment on how to extract a deterministic, queryable knowledge base with forward and backward inference from a text document, is documented in [A Statute as a Runnable Logic Program](/2026-08-24-a-statute-as-a-runnable-logic-program.md)
+An experiment on how to extract a deterministic, queryable knowledge base with forward and backward inference from a text document, is documented in [A Statute as a Runnable Logic Program](/2026/08/24/a-statute-as-a-runnable-logic-program)
 
 ---
 
@@ -236,10 +256,9 @@ That is not a coincidence.
 ```mermaid
 flowchart TD
     subgraph CODE[Code ladder]
-        R1[runtime tests] --> R2[symbolic execution]
-        R2 --> R3[static analysis]
-        R3 --> R4[proof without execution]
-        R4 --> TOP1[rich domain types]
+        R1[runtime tests] --> R2[static analysis]
+        R2 --> R3[proof without execution]
+        R3 --> TOP1[rich domain types]
     end
     subgraph SPEC[Spec ladder]
         S1[prose / markdown] --> S2[deterministic guardrails]
@@ -264,25 +283,33 @@ You will not reach the limit, and I am not suggesting you try. What matters is w
 
 ---
 
-## AI Proposes; the Verifier Disposes
+## What AI Actually Changed
 
 AI did not add a rung to either ladder. It collapsed the cost of climbing them.
 
 That distinction is the whole argument. Dependent types did not get more expressive because a model can write Lean. TLA+ did not get better at liveness. What changed is that the tedious, skilled, slow labour of *encoding* things — writing the property, writing the model, writing the characterisation test, writing the query — got an order of magnitude cheaper.
 
-If you want one architectural principle out of all of this, it is that sentence. Here is what it decomposes into.
+---
 
-As a *design-time* proposer, on the other hand, it is welcome absolutely anywhere, as long as the output goes through a deterministic gate before anyone depends on it. Same model, opposite rules, depending on which side of the build it sits.
+## The Fundamentals Matter More Now, Not Less
 
-**Executable specs, graded by criticality.** The model proposes toward specs that run. Forward: FP discipline first, to get a verifiable substrate at all, then formalism where the language and the stakes both justify it. Legacy: characterisation tests as executable specs. The verifier disposes by running them: deterministic pass/fail with no human in the gate, and a postcondition violation that localises the fault to one unit rather than to a service.
+Immutability. Pure functions. Small composable units. Explicit failure. Contracts at the seams. Types that mean something.
 
-**Legibility and traceability.** Code structured to be read by the next model, not just by the next human. Types encode intent as a machine-readable spec. Traceability is emitted *forward*, at the point of construction, never reverse-engineered later. The verifier disposes via the type checker, which is a verifier of intent, and via structure that makes reasoning safe without global context.
+This is not nostalgia. These are the properties that make code checkable, and checkable is what makes generated code safe to keep. Every one of them was a good idea when humans wrote all the code, and we have always given the same reasons: you can read a pure function without holding the rest of the system in your head, you can pass around an immutable value without wondering who else is going to write to it, and you can compose small units without the combination surprising you. What has changed is who else is reading.
 
-**Functional core, imperative shell.** Propose pure functions with no hidden state. Quarantine effects at the seam, so the model never reasons about or touches side effects. The verifier disposes because for a pure function the output *is* the full contract: you can regenerate the implementation freely with no side-effect risk, and safety and liveness properties become model-checkable.
+Think about what an agent has to do before it can safely change a line of your code. It has to work out what that code does, what it touches, and what breaks elsewhere if it changes. That is the same job you do when you open an unfamiliar file, with one important difference: the agent does it with whatever fits in its context window, and nothing else. It cannot walk over and ask the person who wrote it. It cannot remember the incident in March. Everything it reasons with, it has to recover from the code in front of it. So every property that shrinks the amount of code you must read in order to be sure of something, is worth more to the agent than it ever was to you.
 
-**Composable systems, bounded contexts.** One bounded context fits in one context window, which makes the bounded context the unit of comprehension and means no global understanding is required. The verifier disposes at the contract-checked boundary: a proposal cannot violate a neighbour's contract without something catching it mechanically.
+**Purity bounds what has to be read at all.** For a pure function, the signature plus the body is the entire contract. There is no elsewhere. Nothing in the rest of the codebase can change what it does, which means a model reasoning about it in isolation is reasoning correctly, not optimistically. A method that mutates four fields, reads a clock and writes to a queue has a contract smeared across the whole system, and to reason about it soundly you would have to read the whole system. No context window is big enough for that, and no amount of prompt engineering will substitute for it.
 
-Every one of those four is an ordinary architectural virtue that predates all of this. What changed is that each one now also determines whether a machine can safely participate in your codebase.
+**Immutability deletes the aliasing question.** Most of the genuinely hard questions in code comprehension are some version of "who else holds a reference to this, and when do they write to it?" Answering it requires global knowledge, which is precisely the thing an agent does not have and a human acquires slowly and expensively. Under immutability the question does not arise, because the answer cannot matter.
+
+**Composability makes local reasoning sound rather than merely convenient.** If a unit is small, has explicit inputs and outputs, and does not reach outside itself, then understanding the unit is understanding the unit. This is what lets an agent work usefully with a partial view of the system: the view it has is not a fragment of the truth, it is the whole truth about that piece. Bounded contexts are the same principle applied one level up.
+
+**Explicit failure removes the control flow the model cannot see.** A `Result` or an `Either` in the signature is a fact sitting in front of the reader. An exception thrown eleven frames down is not in anything the model is looking at, and it is not in anything you are looking at either during code review. The difference is that you will eventually find out in production; the model will confidently generate a caller that has no idea the path exists.
+
+None of this is a separate discipline you take up for the benefit of machines. It is the same functional programming discipline we have been arguing for since long before any of this, and it pays in all the usual places: pure, immutable, composable code is cheaper to test, cheaper to change, cheaper to verify, and now, cheaper for a machine to contribute to safely. That last one is not a bonus. Increasingly it is the constraint that decides whether a machine can contribute to your codebase at all without degrading it.
+
+**So the job of AI here is to make rigour cheap. Not to make judgement optional.**
 
 ---
 
@@ -303,6 +330,26 @@ You will, at some point, want to verify something formally. Maybe not on day one
 And if you never climb higher, it has already paid for itself in ordinary human reasoning. Your ceiling depends heavily on the language: Java is hostile to verification, Rust is not.
 
 Tests are the rung you can always afford. That is not an argument for stopping there.
+
+---
+
+## AI Proposes; the Verifier Disposes
+
+If you want one architectural principle out of all of this, it is the heading of this section.
+
+As a *design-time* proposer, a model is welcome absolutely anywhere, as long as the output goes through a deterministic gate before anyone depends on it. Same model, opposite rules, depending on which side of the build it sits.
+
+Here is what it decomposes into.
+
+**Executable specs, graded by criticality.** The model proposes toward specs that run. Forward: FP discipline first, to get a verifiable substrate at all, then formalism where the language and the stakes both justify it. Legacy: characterisation tests as executable specs. The verifier disposes by running them: deterministic pass/fail with no human in the gate, and a postcondition violation that localises the fault to one unit rather than to a service.
+
+**Legibility and traceability.** Code structured to be read by the next model, not just by the next human. Types encode intent as a machine-readable spec. Traceability is emitted *forward*, at the point of construction, never reverse-engineered later. The verifier disposes via the type checker, which is a verifier of intent, and via structure that makes reasoning safe without global context.
+
+**Functional core, imperative shell.** Propose pure functions with no hidden state. Quarantine effects at the seam, so the model never reasons about or touches side effects. The verifier disposes because for a pure function the output *is* the full contract: you can regenerate the implementation freely with no side-effect risk, and safety and liveness properties become model-checkable.
+
+**Composable systems, bounded contexts.** One bounded context fits in one context window, which makes the bounded context the unit of comprehension and means no global understanding is required. The verifier disposes at the contract-checked boundary: a proposal cannot violate a neighbour's contract without something catching it mechanically.
+
+Every one of those four is an ordinary architectural virtue that predates all of this. What changed is that each one now also determines whether a machine can safely participate in your codebase.
 
 ---
 
@@ -341,19 +388,3 @@ Climbing costs real engineering labour, and I am not going to pretend otherwise.
 If the thing is low-volume, short-lived and not critical, this is over-engineering and you should not do it. Volume, longevity and criticality are what decide, and they decide per system, not per organisation. Anyone who tells you the ladder is always worth climbing is doing ideology, not engineering.
 
 Rigour also looks slower up front, and sometimes it genuinely is. I am not going to claim it is secretly faster. What I will claim is that a lot of what gets built without it does not survive contact with production, and that cost lands on somebody's budget anyway — just later, and filed under a different name.
-
-And "least power" will be heard by some people as fighting the tide. Do not soften it on that account. Reaching for the most powerful and least predictable tool when a simpler one will do is an engineering error, whatever the market happens to be wearing this season.
-
----
-
-## The Old Fundamentals Matter More Now, Not Less
-
-Immutability. Small composable units. Explicit failure. Contracts at the seams. Types that mean something.
-
-This is not nostalgia. These are the properties that make code checkable, and checkable is what makes generated code safe to keep. Every one of them was a good idea when humans wrote all the code; every one of them is now also load-bearing for whether a machine can contribute without degrading the system.
-
-One last thing, which is about people rather than code. What compounds is not the artifact. It is the rate at which the people building it get better. Automation captures a snapshot of capability and then sits there, depreciating. A person who builds the thing carries the learning into the next thing.
-
-**So the job of AI here is to make rigour cheap. Not to make judgement optional.**
-
-Every rung you climb makes the next batch of machine output cheaper to trust. That is the part that compounds.
