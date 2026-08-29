@@ -1,0 +1,64 @@
+# Legacy System Understanding Notebook
+
+- The Uneven Landscape  
+- Models of Modernisation  
+  - Refactor  
+  - Lift and Shift  
+  - Rebuild  
+  - Reimagine  
+- Whitebox, Greybox, and Blackbox testing  
+  - Blackbox  
+    - Observability  
+    -   
+  - Whitebox
+    - Static Analysis  
+    - Dynamic Analysis  
+    - Test Harnesses  
+- Transpilation Techniques  
+  - The Structured Program Theorem  
+  - Replicating Runtimes on modern platforms  
+    - Example: replicating COBOL runtime in Java  
+- Seams of Understanding  
+  - Context in Code  
+  - Context in Domain  
+  - Context in Documentation  
+  - Context in Humans  
+- Extracting Understanding from Code is a Non-decidable problem  
+- Deterministic Approaches and their Ceiling  
+- AI: Disruptions and Unlocks  
+  - Harness Engineering and Token Economics  
+  - Agents and Graphs
+- Breakdowns  
+  - Test Harnesses  
+    - as safety net  
+    - as AI-interpretable documentation  
+    - AI test writing  
+      - Engineering for code-under-test context  
+      - Autonomous test failure diagnosis  
+  - Code Structure  
+  - Spatial Structure: Syntax Trees  
+  - Temporal Structures: Control Flow Graphs  
+  - Dependency Structures  
+    - Dataflow Analysis  
+    - Module Dependencies  
+    - Reaching Conditions  
+- Semantic Understanding  
+- Traceability  
+  - AI Traceability  
+  - Looking forward: Traceability for new code in the third AI summer  
+- Verifiability: Externalising Deterministic Reasoning  
+  - Formal Verification: The brutal truth  
+  - Type Systems  
+  - Abstract Interpretation  
+  - Looking forward: Verifiability for new code in the third AI summer  
+- The Modernisation Loop  
+  - AI proposes, Verifier disposes  
+- Modernisation Strategy  
+  - Pre-GenAI strategies  
+    - Big Bang  
+    - Incremental  
+  - GenAI strategies  
+    - Capability slicing  
+    - Flow slicing  
+- Data Modernisation  
+  - TODO
