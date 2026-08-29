@@ -48,9 +48,9 @@ What got cheap in the last three years is exactly the labour that kept us down t
 - [Curry-Howard in Ninety Seconds](#curry-howard-in-ninety-seconds)
 - [The Program Is the Proof](#the-program-is-the-proof)
 - [The Behaviour Ladder](#the-behaviour-ladder)
+- [The Spec Ladder](#the-spec-ladder)
 - [Correct by Construction vs. Correct by Observation](#correct-by-construction-vs.-correct-by-observation)
 - [Markdown Specifications Are Bullshit](#markdown-specifications-are-bullshit)
-- [The Spec Ladder](#the-spec-ladder)
 - [A Specification You Can Interrogate](#a-specification-you-can-interrogate)
 - [Model the Domain, Not Just the Behaviour](#model-the-domain-not-just-the-behaviour)
 - [Both Ladders End in the Same Place](#both-ladders-end-in-the-same-place)
@@ -113,17 +113,36 @@ Here are five ways to be sure your code does what you think, in descending order
 
 | Rung | Techniques | What you actually get |
 |---|---|---|
-| **Correct by construction** | rich domain types, dependent types (Lean, Idris), illegal states made unrepresentable | the violation cannot be written |
-| **Proof without execution** | TLA+ for liveness and safety over time, Dafny for pre/postconditions and invariants | proves a model, not your code |
-| **Static analysis** | control-flow graphs, data-flow analysis, def-use chains, call graphs | recovered, not encoded |
-| **Symbolic execution** | abstract interpretation, reaching conditions, taint analysis | recovered, not encoded |
-| **Runtime** | property tests, characterisation tests, assertions, ordinary business logic | instances of the proof, not the proof |
+| **Formal Verification** | Includes model checking, formal verification. Tools like TLA+, Dafny, etc. | proves a model, not your code |
+| **Static analysis (Reverse Engineering)** | control-flow graphs, data-flow analysis, def-use chains, call graphs | recovered, not encoded |
+| **Static analysis** | lint and immutability, cyclomatic complexity, architectural import constraints | commit and integration gates |
+| **Symbolic execution** | abstract interpretation, reaching conditions, taint analysis | works on actual code, depends upon tooling maturity |
+| **Correct by construction** | rich domain types, dependent types (Lean, Idris), illegal states made unrepresentable | depends upon type system and programmer discipline |
+| **Pre-Production Runtime** | Tests, assertions, ordinary business logic, coverage and assertion quality | instances of the proof, not the proof |
+| **Production Runtime Guardrails** | Monitors, Circuit Breakers, Rate Limiters, etc. | instances of the proof, not the proof |
+| **Prose / markdown** | verified by a human in code review, or by production, and by nothing else | nothing here can fail |
 
-The direction of travel is up, and up is shift-left.
+These have different orders depending upon the criterion.
 
-There is an asymmetry in that table that I want to talk about. **The top two rungs are forward.** You encode the property while you are writing the code, and the tool checks that you did not contradict yourself. **Static and symbolic analysis mostly run in reverse.** You are recovering properties from code that somebody else wrote, years ago, without any conscious intention of making them recoverable. That's reverse engineering.
+### How early in the lifecycle can this technique be applied (Earlier -> Later)?
 
-That is why the reverse rungs show up overwhelmingly in modernisation work, and why most of the practical evidence I have sits on those two rungs rather than the two above them. Nobody is retrofitting Idris onto a Natural/ADABAS system.
+Formal Verification (before any actual code is written) -> Correct by Construction (write / compile-time) -> Static analysis (build time) -> Pre-Production Runtime Guardrails (build / integration time) -> Symbolic execution (post-compile) -> Production Runtime Guardrails (production)
+
+### How Easy is it to apply this technique (Easier -> Harder)?
+
+Static analysis (some standard, some depend upon tooling maturity) -> Pre-Production Runtime Guardrails (standard on most languages) -> Production Runtime Guardrails (standard in many deployment environments) -> Correct by Construction (strongly typed language and programming + modelling discipline) -> Formal Verification (learning and usage experience) -> Symbolic execution (specialised setups)
+
+### How generally applicable is this technique (Narrower -> Wider)?
+
+Production Runtime Guardrails (Cross-Functional Requirements) -> Static analysis (Building Blocks) -> Pre-Production Runtime Guardrails (Both Behaviours and CFRs, but specific instances) -> Symbolic execution (Behaviours across multiple histories) -> Correct by Construction (General Program Correctness) -> Formal Verification (General Program Correctness, not Performance)
+
+
+There is an asymmetry in that table that I want to talk about.
+
+- **The 'Correct by Construction' rung is forward.** You encode the property while you are writing the code, and the compiler checks that you did not contradict yourself.
+- **'Static Analysis (Reverse Engineering)' is a somehwat special case, since it is mostly run when comprehending existing code.** You are recovering properties from code that somebody else wrote, years ago, without any conscious intention of making them recoverable. That's reverse engineering. Obviously, a lot of this analysis actually happens inside compilers when they are lowering code, but that is usually transparent to the program writer.
+- The remaining ones can usually be applied in either direction.
+- **Static analysis** and **Pre-Production Runtime Guardrails** are the cheapest rungs, and there is no excuse whatsoever for skipping them. If your review process consists of senior engineers reading diffs for style and cyclomatic complexity, you are paying six figures for a linter.
 
 ---
 
@@ -131,23 +150,7 @@ That is why the reverse rungs show up overwhelmingly in modernisation work, and 
 
 Runtime is where most teams find out they were wrong. It is the most expensive place to find out, and the latest. You are not required to work this way. It is a choice, and mostly an unexamined one.
 
-Every rung you climb turns a runtime discovery into a compile-time refusal. The compiler says no before the test gets a chance to fail.
-
 This is what shift-left should mean. Most people use it to mean "test earlier", which is still runtime, just sooner. Moving your integration suite from Friday to Tuesday does not change the epistemology of what you are doing: you are still observing instances and generalising. The point is to move the correctness argument out of execution altogether.
-
-And there is a compounding effect that has nothing to do with correctness. Code that is correct by construction is also cheaper to test, cheaper to change, and cheaper for a machine to reason about. Same property, showing up in three different places on the balance sheet.
-
-Every rung above runtime is a model of your code, not your code. Nobody gets to skip this.
-
-TLA+ proves your model has no deadlock. Dafny proves the function you specified is correct. Neither of them has seen your production code. The proof is only ever as good as the model's resemblance to what you actually shipped, and that resemblance is maintained by hand, by humans, under deadline.
-
-Static analysis pays the same tax in a different currency. A control-flow graph is precise right up until it hits polymorphism, at which point the call edge is a guess wearing the costume of a fact. Every soundness/precision trade-off in an analyser is a place where the model and the code diverge quietly.
-
-The legacy world has sharper versions of this. COBOL `REDEFINES` gives you the same bytes interpreted as several incompatible types, and which one is live is decided at runtime by data. Model that wrong and your static fact is fiction.
-
-And the bottom rung is worse than people admit. You can write tests showing that 2, 4 and 6 are even. That says precisely nothing about 8. A test is one instance of the proof, not the proof. This is not a reason to skip tests, it is a reason to be honest about what a green build is evidence *of*.
-
-Pick your rung. Then know what you did not buy.
 
 ---
 
@@ -162,20 +165,15 @@ Here is the operational problem. **Nothing in that document can be checked.** No
 "But it's readable." Readable by whom, to decide what? A specification nobody can execute cannot fail. People hear that as a feature. A specification that cannot fail, can drift merrily from intent without any alarms.
 Prose sits *below* the bottom rung of the behaviour ladder. A test at least fails.
 
----
+We still PREFER executable specifications, and this can mean several things depending upon the fidelity and effort you want to put into building:
 
-## The Spec Ladder
+- The most faithful executable specification is the program itself. It does not always lend itself to easy reading and comprehension, but this becomes readable when constraints and rules are expressed readably as part of the code, i.e., a combination of the type system and the behaviours. In the most extreme case, if the code is highly readable, you could dispense with any other form of documentation: the code IS the spec. If the program's interfaces are defined by its types, the logic of the program is the proof that these interfaces are satisfied. This is Curry-Howard at its logical extreme. Code that is correct by construction is also cheaper to test, cheaper to change, and cheaper for a machine to reason about. Same property, showing up in three different places on the balance sheet.
+- The next form of executable specification are tests, and they are the current workhorse of the industry. They can be remarkably low-effort to implement, never drift, and double as a safety net for existing code, in the absence of strong type and behaviour guarantees. They also double as a useful design tool if you are practising TDD. Their disadvantages are that: they need to be maintained, they can become unreadable, and, most importantly, they represent instances of the proof of behaviour, not a general proof (most business logic is simple enough that this is not a deal-breaker). You can write tests showing that 2, 4 and 6 are even. That says precisely nothing about 8. A test is one instance of the proof, not the proof. This is not a reason to skip tests, it is a reason to be honest about what a green build is evidence *of*.
+- A lot of domain modelling emerges from prose. As stated before, prose cannot be checked. There has been a lot of interest in Domain Specific Languages (DSLs) for modelling business logic. Usually, we'd like DSLs to be machine-checkable for consistency, allow queries, and executable. In the extreme case, the actual code implements the DSL directly, but many times, logic may be better expressed in a more flexible language. One class of languages I've seen particularly suitable for this is Logic Programming: Prolog is the exemplar in this category. I have written about my experiments with extracting out a DSL from a law document in [here](/2026/08/24/a-statute-as-a-runnable-logic-program).
+- The next level of modelling involve various forms of static analysis. Examples are dataflow analysis, which can be used to prove that certain values are never null, or that certain functions are never called with certain arguments. These are useful for catching bugs, but they are not as powerful as a full proof system. Other examples include dominator analysis (does this code chunk always execute when reaching a certain region of functionality?), etc. These are used as building blocks to do more abstracted analysis, e.g., answering the question "which factors affect the interest rate?" might involve doing some dataflow analysis of the interest rate variable. Static analysis pays the same tax in a different currency. A control-flow graph is precise right up until it hits polymorphism, at which point the call edge is a guess wearing the costume of a fact. Every soundness/precision trade-off in an analyser is a place where the model and the code diverge quietly.
+- The next level of executable specification involve formal methods, which include model checking and program verification. For these, you typically model chunks of functionality, and assert invariants and certain properties of the program. Then, depending upon the tool and technique, these properties are verified to hold (or not hold). This is the space of tools like Dafny, TLA+, etc. These techniques are very powerful, but they require extra investment in learning them, require more careful thinking when deciding what properties are useful to prove (e.g., two users cannot log into the same account), and the usefulness / applicability of the proof is dependent upon the fidelity of the model, i.e., if a program is modelled incorrectly, the proof will not be applicable to the actual system. The part worth noting: different techniques in this category are used for modelling different aspects of logic, i.e., you'd write a TLA+ spec for verifying the safety / liveness of a particular piece of code, and maybe use Dafny to assert something sbout a data structure for another piece of logic. These are not usually used to model the full business domain of a program. TLA+ proves your model has no deadlock. Dafny proves the function you specified is correct. Neither of them has seen your production code. The proof is only ever as good as the model's resemblance to what you actually shipped, and that resemblance is maintained by hand, by humans, under deadline.
 
-The specification side has its own ladder, with the same shape, and almost nobody climbs it.
-
-| Rung | What it looks like | What you get |
-|---|---|---|
-| **Rich domain types** | the spec *is* the type; the compiler is the checker; the domain constraint is the signature | no drift is possible |
-| **Declarative, machine-checkable specs** | Prolog and relatives; the specification is itself a program you can query | consistency becomes mechanical |
-| **Deterministic guardrails** | lint and immutability, cyclomatic complexity, coverage and assertion quality, architectural import constraints | the floor, not the destination |
-| **Prose / markdown** | verified by a human in code review, or by production, and by nothing else | nothing here can fail |
-
-Guardrails are the cheapest rung on either ladder and there is no excuse whatsoever for skipping them. If your review process consists of senior engineers reading diffs for style and cyclomatic complexity, you are paying six figures for a linter.
+- 
 
 ---
 
