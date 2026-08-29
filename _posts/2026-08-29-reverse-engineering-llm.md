@@ -4,8 +4,8 @@ author: avishek
 usemathjax: false
 mermaid: true
 tags: ["Software Engineering", "GenAI", Reverse Engineering", "Program Analysis"]
-draft: false
-published: true
+draft: true
+published: false
 ---
 
 A model that proposes unstructured facts is something you have to trust. A model that proposes a thousand candidates against a deterministic check is a *search*. Only the second one is worth building on.
