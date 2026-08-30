@@ -12,7 +12,7 @@ module Jekyll
 
       def render(context)
         r = Random.rand(10000)
-        return p <<HERE
+        return <<HERE
 <div width="#{@chart_x}" height="#{@chart_y}">
   <canvas id="#{@chart_name}" border="2px" width="#{@chart_x}" height="#{@chart_y}"></canvas>
 </div>

@@ -8,7 +8,7 @@ draft: false
 published: true
 ---
 
-Software is hard. Personally, I oppose the position that "writing software was never the hard part", and believe that that is what people say when they have not explored the space of writing maintainable, extensible software well enough, or have not seen the impact of decisions (both good and bad) that go into building systems that are either maintainable and understandable, or become a tangled, friction-laden maintenance nightmare.
+Software is hard. Personally, I oppose the position that "writing software was never the hard part", and believe that that is what people say when they have either not explored the space of writing maintainable, extensible software well enough, or have not seen the impact of decisions (both good and bad) that go into building systems that are either maintainable and understandable, or become a tangled, friction-laden maintenance nightmare.
 
 Let me clarify at length what I mean by "writing software".
 
