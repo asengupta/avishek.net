@@ -12,9 +12,11 @@ Software is hard. Personally, I oppose the position that "writing software was n
 
 Let me clarify at length what I mean by "writing software".
 
+<div class="callout" style="--callout-accent: #b04a2f" markdown="1">
 **What it is not:** not merely knowing and wielding the syntax / API of the language / tech stack through and through to get the job done. This is necessary but not sufficient. If that were the case, we would all be writing in assembly language.
 
 **What it is:** Being able to express domain intention in code, in such a way that said intention is recoverable (ideally mechanically) from the code with minimal context.
+</div>
 
 We'd like to express our intentions to the computer at a level of abstraction closer to our thought processes. This is what programming languages are for, and, more recently, why LLMs have become a viable step-up in expressing these intentions. But they are also the source of a lot of slop. Slop code is different from plain text slop though: working code is working code, however bad the quality. However, I argue that the degree and fidelity of the encoding of our mental model in software, starts not from the code, but from the specifications that we write, and in the logical extreme, **the specification is the code**.
 
@@ -27,15 +29,17 @@ There are two scenarios where these bear fruit:
 
 Both of these are two sides of the same coin, and both lead to the same question: how do we express our intention at a higher abstraction without sacrificing precision?
 
-We have been doing this with programming languages for the longest time, and the temptation is to treat LLMs as another jump in abstraction. This is not a tenable position, though. The sort of abstractions we have been building programming languages for, do not sacrifice precision. Regardless of the language, the computer does exactly what we tell it to do, no more, no less (sometimes to the chagrin and frustration of the humans writing this code). Plain text, and by extension, LLMs, are inherently a lossy medium, if used to express precise intent for consumption and interpretation by a machine.
+We have been doing this with programming languages for the longest time, and the temptation is to treat LLMs as another jump in abstraction, and many do. This is not a tenable position, though. The sort of abstractions we have been building programming languages for, do not sacrifice precision. Regardless of the language, the computer does exactly what we tell it to do, no more, no less (sometimes to the chagrin and frustration of the humans writing this code). Plain text, and by extension, LLMs, are inherently a lossy medium, if used to express precise intent for consumption and interpretation by a machine.
 
 ## The Theses
 
 This is not to dissuade people from using LLMs for programming. The central theses I present in this article are:
 
+<div class="callout" style="--callout-accent: #2980b9" markdown="1">
 - Shift the programming model left, from implicit human understanding to explicit deterministic encoding at runtime, and to explicit type- and structure-level encoding of domain reasoning, such that semantic errors and ambiguity are impossible by construction.
 - Just like good software engineering practices are useful for future (and current) comprehension and reasoning of code to humans and teams, they are as useful to LLM agents for tracing and reasoning through code.
 - The interesting thing about GenAI is not what it makes newly possible; it is what it makes newly affordable: these are the techniques which enable the two points above; and I don't see a lot of people spending that windfall on the thing worth buying.
+</div>
 
 This is an opinionated position, and it is still evolving. I purposefully took a somewhat extreme stance when writing this, because I want to represent something of a mental north star, regardless of the level of feasibility; that depends upon several factors: the language, the tooling, the maturity of the engineering team(s), and so on.
 
@@ -57,8 +61,7 @@ What got cheap in the last three years is exactly the labour that kept us down t
 - [A Specification You Can Interrogate](#a-specification-you-can-interrogate)
 - [Model the Domain, Not Just the Behaviour](#model-the-domain-not-just-the-behaviour)
 - [Both Ladders End in the Same Place](#both-ladders-end-in-the-same-place)
-- [What AI Actually Changed](#what-ai-actually-changed)
-- [The Fundamentals Matter More Now, Not Less](#the-fundamentals-matter-more-now-not-less)
+- [ What AI Actually Changed, and Why the Fundamentals Matter More Now, Not Less](#what-ai-actually-changed-and-why-the-fundamentals-matter-more-now-not-less)
 - [Rigour Theatre](#rigour-theatre)
 - [The Harness Is the Trust Boundary](#the-harness-is-the-trust-boundary)
 - [Where This Is Over-Engineering](#where-this-is-over-engineering)
@@ -76,7 +79,9 @@ Here is what it decomposes into.
 
 **Executable specs, graded by criticality.** The model proposes toward specs that run. Forward: FP discipline first, to get a verifiable substrate at all, then formalism where the language and the stakes both justify it. The verifier disposes by running them: deterministic pass/fail with no human in the gate, and a postcondition violation that localises the fault to one unit rather than to a service.
 
-On inherited code you do not get to choose, and the bottom rung is the only one on offer. Characterisation tests are the way up: they pin existing behaviour as an executable spec, and AI has collapsed the cost of writing them at volume. Two catches, both worth stating. **They pin the bugs exactly as written** — a characterisation test encodes what the system does, not what it should do, so what you have bought is a regression net, not a specification of intent. And a model writing them has no idea which part of the observed output is behaviour and which is incidental, so it will cheerfully assert on timestamps, map ordering and the exact wording of a log line, and you end up with a suite the team learns to ignore. Above that rung, give the model computed facts rather than guesses: call graphs, def-use chains, reaching conditions, coverage. I have written about the mechanics of this at length in [Harnessing LLMs with Deterministic Program Analysis](/2026/05/21/harnessing-llms-with-deterministic-program-analysis.html).
+On inherited code you do not get to choose, and the bottom rung is the only one on offer. Characterisation tests are the way up: they pin existing behaviour as an executable spec, and AI has collapsed the cost of writing them at volume. Two catches, both worth stating.
+
+**They pin the bugs exactly as written** — a characterisation test encodes what the system does, not what it should do, so what you have bought is a regression net, not a specification of intent, which may result in domain SMEs being unpleasantly surprised when the code behaviour does not match their understanding of what _should_ happen. That is, however, a different problem, and falls in the domain of reverse engineering. I have written about the mechanics of this at length in [Harnessing LLMs with Deterministic Program Analysis](/2026/05/21/harnessing-llms-with-deterministic-program-analysis.html), and may write on more of my experiences going forward.
 
 **Legibility and traceability.** Code structured to be read by the next model, not just by the next human. Types encode intent as a machine-readable spec. Traceability is emitted *forward*, at the point of construction, never reverse-engineered later. The verifier disposes via the type checker, which is a verifier of intent, and via structure that makes reasoning safe without global context.
 
@@ -298,19 +303,80 @@ You will not reach the limit, and I am not suggesting you try. What matters is w
 
 ---
 
-## What AI Actually Changed
+## We should borrow more: Domains in Types
+
+I love types. Programmers are no strangers to typed programming languages. Currently, we use types as mere data holders with runtime behaviour. You say: "Yeah, well, that's what a type is". I say: "We can do more, a lot more." There is a lot more that we can borrow from work done in other programming languages in recent years, which push the possibilities of what we can encode in types themselves without depending upon runtime behaviour.
+
+<div class="callout" style="--callout-accent: green" markdown="1">
+Traditional programming separates concerns: write code, then validate it at runtime. Type systems can invert this: encode the constraints themselves into types. A program that type-checks is a program that provably respects all domain rules—no runtime validation needed (for that logic).
+</div>
+
+---
+
+### Levels of Expressiveness
+
+**Level 1: Plain Types (Foundation)**
+
+This example is in Haskell, and simply states that a function takes in two `Int` values, and returns an `Int`. No constraints. Both inputs unchecked. In usual 'enterprise' code, validations happen at runtime in the body of the function.
+
+```haskell
+divide :: Int -> Int -> Int  -- Accepts any integers, could crash on zero
+```
+
+**Level 2: Refined Types (Constraints on Values)**
+
+The second level is where we can start encoding constraints on types. These constraints The refinement `x > 0` is a logical predicate on the value. The type system (using SMT solvers like Z3) proves this predicate holds. Division by zero becomes impossible.
+
+```haskell
+{-@ type Pos = {x:Int | x > 0} @-}
+{-@ divide :: Int -> Pos -> Int @-}
+divide a b = a `div` b  -- Proven safe: b is always positive
+```
+
+**Level 3: Dependent Types (Constraints on Structure)**
+
+This example is in Idris, and allows you to encode very arbitrary propositions as part of the type. Your program's correctness proof is embedded in its type signature. Type-checking *is* proof verification.
+This example is in Idris, and allows you to encode the fact that the input list is sorted, before even running the program. NOTE: I do not know Idris (currently working through Lean 4), but the type signature is very similar across these kinds of languages, so it should look familiar.
+
+```idris
+insert :: (x : Int) -> (xs : List Int) -> (prf : Sorted xs) -> Sorted (insert x xs)
+```
+Types can depend on values. Here, the type of the result depends on the *structure* of the input list (whether it's sorted). You cannot construct an unsorted list—the type system enforces ordering.
+
+Arbitrary mathematical theorems become part of the type. Your program's correctness proof is embedded in its type signature. Type-checking *is* proof verification.
+
+---
+
+## The Practical Architecture when using Strongly Constrained Domain Types
+
+In practice, external data (user input, API responses, database records) arrives unvalidated. Rather than sprinkling checks throughout the codebase, confine validation to a dedicated adapter layer at the system boundary. This adapter layer performs runtime checks and converts unverified data into refined types. Once inside the functional core, all types are proven correct by the type system—no further validation needed. The core logic can assume invariants hold and focus purely on behavior. This splits the problem: the adapter is where you write defensive code; the core is where you reason about correctness.
+
+## Tradeoffs
+
+**Advantages:** Correctness proven before runtime. Impossible states become literally unrepresentable. Downstream code is simpler and faster (no checks).
+
+**Costs:** Steeper learning curve. Proof obligations can become unwieldy when moving beyond refinement types. Complex non-linear arithmetic may require manual lemmas. Development is slower (more annotation).
+
+**Reality:** A lot of runtime validation in enterprise code today, can be shifted to the compile phase with Refinement Types (Level 2). Level 3 opens up lots of tantalising possibilities, but can be complex work depending upon the complexity of the constraint.
+
+Why am I talking about this? Because, by improving the expressibility of our code, we get the following consequences:
+
+- Simpler logic in the functional core, since validation is not interspersed with actual runtime code; in fact, I wager that what we call a huge amount of business logic in code, could largely collapse into nothingness, or just side effects (database calls, network calls, etc.) based on exhaustive pattern matching on types.
+- Errors and human assumptions surface earlier in the type system.
+- Validations and actual logic become clearly delineated, since validations move to the edge, and are no longer part of the functional core.
+- AI context becomes richer and more compressed, because constraints are specified ONCE, at the type level, instead of being spread across the codebase.
+- By the same token, and, **more importantly**, humans understand the code better, faster.
+- From a purist's perspective, we move closer to closing the gap between a readable spec and executable code, i.e, we are closer to "The Code is the Specification".
+
+## What AI Actually Changed, and Why the Fundamentals Matter More Now, Not Less
 
 AI did not add a rung to either ladder. It collapsed the cost of climbing them.
 
 That distinction is the whole argument. Dependent types did not get more expressive because a model can write Lean. TLA+ did not get better at liveness. What changed is that the tedious, skilled, slow labour of *encoding* things — writing the property, writing the model, writing the characterisation test, writing the query — got an order of magnitude cheaper.
 
----
-
-## The Fundamentals Matter More Now, Not Less
-
 Immutability. Pure functions. Small composable units. Explicit failure. Contracts at the seams. Types that mean something.
 
-This is not nostalgia. These are the properties that make code checkable, and checkable is what makes generated code safe to keep. Every one of them was a good idea when humans wrote all the code, and we have always given the same reasons: you can read a pure function without holding the rest of the system in your head, you can pass around an immutable value without wondering who else is going to write to it, and you can compose small units without the combination surprising you. What has changed is who else is reading.
+This is not nostalgia. These are the properties that make code comprehensible at a local scale, without necessarily keeping the entire model in your head all the time, and that leads to code that is safe to keep. Every one of them was a good idea when humans wrote all the code, and we have always given the same reasons: you can read a pure function without holding the rest of the system in your head, you can pass around an immutable value without wondering who else is going to write to it, and you can compose small units without the combination surprising you. What has changed is who else is reading.
 
 Think about what an agent has to do before it can safely change a line of your code. It has to work out what that code does, what it touches, and what breaks elsewhere if it changes. That is the same job you do when you open an unfamiliar file, with one important difference: the agent does it with whatever fits in its context window, and nothing else. It cannot walk over and ask the person who wrote it. It cannot remember the incident in March. Everything it reasons with, it has to recover from the code in front of it. So every property that shrinks the amount of code you must read in order to be sure of something, is worth more to the agent than it ever was to you.
 
