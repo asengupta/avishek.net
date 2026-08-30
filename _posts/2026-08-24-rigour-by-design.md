@@ -60,8 +60,11 @@ What got cheap in the last three years is exactly the labour that kept us down t
 - [Flavours of Specifications](#flavours-of-specifications)
 - [A Specification You Can Interrogate](#a-specification-you-can-interrogate)
 - [Model the Domain, Not Just the Behaviour](#model-the-domain-not-just-the-behaviour)
+- [We should borrow more: Domains in Types](#we-should-borrow-more-domains-in-types)
+- [The Practical Architecture when using Constrained Domain Types](#the-practical-architecture-when-using-constrained-domain-types)
+- [Tradeoffs when using Constrained Domain Types](#tradeoffs-when-using-constrained-domain-types)
 - [Both Ladders End in the Same Place](#both-ladders-end-in-the-same-place)
-- [ What AI Actually Changed, and Why the Fundamentals Matter More Now, Not Less](#what-ai-actually-changed-and-why-the-fundamentals-matter-more-now-not-less)
+- [What AI Actually Changed, and Why the Fundamentals Matter More Now, Not Less](#what-ai-actually-changed-and-why-the-fundamentals-matter-more-now-not-less)
 - [Rigour Theatre](#rigour-theatre)
 - [The Harness Is the Trust Boundary](#the-harness-is-the-trust-boundary)
 - [Where This Is Over-Engineering](#where-this-is-over-engineering)
@@ -83,15 +86,15 @@ On inherited code you do not get to choose, and the bottom rung is the only one 
 
 **They pin the bugs exactly as written** — a characterisation test encodes what the system does, not what it should do, so what you have bought is a regression net, not a specification of intent, which may result in domain SMEs being unpleasantly surprised when the code behaviour does not match their understanding of what _should_ happen. That is, however, a different problem, and falls in the domain of reverse engineering. I have written about the mechanics of this at length in [Harnessing LLMs with Deterministic Program Analysis](/2026/05/21/harnessing-llms-with-deterministic-program-analysis.html), and may write on more of my experiences going forward.
 
-**Legibility and traceability.** Code structured to be read by the next model, not just by the next human. Types encode intent as a machine-readable spec. Traceability is emitted *forward*, at the point of construction, never reverse-engineered later. The verifier disposes via the type checker, which is a verifier of intent, and via structure that makes reasoning safe without global context.
+**Legibility and traceability.** Code structured to be read by the next model, not just by the next human. Types encode intent as a machine-readable spec. Traceability is emitted *forward*, at the point of construction, never reverse-engineered later. The verifier disposes via the type checker, which is a verifier of intent, and via structure that makes reasoning safe without global context. I talk about this in more detail [here](#we-should-borrow-more-domains-in-types).
 
-**Functional core, imperative shell.** Propose pure functions with no hidden state; quarantine effects at the seam. The verifier disposes because for a pure function the output *is* the full contract: you can regenerate the implementation freely with no side-effect risk, and safety and liveness properties become model-checkable.
+**Functional core, imperative shell.** Propose pure functions with no hidden state; quarantine effects at the seam. The verifier disposes because for a pure function the output *is* the full contract: you can regenerate the implementation freely with no side-effect risk, and safety and liveness properties become model-checkable. I talk about this in more detail [here](#what-ai-actually-changed-and-why-the-fundamentals-matter-more-now-not-less).
 
 **Composable systems, bounded contexts.** The unit of comprehension should be a bounded context, not the system, so that no global understanding is required to change anything. The context-window framing is a useful test of whether you have actually drawn the boundary or merely named it: if a context cannot be understood without also loading four of its neighbours, it is not a bounded context, it is a folder. Plenty of contexts in real systems fail that test, and that is a finding about the design rather than about the tooling. The verifier disposes at the contract-checked boundary: a proposal cannot violate a neighbour's contract without something catching it mechanically.
 
 Every one of those four is an ordinary architectural virtue that predates all of this. What changed is that each one now also determines whether a machine can safely participate in your codebase.
 
-The rest of this article is why. It starts with the reason a verifier is a coherent thing to put at the centre of a development process at all, which turns out to be a theorem from 1934.
+The rest of this article is why, which turns out to be a theorem from 1934.
 
 ---
 
@@ -109,19 +112,19 @@ The Curry-Howard Isomorphism says that logic and programming are the same struct
 | modus ponens | calling the function |
 | **checking a proof** | **type-checking** |
 
-A claim like "every valid order yields an invoice" is a proposition. Written as a type, it is:
+A claim like "every valid order yields an invoice" is a **proposition**. Written as a type, it is:
 
 ```haskell
 invoice :: ValidOrder -> Invoice
 ```
 
-The proof of that proposition is an implementation of that type:
+**The proof of that proposition is an implementation of that type**:
 
 ```haskell
 invoice o = ...
 ```
 
-If it compiles, the claim holds. Type-checking *is* proof-checking. Curry found this in 1934, Howard found it again in 1969. It is a theorem, not a nice way of talking about types.
+**If it compiles, the claim holds.** Type-checking *is* proof-checking. Curry found this in 1934, Howard found it again in 1969. It is a theorem, not a nice way of talking about types.
 
 There is one catch, and it matters enormously in the languages most of us actually ship in. Only a *total* function is a proof. Throw an exception, return null, or loop forever, and you have proved nothing at all. The compiler will be perfectly happy anyway. Most of the industry's type systems are logics with a hole in them, and everybody has agreed not to look at the hole.
 
@@ -129,11 +132,11 @@ There is one catch, and it matters enormously in the languages most of us actual
 
 ## The Program Is the Proof
 
-A proposition is a type. A proof of it is a program of that type. This is exact, not a metaphor. So your running code is already the most exact statement of what your system does. A type, a model, a test, a diagram, a paragraph of English: every one of them is an *approximation* of that program, and the only reason you buy an approximation is that it is cheaper than the thing it approximates.
+A proposition is a type. **A proof of it is a program of that type.** This is exact, not a metaphor. So your running code is already the most exact statement of what your system does. A type, a model, a test, a diagram, a paragraph of English: every one of them is an *approximation* of that program, and the only reason you buy an approximation is that it is cheaper than the thing it approximates.
 
 That gives you exactly one question to ask about every technique below. **How much of the proof does it buy, and what does it cost?**
 
-Not "is this rigorous?", not "is this best practice?". How much of the proof, at what price.
+Not "Is this rigorous?", not "Is this best practice?". How much of the proof, and at what price, and we will talk of different techniques, at different levels of fidelity, that we can use.
 
 ---
 
@@ -169,9 +172,13 @@ There is an asymmetry in that table that I want to talk about.
 
 ## Correct by Construction vs. Correct by Observation
 
-Runtime is where most teams find out they were wrong. It is the most expensive place to find out, and the latest. You are not required to work this way. It is a choice, and mostly an unexamined one.
+Runtime is where most teams find out they were wrong. It is the most expensive place to find out, and the latest. You are not required to work this way, and can shift left, like we have been doing for many software engineering practices in recent years.
 
-This is what shift-left should mean. Most people use it to mean "test earlier", which is still runtime, just sooner. Moving your integration suite from Friday to Tuesday does not change the epistemology of what you are doing: you are still observing instances and generalising. The point is to move the correctness argument out of execution altogether.
+In this context, "shift left" does not mean "test earlier", which is still runtime, just sooner. Moving your integration suite from Friday to Tuesday does not change the epistemology of what you are doing: you are still observing instances and generalising.
+
+<div class="callout" style="--callout-accent: green" markdown="1">
+**The point is to move the correctness argument out of execution altogether.**
+</div>
 
 ---
 
@@ -179,7 +186,7 @@ This is what shift-left should mean. Most people use it to mean "test earlier", 
 
 I mean specifications written in markdown *for machine consumption*. Prose for humans is fine and always has been. Prose as the artifact you hand to a code generator and call the source of truth is not.
 
-English is the least exact model of a program you can write. The current fashion is to hand that to a probabilistic system and call the result a methodology. You have stacked two independent sources of ambiguity on top of each other and given the stack a name and a logo.
+**English is the least exact model of a program you can write.** The current fashion is to hand that to a probabilistic system and call the result a methodology. You have stacked two independent sources of ambiguity on top of each other and given the stack a name and a logo.
 
 Here is the operational problem. **Nothing in that document can be checked.** Not for internal consistency, and not against the code that supposedly implements it. So the checking falls to a human reading a diff, and to production.
 
@@ -196,10 +203,14 @@ To be clear about what I am not saying, because it is the obvious objection: req
 We still prefer executable specifications, and this can mean several things depending upon the fidelity and effort you want to put into building:
 
 ### The Code is the Spec
-The most faithful executable specification is the program itself. It does not always lend itself to easy reading, but it becomes readable when constraints and rules are expressed readably as part of the code, i.e., a combination of the type system and the behaviours. In the extreme case you can dispense with any other form of documentation: the code IS the spec. If the program's interfaces are defined by its types, the logic of the program is the proof that these interfaces are satisfied. This is Curry-Howard at its logical extreme. Code that is correct by construction is also cheaper to test, cheaper to change, and cheaper for a machine to reason about. Same property, showing up in three different places on the balance sheet.
+**The most faithful executable specification is the program itself.** It does not always lend itself to easy reading, but it becomes readable when constraints and rules are expressed fluently as part of the code, i.e., a combination of the type system and the behaviours.
+
+In the extreme case you can dispense with any other form of documentation: the code IS the spec. If the program's interfaces are defined by its types, the logic of the program is the proof that these interfaces are satisfied. This is Curry-Howard at its logical extreme. Code that is correct by construction is also cheaper to test, cheaper to change, and cheaper for a machine to reason about. More details [here](#we-should-borrow-more-domains-in-types).
 
 ### Tests
-Tests are the current workhorse of the industry: remarkably low-effort to implement, unable to drift silently, a safety net for existing code in the absence of strong type and behaviour guarantees, and a useful design tool if you are practising TDD. They also need to be maintained, they can become unreadable, and, most importantly, they represent instances of the proof of behaviour, not a general proof. You can write tests showing that 2, 4 and 6 are even. That says precisely nothing about 8. This is not a reason to skip tests — most business logic is simple enough that instances will do — it is a reason to be honest about what a green build is evidence *of*. Tests are the rung you can always afford; that is not an argument for stopping there.
+Tests are the current workhorse of the industry: remarkably low-effort to implement, incapable of drifting silently (assuming your CI pipeline / build system is in order), a safety net for existing code in the absence of strong type and behaviour guarantees, and a useful design tool (if you are practising TDD). They also need to be maintained, and they can become unreadable if not written with care.
+
+However,and, most importantly, **they represent instances of the proof of behaviour, not a general proof**. You can write tests showing that 2, 4 and 6 are even. That says precisely nothing about 8. This is not a reason to skip tests — most business logic is simple enough that instances will do — it is a reason to be honest about what a green build is evidence *of*. Tests are the rung you can always afford; that is not an argument for stopping there.
 
 ### Domain Specific Languages (DSLs)
 A lot of domain modelling emerges from prose, and, as stated before, prose cannot be checked. A DSL for business logic is the way out: machine-checkable for consistency, queryable, executable. In the extreme case the code implements the DSL directly, but often the logic is better expressed in a more flexible language. One class of languages I've seen particularly suitable for this is Logic Programming: Prolog is the exemplar in this category. I have written about my experiments with extracting out a DSL from a law document in [this post](/2026/08/24/a-statute-as-a-runnable-logic-program).
@@ -266,40 +277,7 @@ Domain modelling and type design are the same discipline viewed from two ends. T
 
 A worked example of the declarative approach is at [github.com/avishek-sen-gupta/doc-pipeline](https://github.com/avishek-sen-gupta/doc-pipeline).
 
----
-
-## Both Ladders End in the Same Place
-
-That is not a coincidence.
-
-```mermaid
-flowchart TD
-    subgraph CODE[Code ladder]
-        R1[runtime tests] --> R2[static analysis]
-        R2 --> R3[symbolic execution]
-        R3 --> R4[proof without execution]
-        R4 --> TOP1[rich domain types]
-    end
-    subgraph SPEC[Spec ladder]
-        S1[prose / markdown] --> S2[deterministic guardrails]
-        S2 --> S3[declarative machine-checkable specs]
-        S3 --> TOP2[rich domain types]
-    end
-    TOP1 --> CONV[the type is the proposition\nthe program is the proof\nnothing left to drift]
-    TOP2 --> CONV
-
-    classDef default fill:#dde3f5,stroke:#6b7db3,color:#1a1f5e
-    classDef bad fill:#fce7f3,stroke:#be185d,color:#831843
-    classDef good fill:#d4edda,stroke:#388e3c,color:#1b5e20
-    class R1,S1 bad
-    class TOP1,TOP2,CONV good
-```
-
-The code ladder climbs to rich domain types: behaviour encoded at compile time, where the illegal program does not typecheck. The spec ladder climbs to rich domain types: the domain encoded at compile time, where the illegal state does not typecheck. At the top, the spec and the program stop being two artifacts that can drift apart. They are one artifact.
-
-This matters specifically for AI-assisted construction. **A model's nondeterminism does not sit everywhere. It sits in the gap between the spec and the program.** That gap is the translation step, and translation is where guessing happens. Every rung you climb narrows it. At the limit there is no translation step left for anything to be wrong in.
-
-You will not reach the limit, and I am not suggesting you try. What matters is which way you are walking.
+But, there is a lot more we can do with types. Keep reading.
 
 ---
 
@@ -347,11 +325,55 @@ Arbitrary mathematical theorems become part of the type. Your program's correctn
 
 ---
 
-## The Practical Architecture when using Strongly Constrained Domain Types
+## The Practical Architecture when using Constrained Domain Types
 
-In practice, external data (user input, API responses, database records) arrives unvalidated. Rather than sprinkling checks throughout the codebase, confine validation to a dedicated adapter layer at the system boundary. This adapter layer performs runtime checks and converts unverified data into refined types. Once inside the functional core, all types are proven correct by the type system—no further validation needed. The core logic can assume invariants hold and focus purely on behavior. This splits the problem: the adapter is where you write defensive code; the core is where you reason about correctness.
+None of the above helps if the data arrives as a string. External data (user input, API responses, database records, a CSV somebody emailed you) arrives unvalidated, and no type system will change that. What it changes is *where* you deal with it.
 
-## Tradeoffs
+The move is to confine validation to an adapter layer at the system boundary. The adapter performs runtime checks and converts unverified data into refined types, once. Everything inside is then proven correct by the type system, so the core assumes its invariants hold and concentrates on behaviour. That splits the problem into two halves with completely different rules: the adapter is where you write defensive code, and the core is where you reason about correctness.
+
+```mermaid
+flowchart LR
+    subgraph OUT[Outside]
+        SRC[user input · API responses\ndatabase rows · files · queues\nstrings, numbers, nulls]
+    end
+    subgraph ADP[Adapter · the only place that validates]
+        PARSE[parse into refined types\nrange · format · referential checks\nreturns Either ValidationError Domain]
+    end
+    subgraph CORE[Functional core · no validation anywhere]
+        LOGIC[total functions over refined types\nAmount · NonEmpty · ValidOrder\ninvariants hold BY CONSTRUCTION]
+    end
+    subgraph EFF[Effects]
+        RENDER[render back to the wire\nDB writes · API calls]
+    end
+
+    SRC -->|untrusted| PARSE
+    PARSE -->|rejected: an error VALUE, at the edge| SRC
+    PARSE -->|accepted: proof carried in the type| LOGIC
+    LOGIC --> RENDER
+
+    classDef default fill:#dde3f5,stroke:#6b7db3,color:#1a1f5e
+    classDef bad fill:#fce7f3,stroke:#be185d,color:#831843
+    classDef good fill:#d4edda,stroke:#388e3c,color:#1b5e20
+    class SRC bad
+    class LOGIC good
+```
+
+The arrow that does the work is the one in the middle. A value crosses it exactly once, and it changes kind when it does: `String` becomes `EmailAddress`, `int` becomes `Quantity`, `Order` becomes `ValidOrder`. That change of kind is the record that the check happened, which is why nothing downstream has to ask again. This is what Alexis King called "parse, don't validate": a validating function returns a boolean and throws the knowledge away, while a parsing function returns a *narrower type* and keeps it.
+
+Four rules make the split hold and distinguish it from ordinary defensive programming.
+
+- **The refined type has exactly one way in.** A private constructor plus a smart constructor returning `Either ValidationError Amount`. If anything outside the adapter can call `Amount(-5)`, the type guarantees nothing and you are back to reading call sites.
+- **Failure is a value at the boundary and an impossibility inside.** The adapter returns errors; the core has no error path for invariant violations, because there is no way to construct the violation. When a core function does have to fail for domain reasons ("insufficient funds"), that is a return type, not an exception.
+- **Every entry point is an adapter, including the ones that look internal.** Deserialisation is parsing. A database read is parsing. A message off a queue is parsing. The most common way this architecture rots is a repository that hands the core a row it built with raw constructors, because "it came from our own database".
+- **The core never re-checks.** If you find a defensive `if` inside the core, either the type is too wide or somebody did not trust it. Both are worth fixing at the type rather than at the call site.
+
+What you get, concretely, is that validation logic stops being a cross-cutting concern and becomes its own layer, separate from any other logic. It is the part of the system you test hardest, because it is the only part that can be handed garbage, and it is small enough to test exhaustively. Property-based testing lands naturally here: generate arbitrary bytes, assert that everything either parses into a value satisfying the invariant or is rejected with a specific error.
+
+For AI-assisted work, the surface area of code that needs careful auditing shrinks. The adapter is where a model should be writing careful, paranoid, heavily tested code, and the core is where its output is safest to accept, because a function over refined types cannot be wrong in the ways generated code is usually wrong. It cannot forget a null check that the type made impossible, and it cannot invent a state the constructor refuses to build.
+
+Potential defects concentrate at the boundary. You have not removed the possibility of bad data, you have moved every opportunity for it into one layer. A bug there is now a wrong assumption everywhere downstream, silently, with the type system asserting it is fine. That is a much better place to be than the alternative validation-riddled runtime logic approach, because it is one small layer to review rather than a full codebase to search and reason about.
+
+## Tradeoffs when using Constrained Domain Types
 
 **Advantages:** Correctness proven before runtime. Impossible states become literally unrepresentable. Downstream code is simpler and faster (no checks).
 
@@ -362,11 +384,48 @@ In practice, external data (user input, API responses, database records) arrives
 Why am I talking about this? Because, by improving the expressibility of our code, we get the following consequences:
 
 - Simpler logic in the functional core, since validation is not interspersed with actual runtime code; in fact, I wager that what we call a huge amount of business logic in code, could largely collapse into nothingness, or just side effects (database calls, network calls, etc.) based on exhaustive pattern matching on types.
-- Errors and human assumptions surface earlier in the type system.
+- Errors and human assumptions surface earlier in the type system. Run-of-the-mill defensive programming patterns stand out, and become amenable to refactoring to type constraints.
 - Validations and actual logic become clearly delineated, since validations move to the edge, and are no longer part of the functional core.
 - AI context becomes richer and more compressed, because constraints are specified ONCE, at the type level, instead of being spread across the codebase.
 - By the same token, and, **more importantly**, humans understand the code better, faster.
 - From a purist's perspective, we move closer to closing the gap between a readable spec and executable code, i.e, we are closer to "The Code is the Specification".
+
+---
+
+## Both Ladders End in the Same Place
+
+That is not a coincidence.
+
+```mermaid
+flowchart TD
+    subgraph CODE[Code ladder]
+        R1[runtime tests] --> R2[static analysis]
+        R2 --> R3[symbolic execution]
+        R3 --> R4[proof without execution]
+        R4 --> TOP1[rich domain types]
+    end
+    subgraph SPEC[Spec ladder]
+        S1[prose / markdown] --> S2[deterministic guardrails]
+        S2 --> S3[declarative machine-checkable specs]
+        S3 --> TOP2[rich domain types]
+    end
+    TOP1 --> CONV[the type is the proposition\nthe program is the proof\nnothing left to drift]
+    TOP2 --> CONV
+
+    classDef default fill:#dde3f5,stroke:#6b7db3,color:#1a1f5e
+    classDef bad fill:#fce7f3,stroke:#be185d,color:#831843
+    classDef good fill:#d4edda,stroke:#388e3c,color:#1b5e20
+    class R1,S1 bad
+    class TOP1,TOP2,CONV good
+```
+
+The code ladder climbs to rich domain types: behaviour encoded at compile time, where the illegal program does not typecheck. The spec ladder climbs to rich domain types: the domain encoded at compile time, where the illegal state does not typecheck. At the top, the spec and the program stop being two artifacts that can drift apart. They are one artifact.
+
+This matters specifically for AI-assisted construction. **A model's nondeterminism does not sit everywhere. It sits in the gap between the spec and the program.** That gap is the translation step, and translation is where guessing happens. Every rung you climb narrows it. At the limit there is no translation step left for anything to be wrong in.
+
+You will not reach the limit, and I am not suggesting you try. What matters is which way you are walking.
+
+---
 
 ## What AI Actually Changed, and Why the Fundamentals Matter More Now, Not Less
 
