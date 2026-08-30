@@ -18,9 +18,15 @@ Let me clarify at length what I mean by "writing software".
 **What it is:** Being able to express domain intention in code, in such a way that said intention is recoverable (ideally mechanically) from the code with minimal context.
 </div>
 
-We'd like to express our intentions to the computer at a level of abstraction closer to our thought processes. This is what programming languages are for, and, more recently, why LLMs have become a viable step-up in expressing these intentions. But they are also the source of a lot of slop. Slop code is different from plain text slop though: working code is working code, however bad the quality. However, I argue that the degree and fidelity of the encoding of our mental model in software, starts not from the code, but from the specifications that we write, and in the logical extreme, **the specification is the code**.
+We write specifications in plain text. That's just the way it is. Regardless of how it gets translated, intention always begins its life in plain text. The majority of computing history has been around closing the gap between our mental intent and its expression in executable code.
 
-For the longest time, we have been writing specifications in plain text, which is a poor medium for encoding a mental model. Ideally, like any programming language, how do we express our intention at a higher abstraction without sacrificing precision?
+We'd like to express our intentions to the computer at a level of abstraction closer to our thought processes. This is what programming languages are for, and, more recently, why **LLMs seem to have become a viable step-up in expressing these intentions**. But they are also the source of a lot of slop. Slop code is different from plain text slop though: working code is working code, however bad the quality.
+
+<div class="callout" style="--callout-accent: #b04a2f" markdown="1">
+However, I argue that the current discussion of how well we can write **specifications**, is short-sighted, and merely a checkpoint on a sliding scale where, in the logical extreme, **the specification is the code**.
+</div>
+
+Ideally, like any programming language, how do we express our intention at a higher abstraction without sacrificing precision?
 
 There are two scenarios where these bear fruit:
 
@@ -41,11 +47,11 @@ This is not to dissuade people from using LLMs for programming. The central thes
 - The interesting thing about GenAI is not what it makes newly possible; it is what it makes newly affordable: these are the techniques which enable the two points above; and I don't see a lot of people spending that windfall on the thing worth buying.
 </div>
 
-This is an opinionated position, and it is still evolving. I purposefully took a somewhat extreme stance when writing this, because I want to represent something of a mental north star, regardless of the level of feasibility; that depends upon several factors: the language, the tooling, the maturity of the engineering team(s), and so on.
+**This is an opinionated position, and it is still evolving.** I purposefully took a somewhat extreme stance when writing this, because I want to represent something of a mental north star, regardless of the level of feasibility; that depends upon several factors: the language, the tooling, the maturity of the engineering team(s), and so on.
 
-Every technique and tool I am going to describe here predates GenAI by years. Dependent types, TLA+, Dafny, abstract interpretation, Prolog, property-based testing. None of it was ever wrong. It was expensive, needed skill, and slow work that was hard to defend to anyone holding a budget. So most of us stayed on the bottom rung of the ladder and called it pragmatism.
+Every technique and tool I am going to describe here predates GenAI by years, and in many cases, decades. Dependent types, TLA+, Dafny, abstract interpretation, Prolog, property-based testing. None of it was ever wrong. It was expensive, needed skill, and slow work that was hard to defend to anyone holding a budget. So most of us stayed on the bottom rung of the ladder and called it pragmatism.
 
-What got cheap in the last three years is exactly the labour that kept us down there. Spending it on generating more unverified code faster wastes the opportunity, and that is what most teams are doing.
+What got cheap in the last three years is exactly the labour that kept us down there. Spending it on generating more unverified code faster wastes the opportunity, which is what most teams continue to do.
 
 ---
 
@@ -66,7 +72,7 @@ What got cheap in the last three years is exactly the labour that kept us down t
 - [Both Ladders End in the Same Place](#both-ladders-end-in-the-same-place)
 - [What AI Actually Changed, and Why the Fundamentals Matter More Now, Not Less](#what-ai-actually-changed-and-why-the-fundamentals-matter-more-now-not-less)
 - [Rigour Theatre](#rigour-theatre)
-- [The Harness Is the Trust Boundary](#the-harness-is-the-trust-boundary)
+- [How does all this come together?](#how-does-all-this-come-together)
 - [Where This Is Over-Engineering](#where-this-is-over-engineering)
 - [Conclusion](#conclusion)
 
@@ -286,10 +292,8 @@ But, there is a lot more we can do with types. Keep reading.
 I love types. Programmers are no strangers to typed programming languages. Currently, we use types as mere data holders with runtime behaviour. You say: "Yeah, well, that's what a type is". I say: "We can do more, a lot more." There is a lot more that we can borrow from work done in other programming languages in recent years, which push the possibilities of what we can encode in types themselves without depending upon runtime behaviour.
 
 <div class="callout" style="--callout-accent: green" markdown="1">
-Traditional programming separates concerns: write code, then validate it at runtime. Type systems can invert this: encode the constraints themselves into types. A program that type-checks is a program that provably respects all domain rules—no runtime validation needed (for that logic).
+Traditional programming separates concerns: write code, then validate it at runtime. Type systems can invert this: encode the constraints themselves into types. A program that type-checks is a program that provably respects all domain rules, no runtime validation needed (for that logic).
 </div>
-
----
 
 ### Levels of Expressiveness
 
@@ -319,7 +323,7 @@ This example is in Idris, and allows you to encode the fact that the input list 
 ```idris
 insert :: (x : Int) -> (xs : List Int) -> (prf : Sorted xs) -> Sorted (insert x xs)
 ```
-Types can depend on values. Here, the type of the result depends on the *structure* of the input list (whether it's sorted). You cannot construct an unsorted list—the type system enforces ordering.
+Types can depend on values. Here, the type of the result depends on the *structure* of the input list (whether it's sorted). You cannot construct an unsorted list: the type system enforces ordering.
 
 Arbitrary mathematical theorems become part of the type. Your program's correctness proof is embedded in its type signature. Type-checking *is* proof verification.
 
@@ -468,19 +472,57 @@ So: AI proposes, the verifier disposes, and somebody still has to own the verifi
 
 ## How does all this come together?
 
-Different routes, depending upon the rigour you need and the effort you are willing to invest. You can mix and match, but the idea is to not stay stuck at the status quo.
+Different routes, depending upon the rigour you need and the effort you are willing to invest. You can mix and match, but the idea is to not stay stuck at the status quo. Below are some examples of how you could pick and choose.
 
-Current
-Human writes -> LLM reads and writes code (TDD as needed) -> Validation Boundaries and Side Effects tested through integration tests / mocks -> Cross-component interactions tested through integration tests
+### Route 1: Current
 
-Current with (some) Behavioural Modelling
-Human writes -> LLM reads and writes code (TDD as needed) -> Model critical sections in Dafny, etc. to verify behaviour guarantees -> Validation Boundaries and Side Effects tested through integration tests / mocks -> Cross-component interactions tested through integration tests
+The status quo. Everything is established by running the code, whether it's through tests in the dev environment or through manual testing in a staging environment (or, horrors, in production!).
 
-Machine-Checkable Specs + Behavioural Modelling + Functional Core using Constrained Types
-Human writes -> LLM reads and writes Specs in a DSL (e.g., a declarative logic programming language) -> TLA+ to model component interactions and prove guarantees -> Functional Core using Constrained Types -> TDD Validation Boundaries and Side Effects -> Cross-component interactions tested through integration tests
+1. Human writes
+2. LLM reads and writes code (TDD as needed)
+3. Validation boundaries and side effects tested through integration tests / mocks
+4. Cross-component interactions tested through integration tests
 
-The "Code is the Specification"
-Human writes -> LLM reads and writes Functional Core using Constrained Types -> TDD Validation Boundaries and Side Effects -> Cross-component interactions tested through integration tests 
+### Route 2: Current, with (some) behavioural modelling
+
+One rung up, applied selectively. The critical sections get a proof, and everything else stays as it was.
+
+1. Human writes
+2. LLM reads and writes code (TDD as needed)
+3. **Model critical sections in Dafny, etc. to verify behaviour guarantees**
+4. Validation boundaries and side effects tested through integration tests / mocks
+5. Cross-component interactions tested through integration tests
+
+### Route 3: Machine-checkable specs + behavioural modelling + functional core using constrained types
+
+The full climb. The spec is an artifact that runs, the interactions are proven, and the core carries its invariants in its types.
+
+1. Human writes
+2. **LLM reads and writes specs in a DSL** (e.g., a declarative logic programming language)
+3. **TLA+ to model component interactions and prove guarantees**
+4. **Functional core using constrained types**
+5. TDD validation boundaries and side effects
+6. Cross-component interactions tested through integration tests
+
+### Route 4: The "code is the specification"
+
+The limit case. There is no separate spec artifact to drift, because the types and the core are the spec. In my mind, this is the best possible outcome, but it is also the hardest to achieve, because it depends upon tooling, team maturity, and willingness of stakeholders to accept that there is no material difference between the spec and the code (which is not a technical problem :-).
+
+1. Human writes
+2. **LLM reads and writes functional core using constrained types**
+3. TDD validation boundaries and side effects
+4. Cross-component interactions tested through integration tests
+
+### What each route actually buys
+
+| | Where the spec lives | Proven before runtime | Established by running |
+|---|---|---|---|
+| **1. Current** | in someone's head, and in prose | nothing | all behaviour, all boundaries, all interactions |
+| **2. + behavioural modelling** | prose, plus a model of the critical sections | safety and liveness of what you chose to model | everything else |
+| **3. Specs + modelling + typed core** | a DSL you can query, plus a TLA+ model | domain consistency, component interactions, every invariant in the core | boundaries and side effects only |
+| **4. Code is the specification** | the types and the core, and nowhere else | every invariant the types encode | boundaries and side effects only |
+
+Route 4 is not strictly more rigorous than Route 3. It drops the queryable spec and the interaction model, and buys back the fact that nothing can drift, because there is only one artifact. Which of the two you want depends on whether your risk is misunderstanding the domain, in which case you want the DSL you can interrogate, or concurrency and protocol errors, in which case you want the TLA+ model.
 
 ---
 
@@ -496,12 +538,14 @@ Rigour also looks slower up front, and sometimes it genuinely is. I am not going
 
 ## Conclusion
 
-The argument in one line: your program is the proof, everything else you write about it is an approximation you buy because it is cheaper, and the only question worth asking of any technique is how much of the proof it buys and at what price.
+The argument stems from one line: your program is the proof, everything else you write about it is an approximation because it is cheaper, and the ROI of the approximation depends upon how much of the proof it buys and at what price.
 
 That question used to have depressing answers. The techniques at the top of the ladder — dependent types, model checking, declarative domain models, program analysis — were never wrong, they were expensive, and most of us settled at the bottom and called it pragmatism. What changed in the last three years is not the ladder. It is the price of climbing it. The tedious, skilled, slow labour of encoding things is the exact labour that got cheap, and spending that windfall on generating more unverified code faster is the mistake almost everyone is currently making.
 
-So: AI proposes, the verifier disposes. Executable specs rather than prose that cannot fail. Types and structure that carry intent, because the next reader of your code is as likely to be a machine working from a context window as a human working from memory. A functional core with the effects quarantined, because purity is what makes code tractable to a verifier and to an agent alike. Boundaries drawn well enough that a change stays local. None of it is new, and that is rather the point.
+So: AI proposes, the verifier disposes. Executable specs rather than prose that cannot fail. Types and structure that carry intent, because the next reader of your code is as likely to be a machine working from a context window as a human working from memory. A functional core with the effects quarantined, because purity is what makes code tractable to a verifier and to an agent alike. Boundaries drawn well enough that a change stays local. None of it is new.
 
 What it does not buy you is the judgement about what to encode. Consistency is mechanical; intent never becomes so. The invariant that quantifies over the wrong set will check clean forever, and a gate that nobody owns is a gate that gets optimised around. The expensive human attention does not disappear — it moves, from reading diffs to writing and reading the properties that everything else is checked against, which is a considerably better place for it to be.
 
-**So the job of AI here is to make rigour cheap. Not to make judgement optional.**
+<div class="callout" style="--callout-accent: #b04a2f" markdown="1">
+**So the job of AI here is to make rigour cheap. Not to make judgement optional: that stays human.**
+</div>
