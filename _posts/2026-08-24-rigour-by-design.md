@@ -90,7 +90,7 @@ Here is what it decomposes into.
 
 On inherited code you do not get to choose, and the bottom rung is the only one on offer. Characterisation tests are the way up: they pin existing behaviour as an executable spec, and AI has collapsed the cost of writing them at volume. Two catches, both worth stating.
 
-**They pin the bugs exactly as written** — a characterisation test encodes what the system does, not what it should do, so what you have bought is a regression net, not a specification of intent, which may result in domain SMEs being unpleasantly surprised when the code behaviour does not match their understanding of what _should_ happen. That is, however, a different problem, and falls in the domain of reverse engineering. I have written about the mechanics of this at length in [Harnessing LLMs with Deterministic Program Analysis](/2026/05/21/harnessing-llms-with-deterministic-program-analysis.html), and may write on more of my experiences going forward.
+**They pin the bugs exactly as written.** A characterisation test encodes what the system does, not what it should do, so what you have bought is a regression net, not a specification of intent, which may result in domain SMEs being unpleasantly surprised when the code behaviour does not match their understanding of what _should_ happen. That is, however, a different problem, and falls in the domain of reverse engineering. I have written about the mechanics of this at length in [Harnessing LLMs with Deterministic Program Analysis](/2026/05/21/harnessing-llms-with-deterministic-program-analysis.html), and may write on more of my experiences going forward.
 
 **Legibility and traceability.** Code structured to be read by the next model, not just by the next human. Types encode intent as a machine-readable spec. Traceability is emitted *forward*, at the point of construction, never reverse-engineered later. The verifier disposes via the type checker, which is a verifier of intent, and via structure that makes reasoning safe without global context. I talk about this in more detail [here](#we-should-borrow-more-domains-in-types).
 
@@ -216,7 +216,7 @@ In the extreme case you can dispense with any other form of documentation: the c
 ### Tests
 Tests are the current workhorse of the industry: remarkably low-effort to implement, incapable of drifting silently (assuming your CI pipeline / build system is in order), a safety net for existing code in the absence of strong type and behaviour guarantees, and a useful design tool (if you are practising TDD). They also need to be maintained, and they can become unreadable if not written with care.
 
-However,and, most importantly, **they represent instances of the proof of behaviour, not a general proof**. You can write tests showing that 2, 4 and 6 are even. That says precisely nothing about 8. This is not a reason to skip tests — most business logic is simple enough that instances will do — it is a reason to be honest about what a green build is evidence *of*. Tests are the rung you can always afford; that is not an argument for stopping there.
+However,and, most importantly, **they represent instances of the proof of behaviour, not a general proof**. You can write tests showing that 2, 4 and 6 are even. That says precisely nothing about 8. This is not a reason to skip tests, since most business logic is simple enough that instances will do. It is a reason to be honest about what a green build is evidence *of*. Tests are the rung you can always afford; that is not an argument for stopping there.
 
 ### Domain Specific Languages (DSLs)
 A lot of domain modelling emerges from prose, and, as stated before, prose cannot be checked. A DSL for business logic is the way out: machine-checkable for consistency, queryable, executable. In the extreme case the code implements the DSL directly, but often the logic is better expressed in a more flexible language. One class of languages I've seen particularly suitable for this is Logic Programming: Prolog is the exemplar in this category. I have written about my experiments with extracting out a DSL from a law document in [this post](/2026/08/24/a-statute-as-a-runnable-logic-program).
@@ -227,7 +227,7 @@ The next level of modelling involves various forms of static analysis: dataflow 
 Static analysis pays the same tax in a different currency. A control-flow graph is precise right up until it hits polymorphism, at which point the call edges point to multiple futures, and further facts must be mined (e.g., dependency wiring configuration) to disambiguate. Every soundness/precision trade-off in an analyser is a place where the model and the code diverge quietly.
 
 ### Formal Methods
-Formal methods — model checking and program verification — are where you model chunks of functionality, assert invariants and properties, and have the tool verify that they hold. This is the space of tools like Dafny, TLA+, etc. They are very powerful, but they require investment in learning them, and more careful thinking about which properties are worth proving (e.g., two users cannot log into the same account).
+Formal methods, meaning model checking and program verification, are where you model chunks of functionality, assert invariants and properties, and have the tool verify that they hold. This is the space of tools like Dafny, TLA+, etc. They are very powerful, but they require investment in learning them, and more careful thinking about which properties are worth proving (e.g., two users cannot log into the same account).
 
 Different techniques here model different aspects of logic: you'd write a TLA+ spec to verify the safety / liveness of one piece of code, and maybe use Dafny to assert something about a data structure in another. These are not usually used to model the full business domain of a program. TLA+ proves your model has no deadlock. Dafny proves the function you specified is correct. Neither of them has seen your production code. The proof is only ever as good as the model's resemblance to what you actually shipped, and that resemblance is maintained by hand, by humans, under deadline.
 
@@ -436,7 +436,7 @@ You will not reach the limit, and I am not suggesting you try. What matters is w
 
 AI did not add a rung to either ladder. It collapsed the cost of climbing them.
 
-That distinction is the whole argument. Dependent types did not get more expressive because a model can write Lean. TLA+ did not get better at liveness. What changed is that the tedious, skilled, slow labour of *encoding* things — writing the property, writing the model, writing the characterisation test, writing the query — got an order of magnitude cheaper.
+That distinction is the whole argument. Dependent types did not get more expressive because a model can write Lean. TLA+ did not get better at liveness. What changed is that the tedious, skilled, slow labour of *encoding* things (writing the property, writing the model, writing the characterisation test, writing the query) got an order of magnitude cheaper.
 
 Immutability. Pure functions. Small composable units. Explicit failure. Contracts at the seams. Types that mean something.
 
@@ -458,7 +458,7 @@ Think about what an agent has to do before it can safely change a line of your c
 
 Now the objection to everything above, which I think is the strongest one available, and which I would rather state myself than have stated at me.
 
-Making rigour cheap to produce also makes the *appearance* of rigour cheap to produce. A model will write you a TLA+ spec that model-checks clean, a dependent type that is inhabited, a property test that passes on ten thousand cases — all of which formalise the wrong thing. Consistency is mechanical: intent isn't, and always originates in the human brain. You can check that the spec does not contradict itself; you cannot check that it is the spec you meant.
+Making rigour cheap to produce also makes the *appearance* of rigour cheap to produce. A model will write you a TLA+ spec that model-checks clean, a dependent type that is inhabited, a property test that passes on ten thousand cases, all of which formalise the wrong thing. Consistency is mechanical: intent isn't, and always originates in the human brain. You can check that the spec does not contradict itself; you cannot check that it is the spec you meant.
 
 And rigorous-looking artifacts borrow authority. Nobody re-reads the invariant. It has a `\A` in it, it went green in CI, and the reviewer who might have caught that it quantifies over the wrong set has already scrolled past. Prose at least advertises that it is unverified. A proof of the wrong proposition is the same failure with better clothes, and the more of it you generate, the less any individual piece gets read.
 
@@ -532,7 +532,7 @@ Climbing costs real engineering labour, and I am not going to pretend otherwise.
 
 If the thing is low-volume, short-lived and not critical, this is over-engineering and you should not do it. Volume, longevity and criticality are what decide, and they decide per system, not per organisation. Anyone who tells you the ladder is always worth climbing is doing ideology, not engineering.
 
-Rigour also looks slower up front, and sometimes it genuinely is. I am not going to claim it is secretly faster. What I will claim is that a lot of what gets built without it does not survive contact with production, and that cost lands on somebody's budget anyway — just later, and filed under a different name.
+Rigour also looks slower up front, and sometimes it genuinely is. I am not going to claim it is secretly faster. What I will claim is that a lot of what gets built without it does not survive contact with production, and that cost lands on somebody's budget anyway, just later, and filed under a different name.
 
 ---
 
@@ -540,11 +540,11 @@ Rigour also looks slower up front, and sometimes it genuinely is. I am not going
 
 The argument stems from one line: your program is the proof, everything else you write about it is an approximation because it is cheaper, and the ROI of the approximation depends upon how much of the proof it buys and at what price.
 
-That question used to have depressing answers. The techniques at the top of the ladder — dependent types, model checking, declarative domain models, program analysis — were never wrong, they were expensive, and most of us settled at the bottom and called it pragmatism. What changed in the last three years is not the ladder. It is the price of climbing it. The tedious, skilled, slow labour of encoding things is the exact labour that got cheap, and spending that windfall on generating more unverified code faster is the mistake almost everyone is currently making.
+That question used to have depressing answers. The techniques at the top of the ladder (dependent types, model checking, declarative domain models, program analysis) were never wrong, they were expensive, and most of us settled at the bottom and called it pragmatism. What changed in the last three years is not the ladder. It is the price of climbing it. The tedious, skilled, slow labour of encoding things is the exact labour that got cheap, and spending that windfall on generating more unverified code faster is the mistake almost everyone is currently making.
 
 So: AI proposes, the verifier disposes. Executable specs rather than prose that cannot fail. Types and structure that carry intent, because the next reader of your code is as likely to be a machine working from a context window as a human working from memory. A functional core with the effects quarantined, because purity is what makes code tractable to a verifier and to an agent alike. Boundaries drawn well enough that a change stays local. None of it is new.
 
-What it does not buy you is the judgement about what to encode. Consistency is mechanical; intent never becomes so. The invariant that quantifies over the wrong set will check clean forever, and a gate that nobody owns is a gate that gets optimised around. The expensive human attention does not disappear — it moves, from reading diffs to writing and reading the properties that everything else is checked against, which is a considerably better place for it to be.
+What it does not buy you is the judgement about what to encode. Consistency is mechanical; intent never becomes so. The invariant that quantifies over the wrong set will check clean forever, and a gate that nobody owns is a gate that gets optimised around. The expensive human attention does not disappear. It moves, from reading diffs to writing and reading the properties that everything else is checked against, which is a considerably better place for it to be.
 
 <div class="callout" style="--callout-accent: #b04a2f" markdown="1">
 **So the job of AI here is to make rigour cheap. Not to make judgement optional: that stays human.**
