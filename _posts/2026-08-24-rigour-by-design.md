@@ -383,12 +383,13 @@ Potential defects concentrate at the boundary. You have not removed the possibil
 
 Why am I talking about this? Because, by improving the expressibility of our code, we get the following consequences:
 
-- Simpler logic in the functional core, since validation is not interspersed with actual runtime code; in fact, I wager that what we call a huge amount of business logic in code, could largely collapse into nothingness, or just side effects (database calls, network calls, etc.) based on exhaustive pattern matching on types.
-- Errors and human assumptions surface earlier in the type system. Run-of-the-mill defensive programming patterns stand out, and become amenable to refactoring to type constraints.
-- Validations and actual logic become clearly delineated, since validations move to the edge, and are no longer part of the functional core.
-- AI context becomes richer and more compressed, because constraints are specified ONCE, at the type level, instead of being spread across the codebase.
+- **Simpler logic in the functional core**, since validation is not interspersed with actual runtime code; in fact, I wager that what we call a huge amount of business logic in code, could largely collapse into nothingness, or just side effects (database calls, network calls, etc.) based on exhaustive pattern matching on types.
+- **Errors and human assumptions surface earlier in the type system.** Run-of-the-mill defensive programming patterns stand out, and become amenable to refactoring to type constraints.
+- **Validations and actual side effect-free runtime logic become clearly delineated**, since validations move to the edge, and are no longer part of the functional core. Thus, this becomes a useful architectural constraint.
+- **The surface area of change reduces**: since the domain changes less often, change around side effects like I/O remain confined to the edges.
+- **AI context becomes richer and more compressed**, because constraints are specified ONCE, at the type level, instead of being spread across the codebase.
 - By the same token, and, **more importantly**, humans understand the code better, faster.
-- From a purist's perspective, we move closer to closing the gap between a readable spec and executable code, i.e, we are closer to "The Code is the Specification".
+- From a purist's perspective, **we move closer to closing the gap between a readable spec and executable code**, i.e, we are closer to "The Code is the Specification".
 
 ---
 
@@ -435,7 +436,7 @@ That distinction is the whole argument. Dependent types did not get more express
 
 Immutability. Pure functions. Small composable units. Explicit failure. Contracts at the seams. Types that mean something.
 
-This is not nostalgia. These are the properties that make code comprehensible at a local scale, without necessarily keeping the entire model in your head all the time, and that leads to code that is safe to keep. Every one of them was a good idea when humans wrote all the code, and we have always given the same reasons: you can read a pure function without holding the rest of the system in your head, you can pass around an immutable value without wondering who else is going to write to it, and you can compose small units without the combination surprising you. What has changed is who else is reading.
+This is not nostalgia. These are the properties that make code comprehensible at a local scale, without necessarily keeping the entire model in your head all the time, and that leads to code that is safe to keep. Every one of them was a good idea when humans wrote all the code, and we have always given the same reasons: you can read a pure function without holding the rest of the system in your head, you can pass around an immutable value without wondering who else is going to write to it, and you can compose small units without the combination surprising you. And now, LLMs reap these benefits for the same reasons.
 
 Think about what an agent has to do before it can safely change a line of your code. It has to work out what that code does, what it touches, and what breaks elsewhere if it changes. That is the same job you do when you open an unfamiliar file, with one important difference: the agent does it with whatever fits in its context window, and nothing else. It cannot walk over and ask the person who wrote it. It cannot remember the incident in March. Everything it reasons with, it has to recover from the code in front of it. So every property that shrinks the amount of code you must read in order to be sure of something, is worth more to the agent than it ever was to you.
 
@@ -447,53 +448,39 @@ Think about what an agent has to do before it can safely change a line of your c
 
 **Explicit failure removes the control flow the model cannot see.** A `Result` or an `Either` in the signature is a fact sitting in front of the reader. An exception thrown eleven frames down is not in anything the model is looking at, and it is not in anything you are looking at either during code review. The difference is that you will eventually find out in production; the model will confidently generate a caller that has no idea the path exists.
 
-None of this is a separate discipline you take up for the benefit of machines. It is the same functional programming discipline we have been arguing for since long before any of this, and it pays in all the usual places: pure, immutable, composable code is cheaper to test, cheaper to change, cheaper to verify, and now, cheaper for a machine to contribute to safely. That last one is not a bonus. Increasingly it is the constraint that decides whether a machine can contribute to your codebase at all without degrading it.
-
 ---
 
 ## Rigour Theatre
 
 Now the objection to everything above, which I think is the strongest one available, and which I would rather state myself than have stated at me.
 
-Making rigour cheap to produce also makes the *appearance* of rigour cheap to produce. A model will write you a TLA+ spec that model-checks clean, a dependent type that is inhabited, a property test that passes on ten thousand cases — all of which formalise the wrong thing. Consistency is mechanical. Intent is not, and never becomes so. You can check that the spec does not contradict itself; you cannot check that it is the spec you meant.
+Making rigour cheap to produce also makes the *appearance* of rigour cheap to produce. A model will write you a TLA+ spec that model-checks clean, a dependent type that is inhabited, a property test that passes on ten thousand cases — all of which formalise the wrong thing. Consistency is mechanical: intent isn't, and always originates in the human brain. You can check that the spec does not contradict itself; you cannot check that it is the spec you meant.
 
 And rigorous-looking artifacts borrow authority. Nobody re-reads the invariant. It has a `\A` in it, it went green in CI, and the reviewer who might have caught that it quantifies over the wrong set has already scrolled past. Prose at least advertises that it is unverified. A proof of the wrong proposition is the same failure with better clothes, and the more of it you generate, the less any individual piece gets read.
 
 The second failure is the gate itself. "Deterministic pass/fail with no human in the gate" describes what should happen. What actually happens, when you point an agent at a red build and tell it to make the build green, is that making the build green is the goal it optimises. The assertion gets weakened. The test gets an `@Ignore` and a plausible comment. The postcondition acquires a special case for exactly the input that was failing. The mock gets adjusted until the thing under test is no longer under test. None of this is malice, and all of it is what "satisfy the verifier" means when the verifier is the only thing being satisfied.
 
-Both of these have the same shape, and the same mitigation. The property, the invariant, the contract, the assertion: these are the artifacts where human judgement is least substitutable, and they are exactly the artifacts you should be least willing to accept unreviewed. Generate the implementation freely. Read the specification like it matters, because it is the only place your intent lives, and keep it in version control where a change to it shows up in a diff rather than in an incident.
+All of these have the same mitigation. The property, the invariant, the contract, the assertion: these are the artifacts where human judgement is least substitutable, and they are exactly the artifacts you should be **not accept unreviewed**. Generate the implementation freely. Read the specification like it matters, because it is the only place your intent lives, and keep it in version control where a change to it shows up in a diff rather than in an incident.
 
 So: AI proposes, the verifier disposes, and somebody still has to own the verifier. That is not a hole in the argument. It is where the argument was always going to land, and it is a much better place to be spending expensive human attention than reading diffs for style.
 
 ---
 
-## The Harness Is the Trust Boundary
+## How does all this come together?
 
-A short detour, because this section is about a different problem from the rest of the article: not building software *with* AI, but building software that *contains* it. If you are not shipping an LLM inside the product, skip to the next section.
+Different routes, depending upon the rigour you need and the effort you are willing to invest. You can mix and match, but the idea is to not stay stuck at the status quo.
 
-Not just scaffolding. The trust boundary.
+Current
+Human writes -> LLM reads and writes code (TDD as needed) -> Validation Boundaries and Side Effects tested through integration tests / mocks -> Cross-component interactions tested through integration tests
 
-An agent is a component. Components have typed contracts: input schema, output schema, invariants. "But it's nondeterministic" does not get you out of that; it is an argument for a *stricter* contract, not the absence of one. A chain of agent calls is a program, and every hop is a function call.
+Current with (some) Behavioural Modelling
+Human writes -> LLM reads and writes code (TDD as needed) -> Model critical sections in Dafny, etc. to verify behaviour guarantees -> Validation Boundaries and Side Effects tested through integration tests / mocks -> Cross-component interactions tested through integration tests
 
-The harness is software you own and test, not glue you paste together. If you have not tested the harness, you have not tested the system, because the agent is not the system.
+Machine-Checkable Specs + Behavioural Modelling + Functional Core using Constrained Types
+Human writes -> LLM reads and writes Specs in a DSL (e.g., a declarative logic programming language) -> TLA+ to model component interactions and prove guarantees -> Functional Core using Constrained Types -> TDD Validation Boundaries and Side Effects -> Cross-component interactions tested through integration tests
 
-And record, as they happen, which call, which model version, which prompt, and which gate decision. Reconstructing that afterwards is the genuinely expensive part of debugging an agentic failure, and it is unnecessary.
-
-```mermaid
-flowchart TD
-    CORE[deterministic core\ntyped, synchronous, owns no AI coupling] --> PORT[port / AI interface\ntyped contract: core knows nothing else]
-    PORT --> ADAPT[adapter\ntimeout · retry · circuit breaker\nprompt construction · response parsing · gate]
-    ADAPT --> Q[async queue · bulkhead\nnever block the caller · backpressure]
-    Q --> API[LLM API\nhigh-latency · partially-failing · nondeterministic]
-
-    classDef default fill:#dde3f5,stroke:#6b7db3,color:#1a1f5e
-    classDef good fill:#d4edda,stroke:#388e3c,color:#1b5e20
-    classDef bad fill:#fce7f3,stroke:#be185d,color:#831843
-    class CORE good
-    class API bad
-```
-
-An LLM is a distributed-systems dependency: high-latency, partially-failing, nondeterministic. Treat it as one and the engineering becomes completely ordinary — you already know how to build this. Pretend otherwise and you will meet all three of those properties in production, at the same time, on a Friday.
+The "Code is the Specification"
+Human writes -> LLM reads and writes Functional Core using Constrained Types -> TDD Validation Boundaries and Side Effects -> Cross-component interactions tested through integration tests 
 
 ---
 
