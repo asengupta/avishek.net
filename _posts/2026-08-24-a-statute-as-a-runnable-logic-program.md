@@ -8,13 +8,25 @@ draft: false
 published: true
 ---
 
-In [Rigour by Design](/2026/08/24/rigour-by-design.html) I argued that almost everyone is parked on the bottom rung of the spec ladder, and that what GenAI actually made cheap is the labour of climbing. That post ends with a link to a repository and one sentence of description. This post is what is actually in it.
+In [Rigour by Design]({% post_url 2026-08-24-rigour-by-design %}) I argued that almost everyone is parked on the bottom rung of the spec ladder, and that what GenAI actually made cheap is the labour of climbing. That post had a link to a repository and one sentence of description. This post describes what the actual experiment was.
 
-It is a working log. Some of it worked, a good deal was wrong until execution proved it wrong, and one whole architecture was deleted. What the thing buys is reproducibility: the same question returns the same answer, with the provision that decided it attached, and that comes free with the representation. What nothing in here checks is whether the encoding reads the statute correctly in the first place. The failure modes were more instructive than the successes, so I am going to be precise about which is which.
+One of the things I have always believed - and continue to believe - is that well-written code IS the spec. This is because it marries expressiveness (which non-programmers can understand) with the precision of what actually executes (which programmers appreciate). If I were being glib, I'd liken specs to reading a manual about driving. Sure, you can read all you like about driving, but until you have actually driven a car, you don't really know what works and what doesn't. More precise specs might be akin to a simulator, where you might get a real-er driving experience, but nothing beats actually doing the thing, because all the manuals and simulators are in the service of the final goal: to actually be on the damn road.
 
-The short version: I took the Singapore Land Titles Act and tried to express it as a SWI-Prolog program you can *run*, where every rule cites the provision it encodes and every answer reads back to the source. Then I tried to get a language model to write that program, behind deterministic gates that decide whether its output is admissible.
+At the same time, I have had some toy experience with Prolog which I have documented [here]({% post_url 2025-06-28-a-brief-overview-of-prolog %}) and [here]({% post_url 2025-07-03-building-vm-in-prolog %}). Logic programming fascinates me, and, along with formal verification and types, seem to be one of those points where rigour and expressiveness intersect to a great degree. Add to that the possibility of running a program in reverse being a natural consequence of how Prolog works (`"1+2=X => X=3"`, `"1+Y=3 => Y=2"`), and suddenly, you have something that you can actually query in all sorts of useful ways.
 
-One thing changes how everything below should be read: **none of the Prolog was written by a human.** That covers the libraries the authoring loop produced, and also the ones I will call *reference* libraries, which were authored interactively, with me directing and reviewing while the model typed. So the axis that does real work here is how the code was produced: **interactively, under review, with unbounded rounds and a human in every one** against **one call per domain, checked by a gate, with no human in the loop at all**. What a human contributed is the representation, the gates, and the judgment about which encodings were wrong.
+<div class="callout" style="--callout-accent: #b04a2f" markdown="1">
+What I wanted to prove: how far can you go in representing normal "human-readable" documents (rules, laws, logic) as runnable logic programs, such that:
+
+- The logic program **faithfully represents the intended logic** of the original document with absolute fidelity, **without loss in information**.
+- The logic program is **executable** and can be run to **produce results that are consistent with the original document**.
+- The logic program is **verifiable** and can be checked for **correctness** and **completeness**.
+- The logic program is **understandable** and can be read and understood by humans, including non-programmers.
+</div>
+
+The short version: I took the Singapore Land Titles Act (1995) and tried to express it as a SWI-Prolog program you can *run*, where every rule cites the provision it encodes and every answer reads back to the source. Then I tried to get a language model to write that program, behind deterministic gates that decide whether its output is admissible.
+
+## Characteristics of this Experiment
+**None of the Prolog was written by a human.** That covers the libraries the authoring loop produced, and also the ones I will call *logic infrastructure* libraries, which were authored interactively, with me directing and reviewing while the model typed. So the code was generated **interactively, under review, with unbounded rounds and a human in every one** against **one call per domain, checked by a gate, with no human in the loop at all**. What a human contributed is the representation, the gates, and the judgment about which encodings were wrong.
 
 ---
 
