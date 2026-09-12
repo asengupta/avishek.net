@@ -56,7 +56,7 @@ The thesis, in the form I wrote it down mid-session:
 
 That is the [spec ladder](/2026/08/24/rigour-by-design.html#flavours-of-specifications) argument with a concrete artifact attached. Domain: land administration, so titles, instruments, caveats and mortgages. Source: imperfect markdown. Output: a logic program plus provenance, where every asserted term traces back to the character span that justifies it.
 
-One constraint shaped everything else. **All inference in the hot loop was meant to be strictly local**, which means Ollama, a 7–8B model, on hardware you own. That constraint comes from the documents: a land registry's files cannot leave the building. And a 7–8B model cannot be trusted to author a formal specification. So the whole architecture answers one question: *what can you get out of a weak model, if a deterministic checker gets the final say?*
+The first constraint I intentionally set for myself was: **all inference in the hot loop would be strictly local**: I picked a 7–8B model on Ollama. That constraint comes from the documents: a land registry's files cannot leave the building. And a 7–8B model cannot be trusted to author a formal specification. I wanted to answer the question: *what can you get out of a weak model, if a deterministic checker gets the final say?*
 
 ---
 
@@ -64,9 +64,18 @@ One constraint shaped everything else. **All inference in the hot loop was meant
 
 The first architecture was the obvious one: bootstrap an ontology from the document, extract facts per segment, extract rules by having the model fill slots in fixed templates, compile to Prolog, validate with a meta-program, feed the findings back into a refinement loop.
 
-It ran end to end on real statute text with `qwen2.5:14b` locally, and the headline result is why I still believe the guardrail principle. Every output compiled to valid Prolog and loaded clean in `swipl`. Normalisation produced valid atoms for all 33 proposed entity types and 56 relations. Closed-world extraction *skipped* 38 fact candidates that used unknown relations or the wrong arity. Template-only rules made all 69 constraints well-formed by construction.
+It ran end to end on real statute text with `qwen2.5:14b` locally. The headlines:
 
-The form was perfect. The **meaning** was bad, and that is the finding. The model turned s.119(4), a *directional* prohibition reading "the Registrar shall not register a dealing prohibited by the caveat", into a symmetric mutual exclusion: structurally impeccable, legally inverted. It converted nearly every relation into "every caveat must have X". It filled typed argument slots with the literal word `"string"`, and these *promoted to accepted*, because the type checker validated literal **positions** while ignoring literal **values**. And given a bare citation line with no normative content at all, it hallucinated five rules with **fabricated quotations**.
+- Every output compiled to valid Prolog and loaded clean in `swipl`.
+- Normalisation produced valid atoms for all 33 proposed entity types and 56 relations.
+- Closed-world extraction *skipped* 38 fact candidates that used unknown relations or the wrong arity.
+- Template-only rules made all 69 constraints well-formed by construction.
+
+The form was perfect. The **meaning** was atrocious, but the finding is probably not an outcome of using a smaller / weaker model. Some examples will suffice.
+
+- The model turned s.119(4), a *directional* prohibition reading "the Registrar shall not register a dealing prohibited by the caveat", into a symmetric mutual exclusion: structurally impeccable, legally inverted.
+- It converted nearly every relation into "every caveat must have X". It filled typed argument slots with the literal word `"string"`, and these *promoted to accepted*, because the type checker validated literal **positions** while ignoring literal **values**.
+- And given a bare citation line with no normative content at all, it hallucinated five rules with **fabricated quotations**.
 
 That last one is the most useful, because the fix was deterministic and worked completely: require every proposed rule to carry an evidence quote, and reject it unless the quote is a literal substring of the segment. All five were rejected. Paraphrased evidence correlates with bogus rules, and a substring check suppresses them with no model in the loop.
 
@@ -77,13 +86,13 @@ But no amount of guardrailing fixed the central problem. The representation was 
 - **A type was one opaque atom,** so every distinction got crammed into the label: `registered_mortgage` bakes an event outcome into a name where nothing can reason about it.
 - **Facts had no context.** `register(registrar, mortgage)` asserted flatly is implicitly true *everywhere*, which is false. Torrens land law turns precisely on the register differing from the world, and on what a party knew.
 
-So it went: around 11,800 lines deleted in two commits, and the modules serving the old representation went with it. The temptation is always to keep the code and patch the model underneath it. But the stages *encoded* the bad representation, and maintaining a stage that emits a vocabulary nothing downstream reads is worse than having no stage.
+So it all went: around 11,800 lines deleted in two commits, and the modules serving the old representation went with it. The temptation is always to keep the code and patch the model underneath it. But the stages *encoded* the bad representation, and no amount of patching could have helped.
 
 ---
 
 ## The Representation: Nine Predicates
 
-What replaced it is a coordinate model. The domain-neutral core is nine names in 97 lines, mentioning no dimension, no sort, no relation and no verb:
+What replaced it is a coordinate model, based on McCarthy's *Notes on Formalizing Context* (IJCAI-93) - in itself a highly readable paper. The domain-neutral core is nine names in 97 lines, mentioning no dimension, no sort, no relation and no verb:
 
 ```prolog
 ist(Ctx, Statement).                    % Statement holds in Ctx
@@ -99,11 +108,11 @@ at_or_before(Dim, A, B).                % derived
 holds_in(Statement, QueryContext).      % derived -- the only query form
 ```
 
-**`ist` is McCarthy's "is true in context"**, lifted whole from *Notes on Formalizing Context* (IJCAI-93). The generating rule is one sentence:
+**`ist` is McCarthy's "is true in context"**. The generating rule is one sentence:
 
 > Anything with its own lifetime gets an id, and its value or extent attaches to that id. Anything that varies gets a dimension. Whether something "holds" is membership of a query position inside an extent.
 
-Three consequences follow, and each removed a problem I expected to need machinery for.
+Three consequences follow.
 
 **There is no Event Calculus.** An event is a context positioned at a *point*, a state is a context with a *lower* bound and possibly an *upper* one, and persistence is extent-completion by derived `mark/4` rules. So inertia follows from any dimension carrying a directed order, which means the `version` dimension has it too. "In force from the 1993 Act until repealed" is structurally the same shape as "effective from registration until discharge", and the same machinery answers *"was this a caveat under the Act as it stood in 1990?"* and *"was it effective in mid-2020?"*
 
@@ -137,8 +146,6 @@ Three sorts (`entity`, `quantity`, `text`) and four dimensions (`time`, `version
 ## Where the Model Sits, and the Gates That Contain It
 
 The founding tenet: **the LLM never writes Prolog and never invents structure.** It fills schema-constrained slots, and deterministic code compiles terms.
-
-That tenet survives where it matters, which is the hot loop, thousands of calls per corpus, a weak local model. It was **deliberately broken in one place.** The authoring tier is one call per domain, and its output is small, static, and mechanically checked before anything depends on it. A Pydantic schema plus a JSON to Prolog compiler would buy back one frontier call per domain, at a cost of several hundred lines and a **second copy of the grammar** to keep in step with the checker, and it would only ever fix violations the shape gate already catches. Every defect that actually produced a *wrong answer* cleared the shape gate and needed execution to find. The question was asked twice and answered no twice, with revisit conditions written down: *if authoring starts running per-document; if the repair loop stops converging in about two rounds; or if something other than `swipl` consumes the output.* A tenet with stated conditions for its own reversal is worth more than a tenet.
 
 ```mermaid
 flowchart TD
@@ -179,7 +186,10 @@ There are four gates, and none subsumes another.
 
 Gate 2 sits outside the loop on purpose. It needs a corpus, and **a corpus authored to satisfy the gate compromises the gate.** A model that writes its own fixtures writes them to agree with itself.
 
-The repair contract is blunt. A checker returning a negative verdict wants a repair, and the violation list goes back as the next prompt. A checker that *raises* is saying no repair exists, and the loop propagates it. Exhausting the round budget counts as a **result** that the caller has to interpret. And one detail decides whether any of it works: **the gate must return specific, machine-readable violations.** `undeclared_relation(effective/1)` is actionable. "Try again" is not. An early run reported "0 violations" four times in a row and gave up, which is the degenerate case of the same principle: a rejection carrying nothing the model can act on is just a refusal.
+## Feedback
+The repair contract is blunt. A checker returning a negative verdict wants a repair, and the violation list goes back as the next prompt. A checker that *raises* is saying no repair exists, and the loop propagates it. Exhausting the round budget counts as a **result** that the caller has to interpret.
+
+**The gate must return specific, machine-readable violations.** `undeclared_relation(effective/1)` is actionable. "Try again" is not. An early run reported "0 violations" four times in a row and gave up, which is the degenerate case of the same principle: a rejection carrying nothing the model can act on is just a refusal.
 
 ---
 
@@ -327,7 +337,7 @@ Two things I expected to be hard were not. **Partial holding**, as in "according
 
 ---
 
-## What This Does Not Establish
+## Caveats
 
 This is the section I most want people to read.
 
@@ -337,7 +347,7 @@ This is the section I most want people to read.
 
 What the apparatus establishes *automatically* is that the answer is **reproducible**, and that is a property of the artifact. The same question asked at the same points returns the same answer every time. The date that decides it, 3 March 2024, is constructed by a cited rule, so anyone with the program and the statute can reconstruct it. The evidence is gathered mechanically off the marks. Two independent engines agree or the diff fails. None of that needs an experiment to establish, because it follows from what the thing *is*, which is a deterministic program with citations. A model asked the same question twice is not obliged to answer the same way, and cannot show you the provision that made the difference. That is the comparison worth making, and it does not turn on which one is smarter.
 
-The load-bearing word is *automatically*, and its price is the conditional attached to it. Reproducibility holds **assuming the encoding is a correct reading of the source**, and that assumption is precisely the one nothing here checks. Of the four properties the case rests on, two come free with the representation: reproducibility and reconstructibility. As-at-date reasoning comes free with dimensions, though it is untested at any real scale. Consistency across thousands of documents is genuinely unmeasured, and cannot be measured until the hot loop exists. Faithful reproduction and correctness are different properties, and this project buys the first cheaply and the second not at all.
+The adverb *automatically* does not imply correctness. Reproducibility holds **assuming the encoding is a correct reading of the source**, and that assumption is currently not checked. Of the four properties the case rests on, two come free with the representation: reproducibility and reconstructibility. As-at-date reasoning comes free with dimensions, though it is untested at any real scale. Consistency across thousands of documents is genuinely unmeasured, and cannot be measured until the hot loop exists. Faithful reproduction and correctness are different properties, and I have attempted to demonstrate that the first one is achievable through deterministic gates; the second remains an open question.
 
 **The gates check hygiene.** No gate establishes that a library is a correct *reading* of its source. A library can be well-formed, non-vacuous, non-degenerate, fully cited, and still misread the provision it points at. **Every serious defect found so far was of that kind.** A human reading rule against provision is still necessary, made cheap by one-rule-one-provision, and nowhere near eliminated.
 
