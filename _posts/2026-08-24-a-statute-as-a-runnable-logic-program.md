@@ -77,7 +77,7 @@ The form was perfect. The **meaning** was atrocious, but the finding is probably
 - It converted nearly every relation into "every caveat must have X". It filled typed argument slots with the literal word `"string"`, and these *promoted to accepted*, because the type checker validated literal **positions** while ignoring literal **values**.
 - And given a bare citation line with no normative content at all, it hallucinated five rules with **fabricated quotations**.
 
-That last one is the most useful, because the fix was deterministic and worked completely: require every proposed rule to carry an evidence quote, and reject it unless the quote is a literal substring of the segment. All five were rejected. Paraphrased evidence correlates with bogus rules, and a substring check suppresses them with no model in the loop.
+That last one is the most useful, because the fix was deterministic and worked completely: require every proposed rule to carry an evidence quote, and reject it unless the quote is a literal substring of the segment (this is not completely foolproof, provenance does not imply semantic similarity, but more on that later). All five were rejected. Paraphrased evidence correlates with bogus rules, and a substring check suppresses them with no model in the loop.
 
 But no amount of guardrailing fixed the central problem. The representation was too weak to carry the meaning.
 
@@ -92,7 +92,7 @@ So it all went: around 11,800 lines deleted in two commits, and the modules serv
 
 ## The Representation: Nine Predicates
 
-What replaced it is a coordinate model, based on McCarthy's *Notes on Formalizing Context* (IJCAI-93) - in itself a highly readable paper. The domain-neutral core is nine names in 97 lines, mentioning no dimension, no sort, no relation and no verb:
+The realisation is that simply writing clauses in a declarative language as permissive as Prolog, makes it harder to impose structure amenable to verification, and simply asking an LLM to impose the necessary constraints is not enough. You need _some_ constraints on how express certain things. Of course, there are multiple formalisms that could be used; in this case, I used a (slightly modified) `ist` model, based on McCarthy's *Notes on Formalizing Context* (IJCAI-93) - in itself a highly readable paper. The domain-neutral core is nine names in 97 lines, mentioning no dimension, no sort, no relation and no verb:
 
 ```prolog
 ist(Ctx, Statement).                    % Statement holds in Ctx
@@ -120,6 +120,8 @@ Three consequences follow.
 
 **Closing conditions need no ordering logic.** An extent is clipped if *any* upper mark falls in the gap, so "earliest terminator wins" fell out of the definition without being implemented. A caveat that can lapse at five years, be withdrawn expressly, or be deemed withdrawn fourteen days after an unrectified deficiency notice just has three `upper` mark rules, each citing its own provision, and they compose:
 
+**Conjunction and Disjunction (AND and OR):** Conjunction is two Prolog predicates joined by `,`. Disjunction is either the same Prolog predicate in two separate statements, with the disjunctive clauses, or predicates joined by `;`.
+
 ```prolog
 % s.121(1)(b) "at the expiration of 5 years from the date of the lodgment"
 %  -- an UPPER bound, and the reason offset/4 exists: the point is
@@ -140,6 +142,19 @@ mark(ctx(effective(Cav)), time, upper, T2) :-
 One rule, one provision, one citation. That is [Bench-Capon and Coenen's isomorphism principle](https://link.springer.com/article/10.1007/BF00871902) from 1992, and it is what turns an amendment into a mechanical edit instead of an audit. Fourteen provisions in the caveat library point at character spans into a content-addressed document version, and a gate checks that every declared provision actually cites text. On its first run that gate found a *dead* declaration: a provision nothing called, left over from an abandoned modelling attempt. What it found was dead vocabulary, which is a defect the compiler had no way to see.
 
 Three sorts (`entity`, `quantity`, `text`) and four dimensions (`time`, `version`, `space`, `money`). "Dimension" turns out to mean *ordered value domain*, and positioning a context in one is optional: nothing is positioned in `money`, but its `precedes/3` and `offset/4` are exactly what "exceeds $500" and "the residue after costs" needed. Quantity arithmetic looked like a gap in the vocabulary and was actually a value domain nobody had declared. Four clauses closed it.
+
+**A sort is a kind of thing; it is just not a derived one.** `entity`, `quantity` and `text` are kinds -- a pointable thing, a magnitude, an indecomposable value: but they are kinds the machinery needs, not kinds the Act recognises. A sort earns primitive status only when *generic machinery branches on it*, and the core branches on nothing. `ist`, `mark`, `within`, `precedes` and `holds_in` mention no sort at all. So the leaf set is not about what the statute talks about; it is about what cannot be decomposed. Everything the statute talks about is a rule:
+
+```prolog
+entity(alice).  entity(lot5).  entity(cav1).        % scenario facts -- a sort, no context
+
+land(L, Q) :-                                       % pattern library -- a derived type
+    applies(r_115_1, Q),
+    entity(L),
+    ( ist(_, concerns(_, L)) ; ist(_, claims(_, L)) ).
+```
+
+Nothing is born land. `lot5` is an `entity` in every context; it is `land` only where s.115(1) is in force and some caveat concerns it or some party claims it. The tell is arity: a sort takes no query context and cites nothing, because no section of the Act says lot 5 is pointable, whereas a derived type carries `Q` and exactly one citation. `agent` fails the criterion for the same reason -- a company is an agent in a dealing and an object in a merger, so agency is not what a thing *is*. What the caveat library actually needed in place of `party` was `caveator/2`, `caveatee/2` and `claimant/2`: participation roles, each derived, each cited.
 
 ---
 
@@ -197,7 +212,7 @@ The repair contract is blunt. A checker returning a negative verdict wants a rep
 
 **Land Titles Act, ss.115–121.** `claude-sonnet-4-5` via Bedrock at temperature 0, chosen over the strongest available model deliberately, because a weaker one tests the gate harder. The first one-shot experiment came back `SHAPE_FAIL` with **13 violations**, and the split is the finding. Everything the prompt warned about, it got right: event/state classes assigned correctly, rule-precedence machinery left untouched, no context variable shared across conjuncts, a core derived type all but identical to the reference library's, plus 28 derived rules and 14 provisions cited. Everything it got wrong was **bookkeeping**. The silent semantic kind, which took three attempts to get right in the reference libraries with a human reviewing each one, never appeared. Wired into a repair loop, the same task converged in **two rounds**: two violations, then `SHAPE_OK` with 17 relations, 16 provisions, 25 derived rules and 9 derived mark rules. A second domain, the NY standard fire policy, chosen because an insurer's wording is copyright and this one is a statutory form, behaved identically: 10 violations in round one, `SHAPE_OK` in round two, and again everything caught was vocabulary discipline.
 
-And the accepted library was **better than the reference library in one place**, which is worth recording. For s.119(1) it declared acceptance as an *event* and being-in-order as a *state* whose lower bound derives from that event, where the reference library treats the latter as the event itself. One call plus a gate applied the discipline the prompt teaches, at a point the reviewed interactive sessions had let slide. More rounds with a human in each of them is not uniformly better than one round and a checker.
+And the accepted library was **better than the reference library in one place**. For s.119(1) it declared acceptance as an *event* and being-in-order as a *state* whose lower bound derives from that event, where the reference library treats the latter as the event itself. One call plus a gate applied the discipline the prompt teaches, at a point the reviewed interactive sessions had let slide. More rounds with a human in each of them is not uniformly better than one round and a checker.
 
 Here is every defect worth reporting, and which gate saw it:
 
