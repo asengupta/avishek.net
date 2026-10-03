@@ -1,5 +1,5 @@
 PATH
-  remote: ../jekyll-theme-observatory-editorial
+  remote: ../observatory-editorial-jekyll-theme
   specs:
     observatory-editorial (0.1.0)
       jekyll (>= 3.5, < 5.0)
@@ -103,6 +103,7 @@ GEM
 
 PLATFORMS
   arm64-darwin-21
+  arm64-darwin-23
   arm64-darwin-24
   arm64-darwin-25
 
