@@ -13,6 +13,7 @@ draft: false
 
 ## Table of Contents
 
+- [What fixpoint analysis is](#what-fixpoint-analysis-is)
 - [The problem](#the-problem)
 - [The pipeline](#the-pipeline)
 - [Area need: which bytes anyone reads](#area-need-which-bytes-anyone-reads)
@@ -31,6 +32,48 @@ draft: false
 - [Explainers](#explainers)
 
 ---
+
+## What fixpoint analysis is
+
+Static analysis answers questions about a program without running it. Because it does not run the program, it has to answer for every possible run at once. A typical question is: at this statement, what values can this field hold?
+
+The analysis keeps a set of facts at each statement. Here the fact for a field is the set of literal values it may hold. Each kind of statement has a rule for how it changes the facts:
+
+- `MOVE 'PROGB' TO WS-NEXT` replaces whatever `WS-NEXT` held with `{PROGB}`.
+- `MOVE WS-OTHER TO WS-NEXT` gives `WS-NEXT` whatever `WS-OTHER` held.
+- Where two paths meet, after an `IF` for instance, the field may hold anything either path gave it, so the two sets are joined.
+
+Without loops, one walk from the top of the program to the bottom is enough. Each statement's facts depend only on statements before it. Loops break that. Take this program:
+
+```cobol
+       MOVE 'PROGA' TO WS-NEXT.
+       PERFORM UNTIL WS-DONE = 'Y'
+           IF WS-OPTION = '2'
+               MOVE 'PROGB' TO WS-NEXT
+           END-IF
+           ...
+       END-PERFORM.
+       EXEC CICS XCTL PROGRAM(WS-NEXT) END-EXEC.
+```
+
+The facts at the top of the loop depend on the facts at the bottom of the loop, which depend on the facts at the top. There is no order in which every statement can be worked out after everything it depends on.
+
+The way round this is to start from "nothing known" and apply the rules repeatedly:
+
+1. The first time the analysis reaches the top of the loop, `WS-NEXT` can only hold `{PROGA}`.
+2. After the `IF`, it can hold `{PROGA, PROGB}`. That set goes back round to the top of the loop, so the top's facts were incomplete, and the body has to be looked at again.
+3. The second time round, the top of the loop has `{PROGA, PROGB}`, and going through the body adds nothing new.
+
+Nothing changes any more, so the analysis stops. At the `XCTL`, `WS-NEXT` can hold `PROGA` or `PROGB`. That stable state, where applying the rules once more changes nothing, is the fixpoint.
+
+Two properties make this work. The facts only ever grow, and there are only finitely many of them, so it has to stop. And the order in which statements are revisited changes how much work it takes, not the answer. In practice the analysis keeps a worklist: only statements whose inputs changed are visited again.
+
+That is the whole idea. Everything else in this post is about cost. The cost is roughly the number of facts times the number of times each is revisited, and both can be large:
+
+- **The facts.** cobble keeps facts per byte range, not per field. COBOL group moves, `REDEFINES` and reference modification all alias storage by bytes, so a per-field analysis gets them wrong. A 4,000-byte commarea is a lot of bytes to track through every statement of every program.
+- **The revisits.** The same idea applies one level up, across programs. A program's facts depend on what its callers pass it, and the callers' facts can depend on what it hands back. So there are fixpoints over programs as well, and each of those can revisit whole programs.
+
+A longer explanation with a full worked example is in the [fixpoints and worklists](https://github.com/avishek-sen-gupta/red-dragon-forge/blob/main/docs/explainers/fixpoints.html) explainer.
 
 ## The problem
 
