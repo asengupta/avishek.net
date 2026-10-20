@@ -23,6 +23,10 @@ His current interests include compiler engineering, integrating symbolic AI with
 
 ## **Open Source**
 
+**RedDragonForge** [https://github.com/avishek-sen-gupta/red-dragon-forge](https://github.com/avishek-sen-gupta/red-dragon-forge): A set of runtimes for the COBOL ecosystem, targeting CICS and JCL, capable of connecting to real Db2 instances. It also sports its own VSAM engine to allow VSAM-related operations.
+
+**RedDragon** [https://github.com/avishek-sen-gupta/red-dragon](https://github.com/avishek-sen-gupta/red-dragon): An experimental VM with a simple IR, capable of integrating LLMs to allow targeting of unknown language frontends. Currently supports multiple languages to various degrees of completeness, with the COBOL frontend reporting 86% compliance with the NIST-85 COBOL suite.
+
 **Cobol-REKT** [https://github.com/avishek-sen-gupta/cobol-rekt](https://github.com/avishek-sen-gupta/cobol-rekt): An evolving toolkit of capabilities helpful for reverse engineering legacy Cobol code. These capabilities range from building flowcharts of the underlying code to translating COBOL into a hybrid Intermediate Representation (graph- and instruction- based) potentially suitable for transpilation to other languages.
 
 Engineers can pick components from this library to incorporate into their reverse engineering analysis workflows, or more cohesive products suitable for wider audiences like analysts.
@@ -44,6 +48,14 @@ Engineers can pick components from this library to incorporate into their revers
 **Jquery-Jenkins-Radiator** [[https://github.com/asengupta/jquery-jenkins-radiator](https://github.com/asengupta/jquery-jenkins-radiator) ] : A jQuery-based build radiator for Jenkins, with support for multiple radiators, independent refreshes and timeouts.
 
 ## **Experience**
+
+**AI-assisted Determinism-First Reverse Engineering Pipeline**
+
+Avishek Sen Gupta has been involved in building a reverse engineering pipeline for a government agency for comprehending dataflow and scenario workflows in a 5 MLoc+ codebase composed of Java EE Portlet applications and COBOL backends utilising CICS and JCL. As part of this effort, he used multiple static analysis techniques, including corpus-wide dependency analysis, fixpoint-based dataflow analysis to resolve dynamic call targets, byte-level data provenance tracking, interprocedural control flow graphs to provide strong guardrails for LLM agents to deduce behaviour when producing reports and answering ad-hoc questions about the codebase.
+
+**AI-assisted Determinism-First Reverse Engineering Pipeline**
+
+Avishek Sen Gupta has built a reverse engineering pipeline for a government agency for comprehend the implementation of rules in their legacy Java codebase transpiled from legacy 4GL, and to corroborate the findings with the actual statutes in government documentation. The pipeline uses deterministic unit and acceptance tests to headlessly drive the application(s) through multiple journeys with the appropriate data setup. These tests are then traced using JDK agents to capture the exact program flow, and the behaviour is mined from there. In addition, multiple deterministic components were built to recover application field correlations with database columns, as well as taint analysis to surface data dependencies within the application.
 
 **AI-assisted Reverse Engineering Product**
 
