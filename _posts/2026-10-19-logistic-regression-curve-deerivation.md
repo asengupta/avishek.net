@@ -7,6 +7,8 @@ tags: ["Machine Learning", "Logistic Regression", "Probability"]
 draft: false
 ---
 
+*In this post, I take a look at the basic idea of why the logistic regression's familiar S-curve exists, its relation to the familiar concept of probability, and how framing probability as the logarithm of odds naturally leads to a representation amenable to linear regression.*
+
 I returned to learning some classical machine learning recently, mostly to brush up on some of the foundational math. I usually do this in order to not let my brain rot from just applying language models to any task that presents itself. One of the earliest concepts I learnt in classical ML is **Logistic Regression**. For the longest time, I had a very simplistic, incomplete, and frankly wrong, idea of what LR was actually doing, what it represented, and why it worked. Ironically, the most understanding I gained was from conversing with Claude, forcing it to slow down, and clarify every misunderstanding in excruciating detail until I was convinced that I understood. Of course, mere understanding is not enough, so I'd like to document it, in the hopes that future me (who will have forgotten this material all over again) will find this a valuable aid to recollection.
 
 ## Expressing probability as odds

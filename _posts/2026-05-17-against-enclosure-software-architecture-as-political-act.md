@@ -8,7 +8,7 @@ draft: false
 published: true
 ---
 
-*Software architecture is not politically neutral. The choice between a plugin-based platform and a set of composable small tools is a choice about who can enclose the result. This essay argues for composability as a structural act of resistance, not because it produces better software in every case, but because it produces software that cannot be captured.*
+*Software architecture has politics baked into it. Choosing between a plugin-based platform and a pile of small composable tools is, among other things, choosing whether somebody can fence off the result later. This post makes the case for composability on those grounds: not because it always makes better software, but because what it makes is hard to capture.*
 
 ---
 
@@ -37,39 +37,37 @@ published: true
 
 ## The Chain: Plugin Architecture → Platform → Enclosure
 
-I have built a number of systems using plugin architectures. I built them in good faith, as the technically correct answer to extensibility. You define a host, you define a contract, and anyone who conforms to the contract can extend the system. It is clean. It is modular. It feels like the right shape for software that is meant to grow.
+I've built a fair number of systems around plugin architectures, and I built them because they seemed like the obvious answer to extensibility. You define a host, you define a contract, and anyone who follows the contract can extend the system. It's clean and modular, and it feels like the right shape for software that's supposed to grow.
 
-What I eventually understood is that this shape has a structural logic that extends well beyond the technical. A plugin architecture, by design, produces a platform. And platforms are what get enclosed.
+What took me longer to notice is that this shape has consequences outside the code. A plugin architecture tends to turn into a platform, and platforms are the things that get enclosed.
 
-Enclosure is a term borrowed from history. In sixteenth- to eighteenth-century England, land that had been held in common, accessible to all, owned by no one, was progressively fenced off, privatised, and made subject to rent. The commons became property. Those who had farmed it freely became tenants who paid to continue. The mechanism of enclosure is always the same: take something that was shared, draw a boundary around it, and charge for crossing the boundary. In software, the thing being enclosed is not land but capability: the ability to extend a system, to interoperate with it, to compose it with other tools. The enclosed resource is the interface, the ecosystem, the protocol, and the boundary is drawn by whoever controls the contract. Aaron Swartz, in his *Guerilla Open Access Manifesto*, called this what it is: theft. Not of a thing that was ever anyone's private property, but of something that belonged to everyone, and was taken.
+"Enclosure" comes from English history. Between roughly the sixteenth and eighteenth centuries, land that had been held in common (used by everyone, owned by nobody) was fenced off, privatised, and rented out. People who had farmed it for free became tenants paying to keep doing the same thing. The recipe is simple: take something shared, put a boundary around it, and charge people to cross. In software the thing being fenced isn't land, it's capability: being able to extend a system, interoperate with it, wire it up to other tools. What gets fenced is the interface, the ecosystem, the protocol, and whoever controls the contract gets to put up the fence. Aaron Swartz, in the *Guerilla Open Access Manifesto*, didn't bother with polite language for this kind of thing: he called it theft, not of anyone's private property, but of something that had belonged to everybody.
 
-The logic runs like this. A plugin host defines discovery (how extensions are found), lifecycle (how they are loaded and unloaded), interface (how they talk to the host), and composition (what gets called when). These four concerns are bundled under a single contract that the host owns. The host becomes structurally necessary, not because it does anything especially sophisticated, but because it is the only thing that speaks the contract. Extensions cannot interoperate without it. Users cannot compose without it. The entire capability surface of the system flows through it.
+Here's how it plays out. A plugin host handles discovery (how extensions get found), lifecycle (how they're loaded and unloaded), interface (how they talk to the host), and composition (what gets called when). All four live under one contract, and the host owns it. So the host becomes indispensable, not because it does anything clever, but because it's the only thing that speaks the contract. Extensions can't talk to each other without it, users can't combine things without it, and everything the system can do goes through it.
 
-That is a platform. And platforms are attractive to enclosure because they concentrate what is valuable: the contract, the ecosystem, the user base. A company can draw a boundary around a platform in ways it cannot draw around a set of independent tools. The plugin contract becomes IP. The ecosystem becomes captive. The host becomes a toll gate. The plugins, and the people who built them, become tenants.
+That's a platform. Platforms make attractive targets because everything valuable is in one place: the contract, the ecosystem, the users. A company can fence off a platform in a way it can't fence off a bunch of independent tools. The plugin contract turns into IP, the ecosystem gets locked in, the host becomes a toll booth, and the plugin authors end up as tenants.
 
-**This is not malice. It is the structural logic of how platforms work.** The architecture produces the incentive; the incentive produces the enclosure.
+Nobody has to be acting in bad faith for this to happen. The architecture creates the incentive, and the incentive does the rest.
 
-The question I have been trying to answer is: what is the architectural opposite of a platform?
+So what's the opposite of a platform, architecturally? That's what I've been trying to work out.
 
 ---
 
 ## What Plugin Architectures Actually Do
 
-Before proposing a remedy, it is worth being precise about the diagnosis.
+It helps to pull apart what a plugin architecture is doing. There are four things going on at once:
 
-A plugin architecture is doing four things simultaneously:
-
-**Discovery**: the host defines how extensions are found. It may scan a directory, query a registry, or read a manifest it controls. Extensions do not find each other; they are found by the host.
+**Discovery**: the host decides how extensions are found. It might scan a directory, query a registry, or read a manifest it controls. Extensions don't find each other; the host finds them.
 
 **Lifecycle**: the host calls `init()`, `register()`, `shutdown()` on each extension's behalf. It owns the process. Extensions exist at the host's pleasure.
 
-**Interface**: the host defines the vocabulary. The plugin API, the callback table, the event types: these are specified by the host, and every extension must speak them. An extension written for host A cannot run under host B because the vocabulary is different.
+**Interface**: the host defines the vocabulary. The plugin API, the callback table, the event types are all specified by the host, and every extension has to speak them. An extension written for host A won't run under host B because the vocabulary is different.
 
-**Composition logic**: the host owns the dispatch loop. It decides what fires when, what data flows where, what is in scope. Extensions react to host-defined events.
+**Composition logic**: the host owns the dispatch loop. It decides what fires when, what data goes where, and what's in scope. Extensions react to events the host defines.
 
-Bundling all four under one host-owned contract is what makes a plugin host a platform. **It is not one of these concerns that creates leverage: it is all four combined.** Remove any one, and the others may remain capturable. When all four sit on a public substrate, there is no host to enclose.
+Bundling all four under one host-owned contract is what turns a plugin host into a platform. No single one of these gives the host leverage; it's the combination. Pull one out and the rest can still be captured. Put all four on public ground and there's no host left to capture.
 
-This is not a bug in any particular plugin architecture. It is the shape of the pattern itself. Every plugin architecture I have seen, regardless of how well-intentioned, how open-source, how liberally licensed, has this shape. The question is what to put in its place.
+This isn't a flaw in some particular plugin system; it comes with the pattern. Every plugin architecture I've worked with has looked like this, however well-meaning, open-source or liberally licensed it was. So the real question is what to use instead.
 
 ---
 
@@ -77,41 +75,41 @@ This is not a bug in any particular plugin architecture. It is the shape of the 
 
 ### Rent-Seeking
 
-There is a name for what platforms do: rent-seeking. They create a toll gate and extract value from traffic they did not generate. The plugin ecosystem creates the value; the platform captures it. This is not unique to software: it is the same dynamic as landlordism, as patent trolls, as financial intermediaries who insert themselves between producer and consumer without adding value to either.
+Economists have a word for what platforms do: rent-seeking. They set up a toll booth and charge for traffic they didn't create. The plugin authors make the value and the platform collects it. Software didn't invent this. Landlords, patent trolls, and plenty of financial middlemen do the same thing, putting themselves between producer and consumer without adding much for either.
 
-Software architecture can be anti-rent-seeking by design. The Unix philosophy did this for decades without naming it explicitly. The reason Unix tools resisted enclosure is structural: **stdin and stdout are too generic to own, and each tool is too thin to gate.** The interface is text on a stream. Nobody holds a copyright on a newline. Composition happens in the user's shell, in the user's head, and those things cannot be enclosed.
+You can design architecture to make rent-seeking hard. Unix did this for decades without anyone really saying so out loud. Unix tools were hard to capture because stdin and stdout are too generic to own and each tool is too small to put a gate in front of. The interface is text on a stream, and nobody holds a copyright on a newline. The composition happens in the user's shell (and the user's head), and you can't fence those off either.
 
 ### IP as the Mechanism of Enclosure
 
-A plugin contract is not merely an API: it is a copyrightable artifact. The *Oracle v. Google* litigation made this explicit at the highest level: the question of whether an API can be owned was contested all the way to the Supreme Court, which found in Google's favour on fair use grounds but did not deny that APIs were copyrightable subject matter. The terrain is contested. Plugin interfaces, event models, callback signatures: these can be asserted as intellectual property.
+A plugin contract isn't just an API; it's something you can try to copyright. *Oracle v. Google* went all the way to the Supreme Court over whether APIs can be owned. Google won on fair use, but the court sidestepped whether APIs are copyrightable in the first place, so that question is still open. Plugin interfaces, event models, callback signatures: any of these can be claimed as IP.
 
-**The ecosystem built on top of them compounds the lock-in.** Network effects accumulate on the platform, not on the tools. The more extensions exist, the more valuable the platform; the more valuable the platform, the harder it is to leave. This is the enclosure flywheel.
+The ecosystem on top makes the lock-in worse. Network effects pile up on the platform, not on the individual tools. More extensions make the platform more valuable, and a more valuable platform is harder to leave. It feeds itself.
 
-Note that open-source implementations do not resolve this. A platform whose host is MIT-licensed but whose plugin contract is controlled by a single foundation has not escaped the enclosure logic. **The contract is the thing every extension must conform to.** Whoever controls the contract controls the ecosystem, regardless of what license governs the host's implementation.
+Open-source implementations don't fix this. If the host is MIT-licensed but a single foundation controls the plugin contract, you're in the same position as before. Every extension has to conform to the contract, so whoever controls the contract controls the ecosystem, whatever license the host's code happens to be under.
 
 ### Licensing Theatre
 
-A second-order move has emerged in the last several years: platforms pre-emptively defending against the composable alternative through licensing. SSPL (Server Side Public License), BUSL (Business Source License), and a growing family of "source-available" licenses permit reading the code but not running it as a competing service. The architecture and the license work together: the plugin contract ties the ecosystem to the host; the license prevents anyone from forking the host itself. Enclosure by legal instrument, enabled by architectural centralisation.
+Over the last few years, platforms have also started defending themselves against the composable alternative with licenses. SSPL (Server Side Public License), BUSL (Business Source License), and a growing set of "source-available" licenses let you read the code but not run it as a competing service. The architecture and the license prop each other up: the plugin contract ties the ecosystem to the host, and the license stops anyone forking the host. It's enclosure by legal means, made possible by a centralised architecture.
 
-These licenses are sometimes presented as protecting open-source contributors from exploitation by cloud vendors. That framing is not entirely dishonest; the exploitation is real. But the structural effect is the same: **the composition of architecture and license produces a captive ecosystem.** The parts are visible but not free.
+These licenses are often pitched as protecting open-source maintainers from cloud vendors, and that's not entirely spin; the cloud vendors really do take advantage. But the end result is the same either way: architecture plus license gives you a captive ecosystem. You can see all the parts; you just aren't free to do much with them.
 
 ### The Machinery Analogy: The Escape Hatch
 
-Consider a fully assembled machine: an industrial lathe, a press, a CNC router. The assembled machine can be branded, priced, access-gated (software license, subscription, activation code), and obsoleted (vendor ends support, announces end-of-life, forces a costly upgrade). You are a customer of the machine, on the machine's terms.
+Think about a fully assembled machine: an industrial lathe, a press, a CNC router. The vendor can brand it, price it, lock it behind a license or subscription or activation code, and eventually kill it by ending support and pushing you towards an expensive upgrade. You're a customer, on their terms.
 
-The individual parts, bearings, spindles, fasteners and motors, are too generic to own. Nobody holds a meaningful patent on a bolt. These parts are commodities because they exist at a level of abstraction below any specific application. The fastener standard (M6 thread, ISO 3506) belongs to everyone, which is why a bolt from one manufacturer fits a nut from another.
+The parts (bearings, spindles, fasteners, motors) are too generic to own. Nobody holds a useful patent on a bolt. They're commodities because they sit below any particular application. Fastener standards like the M6 thread belong to everyone, which is why one company's bolt fits another company's nut.
 
-**If you have the expertise to assemble, you build something tailored, not captive.** The vendor has no leverage because there is no vendor, only parts and your own labour.
+If you know how to put the parts together, you can build something that fits what you need and that nobody else controls. No vendor has leverage over you, because there is no vendor, just parts and your own work.
 
-In software: each small tool is a part, too thin to gate and too generic to brand. The interface conventions, text streams, public schemas, open protocols, are the fastener standard. Nobody holds a copyright on JSON. The composition is the machine you build, and it lives in your shell history, your Makefile, your Datalog rules. It is yours.
+Software works the same way. Each small tool is a part, too thin to gate and too generic to brand. The conventions (text streams, public schemas, open protocols) are the thread standard. Nobody holds a copyright on JSON. The composition is the machine you build, and it lives in your shell history, your Makefile, your Datalog rules. It's yours.
 
-The escape hatch is: acquire generic parts, compose them yourself, own the composition.
+So the way out is: get generic parts, put them together yourself, and keep what you build.
 
 ---
 
 ## The Composable Alternative: Unbundling the Platform
 
-If the problem is bundling four concerns under one host-owned contract, the solution is to place each concern on a substrate that nobody owns.
+If the problem is four concerns bundled under one owned contract, the fix is to put each of them somewhere nobody owns.
 
 | Concern | Plugin approach | Composable analog |
 |---|---|---|
@@ -120,89 +118,89 @@ If the problem is bundling four concerns under one host-owned contract, the solu
 | Interface | Host-defined API or callback table | stdin/stdout JSONL, public schema, open protocol |
 | Composition | Host dispatch loop | Shell pipeline, Makefile, Datalog rules (user owns it) |
 
-When each concern sits on a public substrate, there is no host to enclose. The ecosystem does not exist as a capturable thing; there are just tools that speak a common language, and the common language belongs to everyone.
+Once each concern is on public ground, there's no host to capture. There's no "ecosystem" as a single thing someone could take over, just tools that speak a shared language, and the language doesn't belong to anyone.
 
-**Discovery** by `$PATH` convention means anyone can ship a tool that participates in the system by naming it appropriately. The `git-*` subcommand pattern is the canonical example: `git foo` finds `git-foo` on `$PATH`. Git does not own the namespace; it just looks. A prefix naming convention achieves the same thing: discovery without a registry owner.
+**Discovery** by `$PATH` convention means anyone can ship a tool that joins in just by naming it right. The `git-*` subcommand pattern is the best-known example: `git foo` finds `git-foo` on `$PATH`. Git doesn't own the namespace; it just looks. A prefix naming convention does the same job: discovery without anyone owning a registry.
 
-**Lifecycle** by `fork/exec` means the OS is the runtime. There is no `register_plugin()` ceremony, no `init()` callback, no host-controlled process table. The tool runs, produces output, and exits. This is what CGI was, and it is what LSP is, and it handles every lifecycle concern that actually matters.
+**Lifecycle** by `fork/exec` means the OS is the runtime. There's no `register_plugin()` ritual, no `init()` callback, no host-controlled process table. The tool runs, produces output, and exits. That's how CGI worked, it's how LSP works, and it covers every lifecycle concern that matters in practice.
 
-**Interface** on a public substrate means the contract is a format or a protocol, not an API. JSON on stdin/stdout is a contract that nobody owns. A published schema, such as JSON Schema, Protobuf with public `.proto` files, or Datalog facts with a public spec, is a contract that can be independently implemented by any producer or consumer. Formally publishing an interface (with a specification, a reference implementation, and an open license) collapses the IP surface. **This is the architectural equivalent of defensive publication in patent law.** Once the interface is public and documented, asserting ownership over conformance to it becomes untenable.
+**Interface** on public ground means the contract is a format or a protocol, not an API. JSON on stdin/stdout is a contract nobody owns. A published schema (JSON Schema, Protobuf with public `.proto` files, Datalog facts with a public spec) can be implemented independently by anyone producing or consuming it. Publishing an interface properly, with a spec, a reference implementation and an open license, leaves very little to claim as IP. It's a bit like defensive publication in patent law: once the interface is public and documented, it's very hard for anyone to say they own conformance to it.
 
-**Composition logic** in a shell pipeline or a Makefile is composition logic that lives in the user's hands, version-controlled in the user's repository. The user decides what fires when. The user owns the assembly.
+**Composition logic** in a shell pipeline or a Makefile lives with the user, version-controlled in the user's own repository. The user decides what runs when. The user owns the assembly.
 
 ### A Concrete Illustration
 
-`java-bytecode-tools` is a static analysis and visualisation toolkit for Java bytecode. Its `PHILOSOPHY.md` states directly: "toolkit of mechanisms, not workflows." The architecture follows the pattern above:
+`java-bytecode-tools` is a static analysis and visualisation toolkit for Java bytecode. Its `PHILOSOPHY.md` puts it plainly: "toolkit of mechanisms, not workflows." The architecture follows the pattern above:
 
-- **Discovery**: prefix naming convention: `ftrace-*` tools for CFG trace analysis, `ddg-*` for data dependency graphs, `calltree-*` for call tree rendering. No registry. No manifest. A tool exists if it is on the path and speaks the right format.
+- **Discovery**: a prefix naming convention: `ftrace-*` tools for CFG trace analysis, `ddg-*` for data dependency graphs, `calltree-*` for call tree rendering. No registry, no manifest. A tool exists if it's on the path and speaks the right format.
 - **Lifecycle**: every tool is a standalone Unix filter. `fork/exec`. The OS is the runtime.
-- **Interface**: JSON on stdin/stdout throughout. The Java CLI writes JSON to stdout; the Python tools read from stdin or a file argument and write to stdout. The schema is documented. Nothing is proprietary.
-- **Composition**: the pipeline stages are explicit: `xtrace → ftrace-expand-refs → ftrace-inter-slice → ftrace-semantic → ftrace-semantic-to-dot`. This lives in shell scripts and task runner configurations. Any stage can be substituted, any intermediate artifact can be cached, the pipeline can be branched, without asking permission from anyone.
+- **Interface**: JSON on stdin/stdout throughout. The Java CLI writes JSON to stdout; the Python tools read from stdin or a file argument and write to stdout. The schema is documented, and nothing about it is proprietary.
+- **Composition**: the pipeline stages are spelled out: `xtrace → ftrace-expand-refs → ftrace-inter-slice → ftrace-semantic → ftrace-semantic-to-dot`. This lives in shell scripts and task runner configs. You can swap out any stage, cache any intermediate output, or branch the pipeline, without asking anyone's permission.
 
-There is no plugin market. There is no extension store. There is no host. There is a public schema and a naming convention, and both are older than any company that might want to enclose them.
+There's no plugin marketplace, no extension store, no host. There's a documented schema and a naming convention, and neither gives anybody anything to take over.
 
 ---
 
 ## IPC as Substrate: All the Patterns Already Exist
 
-A common objection to the composable approach is that real systems require communication patterns beyond simple pipelines: pub/sub, event-driven dispatch, fan-out, shared state. The implicit claim is that these patterns require a framework, and a framework requires an owner.
+A common objection is that real systems need more than simple pipelines: pub/sub, event-driven dispatch, fan-out, shared state. The assumption is that those need a framework, and a framework needs an owner.
 
-This is false. Every communication pattern that appears in a plugin architecture is available in raw POSIX primitives:
+They don't. Every communication pattern you'd find in a plugin architecture is already there in plain POSIX:
 
-- **Request/response**: subprocess + stdio. One process writes a request; the other reads it and writes a response. This is what CGI was in 1993; it is what LSP is today.
-- **Streaming pipelines**: anonymous pipes with OS-managed backpressure. Writes block when the pipe buffer fills. The OS is the flow controller.
-- **Pub/sub**: append-only files with `inotify`, or a thin socket broker that fans out. A `tail -f` on a log file is pub/sub, with the file as the topic and the filesystem as the broker.
-- **Fan-out/fan-in**: `xargs -P`, `make -j`, or `select`/`epoll` on multiple sockets. The scatter-gather pattern is available in every Unix shell.
-- **Event sourcing**: an append-only log. Consumers read at their own pace and can rewind. This is Git's object store, syslog, and your shell history; all event sourcing without a framework.
+- **Request/response**: subprocess + stdio. One process writes a request; the other reads it and writes a response. That's what CGI was in 1993, and it's what LSP is today.
+- **Streaming pipelines**: anonymous pipes with backpressure handled by the OS. Writes block when the pipe buffer fills, so the OS does the flow control.
+- **Pub/sub**: append-only files with `inotify`, or a thin socket broker that fans messages out. `tail -f` on a log file is pub/sub, with the file as the topic and the filesystem as the broker.
+- **Fan-out/fan-in**: `xargs -P`, `make -j`, or `select`/`epoll` on several sockets. Scatter-gather is available in every Unix shell.
+- **Event sourcing**: an append-only log. Consumers read at their own pace and can rewind. Git's object store, syslog, and your shell history are all event sourcing without a framework.
 - **Coordination**: `flock` for advisory locking, atomic `rename` for atomic publish, `mkdir` as a mutex (atomic on POSIX filesystems).
-- **Capability passing**: Unix domain sockets permit passing file descriptors between processes. A process can open a resource and hand the open handle to another process, without the receiver having ambient permission to open it themselves. This is object-capability security on Unix.
-- **Shared state**: SQLite or LMDB accessed via memory-mapped files, a file format nobody owns, with bindings in every language.
+- **Capability passing**: Unix domain sockets can pass file descriptors between processes. One process opens a resource and hands the open handle to another, which never needed permission to open it itself. That's object-capability security on Unix.
+- **Shared state**: SQLite or LMDB over memory-mapped files: a file format nobody owns, with bindings in every language.
 
-**The kernel is the only framework you cannot avoid, and it ships every pattern you need.** Everything above it is opinion. And opinion is where vendor contracts live.
+The kernel is the one framework you can't avoid, and it already ships all of this. Everything above it is somebody's opinion, and opinions are where vendor contracts tend to creep in.
 
 ---
 
 ## Living Proof: Five Projects, Five Enclosure Vectors Eliminated
 
-The argument above is structural. The following five projects are empirical evidence that the structure holds in practice. Each eliminates a different enclosure vector.
+So far this has been fairly abstract. Here are five real projects where it works in practice, each one closing off a different route to enclosure.
 
 ### LSP: Eliminating Vendor Bundling
 
-Before the Language Server Protocol, the problem of adding language support to editors was an N×M problem: N editors multiplied by M languages, each integration proprietary to the editor vendor. Microsoft's Visual Studio had Roslyn. JetBrains had PSI. Sublime had its own plugin model. Switching editors meant losing all language tooling.
+Before the Language Server Protocol, adding language support to editors was an N×M problem: N editors times M languages, with every integration tied to the editor vendor. Microsoft's Visual Studio had Roslyn. JetBrains had PSI. Sublime had its own plugin model. Switching editors meant losing all your language tooling.
 
-LSP (first shipped with VS Code in 2016) defines a JSON-RPC protocol between a text editor (the client) and a language server (a separate process). The server is separate from the editor: `fork/exec`, stdio transport by default, public JSON-RPC wire format. The spec is published under Creative Commons.
+LSP (first shipped with VS Code in 2016) is a JSON-RPC protocol between a text editor (the client) and a language server (a separate process). The server runs separately from the editor: `fork/exec`, stdio transport by default, a public JSON-RPC wire format. The spec is published under Creative Commons.
 
-The consequence: rust-analyzer works equally well in Neovim, Emacs, Helix, and VS Code. Microsoft has no technical mechanism to degrade it. JetBrains, historically the strongest proprietary language tooling vendor, was forced to implement LSP support because developers demanded it. The Helix editor has no plugin system at all; LSP is its only extensibility surface. **The N×M proprietary market collapsed because a public protocol replaced the proprietary contracts.**
+The upshot: rust-analyzer works just as well in Neovim, Emacs, Helix, and VS Code, and Microsoft has no technical way to make it worse elsewhere. JetBrains, historically the strongest proprietary language-tooling vendor, ended up adding LSP support because developers wanted it. The Helix editor has no plugin system at all; LSP is the only way to extend it. A public protocol replaced the proprietary integrations, and the N×M market fell apart.
 
 ### SQLite: Eliminating Server and Copyright Control
 
-SQLite is public domain, not MIT, not Apache 2.0, but actual public domain. There is no copyright holder to threaten, no CLA to revoke, no license to change. It is serverless: a library, not a daemon. The database is a file. You link SQLite into your application; it reads and writes bytes. The single-file format is fully documented in a published specification, and that specification is stable by guarantee.
+SQLite is in the public domain. Not MIT, not Apache 2.0: actually public domain. There's no copyright holder to make threats, no CLA to revoke, no license to change. It has no server either; it's a library, not a daemon. The database is a file. You link SQLite into your application and it reads and writes bytes. The file format is fully documented in a published spec that's guaranteed to stay stable.
 
-Richard Hipp: "SQLite is designed to replace `fopen()`, not Oracle."
+SQLite's own [When To Use](https://www.sqlite.org/whentouse.html) page puts it like this: "SQLite does not compete with client/server databases. SQLite competes with `fopen()`."
 
-This framing is architecturally significant. A file format that nobody owns replaces a file format (raw bytes) that nobody owns. There is no "managed SQLite" service to sell because there is no server to manage. Oracle, Microsoft, and Amazon all ship products that sit beside or above SQLite without being able to enclose it. The three standard enclosure vectors, copyright, server, proprietary wire protocol, are absent simultaneously.
+SQLite replaces raw bytes on disk, which nobody owns, with a file format that nobody owns either. There's no "managed SQLite" to sell, because there's no server to manage. Oracle, Microsoft, and Amazon all ship products that sit next to or on top of SQLite without being able to take it over. The usual three routes to enclosure (copyright, a server, a proprietary wire protocol) are all missing at once.
 
 ### Nix: Eliminating Registry Control
 
-Every package in Nix is identified by a cryptographic hash of its inputs: source code, build flags, dependencies, build script. The store path `/nix/store/abc123...-openssl-3.0.7` encodes the entire causal history of the artifact. There is no mutable global namespace to control, no registry whose owner can revoke or alter a package identity.
+Every package in Nix is identified by a cryptographic hash of its inputs: source code, build flags, dependencies, build script. A store path like `/nix/store/abc123...-openssl-3.0.7` encodes the artifact's whole build history. There's no mutable global namespace to control, and no registry whose owner can revoke a package or change what a name points to.
 
-When the Nix Foundation went through governance conflicts in 2023–2024, contributors who disagreed forked to form the Lix project. The fork produced a fully compatible implementation in weeks. **This is only possible because the format, derivation files and store paths, is public data, not an API controlled by a foundation.** You cannot hold a governance controversy over a hash.
+When the Nix Foundation went through its governance fights in 2023–2024, contributors who disagreed forked off to form the Lix project, and had a fully compatible implementation within weeks. That only worked because the formats (derivation files, store paths) are public data rather than an API a foundation controls. You can't have a governance fight over a hash.
 
 ### SourceHut: Eliminating Platform Network Effects
 
-SourceHut's code review and patch submission workflow is built on plain-text email and `git format-patch`. A patch is a file sent to a mailing list. Review is a reply. There is no proprietary API, no OAuth token to revoke, no webhook to disable, no social graph to create switching costs.
+SourceHut's code review and patch workflow runs on plain-text email and `git format-patch`. A patch is a file sent to a mailing list, and a review is a reply. There's no proprietary API, no OAuth token to revoke, no webhook to switch off, no social graph that makes it painful to leave.
 
-Drew DeVault, its founder: "GitHub is a platform; email is a protocol. If GitHub disappears, your project's history disappears with it. If the mailing list host disappears, you point your MX record somewhere else and nothing is lost."
+Drew DeVault, its founder, makes the case in [Git is already federated & decentralized](https://drewdevault.com/blog/Git-is-already-distributed/) (2018): email is "already standardized", "decentralized and federated, and it's *already* integrated with git." And if the host goes away, nothing is lost: "If everything is being conducted over email instead, all of the data already lives in the user's inbox. Freely available tools can take their mail spool and publish a new archive if our services go down."
 
-The Linux kernel, Git itself, and many major open source projects have always used the email-patch model. **These workflows have never been captured by any platform because they predate and bypass platforms entirely.**
+The Linux kernel, Git itself, and plenty of other big open source projects have always worked this way. No platform has ever captured these workflows, because they're older than platforms and go around them.
 
 ### Gemini: Eliminating the Monetisation Surface
 
-The Gemini protocol specification is approximately three thousand words and explicitly frozen at that scope. It excludes JavaScript, cookies, inline images beyond a specific mechanism, forms, user tracking, and any execution surface on the client. These exclusions are not gaps; they are design decisions.
+The Gemini protocol spec is about three thousand words, and it's deliberately frozen at that size. It leaves out JavaScript, cookies, inline images (beyond one specific mechanism), forms, user tracking, and any way of running code on the client. These are deliberate omissions, not missing features.
 
-The specification states directly: "Gemini is deliberately designed so that it's impossible for a party with a financial interest in user attention to build the kind of engagement-maximising dark patterns that have come to dominate the web."
+The [Gemini FAQ](https://geminiprotocol.net/docs/faq.gmi) is upfront about the consequence: "Because by default it only presents users with text, and because authors have no way to control the font or size or colour of that text, Gemini is naturally resistant to advertising and marketing."
 
-**Gemini is not resistant to monetisation by policy. It is structurally incapable of it.** There is no execution surface. There is no state mechanism. There is no way to run ad-tech on a Gemini capsule because the protocol provides no substrate for it to run on.
+So Gemini doesn't avoid monetisation as a matter of policy; it just doesn't give monetisation anything to work with. There's no code execution and no state, so there's nowhere for ad-tech to run.
 
 ### The Pattern
 
@@ -214,32 +212,30 @@ The specification states directly: "Gemini is deliberately designed so that it's
 | SourceHut | Platform network effects | Email/protocol replaces API/social graph |
 | Gemini | Monetisation surface | Spec permanently excludes execution + state |
 
-The common structural move: **remove the centralisation point that enclosure requires.** You cannot enclose a hash. You cannot enclose SMTP. You cannot enclose a protocol that structurally cannot run your code. You cannot enclose a separate process speaking a public schema. You cannot enclose a file format you do not own.
+What these have in common is that each one gets rid of the central point that enclosure depends on. You can't fence off a hash, or SMTP, or a protocol that won't run your code, or a separate process speaking a public schema, or a file format nobody owns.
 
 ---
 
 ## Intellectual Lineage
 
-This argument has predecessors, and it is worth naming them.
+None of this is new; plenty of people have made versions of this argument before me.
 
-The Unix tradition is the oldest technical articulation. Eric Raymond's *The Art of Unix Programming* states the design principles clearly, though the political content, that composition is anti-enclosure, is rarely named explicitly. The reason Unix tools resisted capture for decades was structural: the interface was too generic to own, and each tool was too thin to gate. The composition lived in the user's shell history, which has never been anyone's IP.
+The Unix tradition got there first. Eric Raymond's *The Art of Unix Programming* lays out the design principles well, though it mostly doesn't spell out the political side: that composition works against enclosure. As I said earlier, Unix tools stayed hard to capture because the interface was too generic to own and each tool was too small to gate. The composition lived in people's shell histories, which have never been anybody's IP.
 
-Ivan Illich's *Tools for Conviviality* (1973) provides the more general vocabulary. Illich argued that tools have a threshold beyond which they stop serving users and start requiring users to serve them. A hammer is convivial: it does exactly what the user makes it do, and the user's skill determines the outcome. An industrial lathe, past a certain scale, requires a trained operator who serves the machine's requirements. **Plugin architectures cross Illich's threshold.** The user serves the platform: they learn its event model, conform to its API, adapt their extension to its lifecycle. The platform does not adapt to them.
+Ivan Illich's *Tools for Conviviality* (1973) gives a more general way of talking about it. Illich argued that past a certain point, tools stop serving the people using them and start making those people serve the tool. A hammer is "convivial": it does what you make it do, and how well things go depends on your skill. An industrial lathe, past a certain scale, needs a trained operator who works to the machine's requirements. I'd put plugin architectures on the wrong side of that line. You end up working for the platform: learning its event model, conforming to its API, fitting your extension to its lifecycle. It doesn't adapt to you.
 
-Contemporary framings are more pointed. Cory Doctorow's concept of adversarial interoperability, building tools that work with existing platforms without permission, is the legal-strategy version of this argument. Mike Masnick's *Protocols, Not Platforms* is its most precise short statement. The Ink & Switch local-first essay (Kleppmann et al., 2019) makes the technical case for architectures where computation and data live on the user's machine, collapsing the metering surface that SaaS enclosure requires. The permacomputing and small-web communities are building practice around the same ideas, under different names.
+Cory Doctorow's "adversarial interoperability" (building things that work with existing platforms without asking their permission) is roughly the legal-strategy version of this argument. Mike Masnick's *Protocols, Not Platforms* is probably the best short version. Ink & Switch's local-first essay (Kleppmann et al., 2019) makes the technical case for keeping data and computation on the user's machine, which takes away the metering point SaaS relies on. The permacomputing and small-web people are putting a lot of the same ideas into practice, under other names.
 
-None of these sources constitute a single movement. The people writing about this rarely identify with one another. But the structural insight recurs across them: **the architecture is the politics.** You cannot separate the technical choice from its political consequence.
+These people aren't one movement, and most of them wouldn't think of themselves as being on the same side. But the same idea keeps turning up across all of them: the architecture is the politics. You can't really pull the technical choice apart from what it does politically.
 
 ---
 
 ## Honest Limits
 
-This argument has real limits and it is worth being honest about them.
+This approach has real costs, and most of them land on people who aren't practitioners. Back to the machinery analogy: building from parts means knowing what the parts are, how they fit, and what you're trying to end up with. Most people don't want to be mechanics. They want a car that starts when they turn the key.
 
-Composition-heavy architecture puts a tax on non-practitioners. The machinery analogy holds here too: assembling from parts requires knowing what the parts are, how they fit together, and what the result should look like. Most people do not want to be mechanics. They want a car that starts when they turn the key.
+Historically, the market's answer has been to let a company hide the composition behind a product, which is exactly the enclosure I've been arguing against. "Hard to monetise" and "hard for non-experts to use" overlap a lot. Composable tools suit people doing serious work who are willing to learn their tools. They aren't a general answer to how software should reach everyone.
 
-The market answer to that tax has historically been "let a company hide the composition behind a product", which is exactly the enclosure this stance opposes. **"Hostile to monetisation" and "hostile to non-practitioners" overlap heavily.** The composable approach is appropriate for practitioners doing serious work with serious tools. It is not a universal answer to the problem of software distribution.
+I don't think you can engineer that away; it's a real tradeoff. Going composable means giving up the mass market. Whether that's worth it depends on what work you care about.
 
-This is not a flaw to be engineered away. It is a genuine tradeoff, and accepting it honestly is part of what makes the argument credible. The composable stance cedes the mass market by design. The question is whether, for the work that matters to you, that is a price worth paying.
-
-I think it is. The alternative is to build something that can be enclosed, and then watch it be enclosed.
+For me it is. The alternative is building something that can be enclosed, and then watching it happen.
