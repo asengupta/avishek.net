@@ -62,7 +62,7 @@ This is useful because it lets us express probabilities using arbitrary positive
 
 ## Expressing probability as log odds
 
-There is a very simple way to jump from expressing probabilities using only positive numbers (using the language of odds) to include negative numbers: simply take the logarithm of odds. Take the example of "The odds of it raining are 1 to 3". This is saying that it is thrice as likely to not rain as it is to rain. Note now that the ratio now looks like:
+There is a very simple way to jump from expressing probabilities using only positive numbers (using the language of odds) to include negative numbers: simply take the logarithm of odds. Take the example of "The odds of it raining are 1 to 3". This is saying that it is thrice as likely to not rain as it is to rain. Note that the ratio now looks like:
 
 $$
 \frac {p_{rain}}{p_{dry}} = \frac {1}{3} \\
@@ -72,7 +72,7 @@ $$
 Now see what happens when we take log of these odds:
 
 $$
-ln(odds_{rain}) = - ln(3) = −1.099
+\ln(odds_{rain}) = - \ln(3) = −1.099
 $$
 
 The practical upshot is that if we choose to use log odds to express probabilities, we can express probabilities using the complete real number line.
@@ -87,14 +87,14 @@ The fun part - and the point of this exercise - is to see what the original prob
 Let $$t$$ represent the log odds variable. Then we have:
 
 $$
-t = ln \frac {p}{1 - p} \\
+t = \ln \frac {p}{1 - p} \\
 \Rightarrow e^t = \frac {p}{1-p} \\
 \Rightarrow e^t (1 - p) = p \\
 \Rightarrow p (1 + e^t) = e^t \\
 \Rightarrow p = \frac {e^t}{1 + e^t}
 $$
 
-Then we tidy up by dividing both numerator and denominator by $e^t$ to get:
+Then we tidy up by dividing both numerator and denominator by $$e^t$$ to get:
 
 $$
 p = \frac {1}{1 + e^{-t}}
