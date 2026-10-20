@@ -1,9 +1,9 @@
 ---
-title: "Homage to a Machine"
+title: "Homage to a Machine, by a Machine"
 author: avishek
 usemathjax: false
 mermaid: false
-tags: ["Personal", "Hardware", "Software Engineering"]
+tags: ["Personal", "Hardware"]
 ---
 
 It arrived with Big Sur and it is being wiped running macOS 26.7 — five years and eleven
