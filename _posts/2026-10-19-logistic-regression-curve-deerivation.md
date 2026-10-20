@@ -33,7 +33,7 @@ For the second answer, we can write:
 $$
 p_{rain} + p_{dry} = 1 \\
 p_{rain} = 2 \cdot p_{dry} \\
-\Rightarrow 2 \cdot p_{dry} + p_dry = 1 \\
+\Rightarrow 2 \cdot p_{dry} + p_{dry} = 1 \\
 \Rightarrow 3 \cdot p_{dry} = 1 \\
 \Rightarrow p_{dry} = 0.33 \\
 \Rightarrow p_{rain} = 0.67
@@ -45,7 +45,7 @@ $$
 \text{odds(success)} = \frac {\text{successful outcomes}}{\text{unsuccessful outcomes}}
 $$
 
-Why is this useful? Because there is an important property of odds which the plain expression of probability does not have: **odds can be any number between 0 and $$\infty$$.** An example will suffice. Suppose we say that the odds of it raining are some ridiculously larg number, say one million to one. That means that:
+Why is this useful? Because there is an important property of odds which the plain expression of probability does not have: **odds can be any number between 0 and $$\infty$$.** An example will suffice. Suppose we say that the odds of it raining are some ridiculously large number, say one million to one. That means that:
 
 $$
 p_{rain} + p_{dry} = 1 \\
@@ -56,7 +56,7 @@ p_{rain} = 10^6 \cdot p_{dry} \\
 \Rightarrow p_{rain} = 0.999999
 $$
 
-So the probability of it not raining is infinitesmal, but never zero, even in the presence of arbitrarily large numbers.
+So the probability of it not raining is very very small, but never zero, even in the presence of arbitrarily large numbers.
 
 This is useful because it lets us express probabilities using arbitrary positive numbers. But the story is not over yet: we'd like to express probabilities using the entire number line, and this includes negative numbers. That's the subject of the next section.
 
@@ -77,9 +77,6 @@ $$
 
 The practical upshot is that if we choose to use log odds to express probabilities, we can express probabilities using the complete real number line.
 
-## Linear regression on log odds
-
-The reason we like the log odds representation is that we can perform plain linear regression on probabilities, without being restricted to being between 0 and 1. We essentially perform a translation of the original variable to something which covers the full number line, do our linear regression, then interpret the result by inverting the transformation.
 
 If you are familiar with **Generalised Linear Models**, **log odds is the link function**.
 
@@ -107,3 +104,6 @@ That is the S-curve of logistic regression.
 
 ![Logistic Regression S-curve](/assets/images/logistic-regression-s-curve.png)
 
+## Regression on log odds
+
+The reason we like the log odds representation is this: when we perform regression on the points to make the S-curve fit to them, we need a model of how the tuning parameters affect the curve. We'd like to have those tuning parameters represent a linear model, without the co-domain of the linear model being restricted to being between 0 and 1. The fitness function of the regression still measures the fit of the S-curve equation to the data.
