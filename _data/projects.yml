@@ -1,17 +1,20 @@
 heading: Code
 projects:
-  - name: Cobol REKT
-    description: An evolving toolkit of capabilities helpful for reverse engineering legacy Cobol code
-    link: https://github.com/avishek-sen-gupta/cobol-rekt
+  - name: RedDragonForge
+    description: A CICS/JCL runtime environment for RedDragon-compiled COBOL, bundled with a static analysis toolkit
+    link: https://github.com/avishek-sen-gupta/red-dragon-forge
   - name: RedDragon
     description: A deterministic compiler pipeline with LLM-assisted repair for analysing incomplete code and unknown languages
     link: https://github.com/avishek-sen-gupta/red-dragon
+  - name: Cobol REKT
+    description: An evolving toolkit of capabilities helpful for reverse engineering legacy Cobol code
+    link: https://github.com/avishek-sen-gupta/cobol-rekt
   - name: Mojo LSP
-    description: A vibe-coded LSP client for experiments
+    description: A LSP client for experiments
     link: https://github.com/avishek-sen-gupta/mojo-lsp
   - name: Plenoxels
     description: An implementation of Plenoxels in PyTorch, for 3D reconstruction using Neural Radiance Fields
     link: https://github.com/asengupta/plenoxels-pytorch
   - name: IRIS
-    description: A C++ image processing and machine vision librar
+    description: A C++ image processing and machine vision library
     link: https://github.com/asengupta/IRIS

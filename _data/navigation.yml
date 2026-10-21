@@ -8,6 +8,8 @@
   link: /engineering.html
 - name: Art
   link: /art.html
+- name: Algorithm Explainers
+  link: /explainers/index.html
 - name: About Me
   link: /about.html
 - name: Resume
