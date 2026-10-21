@@ -11,7 +11,13 @@
 <nav class="back"><a href="index.html">← All explainers</a></nav>
 <div class="kicker">Explainer 7 of 11</div>
 <h1>Resolving a dynamic call site inside its own program</h1>
+<p class="prereqs"><strong>Read first:</strong> <a href="value-sets.html">Value sets and dynamic calls</a>, <a href="area-need.html">Area need</a></p>
 <p class="lede">Before any cross-program work, ask each program what its own dynamic <code>XCTL</code>, <code>LINK</code>, <code>CALL</code>, <code>RETURN TRANSID</code> and <code>START</code> sites can reach. Most can be answered from the program alone, and every one answered there stops costing the union of everyone's need.</p>
+<aside class="primer-box">
+<p><strong>The core insight.</strong>
+If a field's value comes entirely from literals within this program (<em>replacements</em>), the call site can be resolved locally — no cross-program walk needed.
+If it copies from another field, the value may have come from a caller, a file, or a callee — local resolution cannot determine it, and the site goes to the expensive cross-program walk.</p>
+</aside>
 <nav class="toc"><p class="dim">On this page</p><ol><li><a href="#reverse-engineering">Where this shows up in reverse engineering</a></li><li><a href="#the-problem">The problem</a></li><li><a href="#the-intuition">The intuition</a></li><li><a href="#the-example">The example</a></li><li><a href="#step-by-step">Step by step</a></li><li><a href="#the-rule">The rule</a></li><li><a href="#what-goes-wrong">What goes wrong</a></li><li><a href="#in-cobble">In cobble</a></li></ol></nav>
 
 <h2 id="reverse-engineering">Where this shows up in reverse engineering</h2>
@@ -32,7 +38,7 @@
 <p>One doubt is let through: <em>uninitialised</em>. It means some path reaches the site with the operand never written and no <code>VALUE</code>. That storage belongs to this program, and no other program can have put a name in it. The site can reach only the names its literals spell.</p>
 
 <h2 id="the-example">The example</h2>
-<p>One program, three dynamic sites. PROGB, PROGC and PROGD each <code>XCTL</code> to a name in their own commarea: PROGB reads bytes 20–28, PROGC bytes 40–48, PROGD bytes 60–68. Nothing calls PROGD.</p>
+<p>One program, three dynamic sites. PROGB, PROGC and PROGD each <code>XCTL</code> to a name in their own commarea: PROGB reads bytes [20, 28), PROGC bytes [40, 48), PROGD bytes [60, 68). Nothing calls PROGD.</p>
 <pre class="cobol">       IDENTIFICATION DIVISION.
        PROGRAM-ID. PROGA.
        DATA DIVISION.
@@ -101,7 +107,7 @@
 <tr><td>WS-NEXT-PGM</td><td>{} + uninitialised</td><td>{} <span class="changed">+ inbound-linkage</span></td></tr></tbody></table>
 </li>
 <li>
-<p class="note">Line 24: <code>XCTL PROGRAM(WS-FIRST-PGM)</code>. Its walk arrives with {'PROGB␣␣␣'} and no doubt. Trimmed, that spells PROGB. <strong>Resolved</strong> to PROGB. The XCTL's own write to DFHCOMMAREA does not overlap working storage, so it changes none of the three sets.</p>
+<p class="note">Line 24: <code>XCTL PROGRAM(WS-FIRST-PGM)</code>. Its walk arrives with {'PROGB␣␣␣'} and no doubt. Trimmed, that spells PROGB. <strong>Resolved</strong> to PROGB. The XCTL writes nothing in PROGA and never returns, so it changes none of the three sets.</p>
 <div class="chips"><span class="chip changed">line 24 → PROGB</span></div>
 </li>
 <li>
@@ -119,13 +125,13 @@
 <summary>What each site is charged, and PROGA's entry row <span class="dim">(3 steps)</span></summary>
 <ol class="steps">
 <li>
-<p class="note">The entry rows of the other members, on the commarea slot. Their union is what an unresolved commarea site is charged. PROGA's own row is in it too, because PROGA reads LK-NEXT (bytes 0–8) to pick its target.</p>
+<p class="note">The entry rows of every member, on the commarea slot. Their union is what an unresolved commarea site is charged. PROGA's own row is in it too, because PROGA reads LK-NEXT (bytes [0, 8)) to pick its target.</p>
 <table class="state"><tbody><tr><th>member</th><th>entry, commarea</th></tr>
-<tr><td>PROGA</td><td>[0:8]</td></tr>
-<tr><td>PROGB</td><td>[20:28]</td></tr>
-<tr><td>PROGC</td><td>[40:48]</td></tr>
-<tr><td>PROGD</td><td>[60:68]</td></tr>
-<tr><td>union</td><td class="changed">[0:8] [20:28] [40:48] [60:68] = 32 bytes</td></tr></tbody></table>
+<tr><td>PROGA</td><td>[0, 8)</td></tr>
+<tr><td>PROGB</td><td>[20, 28)</td></tr>
+<tr><td>PROGC</td><td>[40, 48)</td></tr>
+<tr><td>PROGD</td><td>[60, 68)</td></tr>
+<tr><td>union</td><td class="changed">[0, 8) [20, 28) [40, 48) [60, 68) = 32 bytes</td></tr></tbody></table>
 </li>
 <li>
 <p class="note">The charge at each site, as <code>--explain PROGA</code> reports it. A resolved site pays only for the programs it reaches. The unresolved one pays the union, including PROGD, which nothing can reach from here.</p>
@@ -137,8 +143,8 @@
 <li>
 <p class="note">PROGA's entry row across rounds. In round 1 no row is known yet, so only its own target read counts: 8 bytes. In round 2 the charges arrive. The 32 bytes come from line 30 alone; lines 24 and 27 add nothing it does not already hold.</p>
 <table class="state"><tbody><tr><th>round</th><th>PROGA on entry</th></tr>
-<tr><td>1</td><td>[0:8], 8 bytes</td></tr>
-<tr><td>2</td><td class="changed">[0:8] [20:28] [40:48] [60:68], 32 bytes</td></tr></tbody></table>
+<tr><td>1</td><td>[0, 8), 8 bytes</td></tr>
+<tr><td>2</td><td class="changed">[0, 8) [20, 28) [40, 48) [60, 68), 32 bytes</td></tr></tbody></table>
 </li>
 </ol>
 </details>
@@ -206,6 +212,7 @@ charge(site, slot) = ⋃ entry(c)[slot] for c in callees(site), if resolved<br>
 <li><strong>Values that are not program names.</strong> If no value looks like a program name, the site is resolved to nothing and charged nothing, with <code>no-program-name</code>. That matches the combine, which links such a site to nothing.</li>
 <li><strong>The walk starts at the program's entry.</strong> It assumes storage holds its <code>VALUE</code> or nothing on entry. A <code>CALL</code>ed batch subprogram keeps its working storage between calls; a literal written after the site on an earlier call is not a reaching definition here. The value is still one of this program's literals, but the site's callees can miss it. (Read from the code; not reproduced.)</li>
 <li><strong>Without a CSD, transactions say so.</strong> A <code>RETURN TRANSID</code> or <code>START</code> without <code>--config</code> is unresolved with <code>no-csd</code>, not resolved to nothing. Resolving to nothing would charge nothing and drop the bytes the started program needs.</li>
+<li><strong>An incomplete CSD drops bytes.</strong> The same argument applies to a transaction id the CSD does not list, but there the site <em>is</em> resolved to nothing and charged nothing, with <code>transaction-not-in-csd</code>. If the CSD is merely incomplete and the id does start a program, that program's need is dropped. This is unlike a callee missing from the corpus, which is charged every byte. The tool trusts the CSD it is given; the <code>--sites</code> reason is the only trace.</li>
 </ul>
 
 <h2 id="in-cobble">In cobble</h2>

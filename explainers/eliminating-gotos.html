@@ -6,7 +6,7 @@
 <title>Eliminating GOTOs</title>
 <link rel="stylesheet" href="explainer.css">
 <script type="module">
-  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/+esm";
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/+esm";
   const light = matchMedia("(prefers-color-scheme: light)").matches;
   mermaid.initialize({
     startOnLoad: true,
@@ -22,15 +22,16 @@
 <nav class="back"><a href="index.html">← All explainers</a></nav>
 <div class="kicker">Graph algorithms · rewriting a tree, not just reading one</div>
 <h1>Eliminating GOTOs</h1>
+<p class="prereqs"><strong>Read first:</strong> nothing — standalone</p>
 <p class="lede">A forward jump past some statements becomes an <code>IF</code> that skips them. A backward jump back to a label becomes a loop around them. Both are the same move: wrap the statements the jump used to skip over, in whichever control structure makes the skipping implicit.</p>
-<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#reverse-engineering">Where this shows up in reverse engineering</a></li><li><a href="#the-problem">The problem</a></li><li><a href="#a-forward-jump-becomes-an-if">A forward jump becomes an IF</a></li><li><a href="#a-backward-jump-becomes-a-loop">A backward jump becomes a loop</a></li><li><a href="#when-the-target-is-in-an-outer-scope">When the target is in an outer scope</a></li><li><a href="#what-goes-wrong">What goes wrong</a></li><li><a href="#where-this-is-used">Where this is used</a></li></ol></nav>
+<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#reverse-engineering">Where this shows up in reverse engineering</a></li><li><a href="#the-problem">The problem</a></li><li><a href="#a-forward-jump-becomes-an-if">A forward jump becomes an IF</a></li><li><a href="#a-backward-jump-becomes-a-loop">A backward jump becomes a loop</a></li><li><a href="#when-the-target-is-in-an-outer-scope">When the target is in an outer scope</a></li><li><a href="#what-goes-wrong">What goes wrong</a></li><li><a href="#where-this-is-used">Where this is used</a></li><li><a href="#references">References</a></li></ol></nav>
 
 <h2 id="reverse-engineering">Where this shows up in reverse engineering</h2>
 <p>This is the step that makes a decades-old, GOTO-heavy program's logic expressible in a modern language at all. A code generator that only emits <code>if</code> and <code>while</code> has nothing to produce from a jump — something upstream has to remove every one first.</p>
 <ul>
 <li><strong>Legacy-to-modern migration, directly:</strong> turning COBOL control flow into Java, or any other target that lacks an unrestricted jump, has to clear every <code>GOTO</code> out before a code generator can even start — this page's three rewrites are that clearing step, applied one jump at a time.</li>
-<li><strong>Why local rules, not the universal construction:</strong> real COBOL sections are almost always already reducible, so the forward/backward/climb-one-level rewrites finish the job without ever flattening the method into one dispatch loop — see <a href="structured-program-theorem.html">the structured program theorem</a> for the generic fallback these rules are quietly avoiding.</li>
-<li><strong>The order these rules run in matters</strong> for the same reason it matters anywhere else in this pipeline: a jump has to be classified — forward, backward, or crossing a scope — using the dominance and reducibility results from the earlier pages before any rewrite can be chosen safely.</li>
+<li><strong>Why local rules, not the universal construction:</strong> a COBOL <code>GO TO</code> can only target a paragraph, and paragraph labels sit at the top level of their section, never inside a nested <code>IF</code> or loop — so a source jump only ever needs to move <em>outward</em> to meet its label. The climb-one-level rewrite handles exactly that, and the forward/backward rewrites finish the job from there, without ever flattening the method into one dispatch loop — see <a href="structured-program-theorem.html">the structured program theorem</a> for the generic fallback these rules are quietly avoiding.</li>
+<li><strong>The order these rules run in matters:</strong> a jump has to be classified — forward, backward, or crossing a scope — before any rewrite can be chosen, and that classification comes purely from where the jump and its label sit in the statement tree. A cross-scope jump climbs outward first; only once it and its label are siblings does the forward or backward rewrite apply.</li>
 </ul>
 
 <h2 id="the-problem">The problem</h2>
@@ -57,7 +58,7 @@ flowchart TD
     S1 --> S2
     S2 --> Skip["SKIP: S3"]
     J -->|C1| Skip
-    class J,S1,S2 changed
+    class S1,S2 changed
     classDef changed fill:#f5b041,stroke:#f5b041,color:#000
 </pre>
 <p class="dim">Skipped when C1 holds</p><div class="chips"><span class="chip changed">S1</span><span class="chip changed">S2</span></div></li>
@@ -103,7 +104,7 @@ flowchart TD
 <pre class="mermaid">
 flowchart TD
     S1 --> S2
-    S2 --> Test["WHILE C1"]
+    S2 --> Test["test after body: WHILE C1"]
     Test -->|true| S1
     Test -->|false| S3
     class S1,S2,Test changed
@@ -115,7 +116,8 @@ flowchart TD
 
 <h2 id="when-the-target-is-in-an-outer-scope">When the target is in an outer scope</h2>
 <p>Both rewrites above assume the jump and its label sit in the <em>same</em> block of statements. A jump into or out of a nested <code>IF</code> or loop does not — there is no single enclosing block containing exactly "the statements the jump skips," because the jump and its label are nested at different depths.</p>
-<p>The fix climbs one level at a time: wrap everything <em>after</em> the jump, in whatever scope the jump is currently in, inside a new <code>IF</code> guarded by a fresh flag — set that flag right where the jump was, instead of jumping. The jump itself is then re-emitted one level up, in the enclosing scope, now reading that same flag to decide whether to keep going. Repeat until the jump and its label are siblings in the same block — at which point the ordinary forward or backward rewrite above finishes the job.</p>
+<p>The fix climbs one level at a time: wrap everything <em>after</em> the jump, in whatever scope the jump is currently in, inside a new <code>IF</code> guarded by <code>NOT</code> a fresh flag — set that flag right where the jump was, instead of jumping. The jump itself is then re-emitted one level up, in the enclosing scope, now reading that same flag to decide whether to keep going. Repeat until the jump and its label are siblings in the same block — at which point the ordinary forward or backward rewrite above finishes the job. This is Erosa and Hendren's outward-movement transformation.<sup>[1]</sup></p>
+<p>The flag also has to be cleared to false before the nested construct is entered, on every path — not only set to true on the jump path. Without that, the first time the jump fires the flag stays true; if the code sits inside a loop, the next pass arrives with a stale <code>TRUE</code>, skips <code>I2</code> even though the jump never fired, and takes the jump again. (Erosa and Hendren initialise the flag and clear it again at the label; clearing it just before the construct, as below, has the same effect for this one climb. cobol-rekt's implementation does neither — it only ever sets the flag to true — a known gap; see <a href="#what-goes-wrong">what goes wrong</a>.)</p>
 <pre class="mermaid">
 flowchart TD
     subgraph Outer["outer block"]
@@ -149,27 +151,33 @@ flowchart TD
             end
             I1 --> SetFlag --> Guard
         end
-        O1 --> Inner
+        O1 --> InitFlag["SET FLAG TO FALSE"] --> Inner
         Inner --> CheckFlag["IF FLAG GOTO LABEL"]
         CheckFlag --> O2["..."]
     end
     Label["LABEL: ..."]
     CheckFlag -.->|"jumps to, same condition"| Label
     O2 --> Label
-    class SetFlag,CheckFlag changed
+    class InitFlag,SetFlag,CheckFlag changed
     classDef changed fill:#f5b041,stroke:#f5b041,color:#000
 </pre>
-<p>After one climb the jump is a level shallower; a jump nested several levels deep climbs several times before it and its label are finally siblings, ready for the ordinary rewrite.</p>
+<p>Traced both ways: when <code>something</code> holds, the original runs <code>I1</code> then jumps straight to <code>LABEL</code>; the rewrite runs <code>I1</code>, sets the flag, skips <code>I2</code>, and the re-emitted jump skips <code>O2</code> — the same. When <code>something</code> does not hold, both run <code>O2</code> then reach <code>LABEL</code>, and the flag, cleared on the way in, is false. After one climb the jump is a level shallower; a jump nested several levels deep climbs several times before it and its label are finally siblings, ready for the ordinary rewrite.</p>
 
 <h2 id="what-goes-wrong">What goes wrong</h2>
 <ul>
 <li><strong>Climbing out is implemented; climbing in or sideways is not.</strong> A jump into a scope it is not currently in, or across to a sibling scope's interior, needs a different transformation — this technique's own source project states plainly that only the outward climb is implemented, the others are not.</li>
-<li><strong>The fresh flag is not actually guaranteed fresh.</strong> Each climb invents a flag name to carry the "should I keep going" fact up one level — and the real implementation does not yet guarantee two different jumps, descoped through overlapping scopes, get two different names. A second jump reusing the same name mid-transformation is a real, acknowledged risk, not a hypothetical one.</li>
-<li><strong>This mutates the tree it is given, in place.</strong> Unlike <a href="tree-zippers.html">tree zippers</a>, which build a new path to a new root and leave the original tree exactly as it was, this rewrite changes the one tree handed to it. Keep a copy first if the original still needs to exist afterward.</li>
+<li><strong>The fresh flag is not fresh at all.</strong> Each climb needs a flag to carry the "should I keep going" fact up one level, but cobol-rekt uses one hard-coded name for every climb of every jump, and another fixed name for the forward and backward rewrites — so two jumps descoped through overlapping scopes share one flag. The project's README acknowledges these names are not yet unique.</li>
+<li><strong>The flag is never cleared, and later climbs drop the condition.</strong> cobol-rekt only ever sets the flag to true, so the stale-flag problem above is live inside loops. Worse, each climb replaces the jump it re-emitted one level up with an unconditional set-to-true rather than a conditional one, so a jump nested two or more levels deep comes out always taken. The project's README notes the climb "does not utilise the value of the <code>IF</code> condition". The construction drawn above is the correct one; the implementation is not there yet.</li>
+<li><strong>This mutates the tree it is given, in place.</strong> <a href="tree-zippers.html">Tree zippers</a> are related background: they show how one <em>could</em> make the same deep edits to an immutable tree, building a new path to a new root and leaving the original exactly as it was. This pass, as implemented, does not — it changes the one tree handed to it. Keep a copy first if the original still needs to exist afterward.</li>
 </ul>
 
 <h2 id="where-this-is-used">Where this is used</h2>
 <p>Clearing arbitrary jumps out of legacy procedural code one block at a time, as a step before translating it into a language that only has structured control flow at all — a language with no <code>GOTO</code> cannot express one directly, so something has to remove it first. Best suited to jumps confined to a modest span of code, like one section; a jump spanning most of a large program climbs through most of that program's nesting before it reaches a scope it shares with its label.</p>
+
+<h2 id="references">References</h2>
+<ol class="refs">
+<li>A. M. Erosa and L. J. Hendren. "Taming Control Flow: A Structured Approach to Eliminating Goto Statements." <em>Proceedings of the 1994 International Conference on Computer Languages (ICCL)</em>, 1994, pp. 229–240. The outward-movement transformation and its logical flag variables.</li>
+</ol>
 </main>
 </body>
 </html>

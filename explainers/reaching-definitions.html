@@ -11,6 +11,7 @@
 <nav class="back"><a href="index.html">← All explainers</a></nav>
 <div class="kicker">Explainer 3 of 11</div>
 <h1>Gen/kill and reaching definitions</h1>
+<p class="prereqs"><strong>Read first:</strong> <a href="fixpoints.html">Fixpoints and worklists</a></p>
 <p class="lede">For every read of a variable, which writes could have produced the value it sees.</p>
 <nav class="toc"><p class="dim">On this page</p><ol><li><a href="#reverse-engineering">Where this shows up in reverse engineering</a></li><li><a href="#the-problem">The problem</a></li><li><a href="#the-intuition">The intuition</a></li><li><a href="#the-example">The example</a></li><li><a href="#step-by-step">Step by step</a></li><li><a href="#the-rule">The rule</a></li><li><a href="#what-goes-wrong">What goes wrong</a></li><li><a href="#in-cobble">In cobble</a></li></ol></nav>
 
@@ -49,7 +50,8 @@
            MOVE 'DONE' TO WS-A.
            MOVE WS-A TO WS-C.
            STOP RUN.</pre>
-<p>Statements are named the way cobble names them: <code>MAIN-PARA/0</code> is the <code>IF</code>, and <code>MAIN-PARA/0.then.0</code> and <code>MAIN-PARA/0.else.0</code> are the first statement in each arm. A read is identified by its statement and the bytes it reads: <code>WS-A@working_storage[1:5]</code> is <code>WS-A</code>, bytes 1 to 5 of working storage, after the one-byte <code>WS-FLAG</code>.</p>
+<p>Statements are named the way cobble names them: <code>MAIN-PARA/0</code> is the <code>IF</code>, and <code>MAIN-PARA/0.then.0</code> and <code>MAIN-PARA/0.else.0</code> are the first statement in each arm. A read is identified by its statement and the bytes it reads: <code>WS-A@working_storage[1:5]</code> is <code>WS-A</code>, occupying bytes <code>[1, 5)</code> of working storage — bytes 1, 2, 3 and 4, after the one-byte <code>WS-FLAG</code> at byte 0. Byte ranges in these pages count from 0 and are half-open: <code>[start, end)</code> includes <code>start</code> and stops just before <code>end</code>, and cobble writes the same range as <code>[1:5]</code>; <a href="byte-extents.html">byte extents</a> builds on this.</p>
+<p>The walk starts from an empty set, as cobble's does. <a href="fixpoints.html">Fixpoints</a> instead credits every field to a <code>start</code> pseudo-definition on entry; that is a teaching device cobble does not have (see the last point under <a href="#what-goes-wrong">what goes wrong</a>).</p>
 
 <h2 id="step-by-step">Step by step</h2>
 <details class="walk">
@@ -94,18 +96,18 @@ in(s)   = ⋃ out(p) for every predecessor p<br>
 out(s)  = gen(s) ∪ (in(s) − kill(s))<br>
 definers(read of v at s) = { d | (d, v) ∈ in(s) }
 </div>
-<p>This is the same shape as every analysis in the <a href="fixpoints.html">fixpoints</a> page: a transfer per statement and a union where paths meet. With no loop, a single walk in program order already reaches the fixpoint. With a loop, the worklist runs it until nothing grows.</p>
+<p>This is the same shape as every analysis in the <a href="fixpoints.html">fixpoints</a> page: a transfer per statement and a union where paths meet. With no loop, a single walk in <a href="traversal-orders.html">reverse postorder</a> already reaches the fixpoint — not necessarily in source order, since a <code>PERFORM</code>ed paragraph may sit later in the text than the code that runs after it. With a loop, the worklist runs it until nothing grows.</p>
 
 <h2 id="what-goes-wrong">What goes wrong</h2>
 <ul>
 <li><strong>Only a certain overwrite may kill.</strong> A write that <em>might</em> replace the value — through an array element with an unknown subscript, or a write that covers only part of the variable — must not remove the old definitions, because the old value may still be there. Such a write is a <em>weak update</em>: it generates without killing. Killing on a maybe is the one mistake here that produces a wrong answer rather than a loose one. In COBOL the partial case is everywhere; the <a href="byte-extents.html">byte extents</a> page is about it.</li>
 <li><strong>Loops bring definitions back round.</strong> A write at the bottom of a loop reaches a read at the top on the next iteration. That is why the analysis needs a fixpoint rather than a single walk.</li>
 <li><strong>Union is generous.</strong> The answer is every write that <em>could</em> reach, along paths the analysis cannot rule out. If the <code>IF</code> condition were always true, the else arm's write would still be listed: the analysis does not evaluate conditions.</li>
-<li><strong>A read with no definition</strong> — <code>WS-FLAG</code> in the <code>IF</code> here — gets no row. Its value comes from outside the program, or from its initial state.</li>
+<li><strong>A read with no definition</strong> — <code>WS-FLAG</code> in the <code>IF</code> here — gets no definer here — cobble records the read with an empty definer list. Its value comes from outside the program, or from its initial state. With the <code>start</code> pseudo-definition the <a href="fixpoints.html">fixpoints</a> page uses, it would get a row whose only definer is <code>start</code>; the rows for <code>WS-A</code> would not change, because both arms of the <code>IF</code> kill <code>start</code>. <a href="value-sets.html">Value sets</a> reports the same situation as the reason <code>uninitialised</code>.</li>
 </ul>
 
 <h2 id="in-cobble">In cobble</h2>
-<p>The fixpoint stage (<code>cobble-dataflow-fixpoint</code>) collects each read's definers as it walks and writes one row per read into <code>defs.jsonl</code>. Its definitions are kept per byte range, not per variable name; the next page shows why.</p>
+<p>The fixpoint stage (<code>cobble-dataflow-fixpoint</code>) collects each read's definers as it walks and writes one row per read into <code>defs.jsonl</code>. Its definitions are kept per byte range, not per variable name.</p>
 </main>
 
 </body>

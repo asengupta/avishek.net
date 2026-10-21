@@ -11,7 +11,7 @@
 <div class="kicker">cobble · field dataflow</div>
 <h1>Algorithm explainers</h1>
 <p class="lede">The techniques cobble's field dataflow is built on, for engineers who have not met them before. Each page states a problem, walks a small COBOL program one statement at a time with the analysis state after each, and ends with the precise rule and where it goes wrong.</p>
-<p>Read them in order; each builds on the one before.</p>
+<p>Read them in order; each page's "Read first" line names what it actually depends on.</p>
 <ol>
 <li><a href="traversal-orders.html">Visiting a graph: BFS, DFS and reverse postorder</a> — the standard orders for walking a program's statements, and why reverse postorder hands every statement its input complete.</li>
 <li><a href="fixpoints.html">Fixpoints and worklists</a> — how an analysis handles loops: apply the rules until nothing changes, and why the visiting order matters for cost but not for the answer.</li>
@@ -28,15 +28,19 @@
 <li><a href="memoised-reachability.html">Answering every walk once</a> — strongly connected components and a memo, so thousands of walks over the same places cost one walk; plus place identity and an edge index.</li>
 <li><a href="hop-limits.html">Bounding walks by crossings</a> — a limit on program crossings per walk that marks every result it cut, and how to pick the limit.</li>
 </ol>
+<p>Background — if the COBOL or CICS vocabulary in the pages above is unfamiliar:</p>
+<ul>
+<li><a href="cobol-primer.html">COBOL and CICS in 60 seconds</a> — the minimum vocabulary to follow the explainers: fields, MOVE, PERFORM, REDEFINES, commarea, LINK, XCTL, and the CSD.</li>
+</ul>
 <p>Related — not part of cobble's own build-up, each pulled from wherever it actually came from:</p>
 <ul>
-<li><a href="dominance-and-reachability.html">Dominance and reachability</a> — used by a different tool in the forge; where a branch's arms come back together, exactly which statements are inside a loop, and why carrying one pointer per statement instead of a whole candidate set turns an impractically slow computation into a fast one.</li>
-<li><a href="tree-zippers.html">Tree zippers</a> — a data structure, not an analysis, from <a href="https://github.com/avishek-sen-gupta/cobol-rekt">cobol-rekt</a>'s catalogue; a cursor into an immutable tree that remembers the way back up, so editing one node deep inside only rebuilds the handful of ancestors above it.</li>
-<li><a href="reducibility-and-loops.html">Reducibility and loop detection</a> — also from <a href="https://github.com/avishek-sen-gupta/cobol-rekt">cobol-rekt</a>'s catalogue; three ways to tell a loop with one entry from a loop with two, agreeing on the same tiny counter-example each time.</li>
+<li><a href="dominance-and-reachability.html">Dominance and reachability</a> — from <a href="https://github.com/avishek-sen-gupta/cobol-rekt">cobol-rekt</a>'s catalogue, and the post-dominator half from a separate Java method-narration tool; where a branch's arms come back together, exactly which statements are inside a loop, and why carrying one pointer per statement instead of a whole candidate set makes every visit cheap.</li>
+<li><a href="tree-zippers.html">Tree zippers</a> — a data structure, not an analysis, from <a href="https://github.com/avishek-sen-gupta/cobol-rekt">cobol-rekt</a>'s catalogue; a cursor into an immutable tree that remembers the way back up, so an edit deep inside never has to re-walk from the root to find the ancestors it must rebuild — shown as a simplified, ancestor-only variant of Huet's zipper.</li>
+<li><a href="reducibility-and-loops.html">Reducibility and loop detection</a> — also from <a href="https://github.com/avishek-sen-gupta/cobol-rekt">cobol-rekt</a>'s catalogue; three ways to tell a loop with one entry from a loop with two, all three agreeing on the same three-node counter-example.</li>
 <li><a href="dj-graphs-and-natural-loops.html">DJ graphs and natural loop bodies</a> — Sreedhar, Gao and Lee's technique behind reducibility's third method above; the exact statement set of every loop's body, nested ones told apart from the outer loops around them, in one bottom-up pass.</li>
 <li><a href="reaching-conditions-slice.html">Reaching conditions</a> — also from <a href="https://github.com/avishek-sen-gupta/cobol-rekt">cobol-rekt</a>'s catalogue; not to be confused with <a href="reaching-definitions.html">reaching definitions</a> above — this is the boolean condition on the data that must hold to reach a statement at all, not which write a read sees.</li>
 <li><a href="eliminating-gotos.html">Eliminating GOTOs</a> — also from <a href="https://github.com/avishek-sen-gupta/cobol-rekt">cobol-rekt</a>'s catalogue; a forward jump becomes an <code>IF</code>, a backward jump becomes a loop, and a jump into an outer scope climbs there one level at a time.</li>
-<li><a href="structured-program-theorem.html">The structured program theorem</a> — Böhm and Jacopini's guarantee that any flowchart can be rewritten with only sequence, selection and iteration, why that guarantee quietly needs an extra variable more often than the one-sentence version admits, and why eliminating GOTOs' local rules almost never have to reach for the generic fallback.</li>
+<li><a href="structured-program-theorem.html">The structured program theorem</a> — Böhm and Jacopini's guarantee that any flowchart can be rewritten with only sequence, selection and iteration, why that guarantee quietly needs an extra variable more often than the one-sentence version admits, and why that generic construction is a theoretical guarantee here, not something eliminating GOTOs' local rules ever run.</li>
 </ul>
 </main>
 </body>

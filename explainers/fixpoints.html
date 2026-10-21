@@ -11,15 +11,16 @@
 <nav class="back"><a href="index.html">← All explainers</a></nav>
 <div class="kicker">Explainer 2 of 11</div>
 <h1>Fixpoints and worklists</h1>
+<p class="prereqs"><strong>Read first:</strong> <a href="traversal-orders.html">Visiting a graph</a></p>
 <p class="lede">How a program analysis handles loops: keep applying the rules until nothing changes.</p>
 <nav class="toc"><p class="dim">On this page</p><ol><li><a href="#reverse-engineering">Where this shows up in reverse engineering</a></li><li><a href="#the-problem">The problem</a></li><li><a href="#the-intuition">The intuition</a></li><li><a href="#the-example">The example</a></li><li><a href="#step-by-step">Step by step</a></li><li><a href="#the-rule">The rule</a></li><li><a href="#what-goes-wrong">What goes wrong</a></li><li><a href="#in-cobble">In cobble</a></li></ol></nav>
 
 <h2 id="reverse-engineering">Where this shows up in reverse engineering</h2>
 <p>This is the central technique a static dataflow tool for a legacy corpus is built on: a byte-level fixpoint over every field, run once per program, that answers which writes reach each read and what values a field can hold — everything else in this series of pages is a refinement of that one loop.</p>
 <ul>
-<li><strong>A paragraph that <code>PERFORM</code>s itself, or a field whose value loops back into its own computation,</strong> needs the worklist to revisit it until nothing changes. Stopping after one pass over such a program does not produce an approximate answer — it produces a specific wrong one, silently, on exactly the programs with enough real control flow to be worth analysing in the first place.</li>
-<li><strong>The same shape appears on the Java side</strong> in call-graph construction: resolving every virtual call's possible targets is itself a worklist that "drains" once nothing new is discovered, for the same reason — a class hierarchy with its own cycles of interface implementations needs the same keep-going-until-stable discipline, not a single top-to-bottom pass.</li>
-<li><strong>Why it has to be a fixpoint and not a cache:</strong> a legacy program's fields are exactly the place self-referential logic accumulates over decades of maintenance — a running total updated from itself, a flag a loop both reads and sets. Those are the cases a one-pass analysis gets wrong first.</li>
+<li><strong>A loop whose body reads a field it also writes</strong> — a counter, a running total — needs the worklist to revisit it until nothing changes. Stopping after one pass over such a program does not produce a merely loose answer — it produces an incomplete one, missing the writes that arrive round the loop, which every later stage then trusts as final. It does so silently, on exactly the programs with enough real control flow to be worth analysing in the first place.</li>
+<li><strong>The same shape appears on the Java side</strong> in call-graph construction: resolving every virtual call's possible targets is itself a worklist that "drains" once nothing new is discovered, for the same reason — each newly reachable method can create objects of new types, which add new targets to virtual calls already visited, so the walk has to keep going until nothing new turns up, not stop after a single top-to-bottom pass.</li>
+<li><strong>Why one pass is not enough in legacy code:</strong> a legacy program's fields are exactly the place self-referential logic accumulates over decades of maintenance — a running total updated from itself, a flag a loop both reads and sets. Those are the cases a one-pass analysis gets wrong first.</li>
 </ul>
 
 <h2 id="the-problem">The problem</h2>
@@ -112,7 +113,8 @@ until the worklist is empty
 <ul>
 <li><strong>Order is cost.</strong> First-in-first-out wanders out of the loop before the loop has settled, then has to redo everything after it once the loop changes. Reverse postorder, with the loop body ahead of the code after the loop, finishes the loop first. On cobble's largest program, changing order alone cut statement visits from about 107,000 to about 20,000, with an identical answer.</li>
 <li><strong>Budgets.</strong> A big program with many nested loops can still need a lot of visits, so a real analysis caps them. Stopping early gives notes that are <em>missing</em> some writes, never ones that are wrong: everything recorded was reached by a real path. Cobble publishes such a result and marks it unsettled.</li>
-<li><strong>Non-monotone rules break everything.</strong> If a transfer could shrink a fact, the loop could oscillate forever, and different orders could stop at different answers.</li>
+<li><strong>Non-monotone rules break everything.</strong> If a transfer could shrink a fact, the loop could oscillate forever, and different orders could stop at different answers.
+<p>A concrete example: suppose that, to keep notes short, the loop test <code>MAIN-PARA/0</code> used the rule "when a second definition of a field arrives, drop the one already noted — keep only the newest". Follow <code>WS-B</code> there. First visit: only <code>start</code> arrives, so the note is <code>{start}</code>. After the body, <code>LOOP-PARA/0</code> arrives as a second definition, so <code>start</code> is dropped: <code>{LOOP-PARA/0}</code>. Next visit, <code>start</code> arrives again from before the loop — now it is the newcomer — so <code>LOOP-PARA/0</code> is dropped: <code>{start}</code>. The note alternates <code>{start}</code>, <code>{LOOP-PARA/0}</code>, <code>{start}</code>, … for ever; the worklist never empties, and a budget that cuts it off returns whichever of the two it stopped on. The right note, <code>{LOOP-PARA/0, start}</code>, never appears.</p></li>
 </ul>
 
 <h2 id="in-cobble">In cobble</h2>

@@ -69,6 +69,47 @@ code { font-family: var(--mono); font-size: 0.88em; color: var(--accent); overfl
 
 .lede { color: var(--muted); font-size: 1.08rem; }
 
+.prereqs {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-bottom: 1.5rem;
+  padding: 0.5rem 1rem;
+  border-left: 3px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+.prereqs a { color: var(--blue); }
+
+.primer-box {
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0;
+  border-left: 3px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+  border-radius: 0 6px 6px 0;
+  font-size: 0.95rem;
+}
+.primer-box p { margin: 0.4rem 0; }
+
+.note-box {
+  padding: 0.8rem 1rem;
+  margin: 1rem 0;
+  border-left: 3px solid var(--amber);
+  background: color-mix(in srgb, var(--amber) 5%, transparent);
+  border-radius: 0 6px 6px 0;
+  font-size: 0.95rem;
+}
+
+.reasons-box {
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--panel);
+}
+.reasons-box h3 { margin-top: 0; font-size: 1rem; }
+.reasons-box dl { margin: 0.5rem 0 0; }
+.reasons-box dt { font-family: var(--mono); font-size: 0.88em; color: var(--accent); margin-top: 0.5rem; }
+.reasons-box dd { margin-left: 1.2rem; margin-top: 0.1rem; }
+
 pre.cobol {
   font-family: var(--mono);
   font-size: 0.82rem;
@@ -167,5 +208,10 @@ h2 { scroll-margin-top: 1rem; }
 details.walk { border: 1px solid var(--rule); border-radius: 8px; margin: 1rem 0; background: var(--panel); }
 details.walk > summary { cursor: pointer; padding: 0.6rem 0.8rem; font-weight: 600; color: var(--accent); }
 details.walk[open] > summary { border-bottom: 1px solid var(--rule); }
+pre.mermaid { margin: 1rem 0; text-align: center; overflow-x: auto; max-width: 100%; background: none; }
+
+ol.refs { font-size: 0.9rem; color: var(--muted); padding-left: 1.4rem; }
+ol.refs li { margin: 0.35rem 0; }
+
 details.walk > ol.steps { margin: 0.8rem; }
 details.walk ol.steps > li { background: var(--ground); }

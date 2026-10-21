@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>COBOL and CICS in 60 seconds</title>
+<link rel="stylesheet" href="explainer.css">
+</head>
+<body>
+<main>
+<nav class="back"><a href="index.html">← All explainers</a></nav>
+<div class="kicker">Background</div>
+<h1>COBOL and CICS in 60 seconds</h1>
+<p class="lede">The minimum COBOL and CICS vocabulary to follow the explainers. One sentence per concept, with a short code fragment where it helps. The explainers describe <strong>cobble</strong>, a static-analysis tool that reads COBOL and CICS source without running it.</p>
+
+<h2 id="cobol">COBOL</h2>
+
+<h3 id="fields">Fields and storage</h3>
+<p><strong>WORKING-STORAGE SECTION</strong> is where a program declares its variables. Each variable is called a <em>field</em>.</p>
+<p><strong>PICTURE clause</strong> (abbreviated <code>PIC</code>) says what a field holds and how wide it is.</p>
+<pre class="cobol">       01  WS-NAME        PIC X(20).     20 characters of text
+       01  WS-AMOUNT      PIC 9(7)V99.   9 digits; V marks an implied decimal
+                                         point before the last 2 and takes
+                                         no storage, so 9 bytes</pre>
+<p><strong>VALUE clause</strong> gives a field its starting contents when the program begins: <code>01 WS-N PIC 9(2) VALUE 0.</code> A field without one starts with whatever the storage held.</p>
+<p><strong>Group items.</strong> A field can contain sub-fields. The group occupies the concatenated bytes of its children — no extra padding, no hidden header.</p>
+<pre class="cobol">       01  WS-DATE.
+           05  WS-YEAR    PIC 9(4).
+           05  WS-MONTH   PIC 9(2).
+           05  WS-DAY     PIC 9(2).</pre>
+<p><strong>Level numbers</strong> (<code>01</code>, <code>05</code>, …) give the nesting: an <code>01</code> starts a new top-level item, and each higher number belongs to the nearest lower-numbered item above it.</p>
+<p>Writing to <code>WS-DATE</code> writes all eight bytes. Writing to <code>WS-MONTH</code> writes only bytes <code>[4, 6)</code> — the explainers count bytes from 0 and write ranges half-open, so this is bytes 4 and 5, the fifth and sixth.</p>
+<p><strong>REDEFINES</strong> lets two field names describe the same physical bytes — like a C <code>union</code>.</p>
+<pre class="cobol">       01  WS-STAMP       PIC X(8).
+       01  WS-STAMP-NUM REDEFINES WS-STAMP  PIC 9(8).</pre>
+<p>Both names point at the same eight bytes. A write through one is visible through the other.</p>
+<p><strong>OCCURS</strong> declares a table: <code>05 WS-PGMS PIC X(8) OCCURS 10.</code> is ten 8-byte elements, read as <code>WS-PGMS(I)</code>. <strong>OCCURS DEPENDING ON</strong> makes the element count another field's runtime value, so the table's length — and the position of anything after it — is not known until the program runs.</p>
+
+<h3 id="statements">Statements</h3>
+<p><strong>MOVE</strong> copies data from one field to another — this is assignment.</p>
+<pre class="cobol">           MOVE WS-A TO WS-B.</pre>
+<p><strong>ADD</strong> is arithmetic in place: <code>ADD 1 TO WS-N</code> is <code>WS-N = WS-N + 1</code>.</p>
+<p><strong>IF / ELSE / END-IF</strong> is conditional branching, the same as in any language.</p>
+<pre class="cobol">           IF WS-FLAG = 'Y'
+               MOVE 1 TO WS-COUNT
+           ELSE
+               MOVE 0 TO WS-COUNT
+           END-IF.</pre>
+<p><strong>PERFORM</strong> calls a paragraph — think of it as a function call. <code>PERFORM CALC-TOTAL</code> runs the <code>CALC-TOTAL</code> paragraph and returns. <code>PERFORM ... THRU</code> runs a range of consecutive paragraphs.</p>
+<pre class="cobol">           PERFORM CALC-TOTAL.
+           PERFORM INIT-PARA THRU INIT-EXIT.</pre>
+<p><strong>PERFORM … UNTIL</strong> is a loop: <code>PERFORM LOOP-PARA UNTIL WS-N &gt; 3</code> tests the condition <em>before</em> each run of the body (like <code>while (!(WS-N &gt; 3))</code>), so the body may run zero times.</p>
+<p><strong>Fall-through.</strong> Paragraphs are just labels: when one ends without a jump, control runs on into the next paragraph in the source. A paragraph reached by <code>PERFORM</code> returns to its caller instead.</p>
+<p><strong>STOP RUN</strong> ends the program.</p>
+<p><strong>CALL</strong> runs another program. <code>CALL 'PROGB'</code> names it as a literal; <code>CALL WS-PGM</code> (a <em>dynamic</em> call) calls whatever name the field holds at that moment, which the source alone does not show.</p>
+
+<h2 id="cics">CICS</h2>
+<p>CICS is IBM's <em>transaction server</em>. Programs don't run as standalone executables; they run as online transactions on the server.</p>
+<p><strong>Communication area (commarea)</strong> is a shared byte buffer passed between programs. Think of it as a flat byte array. Different programs may map the same bytes to different field names using different copybook layouts.</p>
+<p><strong><code>EXEC CICS LINK</code></strong> calls another program, passing the commarea. The caller waits and resumes when the called program finishes — like a subroutine call.</p>
+<pre class="cobol">           EXEC CICS LINK
+               PROGRAM('PROGA')
+               COMMAREA(WS-COMM)
+               LENGTH(WS-COMM-LEN)
+           END-EXEC.</pre>
+<p><strong><code>EXEC CICS XCTL</code></strong> transfers control to another program. The caller does <em>not</em> resume — like a tail call or a <code>goto</code> to a different program.</p>
+<p><strong><code>EXEC CICS RETURN</code></strong> ends the current program. Optionally starts a new transaction by specifying a <code>TRANSID</code>.</p>
+<p><strong>CSD (CICS System Definition)</strong> is configuration that maps four-character transaction codes to programs. When a user types a transaction code, the CSD tells CICS which program to start.</p>
+
+</main>
+</body>
+</html>

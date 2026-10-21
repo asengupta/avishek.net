@@ -11,8 +11,9 @@
 <nav class="back"><a href="index.html">← All explainers</a></nav>
 <div class="kicker">Explainer 5 of 11</div>
 <h1>Value sets and dynamic calls</h1>
+<p class="prereqs"><strong>Read first:</strong> <a href="fixpoints.html">Fixpoints and worklists</a>, <a href="reaching-definitions.html">Gen/kill and reaching definitions</a></p>
 <p class="lede">Resolving <code>CALL WS-PGM</code> without running the program: track every value a field can hold, and say so when the list may be short.</p>
-<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#reverse-engineering">Where this shows up in reverse engineering</a></li><li><a href="#the-problem">The problem</a></li><li><a href="#the-intuition">The intuition</a></li><li><a href="#the-example">The example</a></li><li><a href="#step-by-step">Step by step</a></li><li><a href="#the-rule">The rule</a></li><li><a href="#what-goes-wrong">What goes wrong</a></li><li><a href="#in-cobble">In cobble</a></li></ol></nav>
+<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#reverse-engineering">Where this shows up in reverse engineering</a></li><li><a href="#the-problem">The problem</a></li><li><a href="#the-intuition">The intuition</a></li><li><a href="#the-example">The example</a></li><li><a href="#step-by-step">Step by step</a></li><li><a href="#the-rule">The rule</a></li><li><a href="#reasons">Reasons taxonomy</a></li><li><a href="#what-goes-wrong">What goes wrong</a></li><li><a href="#in-cobble">In cobble</a></li></ol></nav>
 
 <h2 id="reverse-engineering">Where this shows up in reverse engineering</h2>
 <p>Any call graph for a program with dynamic dispatch has this hole in it until something fills it in — the question is always the same: what values can actually reach the thing deciding where to go next.</p>
@@ -84,12 +85,13 @@
 <h2 id="the-rule">The rule</h2>
 <div class="rule">
 value set  = (values, reasons)<br>
-MOVE literal TO f  : f := ({literal padded to f}, {})<br>
+entry              : f := ({f's VALUE bytes}, {}) if f has a VALUE clause, else ({}, {uninitialised})<br>
+MOVE literal TO f  : f := ({literal padded or truncated to f}, {})<br>
 MOVE g TO f        : f := g's set<br>
-merge              : (values₁ ∪ values₂, reasons₁ ∪ reasons₂), at most 32 values<br>
-never written      : ({}, {uninitialised})<br>
+merge              : (values₁ ∪ values₂, reasons₁ ∪ reasons₂); if more than 32 values, keep the first 32 in sorted order and add over-budget<br>
 call through f     : candidates = trimmed values of f, reasons = f's reasons
 </div>
+<p>The entry line plays the part of the teaching-only <code>start</code> definition on the <a href="fixpoints.html">fixpoints</a> page (cobble itself has no such definition): a <code>VALUE</code> clause supplies the field's starting value, and without one the starting value is unknown. The two <code>MOVE</code> lines gloss over size: when source and target differ in length, an alphanumeric <code>MOVE</code> pads the target with spaces or cuts the value off on the right, so read them as applying that to each value in the set.</p>
 <p>A call site then becomes one of three things in the graph:</p>
 <ul>
 <li><strong>Proven</strong> — exactly one candidate and no reasons. An ordinary call edge, as if the name were written in the source.</li>
@@ -97,9 +99,56 @@ call through f     : candidates = trimmed values of f, reasons = f's reasons
 <li><strong>Unresolved</strong> — no candidates. A single dynamic-target node carrying the expression and the reasons, so the hole is visible rather than silent.</li>
 </ul>
 
+<aside class="reasons-box" id="reasons">
+<h3>Reasons taxonomy</h3>
+<p>Each reason explains why a value set may be incomplete — why the true set of values could be larger than what the analysis found.</p>
+<dl>
+<dt>uninitialised</dt>
+<dd>Some path reaches this point without an exact write to the field, and no <code>WORKING-STORAGE</code> <code>VALUE</code> that cobble can image (text, figurative, or unsigned zoned) covers it. On that path its value is whatever the storage started as. (Introduced here.)</dd>
+<dt>over-budget</dt>
+<dd>More than 32 values reached the field. The first 32 in sorted order are kept; the rest are dropped. The field may have that many possible values — some may come from paths that never actually run — but the analysis cannot carry all of them. (Introduced here.)</dd>
+<dt>incomplete-walk</dt>
+<dd>The <a href="fixpoints.html">fixpoint</a> stopped before settling because it ran out of its sweep budget — the cap on how many passes over the program it may make. Values that would have arrived on later passes are missing. See <a href="bounded-sweeps.html">bounded sweeps</a>.</dd>
+<dt>hop-limit</dt>
+<dd>The cross-program walk — following a field's bytes backwards from one program into the programs that handed them over (<a href="memoised-reachability.html">answering every walk once</a>) — was cut after a fixed number of program crossings. Programs beyond that depth were never visited. See <a href="hop-limits.html">bounding walks by crossings</a>.</dd>
+<dt>readback-skipped</dt>
+<dd>The cross-program walk was told not to follow bytes a called program writes back to its caller, so names a callee puts in the commarea are missing. See <a href="hop-limits.html">bounding walks by crossings</a>.</dd>
+</dl>
+<p>The value comes from somewhere a single program's walk cannot follow:</p>
+<dl>
+<dt>inbound-linkage</dt>
+<dd>The bytes are in <code>LINKAGE</code>: a caller handed them in. Also used when a cross-program walk goes round a cycle of programs and finds nothing. See <a href="local-site-resolution.html">local site resolution</a> and <a href="memoised-reachability.html">answering every walk once</a>.</dd>
+<dt>from-callee</dt>
+<dd>A <code>LINK</code> or <code>CALL BY REFERENCE</code> handed the field to another program, which may have written it. See <a href="local-site-resolution.html">local site resolution</a>.</dd>
+<dt>from-file</dt>
+<dd>A <code>READ</code> or a CICS file command put the value there. See <a href="local-site-resolution.html">local site resolution</a>.</dd>
+<dt>not-a-literal</dt>
+<dd>The value is not a quoted literal, so the analysis does not evaluate it: arithmetic (<code>ADD</code> through <code>COMPUTE</code>), <code>STRING</code>, <code>INITIALIZE</code>, a numeric or figurative <code>MOVE</code> such as <code>MOVE 0</code> or <code>MOVE SPACES</code>, a non-file CICS receiver such as <code>RETRIEVE INTO</code>, a value partly overwritten by an inexact write, or a <code>RETRIEVE</code> with no matching <code>START</code>. See <a href="local-site-resolution.html">local site resolution</a> and <a href="bounded-sweeps.html">bounded sweeps</a>.</dd>
+<dt>unmodelled</dt>
+<dd>A statement cobble does not model may have written the field; it counts as a weak write, so the old values stay and this reason joins them.</dd>
+<dt>outside-analysed-set</dt>
+<dd>The program can be entered from callers outside the analysed members, which may hand it other names. See <a href="memoised-reachability.html">answering every walk once</a>.</dd>
+<dt>not-recorded</dt>
+<dd>The cross-program walk reached a place where the fixpoint recorded no fact. See <a href="memoised-reachability.html">answering every walk once</a>.</dd>
+</dl>
+<p>Reasons the per-site resolution on <a href="local-site-resolution.html">local site resolution</a> gives about the call site itself:</p>
+<dl>
+<dt>no-extent</dt>
+<dd>The operand names no storage cobble could lay out, so there is nothing to read.</dd>
+<dt>operand-not-one-exact-extent</dt>
+<dd>The operand could be several places, such as a subscripted <code>WS-PGMS(I)</code>, so the site stays unresolved there.</dd>
+<dt>no-program-name</dt>
+<dd>No value reaching the site looks like a program name; the site is resolved to nothing.</dd>
+<dt>no-csd</dt>
+<dd>A <code>RETURN TRANSID</code> or <code>START</code> was analysed without a CSD, so its transaction id cannot be mapped to a program; the site stays unresolved.</dd>
+<dt>transaction-not-in-csd</dt>
+<dd>The transaction id is not listed in the CSD supplied; the site is resolved to nothing, which is wrong if the CSD is merely incomplete.</dd>
+</dl>
+</aside>
+
 <h2 id="what-goes-wrong">What goes wrong</h2>
 <ul>
-<li><strong>Under-approximation is the normal case, and the reasons say why.</strong> <code>uninitialised</code>: nothing in the program wrote the field. <code>over-budget</code>: more than 32 values reached it; the first 32 in sorted order are kept. <code>incomplete-walk</code>: the <a href="fixpoints.html">fixpoint</a> stopped before settling, so later values may not have arrived. Others name where a value came from that the analysis cannot follow: a file, the caller's parameters, a called program, a non-literal expression.</li>
+<li><strong>Under-approximation is the normal case, and the reasons say why.</strong> Each code in the <a href="#reasons">taxonomy</a> above names one way the set can be short; any reason at all means "at least these values".</li>
 <li><strong>One candidate is not proof.</strong> A walk that stopped early can leave a single value in the set while a second was still on its way. That is why a proven edge needs an empty set of reasons, not just one candidate.</li>
 <li><strong>A value is not always a program name.</strong> A field can hold spaces or a sentinel like <code>'NONE'</code> on some path. Values that cannot be a program name are dropped from the candidates and recorded separately.</li>
 </ul>
