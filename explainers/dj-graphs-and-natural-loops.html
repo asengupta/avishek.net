@@ -9,6 +9,7 @@
   import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/+esm";
   const light = matchMedia("(prefers-color-scheme: light)").matches;
   mermaid.initialize({
+    deterministicIds: true,
     startOnLoad: true,
     theme: "base",
     themeVariables: light
@@ -22,33 +23,15 @@
 <nav class="back"><a href="index.html">← All explainers</a></nav>
 <div class="kicker">Graph algorithms · which statements are in which loop, including the nested ones</div>
 <h1>DJ graphs and natural loop bodies</h1>
-<p class="prereqs"><strong>Read first:</strong> <a href="reducibility-and-loops.html">Reducibility and loop detection</a>, <a href="dominance-and-reachability.html">Dominance and reachability</a></p>
-<p class="lede">Reducibility answers yes or no, and roughly where. It does not say which statements belong to which loop when there is more than one, nested or side by side. One structure — the <strong>DJ graph</strong> — answers that, by processing a method's loops from the inside out, one dominator level at a time.</p>
-<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#reverse-engineering">Where this shows up in reverse engineering</a></li><li><a href="#the-problem">The problem</a></li><li><a href="#the-dj-graph">The DJ graph</a></li><li><a href="#the-intuition">The intuition</a></li><li><a href="#collapsing-the-nested-loop-bottom-up">Collapsing the nested loop, bottom-up</a></li><li><a href="#when-a-level-is-irreducible-instead">When a level is irreducible instead</a></li><li><a href="#what-goes-wrong">What goes wrong</a></li><li><a href="#summary">Putting it together</a></li><li><a href="#where-this-is-used">Where this is used</a></li><li><a href="#references">References</a></li></ol></nav>
+<aside class="tldr"><p><strong>TL;DR</strong>Once a method has more than one loop, narrating or translating it needs each loop’s exact statements, nested ones told apart from the loops around them — otherwise the inner loop’s statements get described as the outer one’s.</p></aside>
+<p class="prereqs"><strong>Read first:</strong> <a href="reducibility-and-loops.html">Reducibility and loop detection</a>, <a href="dominance-and-reachability.html">Dominance and reachability</a>, <a href="strongly-connected-components.html">Strongly connected components</a></p>
+<p class="lede">A back edge names a loop's header, but not where its body stops. Walk backward from it to the header and you collect every statement on the way, including all of any loop nested inside; a strongly-connected-components check puts both loops in one component too.</p>
+<p class="lede">The example below has a loop at <code>B</code> inside a loop at <code>A</code>. The DJ graph labels each statement with its depth in the dominator tree and handles the deepest header first: <code>B</code>'s body <code>{B, B1, B2}</code> is found and collapsed into <code>B</code>, so when <code>A</code>'s turn comes its body is <code>{A, B, C, D}</code>, with <code>B</code> standing in for the whole inner loop.</p>
+<p class="dim">Dominator, back edge and loop header are defined on the two pages above.</p>
+<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#the-example">The example: a loop inside a loop</a></li><li><a href="#collapsing-the-nested-loop-bottom-up">Step by step: collapsing the nested loop</a></li><li><a href="#the-intuition">Why inside-out</a></li><li><a href="#the-problem">What reducibility alone gives you</a></li><li><a href="#the-dj-graph">The three edge kinds</a></li><li><a href="#when-a-level-is-irreducible-instead">When a level is irreducible instead</a></li><li><a href="#what-goes-wrong">What goes wrong</a></li><li><a href="#summary">The whole pass</a></li><li><a href="#reverse-engineering">Where this shows up in reverse engineering</a></li><li><a href="#where-this-is-used">Where the edge kinds are used next</a></li><li><a href="#references">References</a></li></ol></nav>
 
-<h2 id="reverse-engineering">Where this shows up in reverse engineering</h2>
-<p>Knowing a method is reducible is not the same as knowing which statements belong to which loop — and once there is more than one loop, nested or side by side, that distinction is exactly what the next tool in the pipeline needs.</p>
-<ul>
-<li><strong>Automatic narration of an unfamiliar program</strong> needs the exact loop body before it can say anything more specific than "there is a loop somewhere in here": telling an outer loop's statements apart from an inner one's is what lets a narration describe each one correctly instead of describing the inner loop's statements as if they belonged to the outer one, or vice versa.</li>
-<li><strong>A decompiler nesting loops correctly</strong> in its emitted source has the identical requirement: get the body boundary wrong by one statement and the generated code either runs an extra statement inside the wrong loop or runs one outside a loop it should be inside.</li>
-<li><strong>Why bottom-up, specifically:</strong> resolving the innermost loop first and collapsing it before asking about the loop around it is what keeps the outer loop's own analysis from ever needing to know the inner loop's statements existed — the only way this scales to a method with several loops at several nesting depths without re-deriving the same boundary information at every level.</li>
-</ul>
-
-<h2 id="the-problem">The problem</h2>
-<p><a href="reducibility-and-loops.html">Reducibility and loop detection</a> settles whether a flowgraph is well-behaved at all, and the strongly-connected-components method there points at roughly where the trouble is. Neither one hands back the thing a structuring tool actually needs: for <em>this specific</em> loop, the exact set of statements inside it — and when one loop sits inside another, the inner one's statements need to be told apart from the outer one's before either body means anything.</p>
-<p>The structure below, the <strong>DJ graph</strong>, was introduced by Sreedhar and Gao for a different problem — placing φ-nodes in static single assignment form.<sup>[1]</sup> Sreedhar, Gao and Lee then reused it for this one: identifying every loop's exact body, nested ones included, in one bottom-up pass.<sup>[2]</sup> The dominator-tree reducibility test on the reducibility page is a piece of that second paper too. The rest of it, covered here: process a method's dominator tree from its deepest level up, and at every level, either collapse a loop that was just found into a single stand-in statement, or discover that no single statement can be called that level's loop header at all.</p>
-
-<h2 id="the-dj-graph">The DJ graph</h2>
-<p>A DJ graph takes a method's control-flow graph and splits its edges into three kinds, each telling you something different:</p>
-<ul>
-<li><strong>Dominator-tree edges</strong> ("D-edges") — unchanged from the dominator tree. These are the edges that say "to reach <code>B</code>, execution must first pass through <code>A</code>." They give each statement a <em>depth</em>: how many dominator-tree edges separate it from the method's entry point, which sits at depth 0.</li>
-<li><strong>Back-join edges</strong> ("J-edges, backward") — edges from the original flowgraph where the target dominates the source. These are loop-closing edges: control flows from inside a loop back up to the loop's header. The target of a back-join edge is always a loop header.</li>
-<li><strong>Cross-join edges</strong> ("J-edges, sideways") — the remaining flowgraph edges, where the target does <em>not</em> dominate the source. Most are harmless: every <code>if</code>/<code>else</code> merge produces them — in <a href="dominance-and-reachability.html#the-example">dominance and reachability's diamond</a>, <code>B3 → D</code> and <code>C → D</code> are both cross-join, and that graph is perfectly reducible. A cross-join edge signals an irreducible region only when it is <em>also</em> a DFS back edge — when it closes a cycle without its target dominating its source.</li>
-</ul>
-<p>"Back edge" has two senses, and this page needs both. In the <strong>DFS sense</strong>, it is an edge a depth-first walk finds going to a statement still on its current path. In the <strong>dominator sense</strong>, it is an edge whose target dominates its source — a back-join edge. On a reducible graph the two pick out exactly the same edges; a DFS back edge that is cross-join instead is precisely where they disagree, and precisely an irreducible region.</p>
-<p>The classification rule is the same one <a href="reducibility-and-loops.html#a-third-way-reusing-dominance">reducibility and loop detection's third method</a> already uses. What is new is doing it once over the whole method, annotating each statement with its dominator-tree depth, so that a bottom-up pass knows which level to process next.</p>
-<p><strong>Why depth matters.</strong> A loop can only be nested inside loops whose headers are ancestors of its own header in the dominator tree — so an enclosing loop's header is always shallower than the loops it contains. (Two headers on different branches of the tree are unrelated, whatever their depths.) Processing from deepest to shallowest therefore means the innermost loops get resolved first, before the outer loops that contain them need to know their boundaries.</p>
-<p>A small nested example — an inner loop (<code>B</code>, <code>B1</code>, <code>B2</code>) sitting inside an outer one (<code>A</code> through <code>D</code>):</p>
+<h2 id="the-example">The example: a loop inside a loop</h2>
+<p>An inner loop (<code>B</code>, <code>B1</code>, <code>B2</code>) inside an outer one (<code>A</code> through <code>D</code>). Each statement is immediately dominated by the one above it, so the dominator-tree depths in the labels run <code>d0</code> to <code>d7</code>.</p>
 <pre class="mermaid">
 flowchart TD
     Entry["Entry · d0"] --> A["A · d1"]
@@ -61,22 +44,27 @@ flowchart TD
     D -.->|back edge| A
     D --> Exit["Exit · d7"]
 </pre>
-<p>Every solid edge above is already a dominator-tree edge — this particular shape happens to be a straight chain of immediate dominators. Classifying the two dashed edges the usual way: does <code>B</code> dominate <code>B2</code>? Yes — back-join. Does <code>A</code> dominate <code>D</code>? Yes — back-join. Both climb to the header of the loop they belong to. This graph happens to have no cross-join edges at all; it is fully reducible, nested two deep. (One with cross-join edges could be just as reducible, as long as none of them is also a DFS back edge.)</p>
+<p>The answer for this graph, which the walk below derives — one body per header, with <code>B</code> in the outer body standing for the whole inner loop:</p>
+<div class="chips"><span class="chip changed">B → {B, B1, B2}</span><span class="chip changed">A → {A, B, C, D}</span></div>
+<p>Every edge in the graph, sorted into the kinds the walk uses. The solid ones are all dominator-tree edges; the two dashed ones close loops, because their target dominates their source:</p>
+<div class="scroll-x"><table class="state"><tbody><tr><th>edge</th><th>kind</th><th>why</th></tr><tr><td>the 7 solid edges</td><td>D-edge</td><td>source is the target's immediate dominator</td></tr><tr><td><code>B2 → B</code></td><td>back-join</td><td><code>B</code> dominates <code>B2</code></td></tr><tr><td><code>D → A</code></td><td>back-join</td><td><code>A</code> dominates <code>D</code></td></tr></tbody></table></div>
+<p>The pass, in outline, as the walk runs it on the graph above. The second half never fires here; <a href="#when-a-level-is-irreducible-instead">the irreducible section</a> runs it.</p>
+<pre class="cobol">for depth = deepest .. 0:
+  for each back-join edge s → h,
+      h at this depth:
+    body = walk back from s,
+           stopping at h
+    collapse body into h
+  if a cross-join edge that is also
+     a DFS back edge lands here:
+    collapse each strongly connected
+      component (2+ members) among
+      statements this deep or deeper</pre>
 
-<h2 id="the-intuition">The intuition</h2>
-<p>Think of it this way. You have a method with several loops, some nested inside others. You want to know the exact body of each loop — which statements belong to it and which don't. The strategy is to start with the smallest, innermost loops and work outward.</p>
-<p><strong>Why inside-out?</strong> If you tried to identify the outer loop first, you'd have to figure out which statements are "really" in the outer loop versus which ones only appear to be because they're inside an inner loop that happens to be inside it. That's a mess — you'd end up re-analyzing the inner loop's boundaries every time you look at the outer one. Instead: find the inner loop first, collapse it into a single point, and then the outer loop has one fewer thing to worry about.</p>
-
-<h2 id="collapsing-the-nested-loop-bottom-up">Collapsing the nested loop, bottom-up</h2>
-<p>The algorithm walks the dominator tree's levels from deepest to shallowest. At each level it first asks one question: <em>does a back-join edge land on a statement at this level?</em> (A second question, for irreducible regions, comes in the next section.)</p>
-<ul>
-<li><strong>Yes</strong> — that statement is a loop header. Find the loop's body by walking backward from the back edge's source, collecting every statement along the way, and stopping when you reach the header. This is the same bounded backward walk from <a href="dominance-and-reachability.html#loops-reachability-with-a-stopping-point">dominance and reachability's loop section</a>; it always stops at the header because the header dominates every statement in the body, so every backward path from the body must reach it. Then <em>collapse</em> the entire body into the header: remove the body's statements from the graph, and redirect any edge that left the body to start at the header instead.</li>
-<li><strong>No</strong> — no natural loop at this level. Move on to the next shallower level. (If a cross-join edge that is also a DFS back edge lands at this level, the level holds an irreducible region — handled in the next section, and possible whether or not the level also had a natural loop. Plain cross-join edges, like an <code>if</code>/<code>else</code> merge, change nothing.)</li>
-</ul>
-<p><strong>Why collapsing works.</strong> After the collapse, the header stands in for everything the loop contained. An outer loop at a shallower level, when its own turn comes, sees the collapsed header as a single ordinary statement. It never needs to re-examine the inner loop's body — the inner loop's boundary is already resolved and locked in, so no statement is walked again by every loop that encloses it.</p>
-<p><strong>Why redirecting edges is safe.</strong> Any edge that left the body (like <code>B2 → C</code> in the example below) is redirected to start at the header (<code>B → C</code>). This is correct because the header is the only way into the loop — so from the rest of the program's perspective, the loop's output is indistinguishable from its header's output. The edge keeps its original classification (back-join, cross-join, or dominator) so that levels above can still use it correctly.</p>
-<details class="walk">
-<summary>Collapsing both loops, deepest level first <span class="dim">(6 steps)</span></summary>
+<h2 id="collapsing-the-nested-loop-bottom-up">Step by step: collapsing the nested loop</h2>
+<p>The walk visits depths from 7 up to 0, and at each asks one question: does a back-join edge land on a statement at this depth? Steps 1 and 3 are the two yeses: each finds a header, walks backward from the back edge's source to it, and collapses the body into it in the next step. At every other depth the answer is no and the walk moves up.</p>
+<details class="walk" open>
+<summary>Collapsing both loops, deepest level first <span class="dim">(5 steps)</span></summary>
 <ol class="steps">
 <li class="before"><p class="note">Depths 7 down to 3 — <code>Exit</code>, <code>D</code>, <code>C</code>, <code>B2</code>, <code>B1</code> — pass with nothing to do: no back-join edge lands on any of them. The first one that does is at depth 2.</p>
 <pre class="mermaid">
@@ -155,12 +143,61 @@ flowchart TD
 <p class="dim">Loop bodies found</p><div class="chips"><span class="chip changed">B → {B, B1, B2}</span><span class="chip changed">A → {A, B, C, D}</span></div></li>
 </ol>
 </details>
-<p>Two natural loops, correctly told apart, in one bottom-up pass — the inner one collapsed before the outer one's own back edge was even inspected, so the outer loop's walk never had to know <code>B1</code> or <code>B2</code> existed. The redirected edges keep their original type for exactly this reason: a back-join or cross-join edge that happens to skip past this loop's own header, straight to an outer ancestor, carries that fact up to whichever shallower level needs it next — the same one-level-at-a-time climb <a href="eliminating-gotos.html#when-the-target-is-in-an-outer-scope">eliminating GOTOs</a> uses for a jump nested several scopes deep.</p>
+<p>The backward walks in steps 1 and 3 always stop, and stop at the right place: the header dominates every statement in the body, so every backward path from the body reaches it. It is the same bounded walk as <a href="dominance-and-reachability.html#loops-reachability-with-a-stopping-point">dominance and reachability's loop section</a>. Collapsing then rewires the graph: an edge leaving the body is redirected to start at the header, and an edge entering a body statement other than the header is redirected to end at it. A natural loop has no edges of the second kind, since its header is the only way in; the irreducible walk below does (<code>Entry → B</code> becomes <code>Entry → A</code>). The two collapses above moved these edges:</p>
+<div class="scroll-x"><table class="state"><tbody><tr><th>step</th><th>edge leaving the body</th><th>redirected to</th><th>kind kept</th></tr><tr><td>2</td><td><code>B2 → C</code></td><td class="changed"><code>B → C</code></td><td>D-edge</td></tr><tr><td>4</td><td><code>D → Exit</code></td><td class="changed"><code>A → Exit</code></td><td>D-edge</td></tr></tbody></table></div>
+<p><strong>Why redirecting edges is safe.</strong> The header is the only way into the loop, so from the rest of the program the loop's output is indistinguishable from its header's: <code>C</code> in step 2's graph is reached from <code>B</code>, and that is all a shallower level needs. Each redirected edge keeps its original classification (back-join, cross-join, or dominator), as the last column shows, so levels above can still use it.</p>
+<p><strong>Why collapsing works.</strong> In step 3's graph <code>B</code> is one ordinary statement, so the walk from <code>D</code> back to <code>A</code> passes through it once and never sees <code>B1</code> or <code>B2</code>. The inner boundary was locked in at step 1, so no statement is walked again by every loop that encloses it.</p>
+<p class="dim">Step 3's backward walk visits</p><div class="chips"><span class="chip">D</span><span class="chip">C</span><span class="chip changed">B (= B, B1, B2)</span><span class="chip">A</span></div>
+<p>So the inner loop was collapsed in step 2, before the outer loop's back edge was even inspected in step 3. The kept types matter for exactly this reason: a back-join or cross-join edge that skips past this loop's own header, straight to an outer ancestor, carries that fact up to whichever shallower level needs it next — the same one-level-at-a-time climb <a href="eliminating-gotos.html#when-the-target-is-in-an-outer-scope">eliminating GOTOs</a> uses for a jump nested several scopes deep.</p>
+
+<h2 id="the-intuition">Why inside-out</h2>
+<p>Run the outer loop first instead, on the original graph, before anything is collapsed. The backward walk from <code>D</code>, stopping at <code>A</code>, goes <code>D</code>, <code>C</code>, <code>B2</code>, <code>B1</code>, <code>B</code>, then <code>A</code>: it picks up the inner loop's statements on the way.</p>
+<pre class="mermaid">
+flowchart TD
+    Entry["Entry · d0"] --> A["A · d1"]
+    A --> B["B · d2"]
+    B --> B1["B1 · d3"]
+    B1 --> B2["B2 · d4"]
+    B2 -.->|back edge| B
+    B2 --> C["C · d5"]
+    C --> D["D · d6"]
+    D -.->|back edge| A
+    D --> Exit["Exit · d7"]
+    class A,B,B1,B2,C member
+    class D changed
+    classDef member stroke:#4ade80,stroke-width:3px,fill:transparent
+    classDef changed fill:#f5b041,stroke:#f5b041,color:#000
+    linkStyle 7 stroke:#f5b041,stroke-width:3px
+</pre>
+<p class="dim">Outer loop first</p><div class="chips"><span class="chip changed">A ← {A, B, B1, B2, C, D}</span></div>
+<p>That set has no way to say that <code>B1</code> and <code>B2</code> repeat on their own, inside each pass of <code>A</code>'s loop: they look like the outer loop's statements, which is exactly the mix-up in the TL;DR. Untangling it would mean re-analysing the inner loop's boundary while looking at the outer one. Inside-out avoids that: by step 3 of the walk, <code>B</code> already stands for the inner loop, so the same walk from <code>D</code> gives <code>{A, B, C, D}</code>.</p>
+
+<h2 id="the-problem">What reducibility alone gives you</h2>
+<p><a href="reducibility-and-loops.html">Reducibility and loop detection</a> settles whether a flowgraph is well-behaved at all, and its strongly-connected-components method points at roughly where the trouble is. On the example, neither hands back the two bodies:</p>
+<div class="scroll-x"><table class="state"><tbody><tr><th>question</th><th>answer on the example</th></tr><tr><td>reducible?</td><td>yes: both DFS back edges, <code>B2 → B</code> and <code>D → A</code>, are back-join</td></tr><tr><td>strongly connected components</td><td><code>{A, B, B1, B2, C, D}</code>, with <code>Entry</code> and <code>Exit</code> alone: both loops in one component</td></tr><tr><td>loop bodies (this page)</td><td class="changed"><code>B → {B, B1, B2}</code>, <code>A → {A, B, C, D}</code></td></tr></tbody></table></div>
+<p>The structure that gets the last row, the <strong>DJ graph</strong>, was introduced by Sreedhar and Gao for a different problem — placing φ-nodes in static single assignment form.<sup>[1]</sup> Sreedhar, Gao and Lee then reused it for this one: identifying every loop's exact body, nested ones included, in one bottom-up pass.<sup>[2]</sup> The dominator-tree reducibility test on the reducibility page is a piece of that second paper too. The rest of it is what the walk above did: process a method's dominator tree from its deepest level up, and at every level, either collapse a loop that was just found into a single stand-in statement, or discover that no single statement can be called that level's loop header at all.</p>
+
+<h2 id="the-dj-graph">The three edge kinds</h2>
+<p>A DJ graph splits a method's control-flow edges into three kinds. The example's edge table used the first two:</p>
+<div class="scroll-x"><table class="state"><tbody><tr><th>kind</th><th>test</th><th>in the example</th></tr><tr><td>D-edge (dominator tree)</td><td>an edge of the dominator tree: "to reach <code>B</code>, pass through <code>A</code>"</td><td>the 7 solid edges; counting them from <code>Entry</code> gives <code>d0</code>–<code>d7</code></td></tr><tr><td>back-join (J, backward)</td><td>target dominates source; target is a loop header</td><td><code>B2 → B</code>, <code>D → A</code></td></tr><tr><td>cross-join (J, sideways)</td><td>every other edge: target does <em>not</em> dominate source</td><td>none; the diamond below has two</td></tr></tbody></table></div>
+<p><strong>Cross-join edges</strong> are mostly harmless — every <code>if</code>/<code>else</code> merge makes them. In <a href="dominance-and-reachability.html#the-example">dominance and reachability's diamond</a>, below, <code>D</code> dominates neither <code>B3</code> nor <code>C</code>, so both edges into it are cross-join, and that graph is perfectly reducible:</p>
+<pre class="mermaid">
+flowchart TD
+    A --> B1
+    A --> C
+    B1 --> B2
+    B2 --> B3
+    B3 -.->|cross-join| D
+    C -.->|cross-join| D
+    D --> E
+</pre>
+<p>A cross-join edge signals an irreducible region only when it is <em>also</em> a DFS back edge — when it closes a cycle without its target dominating its source. The diamond has no cycle, so neither of its cross-join edges is one. "Back edge" therefore has two senses here. In the <strong>DFS sense</strong>, it is an edge a depth-first walk finds going to a statement still on its current path. In the <strong>dominator sense</strong>, it is an edge whose target dominates its source — a back-join edge. The table puts edges from this page's graphs through both tests (the last row is the two-entry cycle from <a href="#when-a-level-is-irreducible-instead">the irreducible section</a>, visited <code>A</code> first):</p>
+<div class="scroll-x"><table class="state"><tbody><tr><th>edge</th><th>DFS back edge?</th><th>target dominates source?</th><th>so</th></tr><tr><td><code>B2 → B</code></td><td>yes</td><td>yes</td><td>back-join: a loop</td></tr><tr><td><code>D → A</code></td><td>yes</td><td>yes</td><td>back-join: a loop</td></tr><tr><td><code>B3 → D</code></td><td>no</td><td>no</td><td>cross-join: harmless</td></tr><tr><td><code>B → A</code></td><td>yes</td><td>no</td><td class="changed">cross-join: irreducible</td></tr></tbody></table></div>
+<p>On a reducible graph the two senses pick out exactly the same edges, as in the first two rows; a DFS back edge that is cross-join instead, as in the last row, is precisely where they disagree, and precisely an irreducible region. The rule is <a href="reducibility-and-loops.html#a-third-way-reusing-dominance">reducibility and loop detection's third method</a>; what is new is keeping each statement's depth, so a bottom-up pass knows which level to process next.</p>
+<p><strong>Why depth matters.</strong> A loop can only be nested inside loops whose headers are ancestors of its own header in the dominator tree, so an enclosing loop's header is always shallower than the loops it contains: in the example, <code>A</code> at <code>d1</code> is an ancestor of <code>B</code> at <code>d2</code>. (Two headers on different branches of the tree are unrelated, whatever their depths.) Processing from deepest to shallowest therefore resolves the innermost loops first, as the walk resolved <code>B</code> before <code>A</code>.</p>
 
 <h2 id="when-a-level-is-irreducible-instead">When a level is irreducible instead</h2>
-<p>The algorithm above relies on finding a back-join edge to identify a loop header. A cycle that closes through a cross-join edge instead — a cross-join edge that is also a DFS back edge, landing on a statement at this level — is the hallmark of an <strong>irreducible region</strong>: a cycle with more than one entry point, so there is no single statement that dominates the rest. No bounded backward walk can find the body, because there is no header to walk back to. (Cross-join edges that are not DFS back edges close no cycle and are no signal at all.) A level can hold both kinds: its natural loops are collapsed by the walk first, then whatever irreducible region remains is handled as below.</p>
-<p>When this happens, the algorithm falls back to a stronger tool: it takes every statement at this dominator depth (or deeper) that is still in the graph and runs a <a href="reducibility-and-loops.html#a-quicker-check-for-where-strongly-connected-components">strongly connected components</a> analysis. Any component with more than one member is an irreducible region. It gets collapsed the same way a natural loop does — merged into a single stand-in statement — so that levels above can continue without knowing there was anything unusual.</p>
-<p>Back on the two-entry cycle from the reducibility page — the smallest irreducible shape there is:</p>
+<p>The two-entry cycle from the reducibility page, the smallest irreducible shape there is:</p>
 <pre class="mermaid">
 flowchart TD
     Entry --> A
@@ -168,9 +205,10 @@ flowchart TD
     A -->|cross-join| B
     B -->|cross-join| A
 </pre>
+<p>The first walk relied on a back-join edge to name each header. This cycle closes through a cross-join edge instead — <code>B → A</code>, which is also a DFS back edge when the DFS visits <code>A</code> first, landing on <code>A</code> at depth 1 — the hallmark of an <strong>irreducible region</strong>: a cycle with more than one entry point (<code>Entry → A</code> and <code>Entry → B</code> above), so no single statement dominates the rest, and there is no header for a backward walk to stop at. A level can hold both kinds: its natural loops are collapsed first, then whatever irreducible region remains is handled as below.</p>
 <p>A DFS over this DJ graph from <code>Entry</code>, visiting <code>A</code> before <code>B</code>, finds exactly one back edge: <code>B → A</code>, already classified cross-join. <code>A → B</code> is cross-join too, but the DFS took it as an ordinary forward step, so on its own it would mean nothing; <code>B → A</code> being both cross-join <em>and</em> a DFS back edge is the signal to try the quicker check.</p>
 <details class="walk">
-<summary>Finding the irreducible region at depth 1 <span class="dim">(3 steps)</span></summary>
+<summary>Finding the irreducible region at depth 1 <span class="dim">(2 steps)</span></summary>
 <ol class="steps">
 <li class="before"><p class="note">The DFS back edge found, <code>B → A</code>, is cross-join — this level is irreducible. There is also no back-join edge at this level, so no natural loop to collapse first.</p>
 <pre class="mermaid">
@@ -204,37 +242,50 @@ flowchart TD
 </pre></li>
 </ol>
 </details>
-<p>Same collapse step either way — a reducible loop's body or an irreducible region's component both disappear into one statement before the level above ever sees them. What differs is how the body was found: a bounded backward walk from one edge for a reducible loop, a full strongly-connected-components pass for an irreducible region, because an irreducible region has no single back edge whose header could have been walked back from in the first place.</p>
+<p>Step 1 is the fallback: take every statement at this dominator depth or deeper that is still in the graph, and run a <a href="reducibility-and-loops.html#a-quicker-check-for-where-strongly-connected-components">strongly connected components</a> analysis over them. Any component with more than one member is an irreducible region. Step 2 collapses it the same way a natural loop is collapsed — merged into a single stand-in statement — so that levels above can continue without knowing there was anything unusual.</p>
+<p>Compare step 2 here with step 2 of the first walk: a reducible loop's body and an irreducible region's component both disappear into one statement before the level above ever sees them. What differs is how the body was found: a bounded backward walk from one edge for a reducible loop, a full strongly-connected-components pass for an irreducible region, because an irreducible region has no single back edge whose header could have been walked back from in the first place.</p>
+<div class="scroll-x"><table class="state"><tbody><tr><th></th><th>first walk, steps 1–2</th><th>irreducible walk, steps 1–2</th></tr><tr><td>body found by</td><td>backward walk from <code>B2</code> to <code>B</code></td><td>strongly connected components of <code>{A, B}</code></td></tr><tr><td>body</td><td><code>{B, B1, B2}</code></td><td><code>{A, B}</code></td></tr><tr><td>stand-in</td><td><code>B</code>, the header</td><td class="changed"><code>A</code>, the back edge's target</td></tr></tbody></table></div>
 
 <h2 id="what-goes-wrong">What goes wrong</h2>
-<p>Two limitations to be aware of, both consequences of the design rather than bugs:</p>
+<p>Two limitations to be aware of, both consequences of the design rather than bugs, each shown on one of this page's two walks:</p>
 <ul>
-<li><strong>An irreducible region's recorded "header" is an artifact of visitation order, not a property of the region.</strong> A natural loop has a true header — the one statement that dominates every node in its body. An irreducible region, by definition, has no such statement. The tool described here still picks one statement to serve as the stand-in after collapsing — its own convention, not the paper's — and uses whichever statement the DFS happened to identify as the target of its back edge. Run the DFS over the same two-entry cycle visiting <code>B</code> before <code>A</code> instead, and the back edge found is <code>A → B</code>, not <code>B → A</code> — the identical region collapses to a different stand-in statement depending on which child of <code>Entry</code> happened to be visited first:
-<table class="state"><tr><th>Entry's children visited</th><th>DFS back edge found</th><th>recorded header</th></tr><tr><td><code>A</code>, then <code>B</code></td><td><code>B → A</code></td><td><code>A</code></td></tr><tr><td><code>B</code>, then <code>A</code></td><td><code>A → B</code></td><td><code>B</code></td></tr></table>
-That is not a bug so much as an honest consequence of the question itself: an irreducible region, by definition, has no single header, so any one statement the algorithm names as "the" header for it is already a necessary approximation — just not a stable one across runs.</li>
-<li><strong>A collapsed body is reported in terms of whatever was already collapsed underneath it, not fully expanded back out.</strong> Because the algorithm works bottom-up, by the time an outer loop is processed, its inner loops have already been collapsed into single stand-in statements. The outer loop's reported body includes these stand-ins, not the original statements they absorbed. This is a feature for the algorithm's own operation (it's what keeps an outer loop from re-walking its inner loops' statements), but it means that if you need the full list of original statements, you must expand the stand-ins by looking up what each one absorbed. The outer loop above is recorded as <code>{A, B, C, D}</code> — <code>B</code> there means the single stand-in statement, not the three original statements it absorbed:
-<table class="state"><tr><th>header</th><th>reported body</th><th>original statements, fully expanded</th></tr><tr><td><code>B</code></td><td><code>{B, B1, B2}</code></td><td><code>{B, B1, B2}</code> — not nested, nothing to expand</td></tr><tr><td><code>A</code></td><td><code>{A, B, C, D}</code></td><td><code>{A, B, B1, B2, C, D}</code> once <code>B</code>'s own body is substituted back in</td></tr></table>
-Reading a reported body as the complete statement list, for a loop that turns out to have another one nested inside it, undercounts by exactly the inner loop's size.</li>
+<li><strong>An irreducible region's recorded "header" is an artifact of visitation order, not a property of the region.</strong> A natural loop has a true header — the one statement that dominates every node in its body. An irreducible region, by definition, has no such statement. The tool described here still picks one statement to serve as the stand-in after collapsing — its own convention, not the paper's — and uses whichever statement the DFS happened to identify as the target of its back edge: <code>A</code> in step 2 of the irreducible walk. Run the DFS over the same two-entry cycle visiting <code>B</code> before <code>A</code> instead, and the back edge found is <code>A → B</code>, not <code>B → A</code> — the identical region collapses to a different stand-in statement:
+<table class="state"><tr><th>Entry's children visited</th><th>DFS back edge found</th><th>recorded header</th></tr><tr><td><code>A</code>, then <code>B</code></td><td><code>B → A</code></td><td><code>A</code></td></tr><tr><td><code>B</code>, then <code>A</code></td><td><code>A → B</code></td><td class="changed"><code>B</code></td></tr></table>
+That is not a bug so much as an honest consequence of the question itself: an irreducible region has no single header, so any one statement named as "the" header for it is already a necessary approximation — just not a stable one across runs.</li>
+<li><strong>A collapsed body is reported in terms of whatever was already collapsed underneath it, not fully expanded back out.</strong> By the time an outer loop is processed, its inner loops are already single stand-in statements, and the outer loop's reported body lists those stand-ins. That is what keeps an outer loop from re-walking its inner loops' statements, but if you need the full list of original statements you must expand each stand-in from what it absorbed. Step 3 of the first walk records <code>{A, B, C, D}</code>, where <code>B</code> means the stand-in, not the three statements it absorbed:
+<table class="state"><tr><th>header</th><th>reported body</th><th>original statements, fully expanded</th></tr><tr><td><code>B</code></td><td><code>{B, B1, B2}</code></td><td><code>{B, B1, B2}</code> — not nested, nothing to expand</td></tr><tr><td><code>A</code></td><td><code>{A, B, C, D}</code></td><td class="changed"><code>{A, B, B1, B2, C, D}</code> once <code>B</code>'s own body is substituted back in</td></tr></table>
+Reading a reported body as the complete statement list, for a loop with another one nested inside it, misses the inner loop's statements other than its header: here <code>B1</code> and <code>B2</code>, four statements listed where there are six.</li>
 </ul>
 
-<h2 id="summary">Putting it together</h2>
-<p>The full algorithm, in plain English:</p>
-<ol>
-<li>Build the dominator tree. Record each statement's depth.</li>
-<li>Classify every edge that is not a dominator-tree edge: if the target dominates the source, it's a back-join edge (a loop closing); otherwise it's a cross-join edge (a sideways jump). Run a DFS and mark every cross-join edge that is also a DFS back edge.</li>
-<li>Starting from the deepest level and working up:
-  <ul>
-  <li>If a back-join edge lands on a statement at this level — it's a loop header. Walk backward from the edge's source to find the body. Collapse the body into the header.</li>
-  <li>If a marked cross-join edge — one that is also a DFS back edge — lands on a statement at this level, the level is irreducible. Once any natural loops at this level are collapsed, find the strongly connected components among the statements at this depth or deeper, and collapse each one with more than one member.</li>
-  <li>If neither — nothing interesting at this level (unmarked cross-join edges, like <code>if</code>/<code>else</code> merges, don't count), move up.</li>
-  </ul>
-</li>
-<li>When you reach the root, every loop's body has been identified and collapsed.</li>
-</ol>
-<p>On top of building the dominator tree and walking every edge to classify it, the pass visits each level once, does one backward walk per loop found, and one strongly connected component search per irreducible level. For reducible graphs, Sreedhar, Gao and Lee bound the whole thing at near-linear time by doing the collapsing with a union-find structure.<sup>[2]</sup> Irreducible levels cost more: each search covers every statement at that depth or deeper, so the same statements can be searched again at several levels. On a typical COBOL program — where irreducible regions are rare and loops rarely nest more than two or three deep — this finishes almost instantly.</p>
+<h2 id="summary">The whole pass</h2>
+<p>The full algorithm, as one box:</p>
+<div class="rule">
+1. build the dominator tree; record each statement's depth<br>
+2. classify each non-D-edge: target dominates source → back-join, else cross-join; run a DFS and mark each cross-join edge that is also a DFS back edge<br>
+3. for depth = deepest .. 0:<br>
+&nbsp;&nbsp;&nbsp;a. back-join edge lands here → walk back from its source to the header, collapse<br>
+&nbsp;&nbsp;&nbsp;b. marked cross-join edge lands here → after (a), collapse each strongly connected component (2+ members) of statements this deep or deeper<br>
+&nbsp;&nbsp;&nbsp;c. neither (unmarked cross-join edges don't count) → move up<br>
+4. at the root, every loop's body has been found and collapsed
+</div>
+<p>Each line of the box has already run on this page:</p>
+<div class="scroll-x"><table class="state"><tbody><tr><th>line</th><th>where it ran</th></tr><tr><td>1</td><td>the <code>d0</code>–<code>d7</code> labels on the example graph</td></tr><tr><td>2</td><td>the example's edge table, and the two-senses table under <a href="#the-dj-graph">the three edge kinds</a></td></tr><tr><td>3a</td><td>first walk, steps 1–2 (<code>B</code>) and steps 3–4 (<code>A</code>)</td></tr><tr><td>3b</td><td>irreducible walk, before step 1 (<code>B → A</code> marked), steps 1–2 (<code>{A, B}</code>)</td></tr><tr><td>3c</td><td>first walk, before step 1 (depths 7 to 3)</td></tr><tr><td>4</td><td>first walk, step 5</td></tr></tbody></table></div>
+<p>On top of building the dominator tree and walking every edge to classify it, the pass visits each level once, does one backward walk per loop found, and one strongly connected component search per irreducible level. For this page's two walks:</p>
+<div class="scroll-x"><table class="state"><tbody><tr><th></th><th>levels visited</th><th>backward walks</th><th>component searches</th></tr><tr><td>first walk</td><td>8 (<code>d7</code> to <code>d0</code>)</td><td>2</td><td>0</td></tr><tr><td>irreducible walk</td><td>2 (<code>d1</code>, <code>d0</code>)</td><td>0</td><td>1</td></tr></tbody></table></div>
+<p> For reducible graphs, Sreedhar, Gao and Lee bound the whole thing at near-linear time by doing the collapsing with a union-find structure.<sup>[2]</sup> Irreducible levels cost more: each search covers every statement at that depth or deeper, so the same statements can be searched again at several levels. On a typical COBOL program — where irreducible regions are rare and loops rarely nest more than two or three deep — this finishes almost instantly.</p>
 
-<h2 id="where-this-is-used">Where this is used</h2>
-<p>The three edge types this page builds — dominator, back-join, cross-join — are not thrown away once reducibility and loop bodies are known. They serve at least two purposes downstream:</p>
+<h2 id="reverse-engineering">Where this shows up in reverse engineering</h2>
+<p>Knowing a method is reducible is not the same as knowing which statements belong to which loop — the first table under <a href="#the-problem">what reducibility alone gives you</a> — and once there is more than one loop, that distinction is exactly what the next tool in the pipeline needs. On the example:</p>
+<div class="scroll-x"><table class="state"><tbody><tr><th>handed</th><th><code>B1</code> and <code>B2</code> belong to</th></tr><tr><td>outer-first set <code>{A, B, B1, B2, C, D}</code></td><td class="changed"><code>A</code>'s loop</td></tr><tr><td>DJ graph bodies</td><td><code>B</code>'s loop, inside <code>A</code>'s</td></tr></tbody></table></div>
+<ul>
+<li><strong>Automatic narration of an unfamiliar program</strong> needs the exact loop body before it can say more than "there is a loop somewhere in here". Handed the first row (the set from <a href="#the-intuition">why inside-out</a>), it would describe <code>B1</code> and <code>B2</code> as the outer loop's statements.</li>
+<li><strong>A decompiler nesting loops correctly</strong> in its emitted source has the identical requirement: get the body boundary wrong by one statement and the generated code either runs an extra statement inside the wrong loop or runs one outside a loop it should be inside.</li>
+<li><strong>Why bottom-up, specifically:</strong> as in the first walk, resolving the innermost loop first and collapsing it keeps the outer loop's own analysis from ever needing the inner loop's statements — the only way this scales to a method with several loops at several nesting depths without re-deriving the same boundary at every level.</li>
+</ul>
+
+<h2 id="where-this-is-used">Where the edge kinds are used next</h2>
+<p>The three edge kinds — dominator, back-join, cross-join — are not thrown away once reducibility and loop bodies are known. A transpiler, the first use below, maps them like this on this page's graphs:</p>
+<div class="scroll-x"><table class="state"><tbody><tr><th>edge kind</th><th>becomes</th><th>on this page</th></tr><tr><td>back-join</td><td>a loop</td><td><code>B2 → B</code>, <code>D → A</code></td></tr><tr><td>forward D-edge</td><td>straight-line code or an <code>IF</code></td><td>the example's 7 solid edges</td></tr><tr><td>cross-join, also a DFS back edge</td><td>an irreducible region to restructure</td><td><code>B → A</code> in the two-entry cycle</td></tr></tbody></table></div>
 <ul>
 <li><strong>A transpiler emitting structured code</strong> switches on exactly these three edge classes when deciding how to represent each edge: a back-join edge becomes a loop, a forward dominator edge becomes straight-line code or an <code>IF</code>, and a cross-join edge that is also a DFS back edge (if any) marks the irreducible region that needs the more expensive restructuring from <a href="eliminating-gotos.html">eliminating GOTOs</a>. The classification done here survives into code generation, not just into an analysis report.</li>
 <li><strong>A narration or documentation tool</strong> uses the loop bodies to scope its descriptions: "this loop iterates over records" is only meaningful if the tool knows exactly which statements are inside the loop and which are after it. Without the DJ graph's output, the best it can do is "there is a loop somewhere near these statements."</li>

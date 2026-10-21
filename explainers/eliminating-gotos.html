@@ -9,6 +9,7 @@
   import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/+esm";
   const light = matchMedia("(prefers-color-scheme: light)").matches;
   mermaid.initialize({
+    deterministicIds: true,
     startOnLoad: true,
     theme: "base",
     themeVariables: light
@@ -22,102 +23,151 @@
 <nav class="back"><a href="index.html">← All explainers</a></nav>
 <div class="kicker">Graph algorithms · rewriting a tree, not just reading one</div>
 <h1>Eliminating GOTOs</h1>
+<aside class="tldr"><p><strong>TL;DR</strong>Moving COBOL to Java, or any language without an unrestricted jump, means removing every <code>GO TO</code> first: a code generator that only emits <code>if</code> and <code>while</code> has nothing to work from otherwise. These rewrites are that clearing step.</p></aside>
 <p class="prereqs"><strong>Read first:</strong> nothing — standalone</p>
-<p class="lede">A forward jump past some statements becomes an <code>IF</code> that skips them. A backward jump back to a label becomes a loop around them. Both are the same move: wrap the statements the jump used to skip over, in whichever control structure makes the skipping implicit.</p>
-<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#reverse-engineering">Where this shows up in reverse engineering</a></li><li><a href="#the-problem">The problem</a></li><li><a href="#a-forward-jump-becomes-an-if">A forward jump becomes an IF</a></li><li><a href="#a-backward-jump-becomes-a-loop">A backward jump becomes a loop</a></li><li><a href="#when-the-target-is-in-an-outer-scope">When the target is in an outer scope</a></li><li><a href="#what-goes-wrong">What goes wrong</a></li><li><a href="#where-this-is-used">Where this is used</a></li><li><a href="#references">References</a></li></ol></nav>
+<p class="lede">A <code>GO TO</code> names where control goes next, not which statements it skips. When the jump and its label share a block, the skipped statements are the ones between them, and an <code>IF</code> can be wrapped around those. When the jump is nested inside an <code>IF</code> and the label is a paragraph further out, no one block holds "what the jump skips".</p>
+<p class="lede">In the example below, <code>GO TO SZ1</code> sits inside an <code>IF</code> inside paragraph <code>SA1</code>. The rewrite climbs it out one level at a time, leaving a flag behind, until the jump and <code>SZ1</code> are siblings; a forward rewrite then removes it. The result has no <code>GO TO</code> and prints the same lines whatever <code>WS-NUM1</code> holds.</p>
+<p class="dim">Sections, paragraphs and fall-through are in the <a href="cobol-primer.html#statements">COBOL/CICS primer</a>.</p>
+<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#the-example">The example</a></li><li><a href="#step-by-step">Step by step</a></li><li><a href="#the-problem">Why the jump cannot just be wrapped</a></li><li><a href="#when-the-target-is-in-an-outer-scope">When the target is in an outer scope</a></li><li><a href="#a-forward-jump-becomes-an-if">A forward jump becomes an IF</a></li><li><a href="#a-backward-jump-becomes-a-loop">A backward jump becomes a loop</a></li><li><a href="#the-rules">The rules</a></li><li><a href="#reverse-engineering">Where this shows up in reverse engineering</a></li><li><a href="#what-goes-wrong">What goes wrong</a></li><li><a href="#where-this-is-used">Where this is used</a></li><li><a href="#references">References</a></li></ol></nav>
 
-<h2 id="reverse-engineering">Where this shows up in reverse engineering</h2>
-<p>This is the step that makes a decades-old, GOTO-heavy program's logic expressible in a modern language at all. A code generator that only emits <code>if</code> and <code>while</code> has nothing to produce from a jump — something upstream has to remove every one first.</p>
-<ul>
-<li><strong>Legacy-to-modern migration, directly:</strong> turning COBOL control flow into Java, or any other target that lacks an unrestricted jump, has to clear every <code>GOTO</code> out before a code generator can even start — this page's three rewrites are that clearing step, applied one jump at a time.</li>
-<li><strong>Why local rules, not the universal construction:</strong> a COBOL <code>GO TO</code> can only target a paragraph, and paragraph labels sit at the top level of their section, never inside a nested <code>IF</code> or loop — so a source jump only ever needs to move <em>outward</em> to meet its label. The climb-one-level rewrite handles exactly that, and the forward/backward rewrites finish the job from there, without ever flattening the method into one dispatch loop — see <a href="structured-program-theorem.html">the structured program theorem</a> for the generic fallback these rules are quietly avoiding.</li>
-<li><strong>The order these rules run in matters:</strong> a jump has to be classified — forward, backward, or crossing a scope — before any rewrite can be chosen, and that classification comes purely from where the jump and its label sit in the statement tree. A cross-scope jump climbs outward first; only once it and its label are siblings does the forward or backward rewrite apply.</li>
-</ul>
-
-<h2 id="the-problem">The problem</h2>
-<p>A jump to a label says "control passes to there" without saying anything about why — nothing in the shape of the code shows which statements it skips, or which statements it repeats. An <code>IF</code> or a loop says that directly: everything inside the block is what the jump used to skip, or used to repeat, right there in the tree's own shape. Rewriting a jump into one or the other does not change what the program does; it changes whether a reader — or anything built on the tree's shape — can see it.</p>
-<p>Two shapes to tell apart first, both jumping to a label in the <em>same</em> block of statements as the jump itself: one jumps to a label <strong>later</strong> in the block (forward), one jumps to a label <strong>earlier</strong> (backward).</p>
-
-<h2 id="a-forward-jump-becomes-an-if">A forward jump becomes an IF</h2>
-<p>A conditional jump past some statements, landing on a label later in the same block:</p>
+<h2 id="the-example">The example</h2>
+<p>The program is <code>simple-goto.cbl</code> from cobol-rekt's test programs. Drawn as a tree, its <code>GO TO SZ1</code> (amber) sits in the <code>THEN</code> branch of an <code>IF</code> in paragraph <code>SA1</code>; its label <code>SZ1</code> is a paragraph of section <code>S</code>, two levels further out:</p>
 <pre class="mermaid">
 flowchart TD
-    J["IF C1 GOTO SKIP"] -->|"not C1"| S1
-    S1 --> S2
-    S2 --> Skip["SKIP: S3"]
-    J -->|C1| Skip
+    S["S SECTION"] --> SA1["SA1"]
+    S --> SZ1["SZ1"]
+    SA1 --> D1["DISPLAY #quot;ABCD#quot;"]
+    SA1 --> If["IF WS-NUM1 #gt; 10"]
+    SA1 --> D3["DISPLAY #quot;SA1-1#quot;<br>DISPLAY #quot;SA1-2#quot;"]
+    If -->|THEN| G["GO TO SZ1"]
+    If -->|ELSE| D2["DISPLAY #quot;#lt;= 10#quot;"]
+    SZ1 --> D4["DISPLAY #quot;ENDING...#quot;"]
+    G -.->|"jumps to, 2 levels out"| SZ1
+    class G changed
+    classDef changed fill:#f5b041,stroke:#f5b041,color:#000
 </pre>
-<p>Read it the other way round: <code>S1</code> and <code>S2</code> run exactly when the jump is <em>not</em> taken — when <code>C1</code> does not hold. That is an <code>IF</code> waiting to be written down.</p>
-<details class="walk">
-<summary>Rewriting the forward jump <span class="dim">(2 steps)</span></summary>
+<p>The answer: two climbs and one forward rewrite leave no <code>GO TO</code> and one flag. The table traces both programs for a value of <code>WS-NUM1</code> on each side of the test; they print the same lines.</p>
+<div class="chips"><span class="chip changed">GO TOs left: 0</span><span class="chip">climbs: 2</span><span class="chip">flags: 1 (FLAG)</span><span class="chip">final rewrite: forward</span></div>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>WS-NUM1</th><th>original prints</th><th>rewrite prints</th></tr>
+<tr><td>5 (its VALUE)</td><td>ABCD, &lt;= 10, SA1-1, SA1-2, ENDING...</td><td>ABCD, &lt;= 10, SA1-1, SA1-2, ENDING...</td></tr>
+<tr><td>12</td><td>ABCD, ENDING...</td><td>ABCD, ENDING...</td></tr>
+</tbody></table></div>
+<p>The procedure division first, then the tree the rewrite leaves, written out as COBOL-like text:</p>
+<pre class="cobol">S SECTION.
+SA1.
+    DISPLAY "ABCD".
+    IF WS-NUM1 &gt; 10
+     THEN
+         GO TO SZ1
+     ELSE
+         DISPLAY "&lt;= 10".
+    DISPLAY "SA1-1"
+    DISPLAY "SA1-2".
+SZ1.
+    DISPLAY "ENDING...".</pre>
+<pre class="cobol">S SECTION.
+SA1.
+    DISPLAY "ABCD"
+    SET FLAG TO FALSE
+    IF WS-NUM1 &gt; 10
+        SET FLAG TO TRUE
+    ELSE
+        DISPLAY "&lt;= 10"
+    END-IF
+    IF NOT FLAG
+        DISPLAY "SA1-1"
+        DISPLAY "SA1-2"
+    END-IF.
+IF NOT FLAG        *&gt; wraps nothing
+END-IF
+SZ1.
+    DISPLAY "ENDING...".</pre>
+<details class="walk listing"><summary>Full listing <span class="dim">(simple-goto.cbl)</span></summary>
+<pre class="cobol">       IDENTIFICATION DIVISION.
+       PROGRAM-ID.    SIMPLE-GOTO.
+       AUTHOR.        MOJO
+       DATE-WRITTEN.  SEP 2024.
+       ENVIRONMENT DIVISION.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+            01 WS-NUM1 PIC 9(9) VALUE 5.
+       PROCEDURE DIVISION.
+       S SECTION.
+       SA1.
+           DISPLAY "ABCD".
+           IF WS-NUM1 &gt; 10
+            THEN
+                GO TO SZ1
+            ELSE
+                DISPLAY "&lt;= 10".
+           DISPLAY "SA1-1"
+           DISPLAY "SA1-2".
+       SZ1.
+           DISPLAY "ENDING...".</pre>
+</details>
+<p><code>FLAG</code> is a name this page invents for the one boolean the rewrite needs; it is not declared in the listing. The second row of the table shows what the flag has to reproduce: at 12 the jump skips <code>SA1-1</code> and <code>SA1-2</code>, which sit in <code>SA1</code> after the <code>IF</code>, not in the <code>IF</code> the jump is in.</p>
+
+<h2 id="step-by-step">Step by step</h2>
+<p>The walk starts from the tree in the diagram above. Each step shows only the part of the tree it changed; <code>*&gt;</code> comments mark the new lines.</p>
+<details class="walk" open>
+<summary>Removing GO TO SZ1 <span class="dim">(3 steps)</span></summary>
 <ol class="steps">
-<li class="before"><p class="note">The statements strictly between the jump and the label — not the jump itself, not the label — are what the jump skips when <code>C1</code> holds.</p>
-<pre class="mermaid">
-flowchart TD
-    J["IF C1 GOTO SKIP"] -->|"not C1"| S1
-    S1 --> S2
-    S2 --> Skip["SKIP: S3"]
-    J -->|C1| Skip
-    class S1,S2 changed
-    classDef changed fill:#f5b041,stroke:#f5b041,color:#000
-</pre>
-<p class="dim">Skipped when C1 holds</p><div class="chips"><span class="chip changed">S1</span><span class="chip changed">S2</span></div></li>
-<li><p class="note">Wrap exactly those statements in an <code>IF</code> guarded by the <em>negated</em> condition — run them precisely when the jump would not have fired. Everything from the jump up to (but not including) the label is replaced by the one new <code>IF</code>; the label itself is untouched.</p>
-<pre class="mermaid">
-flowchart TD
-    Guard["IF NOT C1"] -->|true| S1
-    S1 --> S2
-    S2 --> Skip["SKIP: S3"]
-    Guard -->|false| Skip
-    class Guard,S1,S2 changed
-    classDef changed fill:#f5b041,stroke:#f5b041,color:#000
-</pre></li>
+<li class="before"><p class="note">Classify the jump by where it and its label sit in the tree. <code>GO TO SZ1</code> comes before <code>SZ1</code> in tree order, so it is a forward jump. It sits two scopes deeper than <code>SZ1</code>, so it climbs twice before the forward rewrite can apply.</p>
+<table class="state"><tbody>
+<tr><th>node</th><th>sits in</th><th>which sits in</th></tr>
+<tr><td>GO TO SZ1</td><td>THEN of the IF</td><td>SA1, in S</td></tr>
+<tr><td>SZ1</td><td>S</td><td>—</td></tr>
+</tbody></table>
+<div class="chips"><span class="chip">kind: forward</span><span class="chip">climbs needed: 2</span></div></li>
+<li><p class="note">Climb out of the <code>IF</code>. Nothing follows the <code>GO TO</code> in its <code>THEN</code> branch, so there is nothing to guard. The <code>GO TO</code> becomes <code>SET FLAG TO TRUE</code>. The flag is cleared just before the <code>IF</code> is entered, and the jump is re-emitted right after the <code>IF</code>, in <code>SA1</code>, now conditional on the flag.</p>
+<pre class="cobol">SA1.
+    DISPLAY "ABCD"
+    SET FLAG TO FALSE      *&gt; new
+    IF WS-NUM1 &gt; 10
+        SET FLAG TO TRUE   *&gt; was GO TO SZ1
+    ELSE
+        DISPLAY "&lt;= 10"
+    END-IF
+    IF FLAG GO TO SZ1      *&gt; re-emitted
+    DISPLAY "SA1-1"
+    DISPLAY "SA1-2".</pre>
+<div class="chips"><span class="chip changed">jump now in: SA1</span><span class="chip">climbs left: 1</span></div></li>
+<li><p class="note">Climb out of <code>SA1</code>. Everything after the jump in <code>SA1</code>, the two <code>DISPLAY</code>s, goes inside <code>IF NOT FLAG</code>. Where the jump stood, the flag should take the jump's condition; that condition is <code>FLAG</code> itself, so nothing new is set. The jump is re-emitted after <code>SA1</code>, in <code>S</code>, still reading <code>FLAG</code>. No second clear is needed: the one from step 1 sits inside <code>SA1</code>, ahead of the only place the flag is set.</p>
+<pre class="cobol">    ...
+    END-IF
+    IF NOT FLAG      *&gt; new guard
+        DISPLAY "SA1-1"
+        DISPLAY "SA1-2"
+    END-IF.
+IF FLAG GO TO SZ1    *&gt; re-emitted in S
+SZ1.
+    DISPLAY "ENDING...".</pre>
+<div class="chips"><span class="chip changed">jump now in: S, sibling of SZ1</span><span class="chip">climbs left: 0</span></div></li>
+<li><p class="note">Forward rewrite. The jump and <code>SZ1</code> are siblings in <code>S</code>. The statements strictly between them are none, so the new <code>IF NOT FLAG</code> wraps nothing: the climbs already guarded everything the jump skipped. The label stays.</p>
+<pre class="cobol">    END-IF.
+IF NOT FLAG          *&gt; was the jump
+END-IF
+SZ1.
+    DISPLAY "ENDING...".</pre>
+<div class="chips"><span class="chip changed">GO TOs left: 0</span><span class="chip">SZ1: kept, no jump targets it</span></div></li>
 </ol>
 </details>
-<p>The label survives, unused for now — removing a label nothing points to any more is a separate, later cleanup, not this step's job.</p>
+<p>Step 3 leaves the second fragment under <a href="#the-example">the example</a>. Trace its second row, <code>WS-NUM1 = 12</code>, through the steps: step 1's <code>SET FLAG TO TRUE</code> runs, step 2's guard skips <code>SA1-1</code> and <code>SA1-2</code>, and control falls through to <code>SZ1</code>, as the jump did.</p>
 
-<h2 id="a-backward-jump-becomes-a-loop">A backward jump becomes a loop</h2>
-<p>A conditional jump back to a label earlier in the same block:</p>
-<pre class="mermaid">
-flowchart TD
-    Loop["LOOP: S1"] --> S2
-    S2 --> Test["IF C1 GOTO LOOP"]
-    Test -->|C1| Loop
-    Test -->|"not C1"| S3
-</pre>
-<p>Read the other way round: <code>S1</code> and <code>S2</code> run again every time <code>C1</code> holds, checked <em>after</em> they run — a loop whose test comes at the bottom, not the top.</p>
-<details class="walk">
-<summary>Rewriting the backward jump <span class="dim">(2 steps)</span></summary>
-<ol class="steps">
-<li class="before"><p class="note">The label itself and everything up to, but not including, the jump are the loop's body — the jump statement contributes its condition, not its own place in the body.</p>
-<pre class="mermaid">
-flowchart TD
-    Loop["LOOP: S1"] --> S2
-    S2 --> Test["IF C1 GOTO LOOP"]
-    Test -->|C1| Loop
-    Test -->|"not C1"| S3
-    class Loop,S2 changed
-    classDef changed fill:#f5b041,stroke:#f5b041,color:#000
-</pre>
-<p class="dim">Loop body</p><div class="chips"><span class="chip changed">S1</span><span class="chip changed">S2</span></div></li>
-<li><p class="note">Wrap the body in a loop tested at the bottom, using the jump's own condition unchanged — "keep going while <code>C1</code> holds" is exactly what the back-jump already meant. The label, the body, and the jump together collapse into the one new loop.</p>
-<pre class="mermaid">
-flowchart TD
-    S1 --> S2
-    S2 --> Test["test after body: WHILE C1"]
-    Test -->|true| S1
-    Test -->|false| S3
-    class S1,S2,Test changed
-    classDef changed fill:#f5b041,stroke:#f5b041,color:#000
-</pre></li>
-</ol>
-</details>
-<p>No negation this time — the back-jump's condition already says "go again," which is exactly what a bottom-tested loop's condition means too.</p>
+<h2 id="the-problem">Why the jump cannot just be wrapped</h2>
+<p>In the original fragment, the line <code>GO TO SZ1</code> says "control passes to <code>SZ1</code>", and nothing in the tree's shape shows that this means skipping <code>SA1-1</code> and <code>SA1-2</code>. In the rewritten fragment the same fact is on the page: those two lines are inside <code>IF NOT FLAG</code>. The rewrite does not change what the program does, as the trace table shows; it changes whether a reader, or anything built on the tree's shape, can see it.</p>
+<p>The forward rewrite alone could not do this, because it needs one block that directly holds the jump and the label. In the example's tree no scope does:</p>
+<table class="state"><tbody>
+<tr><th>scope</th><th>holds GO TO SZ1</th><th>holds SZ1</th><th>holds SA1-1, SA1-2</th></tr>
+<tr><td>THEN of the IF</td><td>yes</td><td>no</td><td>no</td></tr>
+<tr><td>SA1</td><td>no</td><td>no</td><td>yes</td></tr>
+<tr><td>S</td><td>no</td><td>yes</td><td>no</td></tr>
+</tbody></table>
+<p>Steps 1 and 2 of the walk move the jump down this table's rows: into <code>SA1</code> after step 1, into <code>S</code> after step 2, where the last row then reads yes for both the jump and <code>SZ1</code>.</p>
 
 <h2 id="when-the-target-is-in-an-outer-scope">When the target is in an outer scope</h2>
-<p>Both rewrites above assume the jump and its label sit in the <em>same</em> block of statements. A jump into or out of a nested <code>IF</code> or loop does not — there is no single enclosing block containing exactly "the statements the jump skips," because the jump and its label are nested at different depths.</p>
-<p>The fix climbs one level at a time: wrap everything <em>after</em> the jump, in whatever scope the jump is currently in, inside a new <code>IF</code> guarded by <code>NOT</code> a fresh flag — set that flag right where the jump was, instead of jumping. The jump itself is then re-emitted one level up, in the enclosing scope, now reading that same flag to decide whether to keep going. Repeat until the jump and its label are siblings in the same block — at which point the ordinary forward or backward rewrite above finishes the job. This is Erosa and Hendren's outward-movement transformation.<sup>[1]</sup></p>
-<p>The flag also has to be cleared to false before the nested construct is entered, on every path — not only set to true on the jump path. Without that, the first time the jump fires the flag stays true; if the code sits inside a loop, the next pass arrives with a stale <code>TRUE</code>, skips <code>I2</code> even though the jump never fired, and takes the jump again. (Erosa and Hendren initialise the flag and clear it again at the label; clearing it just before the construct, as below, has the same effect for this one climb. cobol-rekt's implementation does neither — it only ever sets the flag to true — a known gap; see <a href="#what-goes-wrong">what goes wrong</a>.)</p>
+<p>Each climb is one move, applied at whatever depth the jump is: wrap everything <em>after</em> the jump, in the scope it is in, inside an <code>IF</code> guarded by <code>NOT</code> a flag; set that flag where the jump was; re-emit the jump one level up, reading the flag. Repeat until the jump and its label are siblings, then apply the forward or backward rewrite. This is Erosa and Hendren's outward-movement transformation.<sup>[1]</sup> In the walk, step 1's guard was empty, because nothing followed the jump in the <code>THEN</code> branch. The general shape, with statements <code>I2</code> after the jump, is below.</p>
 <pre class="mermaid">
 flowchart TD
     subgraph Outer["outer block"]
@@ -161,18 +211,174 @@ flowchart TD
     class InitFlag,SetFlag,CheckFlag changed
     classDef changed fill:#f5b041,stroke:#f5b041,color:#000
 </pre>
-<p>Traced both ways: when <code>something</code> holds, the original runs <code>I1</code> then jumps straight to <code>LABEL</code>; the rewrite runs <code>I1</code>, sets the flag, skips <code>I2</code>, and the re-emitted jump skips <code>O2</code> — the same. When <code>something</code> does not hold, both run <code>O2</code> then reach <code>LABEL</code>, and the flag, cleared on the way in, is false. After one climb the jump is a level shallower; a jump nested several levels deep climbs several times before it and its label are finally siblings, ready for the ordinary rewrite.</p>
+<p>Traced both ways: when <code>something</code> holds, the original runs <code>I1</code> then jumps straight to <code>LABEL</code>; the rewrite runs <code>I1</code>, sets the flag, skips <code>I2</code>, and the re-emitted jump skips <code>O2</code> — the same. When <code>something</code> does not hold, both run <code>O2</code> then reach <code>LABEL</code>, and the flag, cleared on the way in, is false.</p>
+<p>The <code>SET FLAG TO FALSE</code> in the second diagram is not optional. Inside a loop, a flag left <code>TRUE</code> by one pass makes the next pass skip <code>O2</code> and take the jump again, though the jump never fired; the stale-flag table under <a href="#what-goes-wrong">what goes wrong</a> shows it on the example. (Erosa and Hendren initialise the flag and clear it again at the label; clearing it just before the construct, as here and in step 1 of the walk, has the same effect for one climb. cobol-rekt does neither — a known gap.)</p>
+
+<h2 id="a-forward-jump-becomes-an-if">A forward jump becomes an IF</h2>
+<p>Step 3 of the walk was this rewrite with nothing to wrap. Here it is where the jump and its label already share a block and statements sit between them:</p>
+<pre class="mermaid">
+flowchart TD
+    J["IF C1 GOTO SKIP"] -->|"not C1"| S1
+    S1 --> S2
+    S2 --> Skip["SKIP: S3"]
+    J -->|C1| Skip
+</pre>
+<p>Read it the other way round: <code>S1</code> and <code>S2</code> run exactly when the jump is <em>not</em> taken — when <code>C1</code> does not hold. That is an <code>IF</code> waiting to be written down.</p>
+<details class="walk">
+<summary>Rewriting the forward jump <span class="dim">(1 step)</span></summary>
+<ol class="steps">
+<li class="before"><p class="note">The statements strictly between the jump and the label — not the jump itself, not the label — are what the jump skips when <code>C1</code> holds.</p>
+<pre class="mermaid">
+flowchart TD
+    J["IF C1 GOTO SKIP"] -->|"not C1"| S1
+    S1 --> S2
+    S2 --> Skip["SKIP: S3"]
+    J -->|C1| Skip
+    class S1,S2 changed
+    classDef changed fill:#f5b041,stroke:#f5b041,color:#000
+</pre>
+<p class="dim">Skipped when C1 holds</p><div class="chips"><span class="chip changed">S1</span><span class="chip changed">S2</span></div></li>
+<li><p class="note">Wrap exactly those statements in an <code>IF</code> guarded by the <em>negated</em> condition — run them precisely when the jump would not have fired. Everything from the jump up to (but not including) the label is replaced by the one new <code>IF</code>; the label itself is untouched.</p>
+<pre class="mermaid">
+flowchart TD
+    Guard["IF NOT C1"] -->|true| S1
+    S1 --> S2
+    S2 --> Skip["SKIP: S3"]
+    Guard -->|false| Skip
+    class Guard,S1,S2 changed
+    classDef changed fill:#f5b041,stroke:#f5b041,color:#000
+</pre></li>
+</ol>
+</details>
+<p>The label <code>SKIP</code> survives in step 1's graph, unused for now, as <code>SZ1</code> did in the example — removing a label nothing points to any more is a separate, later cleanup, not this step's job.</p>
+
+<h2 id="a-backward-jump-becomes-a-loop">A backward jump becomes a loop</h2>
+<p>The example has no backward jump. A conditional jump back to a label earlier in the same block looks like this:</p>
+<pre class="mermaid">
+flowchart TD
+    Loop["LOOP: S1"] --> S2
+    S2 --> Test["IF C1 GOTO LOOP"]
+    Test -->|C1| Loop
+    Test -->|"not C1"| S3
+</pre>
+<p>Read the other way round: <code>S1</code> and <code>S2</code> run again every time <code>C1</code> holds, checked <em>after</em> they run — a loop whose test comes at the bottom, not the top.</p>
+<details class="walk">
+<summary>Rewriting the backward jump <span class="dim">(1 step)</span></summary>
+<ol class="steps">
+<li class="before"><p class="note">The label itself and everything up to, but not including, the jump are the loop's body — the jump statement contributes its condition, not its own place in the body.</p>
+<pre class="mermaid">
+flowchart TD
+    Loop["LOOP: S1"] --> S2
+    S2 --> Test["IF C1 GOTO LOOP"]
+    Test -->|C1| Loop
+    Test -->|"not C1"| S3
+    class Loop,S2 changed
+    classDef changed fill:#f5b041,stroke:#f5b041,color:#000
+</pre>
+<p class="dim">Loop body</p><div class="chips"><span class="chip changed">S1</span><span class="chip changed">S2</span></div></li>
+<li><p class="note">Wrap the body in a loop tested at the bottom, using the jump's own condition unchanged — "keep going while <code>C1</code> holds" is exactly what the back-jump already meant. The label, the body, and the jump together collapse into the one new loop.</p>
+<pre class="mermaid">
+flowchart TD
+    S1 --> S2
+    S2 --> Test["test after body: WHILE C1"]
+    Test -->|true| S1
+    Test -->|false| S3
+    class S1,S2,Test changed
+    classDef changed fill:#f5b041,stroke:#f5b041,color:#000
+</pre></li>
+</ol>
+</details>
+<p>Compare the two step-1 graphs: the forward rewrite's guard is <code>NOT C1</code>, this loop's test is <code>C1</code> unchanged. The back-jump's condition already says "go again", which is exactly what a bottom-tested loop's condition means too.</p>
+
+<h2 id="the-rules">The rules</h2>
+<div class="rule">
+classify:  forward if the jump comes before its label in tree order, else backward<br>
+climb (jump in scope B, condition C):<br>
+&nbsp;&nbsp;SET FLAG TO FALSE before the construct holding B<br>
+&nbsp;&nbsp;SET FLAG TO C where the jump was<br>
+&nbsp;&nbsp;IF NOT FLAG around the rest of B<br>
+&nbsp;&nbsp;IF FLAG GO TO label right after the construct<br>
+repeat climb until jump and label are siblings<br>
+forward:  IF NOT C around the statements strictly between jump and label<br>
+backward:  loop tested after the body, condition C; body = label up to the jump
+</div>
+<p>Each line was applied above. <em>classify</em> is the walk's first panel. <em>climb</em> is steps 1 and 2: step 1 shows the clear, the set (<code>C</code> is true: <code>GO TO SZ1</code> is unconditional in its branch) and the re-emitted jump; step 2 shows the guard, and a set that vanishes because <code>C</code> is <code>FLAG</code>. <em>forward</em> is step 3, and step 1 of the forward walk. <em>backward</em> is step 1 of the backward walk.</p>
+
+<h2 id="reverse-engineering">Where this shows up in reverse engineering</h2>
+<ul>
+<li><strong>The order these rules run in matters:</strong> classification comes first and comes purely from where the jump and its label sit in the statement tree, as in the walk's first panel. A cross-scope jump climbs outward first; only once it and its label are siblings does the forward or backward rewrite apply. For the example:
+<div class="chips"><span class="chip">classify: forward</span><span class="chip">climb: step 1</span><span class="chip">climb: step 2</span><span class="chip changed">forward: step 3</span></div></li>
+<li><strong>Legacy-to-modern migration, directly:</strong> turning COBOL control flow into Java, or any other target that lacks an unrestricted jump, has to clear every <code>GO TO</code> out before a code generator can start. The example's walk is that clearing step for one jump; a program with many runs it once per jump.</li>
+<li><strong>Why local rules, not the universal construction:</strong> a COBOL <code>GO TO</code> can only target a paragraph, and paragraph labels sit at the top level of their section, never inside a nested <code>IF</code> or loop — <code>SZ1</code> in the example's tree is a child of <code>S</code>. So a jump only ever needs to move <em>outward</em>, as in steps 1 and 2, never flattening the program into one dispatch loop — <a href="structured-program-theorem.html">the structured program theorem</a>'s generic fallback.</li>
+</ul>
 
 <h2 id="what-goes-wrong">What goes wrong</h2>
 <ul>
-<li><strong>Climbing out is implemented; climbing in or sideways is not.</strong> A jump into a scope it is not currently in, or across to a sibling scope's interior, needs a different transformation — this technique's own source project states plainly that only the outward climb is implemented, the others are not.</li>
-<li><strong>The fresh flag is not fresh at all.</strong> Each climb needs a flag to carry the "should I keep going" fact up one level, but cobol-rekt uses one hard-coded name for every climb of every jump, and another fixed name for the forward and backward rewrites — so two jumps descoped through overlapping scopes share one flag. The project's README acknowledges these names are not yet unique.</li>
-<li><strong>The flag is never cleared, and later climbs drop the condition.</strong> cobol-rekt only ever sets the flag to true, so the stale-flag problem above is live inside loops. Worse, each climb replaces the jump it re-emitted one level up with an unconditional set-to-true rather than a conditional one, so a jump nested two or more levels deep comes out always taken. The project's README notes the climb "does not utilise the value of the <code>IF</code> condition". The construction drawn above is the correct one; the implementation is not there yet.</li>
-<li><strong>This mutates the tree it is given, in place.</strong> <a href="tree-zippers.html">Tree zippers</a> are related background: they show how one <em>could</em> make the same deep edits to an immutable tree, building a new path to a new root and leaving the original exactly as it was. This pass, as implemented, does not — it changes the one tree handed to it. Keep a copy first if the original still needs to exist afterward.</li>
+<li><strong>Climbing out is implemented; climbing in or sideways is not.</strong> A jump into a scope it is not currently in, or across to a sibling scope's interior, needs a different transformation. cobol-rekt's README states that the outward transformation is the only one in the paper applicable to COBOL, and that the other three are not implemented.
+<table class="state"><tbody>
+<tr><th>label sits</th><th>jump must move</th><th>in cobol-rekt</th></tr>
+<tr><td>further out (SZ1 in the example)</td><td>outward</td><td>implemented</td></tr>
+<tr><td>inside a nested block</td><td>inward or sideways</td><td>not implemented</td></tr>
+</tbody></table>
+The second row cannot arise from a COBOL <code>GO TO</code>, whose label is always a paragraph; it arises in languages that can label a statement inside a block.</li>
+<li><strong>The fresh flag is not fresh at all.</strong> Each climb needs a flag, but cobol-rekt uses one hard-coded name for every climb of every jump, and another fixed name for the forward and backward rewrites. Its README acknowledges these names are not yet unique.
+<table class="state"><tbody>
+<tr><th>name</th><th>set in (TreeSmith.java)</th><th>used for</th></tr>
+<tr><td>SOME</td><td>escapeScopeOnce</td><td>every climb of every jump</td></tr>
+<tr><td>EFGH</td><td>replaceJumpWithJumpIf</td><td>a plain jump turned into a conditional one, before a forward or backward rewrite</td></tr>
+</tbody></table>
+Two jumps climbing out of one <code>IF</code> then share a flag. In the first fragment, with <code>A</code> false, control goes to <code>L2</code>. In the second, after one climb each, the <code>ELSE</code> branch sets the shared flag and the first re-emitted jump, to <code>L1</code>, catches it:
+<pre class="cobol">IF A
+    GO TO L1
+ELSE
+    GO TO L2
+END-IF</pre>
+<pre class="cobol">SET FLAG TO FALSE
+IF A
+    SET FLAG TO TRUE       *&gt; for L1
+ELSE
+    SET FLAG TO TRUE       *&gt; for L2
+END-IF
+IF FLAG GO TO L1
+IF FLAG GO TO L2</pre></li>
+<li><strong>The flag is never cleared, and later climbs drop the condition.</strong> cobol-rekt only ever sets the flag to true. Run the example's section twice, first with <code>WS-NUM1 = 12</code> and then with 5, with <code>FLAG</code> false at the start and step 1's <code>SET FLAG TO FALSE</code> left out:
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>pass</th><th>WS-NUM1</th><th>FLAG before the IF</th><th>original prints</th><th>without the clear</th></tr>
+<tr><td>1</td><td>12</td><td>FALSE</td><td>ABCD, ENDING...</td><td>ABCD, ENDING...</td></tr>
+<tr><td>2</td><td>5</td><td class="changed">TRUE (from pass 1)</td><td>ABCD, &lt;= 10, SA1-1, SA1-2, ENDING...</td><td class="changed">ABCD, &lt;= 10, ENDING...</td></tr>
+</tbody></table></div>
+Worse, each climb replaces the conditional jump it re-emitted one level up with an unconditional set-to-true rather than a conditional one, so a jump nested two or more levels deep comes out always taken. The project's README notes the climb "does not utilise the value of the <code>IF</code> condition", and prints its result for the example. Its tree has a block per sentence too, so the jump climbs three times there, setting <code>SOME</code> three times; two of those, trimmed:
+<pre class="cobol">if (gt(ref('WS-NUM1'), primitive(10.0)))
+{
+  set(ref('SOME'), primitive(true))
+  ...
+}
+else
+{
+  print(value(primitive("&lt;= 10")))
+}
+set(ref('SOME'), primitive(true))
+...
+if (not(primitive(true)))
+{
+  {
+    print(value(primitive("SA1-1")))
+    print(value(primitive("SA1-2")))
+  }
+}</pre>
+The second <code>set</code> sits after the <code>if</code>, where step 2 of the walk sets nothing, so it runs at <code>WS-NUM1 = 5</code> too and the guard around <code>SA1-1</code> and <code>SA1-2</code> is false on every path. The construction in the walk is the correct one; the implementation is not there yet.</li>
+<li><strong>This mutates the tree it is given, in place.</strong> Each rewrite in cobol-rekt's <code>TreeSmith</code> edits a scope of the tree it was handed:
+<pre class="cobol">// climb
+currentScope.replaceToEnd(jumpNode, ...)
+// forward
+parent.replaceRangeToExclusive(...)
+// backward
+parent.replaceRangeToInclusive(...)</pre>
+After the walk, the tree that held <code>GO TO SZ1</code> no longer has it. <a href="tree-zippers.html">Tree zippers</a> are related background: they show how one <em>could</em> make the same deep edits to an immutable tree, building a new path to a new root and leaving the original as it was. This pass does not. Keep a copy first if the original still needs to exist afterward.</li>
 </ul>
 
 <h2 id="where-this-is-used">Where this is used</h2>
-<p>Clearing arbitrary jumps out of legacy procedural code one block at a time, as a step before translating it into a language that only has structured control flow at all — a language with no <code>GOTO</code> cannot express one directly, so something has to remove it first. Best suited to jumps confined to a modest span of code, like one section; a jump spanning most of a large program climbs through most of that program's nesting before it reaches a scope it shares with its label.</p>
+<p>Clearing arbitrary jumps out of legacy procedural code one block at a time, as a step before translating it into a language that only has structured control flow. Best suited to jumps confined to a modest span of code, like one section: the example's jump climbed two levels and left one guard. A jump spanning most of a large program climbs through most of that program's nesting, adding a guard at each level, before it reaches a scope it shares with its label.</p>
 
 <h2 id="references">References</h2>
 <ol class="refs">

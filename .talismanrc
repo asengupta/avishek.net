@@ -80,3 +80,31 @@ fileignoreconfig:
   checksum: 0e5f1d2bcb12f6eb9be54dfdab47d9397f96f931a2c847adfa41ca66e1a09a90
 - filename: _posts/2026-04-16-engineering-log-reddragon-testing-harness.md
   checksum: d2b2cf5b45133080d0c119fbddb7c9c7a8e4b4f88ea3f27e238e5b0482f14501
+- filename: explainers/reaching-conditions-slice.html
+  checksum: a1bee402560b88f4afb67967d388d16e9ba3ad509b4d3c3a8efb5ae389f51bb3
+- filename: explainers/dominance-and-reachability.html
+  checksum: e649a1bfda7b4f40c9d4326f58dc5b4e8141d98da8e77019029fd9965d403b21
+- filename: explainers/area-need.html
+  checksum: 15c07d18e2f90be3c096f22e4ef03cc7285a9c03f3dcf2dd2298bc275a709c89
+- filename: explainers/reducibility-and-loops.html
+  checksum: 87f18d4ddd2f2ad3e18a704eccae0484e7ed947321bb9a7156c625b57a993c67
+- filename: explainers/byte-extents.html
+  checksum: f6af114474e5a28e4fa170ae9ca7b2a4f66e55cfbaec292d4db181856c94ffa9
+- filename: explainers/fixpoints.html
+  checksum: f48f81635890e73d039847a36a95812350f6f8991b54419a874f3f68afb253fc
+- filename: explainers/reaching-definitions.html
+  checksum: 3a0ec30849b4e0f8f13b0ee93cf2f499da42ed1208cdd838c8497589fe84c75b
+- filename: explainers/dj-graphs-and-natural-loops.html
+  checksum: 4206107587594a28f5e0642fc8c872e26f0f6ea635fdb9ef62156b81b56be653
+- filename: explainers/eliminating-gotos.html
+  checksum: d7b164a4a34086c903a6068130ac2442f35b383cfe256512095d23116b954e41
+- filename: explainers/bounded-sweeps.html
+  checksum: a429443f8afdd63bd5436ec7c095c15426a6e84cd0ce5aede7bfa43e7f786ec0
+- filename: explainers/structured-program-theorem.html
+  checksum: 369b27180b444d6aca92ddcfe588b4a8e03d8edb18ffa0f3c7928b412a1c01ef
+- filename: explainers/tree-zippers.html
+  checksum: 610bc962e3311989197a2e4a7bd78d5d1575b6af107418d2a381f04acbbf1a70
+- filename: explainers/traversal-orders.html
+  checksum: d982b9e67da0e8fcc411c1b2a4eb3a1670a32655b6627ec37379902237011767
+- filename: explainers/strongly-connected-components.html
+  checksum: d59511be7a3357c8a1f064ace3bb821193559ed5407a8b666e5e513d0a4ebf1b

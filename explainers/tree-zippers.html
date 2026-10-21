@@ -9,6 +9,7 @@
   import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/+esm";
   const light = matchMedia("(prefers-color-scheme: light)").matches;
   mermaid.initialize({
+    deterministicIds: true,
     startOnLoad: true,
     theme: "base",
     themeVariables: light
@@ -22,24 +23,15 @@
 <nav class="back"><a href="index.html">← All explainers</a></nav>
 <div class="kicker">Graph algorithms · a data structure, not an analysis</div>
 <h1>Tree zippers</h1>
+<aside class="tldr"><p><strong>TL;DR</strong>A tool rewriting a large parsed program makes many small edits deep inside the tree. A zipper lets each edit start from where the last one was, without re-walking from the root each time, and leaves the original tree intact.</p></aside>
 <p class="prereqs"><strong>Read first:</strong> nothing — standalone</p>
-<p class="lede">A cursor into an immutable tree that remembers the way back up, so editing one node deep inside does not mean redoing the walk that found it.</p>
-<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#reverse-engineering">Where this shows up in reverse engineering</a></li><li><a href="#the-problem">The problem</a></li><li><a href="#the-tree">The tree</a></li><li><a href="#going-down-the-trail-grows">Going down: the trail grows</a></li><li><a href="#going-up-free-because-it-was-already-remembered">Going up: free, because it was already remembered</a></li><li><a href="#editing-rebuild-on-the-way-back-up">Editing: rebuild on the way back up</a></li><li><a href="#what-goes-wrong">What goes wrong</a></li><li><a href="#where-this-is-used">Where this is used</a></li><li><a href="#references">References</a></li></ol></nav>
+<p class="lede">A tree that is never changed in place cannot give its nodes parent pointers: after an edit, an untouched node hangs under both the old parent and the new one. Without them, climbing up, or finding which ancestors an edit must rebuild, means walking down again from the root.</p>
+<p class="lede">On this page's six-node tree, the zipper walks <code>Root → A → A1 → X</code> once and keeps the ancestors it passed, <code>[A1, A, Root]</code>. Stepping back up to <code>A1</code> and giving it a new child <code>Y</code> both read that list instead of walking again; the edit rebuilds the 3 nodes on the path, adds <code>Y</code>, and reuses <code>X</code>, <code>A2</code> and <code>B</code>.</p>
+<p class="dim">Terms (<em>current</em>, <em>trail</em>, <em>path copying</em>, <em>structural sharing</em>) are defined where the walks first use them.</p>
+<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#the-tree">The example: one edit, three levels down</a></li><li><a href="#going-down-the-trail-grows">Going down: the trail grows</a></li><li><a href="#going-up-free-because-it-was-already-remembered">Going up: free, because it was already remembered</a></li><li><a href="#editing-rebuild-on-the-way-back-up">Editing: rebuild on the way back up</a></li><li><a href="#the-problem">Why keep the trail</a></li><li><a href="#huet">How Huet's zipper differs</a></li><li><a href="#what-goes-wrong">What goes wrong</a></li><li><a href="#reverse-engineering">Where this shows up in reverse engineering</a></li><li><a href="#where-this-is-used">Where this is used</a></li><li><a href="#references">References</a></li></ol></nav>
 
-<h2 id="reverse-engineering">Where this shows up in reverse engineering</h2>
-<p>Any tool that rewrites an AST recovered from legacy or compiled source — rather than one it generated itself — has this exact shape of problem: find one node deep inside a large tree, change it, climb back out, then do it again for the next one.</p>
-<ul>
-<li><strong>A GOTO-elimination pass</strong> over a parsed COBOL program is a natural fit: walk down to a jump that needs restructuring, turn it into a conditional block, climb back out — and the next jump needing attention is somewhere else in the same tree, reached the same way, with none of the first edit's work redone. (cobol-rekt's <a href="eliminating-gotos.html">eliminating GOTOs</a> pass mutates its tree in place instead; a zipper is how the same edits <em>could</em> be made to an immutable one.)</li>
-<li><strong>A decompiler reconstructing source from a recovered AST</strong> faces the identical problem at every control-flow fixup it makes: an AST with thousands of nodes and a handful of places that need rewriting should cost work proportional to the handful, not to the thousands, every single time one of them is touched.</li>
-<li><strong>Why "just mutate the tree" is the wrong comparison:</strong> a zipper is not primarily about avoiding mutation — it is about not re-walking from the root to find out which ancestors need rebuilding. A tool that already knows "I am three levels deep, here is my path back up" because it just walked there, instead of re-deriving that path after the fact, is already most of the way to a zipper whether or not it calls it one.</li>
-</ul>
-
-<h2 id="the-problem">The problem</h2>
-<p>The data structure this page walks through is a <strong>simplified, ancestor-trail variant</strong> of Huet's zipper.<sup>[1]</sup> Huet's version keeps more at each level of its context: the parent path <em>plus</em> the focus's left and right siblings. That makes a step left or right O(1), makes an edit at the focus O(1), and defers rebuilding — each <code>up</code> reassembles one level, and nothing is rebuilt until something moves up. The variant here keeps only the ancestors and rebuilds eagerly: an edit climbs straight back to the root. The idea it shares with Huet's — remember the way back up instead of re-walking it — is the one this page is about. The tree never changes in place — a new node is built, never overwritten. So changing one node three levels down means building a new copy of it, then a new copy of its parent pointing at the new copy, then a new copy of <em>its</em> parent, up to the root. Nothing above the edit can be reused; the whole path has to be rebuilt.</p>
-<p>Walking down to find the node in the first place already visits every statement on that path. Thrown away once the node is found, that walk has to happen a second time, backward, just to know which nodes need rebuilding. The zipper is what remembers the first walk, so there is no second one.</p>
-
-<h2 id="the-tree">The tree</h2>
-<p>A small tree, four levels at its deepest:</p>
+<h2 id="the-tree">The example: one edit, three levels down</h2>
+<p>A small tree, four levels at its deepest. The goal is to reach <code>X</code>, step back up to its parent <code>A1</code>, and give <code>A1</code> a second child <code>Y</code>:</p>
 <pre class="mermaid">
 flowchart TD
     Root --> A
@@ -48,11 +40,99 @@ flowchart TD
     A --> A2
     A1 --> X
 </pre>
-<p>Say the goal is to reach <code>X</code> and give it a sibling. In the diagrams below, <span class="changed">amber</span> marks the node currently in focus; a bordered node marks one remembered on the trail.</p>
+<p>The answer, with the old tree and the new one drawn together. The edit built the four <span class="changed">amber</span> nodes; <code>X</code>, <code>A2</code> and <code>B</code> each now have two parents, one in each tree:</p>
+<pre class="mermaid">
+flowchart TD
+    Root --> A
+    Root --> B
+    A --> A1
+    A --> A2
+    A1 --> X
+    newRoot["new-Root"] --> newA["new-A"]
+    newRoot --> B
+    newA --> newA1["new-A1"]
+    newA --> A2
+    newA1 --> X
+    newA1 --> Y
+    class newRoot,newA,newA1,Y changed
+    classDef changed fill:#f5b041,stroke:#f5b041,color:#000
+</pre>
+<p class="dim">Built by the edit (4)</p><div class="chips"><span class="chip changed">new-Root</span><span class="chip changed">new-A</span><span class="chip changed">new-A1</span><span class="chip changed">Y</span></div>
+<p class="dim">Reused as they are (3)</p><div class="chips"><span class="chip">X</span><span class="chip">A2</span><span class="chip">B</span></div>
+<p>The zipper behind it is a pair: <strong>current</strong>, the node in focus, and <strong>trail</strong>, the ancestors passed to get there, nearest first. This is the shape of <code>NativeZipper</code>, an experimental zipper in cobol-rekt's test sources, in this page's names (full source below):</p>
+<pre class="cobol">down(child):
+  Zipper(trail.prepend(current), child)
+
+up():
+  Zipper(trail.tail, trail.head)
+
+replaceChildren(kids):
+  edited = current.clone(kids)
+  return up().replaceChild(current, edited)
+
+replaceChild(old, new):
+  copy = current.clone(children,
+                       old → new)
+  if trail empty: return Zipper([], copy)
+  return up().replaceChild(current, copy)</pre>
+<p>And the four lines that produce the answer graph above. The walks below take them one at a time:</p>
+<pre class="cobol">z = Zipper([], Root)
+z = z.down(A).down(A1).down(X)
+z = z.up()                   // at A1
+z = z.replaceChildren([X, Y])
+// current new-Root, trail []</pre>
+<details class="walk listing"><summary>Full listing <span class="dim">(cobol-rekt's NativeZipper.java)</span></summary>
+<pre class="cobol">@Getter
+public class NativeZipper&lt;T extends ZipperNode&lt;T&gt;&gt; {
+  private final List&lt;T&gt; thread;
+  private final T current;
+
+  public NativeZipper(List&lt;T&gt; thread, T current) {
+    this.thread = thread;
+    this.current = current;
+  }
+
+  public T current() {
+    return current;
+  }
+
+  public NativeZipper&lt;T&gt; down(T child) {
+    int childIndex = current.children().indexOf(child);
+    if (childIndex == -1) return this;
+    return new NativeZipper&lt;&gt;(thread.prepend(current), child);
+  }
+
+  public NativeZipper&lt;T&gt; down(Predicate&lt;T&gt; condition) {
+    List&lt;T&gt; filtered = current.children().filter(condition);
+    if (filtered.isEmpty()) return this;
+    return down(filtered.head());
+  }
+
+  public NativeZipper&lt;T&gt; up() {
+    if (thread.isEmpty()) return this;
+    return new NativeZipper&lt;&gt;(thread.tail(), thread.head());
+  }
+
+  public NativeZipper&lt;T&gt; replaceChildren(List&lt;T&gt; newChildren) {
+    return up().replaceChild(current, current.clone(current, newChildren));
+  }
+
+  private NativeZipper&lt;T&gt; replaceChild(T replacedChild, T replacingChild) {
+    List&lt;T&gt; currentChildren = current.children();
+    List&lt;T&gt; updatedChildren =
+        currentChildren.update(currentChildren.indexOf(replacedChild), replacingChild);
+    NativeZipper&lt;T&gt; upZipper = up();
+    T nodeCopy = current.clone(current, updatedChildren);
+    if (upZipper == this) return new NativeZipper&lt;&gt;(List.of(), nodeCopy);
+    return upZipper.replaceChild(current, nodeCopy);
+  }
+}</pre>
+<p class="note">From <code>smojol-core/src/test/java/org/smojol/common/</code>. The source calls the trail <code>thread</code>. Imports and the package line are left out.</p>
+</details>
 
 <h2 id="going-down-the-trail-grows">Going down: the trail grows</h2>
-<p>A zipper is two things: <strong>current</strong>, the node in focus, and <strong>trail</strong>, the ancestors passed to get there, nearest first. Moving down to a named child adds the node just left to the front of the trail.</p>
-<details class="walk">
+<p>The second fragment's <code>down(A).down(A1).down(X)</code>, one call per step. In the diagrams, <span class="changed">amber</span> marks the node currently in focus; a bordered node is one remembered on the trail. Each <code>down</code> puts the node just left at the front of the trail.</p>
+<details class="walk" open>
 <summary>Walking down to X <span class="dim">(3 steps)</span></summary>
 <ol class="steps">
 <li class="before"><p class="note">Start at the root. No ancestors behind it yet.</p>
@@ -111,11 +191,11 @@ flowchart TD
 <p class="dim">Current</p><div class="chips"><span class="chip changed">X</span></div><p class="dim">Trail, nearest first</p><div class="chips"><span class="chip changed">A1</span><span class="chip">A</span><span class="chip">Root</span></div></li>
 </ol>
 </details>
-<p>Three moves, three ancestors remembered — in the order a rebuild will need them, nearest first. Nothing has been copied yet; this is pure navigation.</p>
+<p>Steps 1 to 3 made three moves and remembered three ancestors, in the order a rebuild will need them: the trail chips under step 3 read <code>A1, A, Root</code>, nearest first. Nothing has been copied yet; this is pure navigation.</p>
 
 <h2 id="going-up-free-because-it-was-already-remembered">Going up: free, because it was already remembered</h2>
-<p>Going up is reading the front of the trail, not searching for a parent — the whole point of having written it down on the way in.</p>
-<details class="walk">
+<p>The fragment's <code>z.up()</code>. Going up reads the front of the trail from step 3 above; it does not search for a parent.</p>
+<details class="walk" open>
 <summary>Walking back up to A1 <span class="dim">(1 step)</span></summary>
 <ol class="steps">
 <li><p class="note">Up from <code>X</code>: the front of the trail, <code>A1</code>, becomes current, and drops off the trail.</p>
@@ -134,12 +214,12 @@ flowchart TD
 <p class="dim">Current</p><div class="chips"><span class="chip changed">A1</span></div><p class="dim">Trail, nearest first</p><div class="chips"><span class="chip">A</span><span class="chip">Root</span></div></li>
 </ol>
 </details>
-<p>No comparison with the original tree, no re-walk from the root — the parent was sitting at the front of the trail the whole time.</p>
+<p>Compare the trail chips with step 3 of the walk down: <code>A1</code> moved from the front of the trail into current, and nothing else changed. No comparison with the original tree, no re-walk from the root.</p>
 
 <h2 id="editing-rebuild-on-the-way-back-up">Editing: rebuild on the way back up</h2>
-<p>The edit itself is ordinary: give the node in focus a new list of children. What happens next is the part worth watching. From <code>A1</code>, giving it a second child <code>Y</code> alongside <code>X</code>. The diagrams below mark the newly built node that is current <span class="changed">amber</span>, and any node built earlier in the same step but no longer current with a border.</p>
-<details class="walk">
-<summary>Editing A1's children, then climbing back to the root <span class="dim">(3 steps)</span></summary>
+<p>The fragment's <code>z.replaceChildren([X, Y])</code>, from <code>A1</code>. The edit itself is ordinary: give the node in focus a new list of children. What happens next is the part worth watching. The diagrams below mark the newly built node that is current <span class="changed">amber</span>, and any node built earlier in the same walk but no longer current with a border.</p>
+<details class="walk" open>
+<summary>Editing A1's children, then climbing back to the root <span class="dim">(2 steps)</span></summary>
 <ol class="steps">
 <li class="before"><p class="note">Focus is on <code>A1</code>, trail is <code>[A, Root]</code>. Ask for its children to become <code>[X, Y]</code> instead of <code>[X]</code>.</p>
 <pre class="mermaid">
@@ -186,17 +266,43 @@ flowchart TD
 <p class="dim">Just built</p><div class="chips"><span class="chip">new-A = A(new-A1, A2)</span></div><p class="dim">Current</p><div class="chips"><span class="chip changed">new-Root = Root(new-A, B)</span></div><p class="dim">Trail, nearest first</p><div class="chips"><span class="dim">empty</span></div></li>
 </ol>
 </details>
-<p>The original tree has six nodes. The edit built four: the three on the path — <code>A1</code> and its ancestors <code>A</code> and <code>Root</code> — plus the new leaf <code>Y</code>, rather than copying all six. <code>A2</code>, <code>B</code> and <code>X</code> are untouched originals, reused as children of the new nodes around them rather than copied — this reuse is called <strong>structural sharing</strong>, and copying only the path to the root is called <strong>path copying</strong>. Neither is the zipper's doing: any persistent tree edits this way. What the zipper adds is that the path was already sitting on the trail, so no second walk from the root was needed to find it. And the old <code>Root</code>, <code>A</code>, <code>A1</code> still exist, unchanged, pointed to by anything that was holding them before the edit — the edit built a new path to a new root; it did not touch the old one.</p>
+<p>Step 1 built <code>new-A1</code> and <code>new-A</code>; step 2 built <code>new-Root</code> and emptied the trail:</p>
+<p class="dim">Path copied, old → new</p><div class="chips"><span class="chip">A1 → new-A1</span><span class="chip">A → new-A</span><span class="chip">Root → new-Root</span></div>
+<p>The original tree has six nodes. The edit built four: the three on the path — <code>A1</code> and its ancestors <code>A</code> and <code>Root</code>, in the chips above — plus the new leaf <code>Y</code>, rather than copying all six. In step 2's diagram, <code>A2</code>, <code>B</code> and <code>X</code> are untouched originals, reused as children of the new nodes: <strong>structural sharing</strong>. Copying only the path to the root is <strong>path copying</strong>. Neither is the zipper's doing; any persistent tree edits this way. What the zipper adds is that the path was already on the trail, so no second walk from the root was needed. The old <code>Root</code>, <code>A</code>, <code>A1</code> still exist, unchanged: they are the original tree in the answer graph at the top.</p>
+
+<h2 id="the-problem">Why keep the trail</h2>
+<p>Look again at the answer graph at the top: <code>X</code> hangs under both <code>A1</code> and <code>new-A1</code>. A node shared like that cannot carry a single parent pointer, so a tree that is never changed in place has none. The table counts the nodes visited for each of the example's three operations, with and without the trail:</p>
+<div class="scroll-x"><table class="state"><tbody><tr><th>operation</th><th>no trail: nodes visited</th><th>with trail</th></tr><tr><td>down to X</td><td>Root, A, A1, X</td><td>Root, A, A1, X; trail [A1, A, Root]</td></tr><tr><td>up to A1</td><td class="changed">Root, A, A1 again, to find whose child X is</td><td>read the trail's front: A1</td></tr><tr><td>rebuild after the edit</td><td class="changed">Root, A, A1 again, to find A1's ancestors</td><td>read the trail: [A, Root]</td></tr></tbody></table></div>
+<p>The two amber cells are the walk down done a second and a third time, only to learn which nodes lie on the path. The zipper is what remembers the first walk, so there is no second one.</p>
+
+<h2 id="huet">How Huet's zipper differs</h2>
+<p>The data structure in the walks above is a <strong>simplified, ancestor-trail variant</strong> of Huet's zipper.<sup>[1]</sup> Huet's version keeps more at each level of its context: the parent path <em>plus</em> the focus's left and right siblings. At the edit's starting point (focus on <code>A1</code>, before step 1 of the edit walk) the two hold:</p>
+<div class="scroll-x"><table class="state"><tbody><tr><th>level</th><th>this page's trail</th><th>Huet's context: siblings at that level</th></tr><tr><td>under A</td><td>A</td><td>left of A1: none; right: [A2]</td></tr><tr><td>under Root</td><td>Root</td><td>left of A: none; right: [B]</td></tr></tbody></table></div>
+<p>Those sibling lists make a step left or right O(1), make an edit at the focus O(1), and defer rebuilding — each <code>up</code> reassembles one level from its left siblings, the focus and its right siblings, and nothing is rebuilt until something moves up. The variant here keeps only the middle column and rebuilds eagerly: the edit walk climbs straight back to the root in its two steps. The idea both share — remember the way back up instead of re-walking it — is the one this page is about.</p>
 
 <h2 id="what-goes-wrong">What goes wrong</h2>
+<p><strong>Expecting the focus to stay where the edit happened.</strong> In this page's variant it doesn't (Huet's does, deferring the rebuild to <code>up</code>) — an edit climbs the whole trail and lands on the new root, trail empty, same as if the zipper had just been created:</p>
+<div class="scroll-x"><table class="state"><tbody><tr><th>after replaceChildren([X, Y]) at A1</th><th>current</th><th>trail</th></tr><tr><td>this page's variant (edit walk, step 2)</td><td class="changed">new-Root</td><td class="changed">empty</td></tr><tr><td>Huet's</td><td>A1 with [X, Y]</td><td>the same path as before the edit</td></tr></tbody></table></div>
+<p>Treat the variant's return value as "a new tree," not "my cursor, still at <code>A1</code>."</p>
+<p><strong>Assuming a step sideways is as cheap as a step up or down.</strong> This variant's trail only remembers ancestors, not the siblings beside them. Moving from <code>A1</code> to its sibling <code>A2</code> means going up and back down by name or by condition, scanning that level's children — never a single "move right" step, because none is kept. Huet's zipper keeps exactly those sibling lists, which is what makes its sideways step O(1):</p>
+<div class="scroll-x"><table class="state"><tbody><tr><th>A1 to A2</th><th>moves</th><th>children scanned</th></tr><tr><td>this page's variant</td><td>up → A (trail [Root]); down(A2) → A2 (trail [A, Root])</td><td class="changed">2: A1, then A2</td></tr><tr><td>Huet's</td><td>right → A2 (left [A1], right none)</td><td>0</td></tr></tbody></table></div>
+<p><strong>Forgetting the old tree is still there.</strong> Nothing was mutated, so a reference taken before the edit still sees the pre-edit shape. Reading <code>A1</code>'s children through each root of the answer graph:</p>
+<div class="scroll-x"><table class="state"><tbody><tr><th>read through</th><th>A1's children</th></tr><tr><td>Root → A → A1 (old)</td><td>[X]</td></tr><tr><td>new-Root → new-A → new-A1</td><td class="changed">[X, Y]</td></tr></tbody></table></div>
+<p>That's structural sharing — the old and new tree share all the nodes that didn't change, only the edited node and its ancestors are new — working as intended, not a bug. But code that edits and then re-reads the <em>original</em> variable expecting to see its own change gets the first row.</p>
+
+<h2 id="reverse-engineering">Where this shows up in reverse engineering</h2>
+<p>Any tool that rewrites an AST recovered from legacy or compiled source — rather than one it generated itself — has the example's shape of problem, row for row:</p>
+<div class="scroll-x"><table class="state"><tbody><tr><th></th><th>this page's example</th><th>rewriting a recovered AST</th></tr><tr><td>find</td><td>down to X (walk down, steps 1–3)</td><td>walk down to a node that needs rewriting</td></tr><tr><td>change</td><td>A1's children [X] → [X, Y]</td><td>replace it, e.g. a jump by a conditional block</td></tr><tr><td>climb</td><td>new-A, new-Root (edit walk, steps 1–2)</td><td>rebuild its ancestors up to the root</td></tr><tr><td>reuse</td><td>X, A2, B</td><td>every subtree off that path</td></tr></tbody></table></div>
 <ul>
-<li><strong>Expecting the focus to stay where the edit happened.</strong> In this page's variant it doesn't (Huet's does, deferring the rebuild to <code>up</code>) — an edit climbs the whole trail and lands on the new root, trail empty, same as if the zipper had just been created. Treat the return value as "a new tree," not "my cursor, still at <code>A1</code>."</li>
-<li><strong>Assuming a step sideways is as cheap as a step up or down.</strong> This variant's trail only remembers ancestors, not the siblings beside them. Moving to a different child means going up and back down by name or by condition, scanning that level's children — never a single "move right" step, because none is kept. Huet's zipper keeps exactly those sibling lists, which is what makes its sideways step O(1).</li>
-<li><strong>Forgetting the old tree is still there.</strong> Nothing was mutated, so a reference taken before the edit still sees the pre-edit shape. That's structural sharing — the old and new tree share all the nodes that didn't change, only the edited node and its ancestors are new — working as intended, not a bug — but code that edits and then re-reads the <em>original</em> variable expecting to see its own change will not.</li>
+<li><strong>A GOTO-elimination pass</strong> over a parsed COBOL program: walk down to a jump, turn it into a conditional block, climb back out. The next jump is somewhere else in the same tree, reached the same way, with none of the first edit's work redone.</li>
+<li><strong>A decompiler reconstructing source from a recovered AST</strong> meets the same problem at every control-flow fixup: thousands of nodes, a handful to rewrite, and the cost should follow the handful.</li>
+<li><strong>"Just mutate the tree" is the wrong comparison:</strong> the zipper's saving is the amber cells under <a href="#the-problem">why keep the trail</a>, not avoiding mutation. A tool that already knows its path back up because it just walked there is most of the way to a zipper.</li>
 </ul>
 
 <h2 id="where-this-is-used">Where this is used</h2>
-<p>Rewriting an immutable AST without arbitrary jumps: walk down into the tree to a jump that needs restructuring, turn it into a conditional block, climb back out. The trail hands over the path, so nothing re-walks from the root to find it; path copying keeps the rebuild to the handful of ancestors on that one path, every sibling subtree reused untouched. An AST with thousands of nodes and one jump somewhere inside it rebuilds a few nodes per fix, not thousands. (cobol-rekt's <a href="eliminating-gotos.html">eliminating GOTOs</a> pass mutates in place instead, so it needs neither; its only zipper is an experimental ancestor-only one in its test sources, the variant this page walks through.)</p>
+<p>Rewriting an immutable AST without arbitrary jumps, one jump at a time, as in the table above: the trail hands over the path, and path copying keeps the rebuild to the ancestors on it — a few nodes per fix, not thousands. cobol-rekt does not do this:</p>
+<div class="chips"><span class="chip">cobol-rekt GOTO pass: mutates in place</span><span class="chip">cobol-rekt zippers: experimental, test sources only</span></div>
+<p>Its <a href="eliminating-gotos.html">eliminating GOTOs</a> pass mutates its tree in place, so it needs neither a trail nor path copying; a zipper is how the same edits <em>could</em> be made to an immutable one. Its zippers are ancestor-only: <code>NativeZipper</code>, in the full listing under <a href="#the-tree">the example</a>, and <code>BridgeZipper</code>, the same design over its AST nodes — the variant this page walks through.</p>
 
 <h2 id="references">References</h2>
 <ol class="refs">

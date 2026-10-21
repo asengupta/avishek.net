@@ -5,40 +5,65 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hop limits</title>
 <link rel="stylesheet" href="explainer.css">
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/+esm";
+  const light = matchMedia("(prefers-color-scheme: light)").matches;
+  mermaid.initialize({
+    startOnLoad: true,
+    deterministicIds: true,
+    theme: "base",
+    themeVariables: light
+      ? { darkMode: false, background: "#fbfaf7", primaryColor: "#e6e3da", primaryTextColor: "#1a1f26", primaryBorderColor: "#d3cfc4", lineColor: "#5d6673", textColor: "#1a1f26", edgeLabelBackground: "#f1efe9", clusterBkg: "#f1efe9", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
+      : { darkMode: true, background: "#0b0f14", primaryColor: "#1a2230", primaryTextColor: "#e6edf3", primaryBorderColor: "#263041", lineColor: "#8b98a9", textColor: "#e6edf3", edgeLabelBackground: "#121821", clusterBkg: "#121821", clusterBorder: "#263041", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" },
+  });
+</script>
 </head>
 <body>
 <main>
 <nav class="back"><a href="index.html">← All explainers</a></nav>
 <div class="kicker">Explainer 11 of 11</div>
 <h1>Bounding walks by crossings, and flagging what was cut</h1>
+<aside class="tldr"><p><strong>TL;DR</strong>Where programs hand a commarea round a ring, tracing where a call’s target came from can grow without bound. A limit on program crossings keeps it in check and flags every answer it cut, so you know which call targets may be incomplete.</p></aside>
 <p class="prereqs"><strong>Read first:</strong> <a href="memoised-reachability.html">Answering every walk once</a></p>
-<p class="lede">When an exact walk across programs costs too much, stop it after a fixed number of program crossings, keep what it found, and mark every answer the stop cut directly.</p>
-<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#reverse-engineering">Where this shows up in reverse engineering</a></li><li><a href="#the-problem">The problem</a></li><li><a href="#the-intuition">The intuition</a></li><li><a href="#the-example">The example</a></li><li><a href="#step-by-step">Step by step</a></li><li><a href="#the-rule">The rule</a></li><li><a href="#what-goes-wrong">What goes wrong</a></li><li><a href="#in-cobble">In cobble</a></li></ol></nav>
-
-<h2 id="reverse-engineering">Where this shows up in reverse engineering</h2>
-<p>Cobble's last dataflow stage, <code>cobble-dataflow-combine</code>, answers one question for a CICS corpus: where can each dynamic jump go? <code>EXEC CICS XCTL PROGRAM(WS-NEXT-PGM)</code> names its target through a field, and that field's bytes may have come from another program. The combine walks those bytes backwards across programs until it finds literals.</p>
-<ul>
-<li><strong>On a large CICS corpus</strong> (about 3,800 programs and 19,000 jumps) the earlier fixes made each walk cheap: a memo over strongly connected components (<a href="memoised-reachability.html">explainer 10</a>), a per-program memo, an edge index, and places told apart by their bytes alone. Even so, one cyclic group of walks across links grew past a million places on the stack.</li>
-<li><strong>The goal was narrow.</strong> Dynamic targets on that corpus come in three shapes: a literal <code>VALUE</code> in working storage, a <code>MOVE 'LITERAL' TO WS-FIELD</code>, and (about 5%) a field a program reads from its <code>DFHCOMMAREA</code> and then XCTLs to. These need 0, 0 and 1 program crossings. An answer that walks a few crossings and says honestly where it stopped covers all three.</li>
-</ul>
-
-<h2 id="the-problem">The problem</h2>
-<p>The walk's unit is a <strong>place</strong>: a program, a statement in it, and a byte range. A statement reached under many different byte ranges is many places. Where programs hand areas to each other in a ring, every program in the ring can reach every other under many ranges, so one cyclic group holds about as many places as the programs in the ring times the byte ranges each is reached under. On the large corpus that group grew past a million places.</p>
-<p>The memo already answers each place once per round. The remaining cost is the number of places, which is a property of the corpus. No exact fix could be guaranteed faster without building it and measuring it on the corpus. What was needed was a walk whose cost has a known bound, and whose answers say when they may be incomplete.</p>
-
-<h2 id="the-intuition">The intuition</h2>
-<p>Inside one program a walk is cheap: <a href="memoised-reachability.html">the per-program memo</a> answers each position once for the whole run. The expensive part is leaving the program. There are three ways to leave, and each is a <strong>crossing</strong>:</p>
-<ul>
-<li><strong>RECEIVED</strong> — the bytes came in through the linkage section, so go to every caller that jumped here and look at what it handed over.</li>
-<li><strong>RETURNED</strong> — the bytes were written back by a program this one LINKed or CALLed, so go to that callee's exits (a <em>read-back</em>).</li>
-<li><strong>RETRIEVED</strong> — the bytes came from <code>EXEC CICS RETRIEVE</code>, so go to every program that STARTed this transaction.</li>
-</ul>
-<p>Give each place a counter: how many crossings it took to get here. When a place at the limit wants to cross again, it does not. It keeps the values it found in its own program, drops the crossings, and adds the reason <code>hop-limit</code> to what it reports. That reason travels back to the jump that started the walk, the same way every other reason in a <a href="value-sets.html">value set</a> does (see the <a href="value-sets.html#reasons">reasons taxonomy</a> for the full list).</p>
-<p>The cost is now bounded by the programs within N crossings of the jump, not by the size of the corpus. The answer is a subset of the exact answer. A target whose own walk was cut says so; a target shortened only because a cut elsewhere hid a link does not (see <a href="#what-goes-wrong">what goes wrong</a>).</p>
-<p>A second, separate switch, <code>--skip-readbacks</code>, drops one kind of crossing altogether: RETURNED stops are not followed, and the bytes report <code>readback-skipped</code>.</p>
+<p class="lede">To say where a dynamic XCTL goes, the analysis walks its target's bytes backwards, crossing into whichever program they came from. Where programs hand areas round in a ring, those walks pile up: on a large CICS corpus, one cyclic group grew past a million places, though earlier fixes had made each walk cheap.</p>
+<p class="lede"><code>PROGT</code>'s XCTL goes to <code>PROGM</code>, a literal in PROGT, or to <code>PROGQ</code>, which <code>PROGC</code> stamped into the commarea two programs back. Allow one crossing (<code>--max-hops 1</code>) and the walk keeps <code>PROGM</code>, stops short of PROGC, and marks the answer <code>hop-limit</code>; allow two and it finds both, unmarked. Stop after N crossings, keep what was found, mark what was cut.</p>
+<p class="dim">A <strong>crossing</strong> is a step of the walk that leaves one program for another. The <a href="cobol-primer.html">COBOL/CICS primer</a> has the rest of the vocabulary.</p>
+<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#the-example">The example</a></li><li><a href="#step-by-step">Step by step</a></li><li><a href="#the-intuition">Counting crossings</a></li><li><a href="#the-problem">Why the walk needs a bound</a></li><li><a href="#reverse-engineering">Where this shows up</a></li><li><a href="#the-rule">The rule</a></li><li><a href="#what-goes-wrong">What goes wrong</a></li><li><a href="#in-cobble">In cobble</a></li></ol></nav>
 
 <h2 id="the-example">The example</h2>
-<p>Three programs in a chain. <code>PROGC</code> stamps <code>'PROGQ'</code> into the first eight bytes of its commarea and XCTLs to <code>PROGP</code>. <code>PROGP</code> and <code>PROGT</code> have the same shape: each picks its next program either from a literal or from the first eight bytes of the commarea it received, and hands that commarea on. Neither <code>PROGQ</code> nor <code>PROGM</code> is in the analysed set.</p>
+<p>Three programs in a chain, and where each XCTL can go:</p>
+<pre class="mermaid">
+flowchart TD
+    C["PROGC"] -->|"PROGRAM('PROGP')"| P["PROGP"]
+    P -->|"MOVE 'PROGT'"| T["PROGT"]
+    P -.->|"commarea [0, 8)"| Q["PROGQ · not analysed"]
+    T -.->|"MOVE 'PROGM'"| M["PROGM · not analysed"]
+    T -.->|"commarea [0, 8)"| Q
+</pre>
+<p><code>PROGC</code> stamps <code>'PROGQ'</code> into the first eight bytes of its commarea and XCTLs to <code>PROGP</code>. <code>PROGP</code> and <code>PROGT</code> each XCTL to a literal or to the first eight bytes of the commarea they received, handing that commarea on. Dashed arrows lead to <code>PROGQ</code> and <code>PROGM</code>, which are not analysed; each arrow is labelled with the line that names its target.</p>
+<p>The question is the target of PROGT's XCTL. Exactly, it is <code>PROGM</code> or <code>PROGQ</code>: <code>PROGQ</code> travels from PROGC through PROGP's commarea untouched and into PROGT, which is why PROGT's dashed commarea arrow also ends at PROGQ. Here is what the combine answers at four limits, for PROGT and for PROGP; these are the rows the test asserts:</p>
+<table class="state"><tbody>
+<tr><th>--max-hops</th><th>target of PROGT</th><th>target of PROGP</th></tr>
+<tr><td>0</td><td>PROGM · hop-limit</td><td>PROGT · hop-limit</td></tr>
+<tr><td>1</td><td>PROGM · hop-limit</td><td>PROGQ, PROGT</td></tr>
+<tr><td>2</td><td>PROGM, PROGQ</td><td>PROGQ, PROGT</td></tr>
+<tr><td>no limit</td><td>PROGM, PROGQ</td><td>PROGQ, PROGT</td></tr>
+</tbody></table>
+<p>Read the first two rows for PROGT together: the answer at 0 and at 1 is the same, yet both still carry <code>hop-limit</code>, and at 2 it grows. That is why the reason matters more than the comparison. The two solid edges, <code>PROGC → PROGP</code> (a literal) and <code>PROGP → PROGT</code> (from PROGP's own <code>MOVE 'PROGT'</code>), are found at every limit.</p>
+<p>The lines that matter. PROGT is PROGP with <code>'PROGM'</code> in place of <code>'PROGT'</code>:</p>
+<pre class="cobol">* PROGC: WS-FROM is bytes [0, 8) of WS-AREA
+MOVE 'PROGQ' TO WS-FROM.
+EXEC CICS XCTL PROGRAM('PROGP')
+     COMMAREA(WS-AREA) LENGTH(20) END-EXEC.</pre>
+<pre class="cobol">* PROGP: LK-FROM is DFHCOMMAREA [0, 8)
+IF EIBCALEN = 0
+    MOVE 'PROGT' TO WS-NEXT
+ELSE
+    MOVE LK-FROM TO WS-NEXT
+END-IF.
+EXEC CICS XCTL PROGRAM(WS-NEXT)
+     COMMAREA(DFHCOMMAREA) LENGTH(20) END-EXEC.</pre>
+<details class="walk listing"><summary>Full listings <span class="dim">(PROGC, PROGP, PROGT)</span></summary>
 <pre class="cobol">       IDENTIFICATION DIVISION.
        PROGRAM-ID. PROGC.
        DATA DIVISION.
@@ -72,18 +97,18 @@
        IDENTIFICATION DIVISION.
        PROGRAM-ID. PROGT.
       *    Same as PROGP, with 'PROGM' in place of 'PROGT'.</pre>
-<p>Run to the end, the combine knows two edges: <code>PROGC → PROGP</code> (a literal) and <code>PROGP → PROGT</code> (from PROGP's own <code>MOVE 'PROGT'</code>, so it is found at every limit). The question is the target of PROGT's XCTL. Exactly, it is <code>PROGM</code> or <code>PROGQ</code>: <code>PROGQ</code> travels from PROGC through PROGP's commarea untouched and into PROGT.</p>
+</details>
 
 <h2 id="step-by-step">Step by step</h2>
-<p>The walk from PROGT's XCTL meets three places. Each row is a place, what its own program gives, and where it would cross next. The last column is the place's hop count.</p>
-<table class="state"><tbody>
-<tr><th>place</th><th>found locally</th><th>would cross to</th><th>hops</th></tr>
-<tr><td>PROGT, XCTL, WS-NEXT bytes [0, 8)</td><td>{PROGM}</td><td>RECEIVED: caller PROGP, at its XCTL, commarea bytes [0, 8)</td><td>0</td></tr>
-<tr><td>PROGP, XCTL, DFHCOMMAREA bytes [0, 8)</td><td>{}</td><td>RECEIVED: caller PROGC, at its XCTL, WS-AREA bytes [0, 8)</td><td>1</td></tr>
-<tr><td>PROGC, XCTL, WS-AREA bytes [0, 8)</td><td>{PROGQ}</td><td>nothing</td><td>2</td></tr>
-</tbody></table>
+<p>The walk from PROGT's XCTL meets three places, climbing the graph above from PROGT to PROGC. A <strong>place</strong> is a program, a statement in it, and a byte range. Each row is a place, what its own program gives, and where it would cross next. The first column is the place's hop count.</p>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>hops</th><th>place</th><th>found locally</th><th>would cross to</th></tr>
+<tr><td>0</td><td>PROGT, XCTL, WS-NEXT bytes [0, 8)</td><td>{PROGM}</td><td>RECEIVED: caller PROGP, at its XCTL, commarea bytes [0, 8)</td></tr>
+<tr><td>1</td><td>PROGP, XCTL, DFHCOMMAREA bytes [0, 8)</td><td>{}</td><td>RECEIVED: caller PROGC, at its XCTL, WS-AREA bytes [0, 8)</td></tr>
+<tr><td>2</td><td>PROGC, XCTL, WS-AREA bytes [0, 8)</td><td>{PROGQ}</td><td>nothing</td></tr>
+</tbody></table></div>
 <p class="dim">The second place is PROGP's commarea at the moment PROGP hands it on. PROGP never writes LK-FROM, so the bytes there are what PROGP received, and the walk must cross again.</p>
-<details class="walk">
+<details class="walk" open>
 <summary>The target of PROGT at four limits <span class="dim">(4 runs)</span></summary>
 <ol class="steps">
 <li>
@@ -117,15 +142,60 @@
 </li>
 </ol>
 </details>
-<p>PROGP's own target needs one crossing fewer: its walk starts at its XCTL with <code>{PROGT}</code> found locally and reaches PROGC at hops 1. These are the rows the test asserts:</p>
-<table class="state"><tbody>
-<tr><th>--max-hops</th><th>target of PROGT</th><th>target of PROGP</th></tr>
-<tr><td>0</td><td>PROGM · hop-limit</td><td>PROGT · hop-limit</td></tr>
-<tr><td>1</td><td>PROGM · hop-limit</td><td>PROGQ, PROGT</td></tr>
-<tr><td>2</td><td>PROGM, PROGQ</td><td>PROGQ, PROGT</td></tr>
-<tr><td>no limit</td><td>PROGM, PROGQ</td><td>PROGQ, PROGT</td></tr>
-</tbody></table>
-<p>Read the first two rows for PROGT together: the answer at 0 and at 1 is the same, yet both still carry <code>hop-limit</code>, and at 2 it grows. That is why the reason matters more than the comparison.</p>
+<p>PROGP's own target needs one crossing fewer: its walk starts at its XCTL with <code>{PROGT}</code> found locally and reaches PROGC at hops 1. That is why, in the example's table, PROGP's column loses <code>hop-limit</code> one row earlier than PROGT's.</p>
+
+<h2 id="the-intuition">Counting crossings</h2>
+<p>Inside one program a walk is cheap: <a href="memoised-reachability.html">the per-program memo</a> answers each position once for the whole run. The expensive part is leaving the program, which the first two places of the step-by-step table do in their last column. There are three ways to leave, and each is a crossing:</p>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>crossing</th><th>the bytes came</th><th>so go to</th><th>on this page</th></tr>
+<tr><td>RECEIVED</td><td>in through the linkage section</td><td>every caller that jumped here, at what it handed over</td><td>every crossing in the <a href="#step-by-step">step-by-step</a> table and the ring's table below</td></tr>
+<tr><td>RETURNED</td><td>back from a program this one LINKed or CALLed (a <em>read-back</em>)</td><td>that callee's exits</td><td>PROGL's fragment under <a href="#what-goes-wrong">what goes wrong</a></td></tr>
+<tr><td>RETRIEVED</td><td>from <code>EXEC CICS RETRIEVE</code></td><td>every program that STARTed this transaction</td><td>none</td></tr>
+</tbody></table></div>
+<p class="dim">A second, separate switch, <code>--skip-readbacks</code>, drops the RETURNED row altogether: those stops are not followed, and the bytes report <code>readback-skipped</code>. PROGL's table under <a href="#what-goes-wrong">what goes wrong</a> shows it.</p>
+<p>Give each place a counter: how many crossings it took to get here. When a place at the limit wants to cross again, it does not. It keeps the values it found in its own program, drops the crossings, and adds the reason <code>hop-limit</code>. In step 2 of the walk that place is PROGP's, at hops 1: it keeps its empty set and adds the reason, which travels back to PROGT's jump the same way every other reason in a <a href="value-sets.html">value set</a> does (see the <a href="value-sets.html#reasons">reasons taxonomy</a> for the full list). So PROGT's chips in step 2 carry <code>hop-limit</code>, though the cut was one program away:</p>
+<div class="chips"><span class="chip">candidates: PROGM</span><span class="chip">reasons: hop-limit</span></div>
+<p>The answer is a subset of the exact answer: at 1 it is {PROGM}, where the exact answer is {PROGM, PROGQ}. A target whose own walk was cut says so; a target shortened only because a cut elsewhere hid a link does not (see <a href="#what-goes-wrong">what goes wrong</a>).</p>
+
+<h2 id="the-problem">Why the walk needs a bound</h2>
+<p>The example's walk met three places and ended at a literal. A statement reached under many different byte ranges is many places, and where programs hand areas to each other in a ring, every program in the ring can reach every other under many ranges, so one cyclic group holds about as many places as the programs in the ring times the byte ranges each is reached under. The smallest ring is three copies of PROGP, each choosing the next program in the ring from a literal or from the first eight bytes of the commarea it received:</p>
+<pre class="mermaid">
+flowchart LR
+    X["PROGX"] -->|"MOVE 'PROGY'"| Y["PROGY"]
+    Y -->|"MOVE 'PROGZ'"| Z["PROGZ"]
+    Z -->|"MOVE 'PROGX'"| X
+</pre>
+<p>Each arrow is an XCTL that hands on the whole commarea. Walking back from PROGX's XCTL, with no limit, meets these places. Only one byte range, <code>[0, 8)</code>, travels round this ring, so each program adds one place to the walk; a ring that passed several ranges would add one place per program per range.</p>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>#</th><th>place</th><th>found locally</th><th>would cross to</th></tr>
+<tr><td>1</td><td>PROGX, XCTL, WS-NEXT bytes [0, 8)</td><td>{PROGY}</td><td>RECEIVED: caller PROGZ</td></tr>
+<tr><td>2</td><td>PROGZ, XCTL, DFHCOMMAREA bytes [0, 8)</td><td>{}</td><td>RECEIVED: caller PROGY</td></tr>
+<tr><td>3</td><td>PROGY, XCTL, DFHCOMMAREA bytes [0, 8)</td><td>{}</td><td>RECEIVED: caller PROGX</td></tr>
+<tr><td>4</td><td>PROGX, XCTL, DFHCOMMAREA bytes [0, 8)</td><td>{}</td><td>RECEIVED: caller PROGZ, which is place 2 again</td></tr>
+</tbody></table></div>
+<p>Row 4 is not row 1: the same statement, but the commarea's bytes rather than WS-NEXT's, so it is a separate place. Its crossing lands on place 2, which the memo already holds, and the walk ends. On the large corpus the same shape, with many more programs and ranges, grew past a million places.</p>
+<p>The memo already answers each place once per round: the four rows above are each answered once. The remaining cost is the number of rows, which is a property of the corpus. No exact fix could be guaranteed faster without building it and measuring it on the corpus. What was needed was a walk whose cost has a known bound, and whose answers say when they may be incomplete. Here is the ring's walk from PROGX with <code>--max-hops 2</code>; the amber place is the one at the limit:</p>
+<pre class="mermaid">
+flowchart TD
+    p1["PROGX · WS-NEXT [0, 8) · hops 0 · {PROGY}"] -->|"RECEIVED"| p2["PROGZ · commarea [0, 8) · hops 1 · {}"]
+    p2 -->|"RECEIVED"| p3["PROGY · commarea [0, 8) · hops 2 · {}"]
+    p3 -.->|"not crossed: hop-limit"| p4["PROGX · commarea [0, 8)"]
+    classDef changed fill:#f5b041,stroke:#f5b041,color:#000
+    class p3 changed
+</pre>
+<p>PROGY's place, at hops 2, keeps its empty set and adds <code>hop-limit</code>, which travels back up the two solid arrows to PROGX's jump, so PROGX's target is:</p>
+<div class="chips"><span class="chip">candidates: PROGY</span><span class="chip changed">reasons: hop-limit</span></div>
+<p>The cost is now bounded by the programs within N crossings of the jump, not by the size of the corpus: the picture above has three places whatever lies beyond the dashed arrow.</p>
+
+<h2 id="reverse-engineering">Where this shows up</h2>
+<p>Cobble's last dataflow stage, <code>cobble-dataflow-combine</code>, answers one question for a CICS corpus: where can each dynamic jump go? On a large CICS corpus (about 3,800 programs and 19,000 jumps), a memo over strongly connected components (<a href="memoised-reachability.html">explainer 10</a>), a per-program memo, an edge index, and places told apart by their bytes alone had made each walk cheap; even so, one cyclic group of walks, the ring's shape at scale, grew past a million places on the stack. The goal was narrow. Dynamic targets on that corpus come in three shapes, here as lines of PROGP with the crossings each needs:</p>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>shape</th><th>as a line of <a href="#the-example">PROGP</a></th><th>crossings</th></tr>
+<tr><td>VALUE</td><td><code>01 WS-NEXT PIC X(8) VALUE 'PROGT'.</code> (a variant: PROGP itself uses a MOVE)</td><td>0</td></tr>
+<tr><td>MOVE literal</td><td><code>MOVE 'PROGT' TO WS-NEXT</code></td><td>0</td></tr>
+<tr><td>from commarea</td><td><code>MOVE LK-FROM TO WS-NEXT</code>, where LK-FROM is what PROGC stamped</td><td>1</td></tr>
+</tbody></table></div>
+<p>The last shape, about 5% of them, is PROGP's own target: one crossing, to PROGC, finds <code>'PROGQ'</code>, so from <code>--max-hops 1</code> up its row carries no <code>hop-limit</code>. An answer that walks a few crossings and says honestly where it stopped covers all three.</p>
 
 <h2 id="the-rule">The rule</h2>
 <div class="rule">
@@ -136,21 +206,82 @@ otherwise:  each place crossed to gets hops + 1  (hops stays 0 when there is no 
 --skip-readbacks:  a RETURNED stop crosses nowhere and adds readback-skipped<br>
 answer(jump) = join of every place reached from (program, jump, target bytes, 0)
 </div>
-<p>Why hops are counted only when a limit is set: the hop count is part of the place. With no limit, a cycle across programs would come back to the same program, statement and bytes with a larger count — a new place on every lap, and the walk would never end. With the count held at 0, the lap returns to a place already seen and the memo closes the cycle. With a limit N, a place can appear under at most N + 1 counts, so laps run out.</p>
-<p>Why a target without <code>hop-limit</code> is exact: expansion depends on the hop count only through the cut. If no place reached from a jump was cut, each was expanded exactly as it would be with no limit, so the walk reaches the same programs, statements and bytes, and joins the same values and reasons. (This holds within a round, given the same edges; see below.)</p>
+<p>Each line of the box was applied in the walk above. The cut line is step 1 (PROGT's place at hops 0) and step 2 (PROGP's place at hops 1). The <em>hops + 1</em> line is step 3, where PROGC's place is reached with hops 2. The <em>stays 0</em> clause is step 4, where the hop column reads 0 on every row (amber where it changed). The <code>--skip-readbacks</code> line is PROGL's second row under <a href="#what-goes-wrong">what goes wrong</a>.</p>
+<p>Why hops are counted only when a limit is set: the hop count is part of the place. With no limit, a cycle across programs would come back to the same program, statement and bytes with a larger count — a new place on every lap, and the walk would never end. With the count held at 0, the lap returns to a place already seen and the memo closes the cycle: that is row 4 of the ring's table landing on place 2. With a limit N, a place can appear under at most N + 1 counts, so laps run out. The ring's walk from PROGX shows both, one row per limit:</p>
+<table class="state"><tbody>
+<tr><th>--max-hops</th><th>places on PROGX's walk (program · hops)</th><th>target of PROGX</th></tr>
+<tr><td>no limit</td><td>X·0, Z·0, Y·0, X·0 (commarea), then Z·0 again: closed</td><td>PROGY</td></tr>
+<tr><td>0</td><td>X·0 cut</td><td>PROGY · hop-limit</td></tr>
+<tr><td>1</td><td>X·0, Z·1 cut</td><td>PROGY · hop-limit</td></tr>
+<tr><td>2</td><td>X·0, Z·1, Y·2 cut</td><td>PROGY · hop-limit</td></tr>
+<tr><td>3</td><td>X·0, Z·1, Y·2, X·3 (commarea) cut</td><td>PROGY · hop-limit</td></tr>
+<tr><td>4</td><td>X·0, Z·1, Y·2, X·3, Z·4 cut</td><td>PROGY · hop-limit</td></tr>
+</tbody></table>
+<p>Under limit N the walk holds N + 1 places, the last one cut. At 4, PROGZ's commarea is held twice, as Z·1 and Z·4. With no limit it holds four, and the lap that would have been Z·4 is the Z·0 the memo already has.</p>
+<p>Why a target without <code>hop-limit</code> is exact: expansion depends on the hop count only through the cut. If no place reached from a jump was cut, each was expanded exactly as it would be with no limit, so the walk reaches the same programs, statements and bytes, and joins the same values and reasons. Steps 3 and 4 of the walk are this argument on PROGT: the same three places, expanded the same way, differing only in the hop column, with the same chips. (This holds within a round, given the same edges; see below.)</p>
 
 <h2 id="what-goes-wrong">What goes wrong</h2>
 <ul>
-<li><strong>Cut targets are subsets.</strong> A <code>hop-limit</code> row keeps every value it found, and they are all real, but there may be more. A cut row is never silent: the reason is on the row in <code>targets.jsonl</code>. Rows downstream of a link a cut hid can be silent (see <em>rounds couple targets</em> below). (See the <a href="value-sets.html#reasons">reasons taxonomy</a> for the full list of reason codes.)</li>
-<li><strong>Choosing N is empirical.</strong> Raise N until no row carries <code>hop-limit</code>, or the rows that still do are ones you can accept as possibly short. Checking that <code>targets.jsonl</code> and <code>links.jsonl</code> stop changing between N and N + 1 helps, but it is not proof (next point): rows carrying <code>hop-limit</code> can still change, and so can rows that depend on a link a cut hid. On the large corpus, 3 hops took about 1 s, 4 about 10 s, 5 about a minute; the targets at 3 and 4 were identical, but 3 targets still carried <code>hop-limit</code>, so 5 was chosen. This page does not record how many, if any, still carried it at 5. On CardDemo, the targets were identical with no limit, with <code>--max-hops 1</code>, and with <code>--max-hops 1</code> and <code>--skip-readbacks</code> together.</li>
-<li><strong>Identical at N and N + 1 is not proof.</strong> The example shows it: PROGT's target is the same at 0 and 1 and grows at 2, because the middle program only relays bytes. Every relay program in a chain is one more crossing that finds nothing. The <code>hop-limit</code> reason is the honest signal; the comparison is a heuristic.</li>
-<li><strong>Rounds couple targets.</strong> The combine runs in rounds: a target's values become new edges, and edges feed other walks. A cut that hides a program name hides the edge to that program too, and a walk into that program then sees fewer callers without itself being cut. This follows from reading the code; it was not reproduced. The cut target that hid the name does carry <code>hop-limit</code>, so the trail starts at a flagged row.</li>
-<li><strong>Cost is per program, not per statement.</strong> N bounds how many programs a walk enters, not how big they are. Under a limit a place can also exist under up to N + 1 hop counts, so the memo may hold that many copies of it.</li>
-<li><strong><code>--skip-readbacks</code> loses a whole shape.</strong> A program that LINKs to a routine which writes the next program's name into the commarea, and then XCTLs to that name, resolves to nothing with the flag set: the row says <code>readback-skipped</code> and has no candidate.</li>
+<li><strong>Cut targets are subsets.</strong> A <code>hop-limit</code> row keeps every value it found, and they are all real, but there may be more. PROGT at <code>--max-hops 1</code>:
+<table class="state"><tbody>
+<tr><th></th><th>candidates</th><th>reasons</th></tr>
+<tr><td>at 1</td><td>PROGM</td><td>hop-limit</td></tr>
+<tr><td>exact</td><td>PROGM, PROGQ</td><td>none</td></tr>
+</tbody></table>
+PROGM is real; PROGQ is missing. A cut row is never silent: the reason is on the row in <code>targets.jsonl</code>. Rows downstream of a link a cut hid can be silent (see <em>rounds couple targets</em> below). (See the <a href="value-sets.html#reasons">reasons taxonomy</a> for the full list of reason codes.)</li>
+<li><strong>Choosing N is empirical.</strong> Raise N until no row carries <code>hop-limit</code>, or the rows that still do are ones you can accept as possibly short. Some never clear: in the ring's table above, every limit from 0 to 4 leaves PROGX at <code>PROGY · hop-limit</code>, because every place on that ring has a crossing and nothing on it ever writes the commarea, so the last place held is always cut. Checking that <code>targets.jsonl</code> and <code>links.jsonl</code> stop changing between N and N + 1 helps, but it is not proof (next point): rows carrying <code>hop-limit</code> can still change, and so can rows that depend on a link a cut hid. On the large corpus:
+<table class="state"><tbody>
+<tr><th>--max-hops</th><th>time</th><th>targets</th></tr>
+<tr><td>3</td><td>about 1 s</td><td>—</td></tr>
+<tr><td>4</td><td>about 10 s</td><td>identical to 3</td></tr>
+<tr><td>5</td><td>about a minute</td><td>chosen</td></tr>
+</tbody></table>
+Rows 3 and 4 agree, yet 3 targets still carried <code>hop-limit</code>, so 5 was chosen. This page does not record how many, if any, still carried it at 5. On CardDemo, the targets were identical with no limit, with <code>--max-hops 1</code>, and with <code>--max-hops 1</code> and <code>--skip-readbacks</code> together.</li>
+<li><strong>Identical at N and N + 1 is not proof.</strong> The example shows it: PROGT's target, from the example's table,
+<div class="chips"><span class="chip">0: PROGM · hop-limit</span><span class="chip">1: PROGM · hop-limit</span><span class="chip changed">2: PROGM, PROGQ</span></div>
+is the same at 0 and 1 and grows at 2, because the middle program, PROGP, only relays bytes (its row in step 2 finds {}). Every relay program in a chain is one more crossing that finds nothing. The <code>hop-limit</code> reason is the honest signal; the comparison is a heuristic.</li>
+<li><strong>Rounds couple targets.</strong> The combine runs in rounds: a target's values become new edges, and edges feed other walks. A cut that hides a program name hides the edge to that program too, and a walk into that program then sees fewer callers without itself being cut. In the example, the name is PROGQ and the hidden edge is <code>PROGT → PROGQ</code>, the dashed arrow from PROGT to PROGQ in the example's graph:
+<table class="state"><tbody>
+<tr><th>--max-hops</th><th>PROGT's target</th><th>callers of PROGQ a next round could know</th></tr>
+<tr><td>1</td><td>PROGM · hop-limit</td><td>PROGP</td></tr>
+<tr><td>2</td><td>PROGM, PROGQ</td><td>PROGP, PROGT</td></tr>
+</tbody></table>
+PROGQ is not analysed, so here nothing is shortened. Were it analysed, a RECEIVED crossing in PROGQ's own walk at 1 would go to PROGP but not to PROGT, and nothing on PROGQ's row would say so. This follows from reading the code; it was not reproduced. The cut target that hid the name does carry <code>hop-limit</code>, so the trail starts at a flagged row.</li>
+<li><strong>Cost is per program, not per statement.</strong> N bounds how many programs a walk enters, not how big they are. Under a limit a place can also exist under up to N + 1 hop counts, so the memo may hold that many copies of it: in the ring's table at 4, PROGZ's commarea is held as both Z·1 and Z·4.</li>
+<li><strong><code>--skip-readbacks</code> loses a whole shape.</strong> A program that LINKs to a routine which writes the next program's name into the commarea, and then XCTLs to that name, resolves to nothing with the flag set. PROGL is that program:
+<pre class="cobol">       PROGRAM-ID. PROGL.
+       ...
+       01  WS-AREA.
+           05  WS-NEXT          PIC X(8).
+           05  WS-REST          PIC X(12).
+       PROCEDURE DIVISION.
+           EXEC CICS LINK PROGRAM('PROGW')
+                COMMAREA(WS-AREA) LENGTH(20) END-EXEC.
+           EXEC CICS XCTL PROGRAM(WS-NEXT) END-EXEC.
+
+       PROGRAM-ID. PROGW.
+       ...
+       01  DFHCOMMAREA.
+           05  LK-NEXT          PIC X(8).
+           05  LK-REST          PIC X(12).
+       PROCEDURE DIVISION.
+           MOVE 'PROGN' TO LK-NEXT.
+           EXEC CICS RETURN END-EXEC.</pre>
+WS-NEXT is bytes [0, 8) of the area PROGW wrote back, so PROGL's target needs one RETURNED crossing:
+<table class="state"><tbody>
+<tr><th>run</th><th>target of PROGL</th></tr>
+<tr><td>default</td><td>PROGN</td></tr>
+<tr><td>--skip-readbacks</td><td>no candidate · readback-skipped</td></tr>
+<tr><td>--max-hops 0</td><td>no candidate · hop-limit</td></tr>
+</tbody></table>
+The second row is the lost shape: the row says <code>readback-skipped</code> and has no candidate. The third shows the same crossing counted as a hop.</li>
 </ul>
 
 <h2 id="in-cobble">In cobble</h2>
-<p>The combine (<code>cobble-dataflow-combine</code>) applies the limit when <code>--max-hops</code> is set; with no limit, a walk follows links as far as they go. A walk cut at the limit carries the reason <code>hop-limit</code>. <code>--skip-readbacks</code> leaves RETURNED stops unfollowed, and the bytes report <code>readback-skipped</code>. Each place is answered once per round, as <a href="memoised-reachability.html">memoised reachability</a> explains. Both flags are in the field dataflow reference.</p>
+<p>The combine (<code>cobble-dataflow-combine</code>) applies the limit when <code>--max-hops</code> is set; with no limit, a walk follows links as far as they go. A walk cut at the limit carries the reason <code>hop-limit</code>. <code>--skip-readbacks</code> leaves RETURNED stops unfollowed, and the bytes report <code>readback-skipped</code>. Each place is answered once per round, as <a href="memoised-reachability.html">memoised reachability</a> explains. Both flags are in the field dataflow reference. This is PROGT's row in <code>targets.jsonl</code> from running the combine on the example with <code>--max-hops 1</code>; it is the <em>1</em> row of the example's table, PROGT's column:</p>
+<pre class="cobol">{"caller": "PROGT", "node": "%MAIN/1", "transfer": "CICS_XCTL",
+ "expression": "WS-NEXT", "candidates": ["PROGM"],
+ "reasons": ["hop-limit"], "dropped": [], "outside": []}</pre>
 </main>
 
 </body>

@@ -5,52 +5,64 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Interprocedural rounds</title>
 <link rel="stylesheet" href="explainer.css">
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/+esm";
+  const light = matchMedia("(prefers-color-scheme: light)").matches;
+  mermaid.initialize({
+    deterministicIds: true,
+    startOnLoad: true,
+    theme: "base",
+    themeVariables: light
+      ? { darkMode: false, background: "#fbfaf7", primaryColor: "#e6e3da", primaryTextColor: "#1a1f26", primaryBorderColor: "#d3cfc4", lineColor: "#5d6673", textColor: "#1a1f26", edgeLabelBackground: "#f1efe9", clusterBkg: "#f1efe9", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
+      : { darkMode: true, background: "#0b0f14", primaryColor: "#1a2230", primaryTextColor: "#e6edf3", primaryBorderColor: "#263041", lineColor: "#8b98a9", textColor: "#e6edf3", edgeLabelBackground: "#121821", clusterBkg: "#121821", clusterBorder: "#263041", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" },
+  });
+</script>
 </head>
 <body>
 <main>
 <nav class="back"><a href="index.html">← All explainers</a></nav>
 <div class="kicker">Explainer 8 of 11</div>
 <h1>Rounds across programs, and walking only what changed</h1>
+<aside class="tldr"><p><strong>TL;DR</strong>Whether a program needs some bytes can depend on a program two calls away, so a corpus-wide answer takes several rounds. Re-walking only the programs whose inputs changed keeps those rounds affordable on thousands of programs.</p></aside>
 <p class="prereqs"><strong>Read first:</strong> <a href="area-need.html">Area need</a>, <a href="local-site-resolution.html">Local site resolution</a></p>
-<p class="lede">How area need settles across a whole corpus: walk every program once, then walk again only the programs whose inputs moved, until none did.</p>
-<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#reverse-engineering">Where this shows up in reverse engineering</a></li><li><a href="#the-problem">The problem</a></li><li><a href="#the-intuition">The intuition</a></li><li><a href="#the-example">The example</a></li><li><a href="#step-by-step">Step by step</a></li><li><a href="#the-rule">The rule</a></li><li><a href="#what-goes-wrong">What goes wrong</a></li><li><a href="#in-cobble">In cobble</a></li></ol></nav>
-
-<h2 id="reverse-engineering">Where this shows up in reverse engineering</h2>
-<p>The goal on a large CICS corpus (about 3,800 programs) was to resolve dynamic call targets: <code>CALL WS-PGM</code>, <code>EXEC CICS XCTL PROGRAM(WS-NEXT-PGM)</code>. To do that cheaply, the fixpoint should track only the handed-over bytes some target can depend on. <a href="area-need.html">Area need</a> computes those bytes per program. On CardDemo, the entry need summed over every program fell from 4,394 bytes to 92, and the fixpoint narrowed to it gave identical targets, links and graph.</p>
-<ul>
-<li><strong>A commarea is a conversation between programs.</strong> Whether a program needs byte 0 of its commarea can depend on a program three LINKs away that reads a next-program name back. No single program's source says so.</li>
-<li><strong>One answer per program is not enough.</strong> Each program's answer feeds its callers and its callees. Change one and others may change. So the corpus is walked in rounds until no answer moves.</li>
-<li><strong>Walking 3,800 programs per round is the cost.</strong> Most programs' inputs do not change after the first round or two. Walking only the ones whose inputs changed gives the same table for a fraction of the walks.</li>
-</ul>
-
-<h2 id="the-problem">The problem</h2>
-<p>Each program (a <em>member</em>) has two rows in the area table:</p>
-<ul>
-<li><strong>entry</strong> — the bytes of each area it receives that it needs on entry;</li>
-<li><strong>back</strong> — the bytes of that area its callers read again after it returns.</li>
-</ul>
-<p>A member's walk is ordinary backward liveness over its own statements: the same worklist idea as <a href="fixpoints.html">fixpoints</a>, run backwards (see <a href="area-need.html#the-intuition">area need</a>). But the demand that walk starts from comes from the table. At a call that hands over an area, the member must supply what the callee reads on entry: the callee's <strong>entry</strong> row. At its own <code>GOBACK</code> or <code>EXEC CICS RETURN</code>, it must supply what its callers read back: its own <strong>back</strong> row. At a dynamic call nothing resolved, it must supply what <em>any</em> member might read: the union of every member's entry row.</p>
-<p>So the walk's output depends on rows that other walks produce. A member's entry row feeds its callers. Its read-backs feed its callees' back rows. Per-program liveness, run once, sees only the rows as they stood when it ran. It cannot settle a dependency that runs through other programs.</p>
-
-<h2 id="the-intuition">The intuition</h2>
-<p>Start every member at "needs nothing". Walk every member against that table. Collect what each walk reports and build a new table. Walk again against the new table. Rows only grow, and they are bounded by the size of the areas, so eventually a round changes nothing. That table is the least one that holds.</p>
-<p>Walking every member every round is correct but wasteful. A walk reads exactly three things from the table:</p>
-<ol>
-<li>the entry rows of the programs its call sites reach;</li>
-<li>its own back row;</li>
-<li>if it has a call site that hands over an area and that nothing resolved, the union of every member's entry row (the <em>dynamic</em> need).</li>
-</ol>
-<p>Everything else it reads is its own program, which never changes. So if none of those three things changed since a member was last walked, walking it again gives the same report. Keep its last report and skip it. That leaves three reasons to walk a member again:</p>
-<ul>
-<li>a program it calls got a new <strong>entry</strong> row — the member is one of that program's callers;</li>
-<li>its own <strong>back</strong> row changed;</li>
-<li>the <strong>dynamic</strong> need changed, and the member has an unresolved site.</li>
-</ul>
-<p>The first reason needs "who calls this program", but each member only knows what it calls. So the callee map is inverted once, before the first round: the inversion turns "member → programs its sites reach" into "program → members whose sites reach it". The sites counted are those naming a program, plus dynamic sites resolved to one or more programs (in their own program, see <a href="local-site-resolution.html">local site resolution</a>, or by an earlier combine).</p>
-<p>This is the <a href="fixpoints.html">worklist</a> idea one level up. There, the items are statements, and a statement whose notes changed queues its neighbours. Here, the items are members, and a row that changed queues the members that read it. One difference: within a program the worklist takes one statement at a time and its result is visible at once. Here a whole round of members walks against the same table, built at the end of the previous round. That is what lets the walks of one round run in parallel.</p>
+<p class="lede">A program's need on entry can be decided by a program two calls away, whose answer depends on others in turn. So one walk per program is not enough: the corpus is walked in rounds until no answer moves, and on about 3,800 programs, walking every one every round is the cost.</p>
+<p class="lede"><code>PROGA</code> LINKs to <code>PROGB</code>, which LINKs to <code>PROGC</code>; then <code>PROGA</code> XCTLs to the name it reads back from bytes [0, 8). So <code>PROGC</code> needs those bytes on entry, though its own code only writes them. Five rounds settle it, and walking only the programs whose inputs changed takes 9 walks instead of 20.</p>
+<p class="dim">Each program is a <strong>member</strong>, with an <strong>entry</strong> row (bytes it needs on entry) and a <strong>back</strong> row (bytes its callers read after it returns).</p>
+<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#the-example">The example</a></li><li><a href="#step-by-step">Step by step</a></li><li><a href="#the-intuition">Why only some members walk again</a></li><li><a href="#the-problem">Why one walk per program is not enough</a></li><li><a href="#reverse-engineering">Where this shows up</a></li><li><a href="#the-rule">The rule</a></li><li><a href="#what-goes-wrong">What goes wrong</a></li><li><a href="#in-cobble">In cobble</a></li></ol></nav>
 
 <h2 id="the-example">The example</h2>
-<p>Four programs share one 16-byte commarea layout. <code>PROGA</code> LINKs to <code>PROGB</code>, which LINKs to <code>PROGC</code>. After <code>PROGB</code> returns, <code>PROGA</code> XCTLs to whatever program name came back. <code>PROGD</code> reads a program name from a queue and XCTLs there, handing its commarea on.</p>
+<p>Four programs share one 16-byte commarea layout. Besides the <code>PROGA</code> → <code>PROGB</code> → <code>PROGC</code> chain, <code>PROGD</code> reads a program name from a queue and XCTLs there, handing its commarea on. Solid arrows: LINKs to a named program; dashed: XCTLs to a variable.</p>
+<pre class="mermaid">
+flowchart TD
+    A[PROGA] -->|"LINK, WS-AREA"| B[PROGB]
+    B -->|"LINK, DFHCOMMAREA"| C[PROGC]
+    A -.->|"XCTL WS-NEXT-PGM, no area"| Q1["?"]
+    D[PROGD] -.->|"XCTL WS-NEXT, DFHCOMMAREA"| Q2["? (read from NEXTQ)"]
+</pre>
+<p>The strip below is the 16-byte commarea as the rounds leave it. <code>PROGB</code>, <code>PROGC</code> and <code>PROGD</code> each need bytes [0, 8), <code>CA-NEXT-PGM</code>, on entry (marked <em>need</em>). Bytes [8, 16), <code>CA-CODE</code> and <code>CA-ACCT</code>, are needed by nobody, so a fixpoint narrowed to this need does not have to track them.</p>
+<div class="bytes"><div class="byte-index">0</div><div class="byte-index">1</div><div class="byte-index">2</div><div class="byte-index">3</div><div class="byte-index">4</div><div class="byte-index">5</div><div class="byte-index">6</div><div class="byte-index">7</div><div class="span" style="grid-column:1 / 9">CA-NEXT-PGM</div><div class="byte w1">need</div><div class="byte w1">need</div><div class="byte w1">need</div><div class="byte w1">need</div><div class="byte w1">need</div><div class="byte w1">need</div><div class="byte w1">need</div><div class="byte w1">need</div><div class="byte-index">8</div><div class="byte-index">9</div><div class="byte-index">10</div><div class="byte-index">11</div><div class="byte-index">12</div><div class="byte-index">13</div><div class="byte-index">14</div><div class="byte-index">15</div><div class="span" style="grid-column:1 / 3">CA-CODE</div><div class="span" style="grid-column:3 / 9">CA-ACCT</div><div class="byte">·</div><div class="byte">·</div><div class="byte">·</div><div class="byte">·</div><div class="byte">·</div><div class="byte">·</div><div class="byte">·</div><div class="byte">·</div></div>
+<p>That is the whole answer, one row per member, settled after 5 rounds and 9 walks:</p>
+<div class="chips"><span class="chip">PROGA: receives nothing</span><span class="chip">PROGB: entry [0, 8), back [0, 8)</span><span class="chip">PROGC: entry [0, 8), back [0, 8)</span><span class="chip">PROGD: entry [0, 8), back {}</span></div>
+<p>The lines that matter. <code>CA-NEXT-PGM</code> and <code>PROGA</code>'s <code>WS-NEXT-PGM</code> are both bytes [0, 8):</p>
+<pre class="cobol">* PROGA
+EXEC CICS LINK PROGRAM('PROGB')
+     COMMAREA(WS-AREA) END-EXEC.
+EXEC CICS XCTL PROGRAM(WS-NEXT-PGM) END-EXEC.
+* PROGB
+EXEC CICS LINK PROGRAM('PROGC')
+     COMMAREA(DFHCOMMAREA) END-EXEC.
+EXEC CICS RETURN END-EXEC.</pre>
+<pre class="cobol">* PROGC
+IF EIBAID = DFHPF3
+    MOVE 'PROGE' TO CA-NEXT-PGM
+END-IF.
+EXEC CICS RETURN END-EXEC.
+* PROGD
+EXEC CICS READQ TS QUEUE('NEXTQ')
+     INTO(WS-NEXT) END-EXEC.
+EXEC CICS XCTL PROGRAM(WS-NEXT)
+     COMMAREA(DFHCOMMAREA) END-EXEC.</pre>
+<details class="walk listing"><summary>Full listings <span class="dim">(all four programs and the shared layout)</span></summary>
 <pre class="cobol">      *> Layout shared by PROGB, PROGC, PROGD (PROGA uses WS-AREA, same shape)
        01  DFHCOMMAREA.
            05  CA-NEXT-PGM          PIC X(8).
@@ -85,14 +97,15 @@
        PROCEDURE DIVISION.
            EXEC CICS READQ TS QUEUE('NEXTQ') INTO(WS-NEXT) END-EXEC.
            EXEC CICS XCTL PROGRAM(WS-NEXT) COMMAREA(DFHCOMMAREA) END-EXEC.</pre>
+</details>
 <p>What the walks need to know about these programs:</p>
 <ul>
-<li><code>PROGA</code>'s XCTL reads <code>WS-NEXT-PGM</code>, bytes [0, 8) of <code>WS-AREA</code>, after the LINK. So it reads those bytes back from <code>PROGB</code>. <code>PROGA</code> receives no area, so it has no entry need of its own. Its XCTL hands over no area, so it reads nothing from the table and does not count as a member with an unresolved site.</li>
+<li><code>PROGA</code>'s XCTL reads <code>WS-NEXT-PGM</code>, bytes [0, 8) of <code>WS-AREA</code>, after the LINK. So it reads those bytes back from <code>PROGB</code>. <code>PROGA</code> receives no area, so it has no entry need of its own. Its XCTL hands over no area, so it is not a member with an unresolved site.</li>
 <li>cobble treats a LINK as writing the area it hands over. So in <code>PROGB</code>, bytes live after the LINK are supplied by <code>PROGC</code>, not by <code>PROGB</code>'s caller. <code>PROGB</code>'s entry need is <code>PROGC</code>'s entry need; what <code>PROGB</code> reads back from <code>PROGC</code> is <code>PROGB</code>'s own back row.</li>
-<li><code>PROGC</code> writes <code>CA-NEXT-PGM</code> on one path only. On the other path the incoming bytes go straight back to its caller. So its entry need is its back row.</li>
+<li><code>PROGC</code> writes <code>CA-NEXT-PGM</code> on one path only (the <code>IF</code> above). On the other path the incoming bytes go straight back to its caller. So its entry need is its back row.</li>
 <li><code>PROGD</code>'s XCTL target comes from a queue, so no definition resolves it. It hands over its commarea, so it is charged the dynamic need: the union of every member's entry row.</li>
 </ul>
-<p>The callee map and its inversion:</p>
+<p>The callee map and its inversion: <code>PROGB</code> in <code>PROGA</code>'s callees becomes <code>PROGA</code> in <code>PROGB</code>'s callers.</p>
 <table class="state"><tbody>
 <tr><th>member</th><th>callees (named or resolved)</th><th>callers()</th></tr>
 <tr><td>PROGA</td><td>{PROGB}</td><td>—</td></tr>
@@ -100,11 +113,12 @@
 <tr><td>PROGC</td><td>{}</td><td>{PROGB}</td></tr>
 <tr><td>PROGD</td><td>{} (one unresolved site)</td><td>—</td></tr>
 </tbody></table>
-<p>Members with an unresolved site that hands over an area: <code>{PROGD}</code>. Rows below are commarea byte ranges, written half-open: <code>[0, 8)</code> is bytes 0 to 7, the eight bytes of <code>CA-NEXT-PGM</code>.</p>
+<p>Members with an unresolved site that hands over an area: <code>{PROGD}</code>.</p>
+<p>Rows below are commarea byte ranges, written half-open: <code>[0, 8)</code> is bytes 0 to 7, the eight bytes of <code>CA-NEXT-PGM</code>.</p>
 
 <h2 id="step-by-step">Step by step</h2>
 <p>Each step is one round. It shows which members were walked, the table after the round (amber: changed in this round), and the members dirtied for the next round with the reason.</p>
-<details class="walk">
+<details class="walk" open>
 <summary>Rounds until the table settles <span class="dim">(5 rounds, 9 walks)</span></summary>
 <ol class="steps">
 <li class="before">
@@ -169,9 +183,89 @@
 </li>
 </ol>
 </details>
-<p>Walking every member every round produces the same five tables, round for round, because a skipped member would have reported exactly what it reported last time. It costs 5 × 4 = 20 walks. The dirty sets cost 4 + 1 + 1 + 2 + 1 = 9.</p>
-<p>Notice the direction each fact travels. A back row moves <em>down</em> the chain (<code>PROGA</code> → <code>PROGB</code> → <code>PROGC</code>), one hop per round. An entry row moves <em>up</em> (<code>PROGC</code> → <code>PROGB</code> → <code>PROGA</code>), one hop per round. The dynamic need moves <em>sideways</em> to <code>PROGD</code>, which no call chain connects to the others.</p>
-<p><strong>With <code>--max-rounds 3</code></strong>, the run stops after round 3 and warns that it stopped after 3 rounds with 2 members still to walk. The table it writes has <code>PROGB</code> and <code>PROGD</code> needing nothing on entry. Those bytes arrive only through the longer chain <code>PROGA</code> → <code>PROGB</code> → <code>PROGC</code> and back, which three rounds did not finish carrying.</p>
+<p>Walking every member every round produces the same five tables, round for round, because a skipped member would have reported exactly what it reported last time. In the grid under <a href="#the-intuition">why only some members walk again</a>, below, that is all 5 × 4 = 20 cells. The dirty sets walk only the amber ones: 4 + 1 + 1 + 2 + 1 = 9.</p>
+<p>Notice the direction each fact travels, on the row graph in <a href="#the-problem">the problem</a>. A back row moves <em>down</em> (<code>PROGA</code> → <code>PROGB</code> → <code>PROGC</code>): the amber back cells, rounds 1 and 2. An entry row moves <em>up</em> (<code>PROGC</code> → <code>PROGB</code> → <code>PROGA</code>): the amber entry cells, rounds 3 and 4. The dynamic need moves <em>sideways</em> to <code>PROGD</code>, through that graph's dynamic box.</p>
+<p><strong>With <code>--max-rounds 3</code></strong>, the run stops after round 3 and warns that it stopped after 3 rounds with 2 members still to walk. It writes the walk's round-3 table (step 3), compared here with the settled one: <code>PROGB</code> and <code>PROGD</code> need nothing on entry. Those bytes arrive only through the longer chain <code>PROGA</code> → <code>PROGB</code> → <code>PROGC</code> and back, which three rounds did not finish carrying.</p>
+<table class="state"><tbody>
+<tr><th>member</th><th>entry, --max-rounds 3</th><th>entry, settled</th></tr>
+<tr><td>PROGA</td><td>{}</td><td>{}</td></tr>
+<tr><td>PROGB</td><td class="changed">{}</td><td>[0, 8)</td></tr>
+<tr><td>PROGC</td><td>[0, 8)</td><td>[0, 8)</td></tr>
+<tr><td>PROGD</td><td class="changed">{}</td><td>[0, 8)</td></tr>
+</tbody></table>
+<p class="dim">amber: short of the settled need. The back rows, [0, 8) for PROGB and PROGC, are already settled by round 3.</p>
+
+<h2 id="the-intuition">Why only some members walk again</h2>
+<p>The walk started every member at "needs nothing" and walked each round against the table the round before built. Rows only grow, and they are bounded by the size of the areas, so eventually a round changes nothing: step 5. That table is the least one that holds, the strip in <a href="#the-example">the example</a>.</p>
+<p>Round 1 walked all four members; after that, each round walked only one or two. Skipping is safe because a walk reads exactly three things from the table:</p>
+<ol>
+<li>the entry rows of the programs its call sites reach;</li>
+<li>its own back row;</li>
+<li>if it has a call site that hands over an area and that nothing resolved, the union of every member's entry row (the <em>dynamic</em> need).</li>
+</ol>
+<p>For the example, one column per item in that list:</p>
+<table class="state"><tbody>
+<tr><th>member</th><th>1. entry rows of</th><th>2. own back</th><th>3. dynamic?</th></tr>
+<tr><td>PROGA</td><td>PROGB</td><td>PROGA's</td><td>no: its XCTL hands over no area</td></tr>
+<tr><td>PROGB</td><td>PROGC</td><td>PROGB's</td><td>no</td></tr>
+<tr><td>PROGC</td><td>—</td><td>PROGC's</td><td>no</td></tr>
+<tr><td>PROGD</td><td>—</td><td>PROGD's</td><td>yes: its XCTL</td></tr>
+</tbody></table>
+<p>Everything else a walk reads is its own program, which never changes. So if none of the cells in a member's row of that table changed since its last walk, walking it again gives the same report: keep that report and skip the member. That leaves three reasons to walk a member again: a program it calls got a new <strong>entry</strong> row, its own <strong>back</strong> row changed, or the <strong>dynamic</strong> need changed and it has an unresolved site. Each fired in the walk:</p>
+<table class="state"><tbody>
+<tr><th>reason</th><th>in the walk</th></tr>
+<tr><td>callee's entry changed</td><td>round 3: PROGC's entry becomes [0, 8), so its caller PROGB walks in round 4. Round 4: PROGB's entry becomes [0, 8), so PROGA walks in round 5</td></tr>
+<tr><td>own back changed</td><td>round 1: PROGB's back becomes [0, 8), so PROGB walks in round 2. Round 2: PROGC's back, so PROGC walks in round 3</td></tr>
+<tr><td>dynamic changed (member has an unresolved site)</td><td>round 3: the dynamic need goes from {} to [0, 8), so PROGD walks in round 4</td></tr>
+</tbody></table>
+<p>The first reason needs "who calls <code>PROGC</code>", but each member only knows what it calls. So the callee map is inverted once, before the first round: "member → programs its sites reach" becomes "program → members whose sites reach it", the <em>callers()</em> column of the callee map in <a href="#the-example">the example</a>. The sites counted are those naming a program, plus dynamic sites resolved to one or more programs (in their own program, see <a href="local-site-resolution.html">local site resolution</a>, or by an earlier combine).</p>
+<p>This is the <a href="fixpoints.html">worklist</a> idea one level up. There, the items are statements, and a statement whose notes changed queues its neighbours. Here, the items are members, and a row that changed queues the members that read it. One difference: within a program the worklist takes one statement at a time and its result is visible at once. Here a whole round walks against the table the previous round built: in the grid below, round 4 walks <code>PROGB</code> and <code>PROGD</code> both against round 3's table. That is what lets one round's walks run in parallel.</p>
+<table class="state"><tbody>
+<tr><th>round</th><th>PROGA</th><th>PROGB</th><th>PROGC</th><th>PROGD</th></tr>
+<tr><td>1</td><td class="changed">walk</td><td class="changed">walk</td><td class="changed">walk</td><td class="changed">walk</td></tr>
+<tr><td>2</td><td>kept</td><td class="changed">walk</td><td>kept</td><td>kept</td></tr>
+<tr><td>3</td><td>kept</td><td>kept</td><td class="changed">walk</td><td>kept</td></tr>
+<tr><td>4</td><td>kept</td><td class="changed">walk</td><td>kept</td><td class="changed">walk</td></tr>
+<tr><td>5</td><td class="changed">walk</td><td>kept</td><td>kept</td><td>kept</td></tr>
+</tbody></table>
+<p class="dim">amber: walked this round; kept: last report reused</p>
+
+<h2 id="the-problem">Why one walk per program is not enough</h2>
+<p>In step 1 of the walk, <code>PROGB</code>'s walk found nothing, because the table it walked against was empty. Only after <code>PROGA</code>'s walk filled <code>PROGB</code>'s back row could <code>PROGB</code>'s walk in step 2 find anything. A member's walk is ordinary backward liveness over its own statements (see <a href="area-need.html#the-intuition">area need</a>), but the demand it starts from comes from the table. The right-hand column is <code>PROGB</code>'s rows once the rounds have settled:</p>
+<table class="state"><tbody>
+<tr><th>row</th><th>means</th><th>PROGB</th></tr>
+<tr><td><strong>entry</strong></td><td>the bytes of each area it receives that it needs on entry</td><td>[0, 8)</td></tr>
+<tr><td><strong>back</strong></td><td>the bytes of that area its callers read again after it returns</td><td>[0, 8)</td></tr>
+</tbody></table>
+<p>The fragment below, from <code>PROGB</code> and <code>PROGD</code>, marks where each demand comes in:</p>
+<pre class="cobol">* PROGB
+EXEC CICS LINK PROGRAM('PROGC')
+     COMMAREA(DFHCOMMAREA) END-EXEC.
+                  *> PROGC's entry row
+EXEC CICS RETURN END-EXEC.
+                  *> PROGB's own back row
+* PROGD
+EXEC CICS XCTL PROGRAM(WS-NEXT)
+     COMMAREA(DFHCOMMAREA) END-EXEC.
+                  *> the dynamic need</pre>
+<p>At the LINK, which hands over an area, <code>PROGB</code> must supply what the callee reads on entry: the callee's <strong>entry</strong> row. At its own <code>EXEC CICS RETURN</code> (or a <code>GOBACK</code>), it must supply what its callers read back: its own <strong>back</strong> row. At <code>PROGD</code>'s XCTL, a dynamic call nothing resolved, it must supply what <em>any</em> member might read: the union of every member's entry row.</p>
+<p>So each walk's output depends on rows that other walks produce. The graph below draws that for the example: an arrow runs from the walk that produces a row to the walk that reads it. <code>PROGB</code> has two arrows in (<code>PROGC</code>'s entry row, its own back row from <code>PROGA</code>) and three out (<code>PROGC</code>'s back row, its own entry row to <code>PROGA</code> and to the dynamic box). Run once, per-program liveness cannot settle a loop like the <code>PROGB</code> ⇄ <code>PROGC</code> pair, where each walk's output is the other's input: in the walk, <code>PROGB</code> fed <code>PROGC</code>'s back row in step 2 and read <code>PROGC</code>'s entry row back in step 4.</p>
+<pre class="mermaid">
+flowchart TD
+    A[PROGA] -->|"PROGB's back"| B[PROGB]
+    B -->|"PROGC's back"| C[PROGC]
+    C -->|"PROGC's entry"| B
+    B -->|"PROGB's entry"| A
+    D[PROGD]
+    B -->|"entry"| DYN["dynamic need = ⋃ entry"]
+    C -->|"entry"| DYN
+    D -->|"entry"| DYN
+    DYN -->|"unresolved XCTL"| D
+</pre>
+
+<h2 id="reverse-engineering">Where this shows up</h2>
+<p>The goal on a large CICS corpus (about 3,800 programs) was to resolve dynamic call targets: <code>CALL WS-PGM</code>, <code>EXEC CICS XCTL PROGRAM(WS-NEXT-PGM)</code>. To do that cheaply, the fixpoint should track only the handed-over bytes some target can depend on. <a href="area-need.html">Area need</a> computes those bytes per program, and these rounds are how it settles across the corpus. On CardDemo, the entry need summed over every program fell from 4,394 bytes to 92 once <code>LENGTH OF</code> bounds were folded and more sites resolved (<a href="area-need.html#reverse-engineering">area need</a> has the steps), and the fixpoint narrowed to it gave identical targets, links and graph.</p>
+<p>A commarea is a conversation between programs: no single program's source says that <code>PROGC</code> needs bytes [0, 8). And walking 3,800 programs per round is the cost, though most programs' inputs do not change after the first round or two: walking only the members whose inputs changed gives the same table for a fraction of the walks, 9 instead of 20 on the example.</p>
 
 <h2 id="the-rule">The rule</h2>
 <div class="rule">
@@ -184,21 +278,98 @@ dirty_k = callers(members whose entry changed)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;∪ (members with an unresolved site, if dynamic changed)<br>
 stop when dirty_k is empty, or when k = --max-rounds (N &gt; 0), warning |dirty_k|
 </div>
-<p>Why this reaches the same rows as walking everything: a walk reads only its program, which is fixed, and the three things named above. A member is left out of a round only when none of those changed since its last walk. So its kept report is the one a fresh walk would produce, and each <code>T_k</code> equals the table the walk-everything run builds in round k. It stops because rows only grow — more demand in a liveness walk never means fewer live bytes — and every row is bounded by the bytes of the areas.</p>
+<p>Round 3 of the walk (step 3) is the rule applied once, term by term:</p>
+<table class="state"><tbody>
+<tr><th>term</th><th>round 3</th></tr>
+<tr><td>walked: dirty₂</td><td>{PROGC}, against T₂</td></tr>
+<tr><td>members whose entry changed</td><td>{PROGC}</td></tr>
+<tr><td>callers of those</td><td>{PROGB}</td></tr>
+<tr><td>members whose back changed</td><td>{}</td></tr>
+<tr><td>dynamic changed?</td><td>yes, {} → [0, 8): add {PROGD}</td></tr>
+<tr><td>dirty₃</td><td class="changed">{PROGB, PROGD}</td></tr>
+</tbody></table>
+<p>The stop clause fires twice on this page: in round 5, where dirty₅ is empty (the last step of the walk), and with <code>--max-rounds 3</code>, at k = 3 with |dirty₃| = 2 — the table above.</p>
+<p>Why this reaches the same rows as walking everything: a walk reads only its program, which is fixed, and the three things in the table under <a href="#the-intuition">why only some members walk again</a>. A member is left out of a round only when none of those changed since its last walk. So its kept report is the one a fresh walk would produce, and each <code>T_k</code> equals the table the walk-everything run builds in round k. <code>PROGA</code>'s column in the grid shows it: walked in round 1, kept through rounds 2–4, walked again in round 5. Its two reports, from the walk:</p>
+<table class="state"><tbody>
+<tr><th>PROGA's report</th><th>round 1 (walked)</th><th>rounds 2–4</th><th>round 5 (walked)</th></tr>
+<tr><td>reads back from PROGB</td><td>[0, 8)</td><td>kept</td><td>[0, 8)</td></tr>
+<tr><td>entry row</td><td>none: receives no area</td><td>kept</td><td>none: receives no area</td></tr>
+</tbody></table>
+<p>The round-5 walk changed nothing, which is why it is the last. It stops because rows only grow — more demand in a liveness walk never means fewer live bytes — and every row is bounded by the bytes of the areas: every amber cell in the walk goes from {} to [0, 8), and none ever shrinks.</p>
 
 <h2 id="what-goes-wrong">What goes wrong</h2>
 <ul>
-<li><strong>Rounds track chain length.</strong> A fact moves one call hop per round, because a round's walks all read the table from before the round. A deep LINK chain, or a back row that must travel down and come back up as an entry row, needs that many rounds. The example's three-deep chain took five.</li>
-<li><strong>A capped run can be short, and a short need gives wrong targets.</strong> <code>--max-rounds N</code> stops after N rounds even when members are still dirty, and logs a warning with how many. Every byte in the capped table is really needed; what it can miss is bytes that arrive only through call chains longer than the rounds covered. A narrowed fixpoint that trusts a short need stops tracking those bytes, so a target that depends on them can lose values, and nothing in the result marks which targets did: the log warning is the only sign. The default, 0, runs until it settles.</li>
-<li><strong>Unresolved sites couple everything.</strong> A member with an unresolved site that hands over an area depends on every member's entry row. Any change that widens the union dirties all of them at once. In the same way, what unresolved calls read back is added to every member's back row, so a change there dirties every member. Resolving sites first — <a href="local-site-resolution.html">in their own program</a>, or from an earlier combine — cuts these edges and shrinks the need.</li>
-<li><strong>A round waits for its slowest worker.</strong> Members are split across worker processes once, at load time. A round with one dirty member uses one worker while the others wait, and a round ends only when every worker has sent its reports.</li>
-<li><strong>Missing programs count as needing everything.</strong> A callee that is not in the table, or does not receive the slot handed to it, is charged every byte. A member whose ASG cannot be read is dropped with a warning and adds no row.</li>
+<li><strong>Rounds track chain length.</strong> A fact moves one call hop per round, because a round's walks all read the table from before the round. A deep LINK chain, or a back row that must travel down and come back up as an entry row, needs that many rounds. The example's three-deep chain took five; the table, read off the walk, shows where the bytes [0, 8) were in each round:
+<table class="state"><tbody>
+<tr><th>round</th><th>row that became [0, 8)</th><th>hop</th></tr>
+<tr><td>1</td><td>PROGB back</td><td>PROGA → PROGB</td></tr>
+<tr><td>2</td><td>PROGC back</td><td>PROGB → PROGC</td></tr>
+<tr><td>3</td><td>PROGC entry, dynamic</td><td>turns round in PROGC</td></tr>
+<tr><td>4</td><td>PROGB entry, PROGD entry</td><td>PROGC → PROGB; dynamic → PROGD</td></tr>
+<tr><td>5</td><td>none: PROGA has no entry row</td><td>PROGB → PROGA</td></tr>
+</tbody></table>
+</li>
+<li><strong>A capped run can be short, and a short need gives wrong targets.</strong> <code>--max-rounds N</code> stops after N rounds even when members are still dirty, and logs a warning with how many. This is the line cobble logged for the example with <code>--max-rounds 3</code>:
+<pre class="cobol" style="white-space: pre-wrap">area need: stopped after 3 rounds with 2 members still to walk: the need may be short of what a settled run finds</pre>
+Every byte in the capped table is really needed; what it can miss is bytes that arrive only through call chains longer than the rounds covered — <code>PROGB</code>'s and <code>PROGD</code>'s [0, 8) in the capped table after <a href="#step-by-step">the walk</a>. A narrowed fixpoint that trusts a short need stops tracking those bytes, so a target that depends on them can lose values, and nothing in the result marks which targets did: the log warning is the only sign. The default, 0, runs until it settles.</li>
+<li><strong>Unresolved sites couple everything.</strong> A member with an unresolved site that hands over an area depends on every member's entry row. Any change that widens the union dirties all of them at once. In the example the only such member is <code>PROGD</code>, and the union moves once, in round 3, because of <code>PROGC</code> — a program <code>PROGD</code> has no call to:
+<table class="state"><tbody>
+<tr><th>round</th><th>union of entry rows after it</th><th>dirtied for dynamic</th></tr>
+<tr><td>1</td><td>{}</td><td>—</td></tr>
+<tr><td>2</td><td>{}</td><td>—</td></tr>
+<tr><td>3</td><td class="changed">[0, 8)</td><td>{PROGD}</td></tr>
+<tr><td>4</td><td>[0, 8)</td><td>—</td></tr>
+<tr><td>5</td><td>[0, 8)</td><td>—</td></tr>
+</tbody></table>
+Every other member with an unresolved site would be in that round-3 cell too. In the same way, what unresolved calls read back is added to every member's back row, so a change there dirties every member. Resolving sites first — <a href="local-site-resolution.html">in their own program</a>, or from an earlier combine — cuts these edges and shrinks the need.</li>
+<li><strong>A round waits for its slowest worker.</strong> Members are split across worker processes once, at load time. A round with one dirty member uses one worker while the others wait, and a round ends only when every worker has sent its reports. With <code>--max-workers 2</code>, cobble deals the example's members out in turn, in the order the extents file lists them (<code>PROGA</code>, <code>PROGB</code>, <code>PROGC</code>, <code>PROGD</code>), so each worker's work per round, from the grid, is:
+<table class="state"><tbody>
+<tr><th>round</th><th>worker 1: PROGA, PROGC</th><th>worker 2: PROGB, PROGD</th></tr>
+<tr><td>1</td><td>PROGA, PROGC</td><td>PROGB, PROGD</td></tr>
+<tr><td>2</td><td class="dim">waits</td><td>PROGB</td></tr>
+<tr><td>3</td><td>PROGC</td><td class="dim">waits</td></tr>
+<tr><td>4</td><td class="dim">waits</td><td>PROGB, PROGD</td></tr>
+<tr><td>5</td><td>PROGA</td><td class="dim">waits</td></tr>
+</tbody></table>
+After round 1, every round leaves one of the two workers waiting.</li>
+<li><strong>Missing programs count as needing everything.</strong> A callee that is not in the table, or does not receive the slot handed to it, is charged every byte. Change <code>PROGB</code>'s LINK to name a program the corpus does not have:
+<pre class="cobol">PROGRAM-ID. PROGB.
+PROCEDURE DIVISION.
+    EXEC CICS LINK PROGRAM('PROGX')
+         COMMAREA(DFHCOMMAREA) END-EXEC.
+    EXEC CICS RETURN END-EXEC.</pre>
+The LINK now demands all of [0, 16), so <code>PROGB</code> needs every byte on entry in round 1, and the union of entry rows widens to [0, 16), which <code>PROGD</code> is charged in round 2. <code>PROGC</code>, which nothing calls any more, needs nothing. It settles after 2 rounds and 4 + 3 = 7 walks (amber: wider than the settled table):
+<table class="state"><tbody>
+<tr><th>member</th><th>entry</th><th>back</th></tr>
+<tr><td>PROGA</td><td>{}</td><td>{}</td></tr>
+<tr><td>PROGB</td><td class="changed">[0, 16)</td><td>[0, 8)</td></tr>
+<tr><td>PROGC</td><td>{}</td><td>{}</td></tr>
+<tr><td>PROGD</td><td class="changed">[0, 16)</td><td>{}</td></tr>
+<tr><td>dynamic</td><td class="changed">[0, 16)</td><td></td></tr>
+</tbody></table>
+Against the strip in <a href="#the-example">the example</a>, bytes [8, 16) — <code>CA-CODE</code> and <code>CA-ACCT</code>, which no target reads — are now tracked on entry to two programs. A member whose ASG cannot be read is dropped with a warning and adds no row.</li>
 </ul>
 
 <h2 id="in-cobble">In cobble</h2>
-<p>The command is <code>cobble-dataflow-area-need</code>. Before the first round it inverts the callee map once. After each round it compares the table before and after and finds the three kinds of dirty member, and the next round walks only those. It stops when that set is empty, or after <code>--max-rounds</code> rounds with a warning. A walk reads, for each call, the callee's entry row, the dynamic need for an unresolved site, or every byte for an unknown callee; and for itself, its own back row.</p>
-<p>The members are shared out among worker processes (<code>--max-workers</code>). Each worker holds its share of the members for the whole run; only the table and the reports cross between processes. One progress count, under a lock, is advanced by every worker as it finishes a load or a walk, so the log numbers members in the order they finish. It is never reset: each round subtracts the walks made before it to print <code>[i/n]</code> for that round.</p>
-<p>The walk inside each member is backward liveness: the same worklist idea as <a href="fixpoints.html">fixpoints</a>, run backwards, as <a href="area-need.html#the-intuition">area need</a> describes. What the rows mean, and where the demand comes from, is in <a href="area-need.html">area need</a>.</p>
+<p>The command is <code>cobble-dataflow-area-need</code>. Before the first round it inverts the callee map once. After each round it compares the table before and after and finds the three kinds of dirty member, and the next round walks only those. It stops when that set is empty, or after <code>--max-rounds</code> rounds with a warning. A walk reads, for each call, the callee's entry row, the dynamic need for an unresolved site, or every byte for an unknown callee; and for itself, its own back row. Run on this page's four programs with <code>--max-workers 1</code>, it logs the walk above round for round (timestamps, the <code>reaching_defs</code> and loading lines, and the closing "written to" line are left out):</p>
+<pre class="cobol" style="white-space: pre-wrap">area need: PROGD MAIN-PARA line 14 XCTL unresolved: not-a-literal
+area need round 1: [1/4] PROGA, 0 bytes on entry
+area need round 1: [2/4] PROGB, 0 bytes on entry
+area need round 1: [3/4] PROGC, 0 bytes on entry
+area need round 1: [4/4] PROGD, 0 bytes on entry
+area need round 1: walked 4 members; 0 bytes needed on entry, 8 read back, summed over 4 members; 1 to walk next
+area need round 2: [1/1] PROGB, 0 bytes on entry
+area need round 2: walked 1 members; 0 bytes needed on entry, 16 read back, summed over 4 members; 1 to walk next
+area need round 3: [1/1] PROGC, 8 bytes on entry
+area need round 3: walked 1 members; 8 bytes needed on entry, 16 read back, summed over 4 members; 2 to walk next
+area need round 4: [1/2] PROGB, 8 bytes on entry
+area need round 4: [2/2] PROGD, 8 bytes on entry
+area need round 4: walked 2 members; 24 bytes needed on entry, 16 read back, summed over 4 members; 1 to walk next
+area need round 5: [1/1] PROGA, 0 bytes on entry
+area need round 5: walked 1 members; 24 bytes needed on entry, 16 read back, summed over 4 members; 0 to walk next</pre>
+<p>The "to walk next" counts are the sizes of the chip rows in the walk: 1, 1, 2, 1, 0. The byte sums add up the table's columns: in round 4, entry rows of 8 bytes each for <code>PROGB</code>, <code>PROGC</code> and <code>PROGD</code> make 24, and back rows for <code>PROGB</code> and <code>PROGC</code> make 16.</p>
+<p>The members are shared out among worker processes (<code>--max-workers</code>). Each worker holds its share of the members for the whole run; only the table and the reports cross between processes. One progress count, under a lock, is advanced by every worker as it finishes a load or a walk, so the log numbers members in the order they finish. It is never reset: each round subtracts the walks made before it to print <code>[i/n]</code> for that round, which is why round 4 in the log above counts <code>[1/2]</code>, <code>[2/2]</code> rather than carrying on from round 3.</p>
+<p>The walk inside each member is backward liveness: the same worklist idea as <a href="fixpoints.html">fixpoints</a>, run backwards, as <a href="area-need.html#the-intuition">area need</a> describes. What the rows mean, and where the demand comes from — the annotated fragment in <a href="#the-problem">the problem</a> — is in <a href="area-need.html">area need</a>.</p>
 </main>
 
 </body>

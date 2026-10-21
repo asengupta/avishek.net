@@ -5,35 +5,55 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Fixpoints and worklists</title>
 <link rel="stylesheet" href="explainer.css">
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/+esm";
+  const light = matchMedia("(prefers-color-scheme: light)").matches;
+  mermaid.initialize({
+    deterministicIds: true,
+    startOnLoad: true,
+    theme: "base",
+    themeVariables: light
+      ? { darkMode: false, background: "#fbfaf7", primaryColor: "#e6e3da", primaryTextColor: "#1a1f26", primaryBorderColor: "#d3cfc4", lineColor: "#5d6673", textColor: "#1a1f26", edgeLabelBackground: "#f1efe9", clusterBkg: "#f1efe9", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
+      : { darkMode: true, background: "#0b0f14", primaryColor: "#1a2230", primaryTextColor: "#e6edf3", primaryBorderColor: "#263041", lineColor: "#8b98a9", textColor: "#e6edf3", edgeLabelBackground: "#121821", clusterBkg: "#121821", clusterBorder: "#263041", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" },
+  });
+</script>
 </head>
 <body>
 <main>
 <nav class="back"><a href="index.html">← All explainers</a></nav>
 <div class="kicker">Explainer 2 of 11</div>
 <h1>Fixpoints and worklists</h1>
+<aside class="tldr"><p><strong>TL;DR</strong>Legacy code is full of loops that update a field from itself — running totals, flags a loop both reads and sets — and those are the cases a quick one-pass analysis gets wrong first. Every analysis in this series gets a complete answer on them the way this page shows.</p></aside>
 <p class="prereqs"><strong>Read first:</strong> <a href="traversal-orders.html">Visiting a graph</a></p>
-<p class="lede">How a program analysis handles loops: keep applying the rules until nothing changes.</p>
-<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#reverse-engineering">Where this shows up in reverse engineering</a></li><li><a href="#the-problem">The problem</a></li><li><a href="#the-intuition">The intuition</a></li><li><a href="#the-example">The example</a></li><li><a href="#step-by-step">Step by step</a></li><li><a href="#the-rule">The rule</a></li><li><a href="#what-goes-wrong">What goes wrong</a></li><li><a href="#in-cobble">In cobble</a></li></ol></nav>
-
-<h2 id="reverse-engineering">Where this shows up in reverse engineering</h2>
-<p>This is the central technique a static dataflow tool for a legacy corpus is built on: a byte-level fixpoint over every field, run once per program, that answers which writes reach each read and what values a field can hold — everything else in this series of pages is a refinement of that one loop.</p>
-<ul>
-<li><strong>A loop whose body reads a field it also writes</strong> — a counter, a running total — needs the worklist to revisit it until nothing changes. Stopping after one pass over such a program does not produce a merely loose answer — it produces an incomplete one, missing the writes that arrive round the loop, which every later stage then trusts as final. It does so silently, on exactly the programs with enough real control flow to be worth analysing in the first place.</li>
-<li><strong>The same shape appears on the Java side</strong> in call-graph construction: resolving every virtual call's possible targets is itself a worklist that "drains" once nothing new is discovered, for the same reason — each newly reachable method can create objects of new types, which add new targets to virtual calls already visited, so the walk has to keep going until nothing new turns up, not stop after a single top-to-bottom pass.</li>
-<li><strong>Why one pass is not enough in legacy code:</strong> a legacy program's fields are exactly the place self-referential logic accumulates over decades of maintenance — a running total updated from itself, a flag a loop both reads and sets. Those are the cases a one-pass analysis gets wrong first.</li>
-</ul>
-
-<h2 id="the-problem">The problem</h2>
-<p>You want to know, at every statement in a program, which statements may have last written each field — not on one run, but on <em>any</em> run, whatever the input data. You cannot run the program on every input, so you reason about it instead.</p>
-
-<h2 id="the-intuition">The intuition</h2>
-<p>Start the way you would by hand: walk the program from the top, keeping notes at each statement on which statements may have last written each field. A <code>MOVE</code> into a field replaces that field's note with itself. At an <code>IF</code>, walk both arms, because you do not know which one will run; where the arms meet, keep everything either arm noted.</p>
-<p>That works until you reach a loop. The first time you arrive at the loop's test, the only thing that reaches it is what came from before the loop. Then you walk the body, and by the end of the body you know something new — say, a field was just written inside it. That flows back to the test, so the test's notes were incomplete. You have to go round again with the new information, and again, until a trip round the loop adds nothing. That end state, where one more trip would change nothing, is the <strong>fixpoint</strong>.</p>
-<p>Re-walking the whole program each time is wasteful: a statement's notes can only change if something before it changed. So keep a list of the statements that need visiting — the <strong>worklist</strong>. It starts with the first statement. Take a statement off the list and work out its notes from what its predecessors have noted so far. If its notes changed, everything after it may change too, so put its successors on the list. If they did not change, add nothing. When the list runs dry, no statement's notes can change any more: you are at the fixpoint.</p>
-<p>Two things make this trustworthy. It always stops, because notes only ever grow and there are only so many statements that could appear in them. And it reaches the same notes whatever order you take statements off the list: order changes how much work you do, not what you find.</p>
+<p class="lede">A loop sends what its body writes back to statements an analysis has already visited. Walk the program once, top to bottom, and those writes are silently missing: the answer is not loose but incomplete, and every later stage trusts it as final.</p>
+<p class="lede">In this page's program, <code>MOVE WS-B TO WS-C</code> reads a <code>WS-B</code> that only the loop body writes. One pass says nothing in the program wrote it. Going round until nothing changes, the <strong>fixpoint</strong>, says <code>MOVE WS-A TO WS-B</code>, or nothing since the program began. A <strong>worklist</strong> gets there in 8 visits by revisiting a statement only when something before it changed.</p>
+<p class="dim">A statement's <strong>notes</strong> say, for each field, which statements may have last written it.</p>
+<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#the-example">The example</a></li><li><a href="#step-by-step">Step by step</a></li><li><a href="#the-intuition">Why go round again</a></li><li><a href="#the-problem">The question it answers</a></li><li><a href="#reverse-engineering">Where this shows up</a></li><li><a href="#the-rule">The rule</a></li><li><a href="#what-goes-wrong">What goes wrong</a></li><li><a href="#in-cobble">In cobble</a></li></ol></nav>
 
 <h2 id="the-example">The example</h2>
-<p>A loop whose body copies <code>WS-A</code> into <code>WS-B</code>, and a read of <code>WS-B</code> after the loop.</p>
+<p>Each box is a statement of <code>FIXLOOP</code>, named the way cobble names them (paragraph, then position). The dashed back edge is the loop going round.</p>
+<pre class="mermaid">
+flowchart TD
+    E(["entry: every field = start"]) --> M0["MAIN-PARA/0: PERFORM LOOP-PARA UNTIL WS-N > 3"]
+    M0 -->|"WS-N not > 3"| L0["LOOP-PARA/0: MOVE WS-A TO WS-B"]
+    L0 --> L1["LOOP-PARA/1: ADD 1 TO WS-N"]
+    L1 -.->|back edge| M0
+    M0 -->|"WS-N > 3"| M1["MAIN-PARA/1: MOVE WS-B TO WS-C"]
+    M1 --> M2["MAIN-PARA/2: STOP RUN"]
+</pre>
+<p>The answer at <code>MAIN-PARA/1</code>, the read after the loop: these statements may have last written <code>WS-B</code>.</p>
+<div class="chips"><span class="chip">LOOP-PARA/0</span><span class="chip">start</span></div>
+<p><code>start</code>, the entry box, stands for the value a field holds on entry: for <code>WS-A</code> its <code>VALUE 'AAAA'</code>, for <code>WS-B</code> whatever its storage held. It is a teaching device; cobble has no such definition (see <a href="#in-cobble">in cobble</a>). Stop after one trip down the graph and both reads of a field written in the loop come out short:</p>
+<table class="state" id="one-pass"><tr><th>field</th><th>read by</th><th>last written by, after one pass</th><th>at the fixpoint</th></tr><tr><td>WS-B</td><td>MAIN-PARA/1</td><td>{start}</td><td>{LOOP-PARA/0, start}</td></tr><tr><td>WS-N</td><td>LOOP-PARA/1</td><td>{start}</td><td>{LOOP-PARA/1, start}</td></tr></table>
+<p>Each left-hand note misses the write that comes round the back edge. Row 1 is the worse: it says <code>WS-C</code> is copied from a <code>WS-B</code> nothing in the program has written. The procedure division:</p>
+<pre class="cobol">MAIN-PARA.
+    PERFORM LOOP-PARA UNTIL WS-N &gt; 3.
+    MOVE WS-B TO WS-C.
+    STOP RUN.
+LOOP-PARA.
+    MOVE WS-A TO WS-B.
+    ADD 1 TO WS-N.</pre>
+<details class="walk listing"><summary>Full listing <span class="dim">(FIXLOOP)</span></summary>
 <pre class="cobol">       IDENTIFICATION DIVISION.
        PROGRAM-ID. FIXLOOP.
        DATA DIVISION.
@@ -50,12 +70,14 @@
        LOOP-PARA.
            MOVE WS-A TO WS-B.
            ADD 1 TO WS-N.</pre>
-<p>The notes here are, for each field, the set of statements that may have last written it. <code>start</code> stands for the value the field holds on entry. The statements are named the way cobble names them: paragraph, then position.</p>
+</details>
 
 <h2 id="step-by-step">Step by step</h2>
-<p>When the worklist holds more than one statement, something has to pick which goes next. This run picks the one that comes earliest in <strong>reverse postorder</strong> — an order in which every statement comes after the statements that lead into it, except where a loop leads back to its own test. <a href="traversal-orders.html">Visiting a graph</a> builds it step by step. For this program it is <code>MAIN-PARA/0, LOOP-PARA/0, LOOP-PARA/1, MAIN-PARA/1, MAIN-PARA/2</code>: the loop body comes before the code after the loop, so the loop settles before that code is visited.</p>
-<p>Each step shows the notes after the visited statement (amber: what changed) and the worklist after it.</p>
-<details class="walk">
+<p>When the worklist holds more than one statement, something has to pick which goes next. This run picks the one that comes earliest in <strong>reverse postorder</strong> — an order in which every statement comes after the statements that lead into it, except where a loop leads back to its own test. <a href="traversal-orders.html">Visiting a graph</a> builds it step by step. For this program it is:</p>
+<div class="chips"><span class="chip">MAIN-PARA/0</span><span class="chip">LOOP-PARA/0</span><span class="chip">LOOP-PARA/1</span><span class="chip">MAIN-PARA/1</span><span class="chip">MAIN-PARA/2</span></div>
+<p>In the graph above, every box comes after the box its solid arrow comes from, and only the dashed back edge runs the other way. The loop body comes before the code after the loop, so the loop settles before that code is visited.</p>
+<p>Each step shows the notes after the visited statement (amber: what changed) and the worklist after it. Watch step 3: the list holds <code>MAIN-PARA/1</code> and <code>MAIN-PARA/0</code>, and <code>MAIN-PARA/0</code> goes first because it is earlier in that order.</p>
+<details class="walk" open>
 <summary>The worklist run, one visit at a time <span class="dim">(8 steps)</span></summary>
 <ol class="steps">
 <li class="before">
@@ -97,28 +119,66 @@
 </li>
 </ol>
 </details>
-<p>A first-in-first-out worklist reaches exactly the same notes, but leaves the loop before it has settled, so it visits <code>MAIN-PARA/1</code> and <code>MAIN-PARA/2</code> twice: 10 visits instead of 8.</p>
+<p>A first-in-first-out worklist reaches exactly the same notes, but leaves the loop before it has settled, so it visits <code>MAIN-PARA/1</code> and <code>MAIN-PARA/2</code> twice: 10 visits instead of 8. In the table, the first-in-first-out column takes <code>MAIN-PARA/1</code> at visit 2 and <code>MAIN-PARA/2</code> at visit 4, before the body has gone round once, and has to redo them at visits 7 and 9. The reverse-postorder column is steps 1–8 of the walk.</p>
 <table class="state"><tr><th>visit</th><th>first in, first out</th><th>reverse postorder</th></tr><tr><td>1</td><td>MAIN-PARA/0</td><td>MAIN-PARA/0</td></tr><tr><td>2</td><td>MAIN-PARA/1</td><td>LOOP-PARA/0</td></tr><tr><td>3</td><td>LOOP-PARA/0</td><td>LOOP-PARA/1</td></tr><tr><td>4</td><td>MAIN-PARA/2</td><td>MAIN-PARA/0</td></tr><tr><td>5</td><td>LOOP-PARA/1</td><td>LOOP-PARA/0</td></tr><tr><td>6</td><td>MAIN-PARA/0</td><td>LOOP-PARA/1</td></tr><tr><td>7</td><td>MAIN-PARA/1</td><td>MAIN-PARA/1</td></tr><tr><td>8</td><td>LOOP-PARA/0</td><td>MAIN-PARA/2</td></tr><tr><td>9</td><td>MAIN-PARA/2</td><td></td></tr><tr><td>10</td><td>LOOP-PARA/1</td><td></td></tr></table>
+
+<h2 id="the-intuition">Why go round again</h2>
+<p>Steps 1–3 are the walk you would do by hand: go down the graph keeping notes. A <code>MOVE</code> replaces its target's note with itself, so after step 2 <code>WS-B</code>'s note is just <code>LOOP-PARA/0</code>. The <code>PERFORM … UNTIL</code> may go either way, so both are walked; where paths meet, everything either path noted is kept.</p>
+<p>Then the back edge carries step 3's notes to <code>MAIN-PARA/0</code>, whose notes from step 1 held only <code>start</code>: they were incomplete. Step 4 goes round again, and steps 5 and 6 carry the new notes through the body until step 6 changes nothing: the loop has settled.</p>
+<p>Re-walking the whole program each time would be wasteful, since a statement's notes change only if something before it changed. So the chips under each step are a worklist: take a statement off, work out its notes from its predecessors', and queue its successors only if its notes changed. When the list runs dry, at step 8, nothing can change any more: that is the fixpoint.</p>
+<p>It always stops: notes only grow, and only so many statements can appear in them. Here no note can ever hold more than this:</p>
+<table class="state" id="bound"><tr><th>field</th><th>every entry its note can ever hold</th></tr><tr><td>WS-A</td><td>{start}</td></tr><tr><td>WS-B</td><td>{LOOP-PARA/0, start}</td></tr><tr><td>WS-C</td><td>{MAIN-PARA/1, start}</td></tr><tr><td>WS-N</td><td>{LOOP-PARA/1, start}</td></tr></table>
+<p><code>WS-B</code>'s note after <code>MAIN-PARA/0</code> goes from <code>{start}</code> in step 1 to its row of that table in step 4, and can go no further. And the order statements come off the list changes how much work is done, not what is found: the two runs compared above, 8 visits and 10, end with the same notes.</p>
+
+<h2 id="the-problem">The question it answers</h2>
+<p>At every statement, which statements may have last written each field: not on one run, but on <em>any</em> run, whatever the input data. You cannot run the program on every input, so the walk reasons about it instead. That is why step 7 keeps <code>start</code> for <code>WS-B</code>: the analysis does not track that <code>WS-N</code> starts at 0, so it allows for the path that skips the loop altogether:</p>
+<div class="chips"><span class="chip">entry</span><span class="chip">MAIN-PARA/0</span><span class="chip">MAIN-PARA/1</span></div>
+
+<h2 id="reverse-engineering">Where this shows up</h2>
+<p>This is the loop a static dataflow tool for a legacy corpus is built on: a byte-level fixpoint over every field, run once per program, that answers which writes reach each read and what values a field can hold. Everything else in this series of pages refines it.</p>
+<ul>
+<li><strong>Self-referential fields.</strong> Decades of maintenance pile up running totals updated from themselves and flags a loop both reads and sets, like <code>WS-N</code> here, which reads the value it wrote on the previous trip. Those are the cases a one-pass analysis gets wrong first.
+<pre class="cobol">LOOP-PARA.
+    MOVE WS-A TO WS-B.
+    ADD 1 TO WS-N.</pre></li>
+<li><strong>The same shape on the Java side.</strong> Resolving every virtual call's possible targets is a worklist that drains once nothing new turns up: each newly reachable method can create objects of new types, which add targets to virtual calls already visited.</li>
+</ul>
 
 <h2 id="the-rule">The rule</h2>
 <div class="rule">
-in(s)  = ⋃ out(p) for every predecessor p of s   (the entry also gets "start")<br>
+in(s)  = ⋃ out(p) for every predecessor p of s<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(the entry also gets "start")<br>
 out(s) = transfer_s(in(s))<br>
-repeat: take s from the worklist; if out(s) grew, add s's successors<br>
+repeat: take s from the worklist;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if out(s) grew, add s's successors<br>
 until the worklist is empty
 </div>
-<p>Two properties make this terminate with one answer. Each transfer is <strong>monotone</strong>: more knowledge in never means less out. And there are only finitely many notes: each field can be credited to at most every write in the program. Every change makes some set strictly bigger, so changes run out.</p>
+<p>Step 4 of the walk is the first line at work. <code>MAIN-PARA/0</code> has two arrows into it in the graph: the entry brings <code>start</code> for every field, and the back edge brings step 3's notes, the middle column. Adding <code>start</code> to each row gives step 4's table, the right-hand column:</p>
+<table class="state"><tr><th>field</th><th>from LOOP-PARA/1 (step 3)</th><th>in(MAIN-PARA/0), step 4</th></tr><tr><td>WS-A</td><td>{start}</td><td>{start}</td></tr><tr><td>WS-B</td><td>{LOOP-PARA/0}</td><td class="changed">{LOOP-PARA/0, start}</td></tr><tr><td>WS-C</td><td>{start}</td><td>{start}</td></tr><tr><td>WS-N</td><td>{LOOP-PARA/1}</td><td class="changed">{LOOP-PARA/1, start}</td></tr></table>
+<p><code>PERFORM … UNTIL</code> writes nothing, so its out is that in. The second line is step 5: <code>LOOP-PARA/0</code>'s transfer replaces <code>WS-B</code> with itself and passes <code>WS-N</code> <code>{LOOP-PARA/1, start}</code> through unchanged. The third line decides the chips: step 5's notes grew, so <code>LOOP-PARA/1</code> was queued; step 6's did not, so nothing was.</p>
+<p>Two properties make this terminate with one answer. Each transfer is <strong>monotone</strong>: more knowledge in never means less out. In step 4, <code>MAIN-PARA/0</code> got more in than in step 1, and its notes went from <code>{start}</code> to <code>{LOOP-PARA/0, start}</code> for <code>WS-B</code>, a superset. And there are only finitely many notes: each field can be credited to at most every write in the program, as in the <a href="#bound">bound table</a> above. Every change makes some set strictly bigger, so changes run out.</p>
 
 <h2 id="what-goes-wrong">What goes wrong</h2>
 <ul>
-<li><strong>Order is cost.</strong> First-in-first-out wanders out of the loop before the loop has settled, then has to redo everything after it once the loop changes. Reverse postorder, with the loop body ahead of the code after the loop, finishes the loop first. On cobble's largest program, changing order alone cut statement visits from about 107,000 to about 20,000, with an identical answer.</li>
-<li><strong>Budgets.</strong> A big program with many nested loops can still need a lot of visits, so a real analysis caps them. Stopping early gives notes that are <em>missing</em> some writes, never ones that are wrong: everything recorded was reached by a real path. Cobble publishes such a result and marks it unsettled.</li>
-<li><strong>Non-monotone rules break everything.</strong> If a transfer could shrink a fact, the loop could oscillate forever, and different orders could stop at different answers.
-<p>A concrete example: suppose that, to keep notes short, the loop test <code>MAIN-PARA/0</code> used the rule "when a second definition of a field arrives, drop the one already noted — keep only the newest". Follow <code>WS-B</code> there. First visit: only <code>start</code> arrives, so the note is <code>{start}</code>. After the body, <code>LOOP-PARA/0</code> arrives as a second definition, so <code>start</code> is dropped: <code>{LOOP-PARA/0}</code>. Next visit, <code>start</code> arrives again from before the loop — now it is the newcomer — so <code>LOOP-PARA/0</code> is dropped: <code>{start}</code>. The note alternates <code>{start}</code>, <code>{LOOP-PARA/0}</code>, <code>{start}</code>, … for ever; the worklist never empties, and a budget that cuts it off returns whichever of the two it stopped on. The right note, <code>{LOOP-PARA/0, start}</code>, never appears.</p></li>
+<li><strong>Order is cost.</strong> First-in-first-out wanders out of the loop before the loop has settled, then has to redo everything after it once the loop changes. Reverse postorder, with the loop body ahead of the code after the loop, finishes the loop first. Counting the two runs compared above by statement, the whole difference is the two statements after the loop:
+<table class="state"><tr><th>statement</th><th>visits, first in first out</th><th>visits, reverse postorder</th></tr><tr><td>MAIN-PARA/0</td><td>2</td><td>2</td></tr><tr><td>LOOP-PARA/0</td><td>2</td><td>2</td></tr><tr><td>LOOP-PARA/1</td><td>2</td><td>2</td></tr><tr><td>MAIN-PARA/1</td><td>2</td><td>1</td></tr><tr><td>MAIN-PARA/2</td><td>2</td><td>1</td></tr><tr><td>total</td><td>10</td><td>8</td></tr></table>
+<p>Both runs end with the notes of step 8: <code>WS-B</code> <code>{LOOP-PARA/0, start}</code>, <code>WS-C</code> <code>{MAIN-PARA/1}</code>, <code>WS-N</code> <code>{LOOP-PARA/1, start}</code>. On cobble's largest program, changing order alone cut statement visits from about 107,000 to about 20,000, with an identical answer.</p></li>
+<li><strong>Budgets.</strong> A big program with many nested loops can still need a lot of visits, so a real analysis caps them. Stopping early gives notes that are <em>missing</em> some writes, never ones that are wrong: everything recorded was reached by a real path. Cut the walk off after 4 visits — after step 4 — and the notes for <code>WS-N</code> stand like this:
+<table class="state"><tr><th>notes after</th><th><code>WS-N</code>, stopped after step 4</th><th><code>WS-N</code> at the fixpoint</th></tr><tr><td>MAIN-PARA/0</td><td>{LOOP-PARA/1, start}</td><td>{LOOP-PARA/1, start}</td></tr><tr><td>LOOP-PARA/0</td><td class="changed">{start}</td><td>{LOOP-PARA/1, start}</td></tr><tr><td>LOOP-PARA/1</td><td>{LOOP-PARA/1}</td><td>{LOOP-PARA/1}</td></tr><tr><td>MAIN-PARA/1</td><td class="changed">not visited</td><td>{LOOP-PARA/1, start}</td></tr><tr><td>MAIN-PARA/2</td><td class="changed">not visited</td><td>{LOOP-PARA/1, start}</td></tr></table>
+<p>The amber cells are short, not wrong: every entry in the middle column also appears in the right one. Cobble publishes such a result and marks it unsettled.</p></li>
+<li><strong>Non-monotone rules break everything.</strong> If a transfer could shrink a fact, re-walking could oscillate forever, and a worklist could empty on an answer that is not a fixpoint at all.
+<p>A concrete example: suppose that, to keep notes short, the loop test <code>MAIN-PARA/0</code> used the rule "when a definition of a field arrives that is not already noted, drop the ones already noted — keep only the newest". This is not monotone: in step 4, more arrives than in step 1, yet <code>start</code> is lost. Follow <code>WS-B</code> there, re-walking the whole program in reverse postorder each round:</p>
+<table class="state"><tr><th>round</th><th>arriving at MAIN-PARA/0</th><th>kept, newest only</th></tr><tr><td>1</td><td>{start}</td><td>{start}</td></tr><tr><td>2</td><td>{LOOP-PARA/0, start}</td><td class="changed">{LOOP-PARA/0}</td></tr><tr><td>3</td><td>{LOOP-PARA/0, start}</td><td class="changed">{start}</td></tr><tr><td>4</td><td>{LOOP-PARA/0, start}</td><td class="changed">{LOOP-PARA/0}</td></tr></table>
+<p>In round 1 the body has not run yet, so only <code>start</code> arrives. In round 2, <code>LOOP-PARA/0</code> is the newcomer, so <code>start</code> is dropped. In round 3, <code>start</code> arrives again from the entry and is now the newcomer, so <code>LOOP-PARA/0</code> is dropped. The right-hand column alternates for ever, and no round ever changes nothing. The union rule, given the same middle column, keeps <code>{LOOP-PARA/0, start}</code> from round 2 on, and round 3 confirms it.</p>
+<p>The worklist does worse: it stops. Run the walk above under the newest-only rule and steps 1–6 visit the same statements; step 4 now leaves <code>{LOOP-PARA/0}</code> for <code>WS-B</code> and <code>{LOOP-PARA/1}</code> for <code>WS-N</code>. Step 6's <code>LOOP-PARA/1</code> still ends with the same notes as in step 3, so nothing re-queues <code>MAIN-PARA/0</code>, and the list empties after 8 visits (first in, first out also stops there, after 10). Step 7's notes, under each rule: the newest-only run has dropped <code>start</code>, the path that skips the loop, which the analysis must allow for (see <a href="#the-problem">the question it answers</a>).</p>
+<table class="state"><tr><th>notes after MAIN-PARA/1</th><th>newest-only worklist</th><th>the walk's step 7</th></tr><tr><td>WS-B</td><td class="changed">{LOOP-PARA/0}</td><td>{LOOP-PARA/0, start}</td></tr><tr><td>WS-N</td><td class="changed">{LOOP-PARA/1}</td><td>{LOOP-PARA/1, start}</td></tr></table>
+<p>The empty list looks like a fixpoint and is not: visiting <code>MAIN-PARA/0</code> once more would flip its note back to <code>{start}</code>. The worklist only skips a statement safely when its result depends on nothing but what arrives and never shrinks as more arrives; the newest-only rule breaks both.</p></li>
 </ul>
 
 <h2 id="in-cobble">In cobble</h2>
-<p>The fixpoint stage (<code>cobble-dataflow-fixpoint</code>) runs this worklist over each member, queued in reverse postorder. Cobble's notes are kept per byte range rather than whole fields — see <a href="byte-extents.html">byte extents</a> — but the loop is this one.</p>
+<p>The fixpoint stage (<code>cobble-dataflow-fixpoint</code>) runs this worklist over each member, queued in reverse postorder. Rather than always the earliest queued statement, as in the walk above, it takes the first queued statement after the one just visited, wrapping round to the earliest, so that changes coming back round a loop are carried together in one pass. Cobble's notes are kept per byte range rather than whole fields — see <a href="byte-extents.html">byte extents</a> — but the loop is this one. Cobble has no <code>start</code>: a path on which nothing wrote the bytes adds no definer, and shows up instead in the field's values, as its <code>VALUE</code> clause or, without one, the reason <code>uninitialised</code> (see <a href="value-sets.html">value sets</a>). Run on this page's program, it reports these definers for the two reads in the <a href="#one-pass">one-pass table</a>; its <code>--sweeps 1</code> option makes one reverse-postorder pass instead of the worklist:</p>
+<table class="state"><tr><th>field</th><th>read by</th><th>definers, worklist</th><th>definers, <code>--sweeps 1</code></th></tr><tr><td>WS-B</td><td>MAIN-PARA/1</td><td>LOOP-PARA/0</td><td>none</td></tr><tr><td>WS-N</td><td>LOOP-PARA/1</td><td>LOOP-PARA/1</td><td>none</td></tr></table>
+<p>Cobble names the reads <code>WS-B@working_storage[4:8]</code> and <code>WS-N@working_storage[12:14]</code>. Where this page writes <code>start</code>, cobble gives a starting value instead, in both runs: the reason <code>uninitialised</code> for <code>WS-B</code>, which has no <code>VALUE</code> clause, and the image <code>00</code> of <code>WS-N</code>'s <code>VALUE 0</code>. Read that way, the worklist column is the one-pass table's fixpoint column and the <code>--sweeps 1</code> column is its one-pass column; cobble marks the one-pass run unsettled.</p>
 </main>
 
 </body>

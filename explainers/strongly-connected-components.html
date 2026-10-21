@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Strongly connected components</title>
+<link rel="stylesheet" href="explainer.css">
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/+esm";
+  const light = matchMedia("(prefers-color-scheme: light)").matches;
+  mermaid.initialize({
+    deterministicIds: true,
+    startOnLoad: true,
+    theme: "base",
+    themeVariables: light
+      ? { darkMode: false, background: "#fbfaf7", primaryColor: "#e6e3da", primaryTextColor: "#1a1f26", primaryBorderColor: "#d3cfc4", lineColor: "#5d6673", textColor: "#1a1f26", edgeLabelBackground: "#f1efe9", clusterBkg: "#f1efe9", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
+      : { darkMode: true, background: "#0b0f14", primaryColor: "#1a2230", primaryTextColor: "#e6edf3", primaryBorderColor: "#263041", lineColor: "#8b98a9", textColor: "#e6edf3", edgeLabelBackground: "#121821", clusterBkg: "#121821", clusterBorder: "#263041", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" },
+  });
+</script>
+</head>
+<body>
+<main>
+<nav class="back"><a href="index.html">← All explainers</a></nav>
+<div class="kicker">Graph algorithms · which statements can all reach each other</div>
+<h1>Strongly connected components</h1>
+<aside class="tldr"><p><strong>TL;DR</strong>CICS programs that hand control round in rings, and loops in a method, are where a tool that treats each program or statement on its own does the same work again and again, or cannot tell where a loop starts. Finding the groups that all lead back to each other lets it treat each ring or loop as one unit: solved once, and checked for how control gets in.</p></aside>
+<p class="prereqs"><strong>Read first:</strong> <a href="traversal-orders.html">Visiting a graph</a></p>
+<p class="lede">On a cycle, each statement's result feeds the next and the last feeds the first, so no order puts every statement after everything that feeds it. Which statements belong to one cycle is a question about pairs: does X reach Y, and Y reach X? Asked directly, that is a walk from every statement, each going over the same arrows again.</p>
+<p class="lede">On this page's seven paragraphs, one depth-first walk from <code>ENTRY-PARA</code> gives each paragraph two numbers, an <em>index</em> and a <em>low</em>, and pops four groups off a stack: <code>{Exit}</code>, <code>{D, E}</code>, <code>{A, B, C}</code>, <code>{Entry}</code>. Each group comes off after every group it leads to, which is the order a tool needs to solve them in.</p>
+<p class="dim">A <strong>component</strong> here is a strongly connected component: a largest set of nodes that all reach each other. <em>Path</em>, <em>back edge</em> and <em>preorder</em> are as in <a href="traversal-orders.html#depth-first-as-far-as-you-can-then-back-up">visiting a graph</a>.</p>
+<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#the-example">The example</a></li><li><a href="#step-by-step">Step by step</a></li><li><a href="#the-intuition">Why one walk is enough</a></li><li><a href="#finish-order">The order components finish in</a></li><li><a href="#the-rule">The rule</a></li><li><a href="#where-this-is-used">Where this is used</a></li><li><a href="#what-goes-wrong">What goes wrong</a></li><li><a href="#in-cobble">In cobble and cobol-rekt</a></li><li><a href="#references">References</a></li></ol></nav>
+
+<h2 id="the-example">The example</h2>
+<p>Seven paragraphs, one node each, with an arrow for every fall-through and every <code>GO TO</code>. <code>A</code>, <code>B</code> and <code>C</code> form a three-paragraph ring; <code>D</code> and <code>E</code> a two-paragraph loop after it:</p>
+<pre class="mermaid">
+flowchart LR
+    Entry --> A
+    A --> B
+    B --> C
+    C -->|"GO TO A-PARA"| A
+    C --> D
+    D --> E
+    E -->|"GO TO D-PARA"| D
+    E --> Exit
+</pre>
+<p>The answer: four components, one chip each. Every paragraph is in exactly one; <code>Entry</code> and <code>Exit</code> sit on no cycle, so each is a component on its own.</p>
+<div class="chips"><span class="chip changed">{A, B, C}</span><span class="chip changed">{D, E}</span><span class="chip">{Entry}</span><span class="chip">{Exit}</span></div>
+<p>The paragraphs behind the picture, a fragment constructed for this page. <code>ENTRY-PARA</code> is <code>Entry</code>, <code>A-PARA</code> is <code>A</code>, and so on down to <code>EXIT-PARA</code>, which is <code>Exit</code>:</p>
+<pre class="cobol">       ENTRY-PARA.
+           MOVE 0 TO WS-TRIES.
+       A-PARA.
+           ADD 1 TO WS-TRIES.
+       B-PARA.
+           CALL 'CONNECT' USING WS-STATUS.
+       C-PARA.
+           IF WS-STATUS NOT = '00' AND WS-TRIES &lt; 3
+               GO TO A-PARA.
+       D-PARA.
+           ADD 1 TO WS-COUNT.
+       E-PARA.
+           IF WS-COUNT &lt; 10
+               GO TO D-PARA.
+       EXIT-PARA.
+           STOP RUN.</pre>
+<p>Each paragraph above <code>EXIT-PARA</code> falls through to the next, which gives the six downward arrows. <code>C-PARA</code>'s <code>GO TO</code> gives <code>C → A</code>, the retry ring; <code>E-PARA</code>'s gives <code>E → D</code>, the counting loop. Those are the picture's eight arrows, and no others.</p>
+<p>The walk below tries each paragraph's arrows <strong>in the order drawn</strong>: the <code>GO TO</code> before the fall-through. So <code>C</code> tries <code>C → A</code> before <code>C → D</code>, and <code>E</code> tries <code>E → D</code> before <code>E → Exit</code>. Every index, low and component below follows from that order:</p>
+<div class="chips"><span class="chip">Entry → A</span><span class="chip">A → B</span><span class="chip">B → C</span><span class="chip">C → A, then C → D</span><span class="chip">D → E</span><span class="chip">E → D, then E → Exit</span></div>
+
+<h2 id="step-by-step">Step by step</h2>
+<p>This is Tarjan's algorithm.<sup>[1]</sup> It is the <a href="traversal-orders.html#depth-first-as-far-as-you-can-then-back-up">depth-first walk</a>, with three additions. Each paragraph gets an <strong>index</strong>, the order it was first visited, counting from 0. It also gets a <strong>low</strong>, the smallest index it is known to get back to; this starts equal to its index. And beside the <em>path</em> there is a <strong>stack</strong>, holding every visited paragraph not yet in a finished component.</p>
+<p>In each step's picture, the amber paragraph is the one the walk is at, the amber arrow is the one it just tried, and a dashed outline marks a paragraph already in a finished component. In each table, amber cells are the ones that step changed.</p>
+<details class="walk" open>
+<summary>Tarjan's algorithm on the seven paragraphs, one move at a time <span class="dim">(16 steps)</span></summary>
+<ol class="steps">
+<li class="before">
+<p class="note">Nothing is visited. The walk starts at <code>Entry</code>, the paragraph control enters first. The path and the stack are both empty.</p>
+<p class="dim">Path</p><div class="chips"><span class="dim">empty</span></div>
+<p class="dim">Stack, bottom first</p><div class="chips"><span class="dim">empty</span></div>
+<p class="dim">Components finished</p><div class="chips"><span class="dim">none yet</span></div>
+<pre class="mermaid">
+flowchart LR
+    Entry --> A
+    A --> B
+    B --> C
+    C --> A
+    C --> D
+    D --> E
+    E --> D
+    E --> Exit
+    classDef cur fill:#f5b041,stroke:#f5b041,color:#000
+    classDef done stroke-dasharray:4 3
+</pre>
+</li>
+<li>
+<p class="note">Visit <code>Entry</code>: it is the first paragraph seen, so its index is 0, and its low starts equal to its index. It joins the path and is pushed on the stack.</p>
+<table class="state"><tbody><tr><th>paragraph</th><th>index</th><th>low</th><th>component</th></tr><tr><td>Entry</td><td class="changed">0</td><td class="changed">0</td><td>·</td></tr></tbody></table>
+<p class="dim">Path</p><div class="chips"><span class="chip">Entry</span></div>
+<p class="dim">Stack, bottom first</p><div class="chips"><span class="chip">Entry</span></div>
+<p class="dim">Components finished</p><div class="chips"><span class="dim">none yet</span></div>
+<pre class="mermaid">
+flowchart LR
+    Entry --> A
+    A --> B
+    B --> C
+    C --> A
+    C --> D
+    D --> E
+    E --> D
+    E --> Exit
+    class Entry cur
+    classDef cur fill:#f5b041,stroke:#f5b041,color:#000
+    classDef done stroke-dasharray:4 3
+</pre>
+</li>
+<li>
+<p class="note"><code>Entry</code>'s one arrow goes to <code>A</code>, not yet seen: visit it. Index 1, low 1; it joins the path and the stack.</p>
+<table class="state"><tbody><tr><th>paragraph</th><th>index</th><th>low</th><th>component</th></tr><tr><td>Entry</td><td>0</td><td>0</td><td>·</td></tr><tr><td>A</td><td class="changed">1</td><td class="changed">1</td><td>·</td></tr></tbody></table>
+<p class="dim">Path</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span></div>
+<p class="dim">Stack, bottom first</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span></div>
+<p class="dim">Components finished</p><div class="chips"><span class="dim">none yet</span></div>
+<pre class="mermaid">
+flowchart LR
+    Entry --> A
+    A --> B
+    B --> C
+    C --> A
+    C --> D
+    D --> E
+    E --> D
+    E --> Exit
+    class A cur
+    classDef cur fill:#f5b041,stroke:#f5b041,color:#000
+    classDef done stroke-dasharray:4 3
+    linkStyle 0 stroke:#f5b041,stroke-width:3px
+</pre>
+</li>
+<li>
+<p class="note"><code>A</code> falls through to <code>B</code>, not yet seen: index 2, low 2.</p>
+<table class="state"><tbody><tr><th>paragraph</th><th>index</th><th>low</th><th>component</th></tr><tr><td>Entry</td><td>0</td><td>0</td><td>·</td></tr><tr><td>A</td><td>1</td><td>1</td><td>·</td></tr><tr><td>B</td><td class="changed">2</td><td class="changed">2</td><td>·</td></tr></tbody></table>
+<p class="dim">Path</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span><span class="chip">B</span></div>
+<p class="dim">Stack, bottom first</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span><span class="chip">B</span></div>
+<p class="dim">Components finished</p><div class="chips"><span class="dim">none yet</span></div>
+<pre class="mermaid">
+flowchart LR
+    Entry --> A
+    A --> B
+    B --> C
+    C --> A
+    C --> D
+    D --> E
+    E --> D
+    E --> Exit
+    class B cur
+    classDef cur fill:#f5b041,stroke:#f5b041,color:#000
+    classDef done stroke-dasharray:4 3
+    linkStyle 1 stroke:#f5b041,stroke-width:3px
+</pre>
+</li>
+<li>
+<p class="note"><code>B</code> falls through to <code>C</code>, not yet seen: index 3, low 3.</p>
+<table class="state"><tbody><tr><th>paragraph</th><th>index</th><th>low</th><th>component</th></tr><tr><td>Entry</td><td>0</td><td>0</td><td>·</td></tr><tr><td>A</td><td>1</td><td>1</td><td>·</td></tr><tr><td>B</td><td>2</td><td>2</td><td>·</td></tr><tr><td>C</td><td class="changed">3</td><td class="changed">3</td><td>·</td></tr></tbody></table>
+<p class="dim">Path</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span><span class="chip">B</span><span class="chip">C</span></div>
+<p class="dim">Stack, bottom first</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span><span class="chip">B</span><span class="chip">C</span></div>
+<p class="dim">Components finished</p><div class="chips"><span class="dim">none yet</span></div>
+<pre class="mermaid">
+flowchart LR
+    Entry --> A
+    A --> B
+    B --> C
+    C --> A
+    C --> D
+    D --> E
+    E --> D
+    E --> Exit
+    class C cur
+    classDef cur fill:#f5b041,stroke:#f5b041,color:#000
+    classDef done stroke-dasharray:4 3
+    linkStyle 2 stroke:#f5b041,stroke-width:3px
+</pre>
+</li>
+<li>
+<p class="note"><code>C</code>'s first arrow, the <code>GO TO A-PARA</code>, leads to <code>A</code>. <code>A</code> has been seen and is still on the stack, so the walk does not go there; instead <code>C</code>'s low drops to <code>A</code>'s index: 1. <code>C</code> has found a way back to a paragraph above it on the path.</p>
+<table class="state"><tbody><tr><th>paragraph</th><th>index</th><th>low</th><th>component</th></tr><tr><td>Entry</td><td>0</td><td>0</td><td>·</td></tr><tr><td>A</td><td>1</td><td>1</td><td>·</td></tr><tr><td>B</td><td>2</td><td>2</td><td>·</td></tr><tr><td>C</td><td>3</td><td class="changed">1</td><td>·</td></tr></tbody></table>
+<p class="dim">Path</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span><span class="chip">B</span><span class="chip">C</span></div>
+<p class="dim">Stack, bottom first</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span><span class="chip">B</span><span class="chip">C</span></div>
+<p class="dim">Components finished</p><div class="chips"><span class="dim">none yet</span></div>
+<pre class="mermaid">
+flowchart LR
+    Entry --> A
+    A --> B
+    B --> C
+    C --> A
+    C --> D
+    D --> E
+    E --> D
+    E --> Exit
+    class C cur
+    classDef cur fill:#f5b041,stroke:#f5b041,color:#000
+    classDef done stroke-dasharray:4 3
+    linkStyle 3 stroke:#f5b041,stroke-width:3px
+</pre>
+</li>
+<li>
+<p class="note"><code>C</code>'s second arrow, the fall-through, leads to <code>D</code>, not yet seen: index 4, low 4.</p>
+<table class="state"><tbody><tr><th>paragraph</th><th>index</th><th>low</th><th>component</th></tr><tr><td>Entry</td><td>0</td><td>0</td><td>·</td></tr><tr><td>A</td><td>1</td><td>1</td><td>·</td></tr><tr><td>B</td><td>2</td><td>2</td><td>·</td></tr><tr><td>C</td><td>3</td><td>1</td><td>·</td></tr><tr><td>D</td><td class="changed">4</td><td class="changed">4</td><td>·</td></tr></tbody></table>
+<p class="dim">Path</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span><span class="chip">B</span><span class="chip">C</span><span class="chip">D</span></div>
+<p class="dim">Stack, bottom first</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span><span class="chip">B</span><span class="chip">C</span><span class="chip">D</span></div>
+<p class="dim">Components finished</p><div class="chips"><span class="dim">none yet</span></div>
+<pre class="mermaid">
+flowchart LR
+    Entry --> A
+    A --> B
+    B --> C
+    C --> A
+    C --> D
+    D --> E
+    E --> D
+    E --> Exit
+    class D cur
+    classDef cur fill:#f5b041,stroke:#f5b041,color:#000
+    classDef done stroke-dasharray:4 3
+    linkStyle 4 stroke:#f5b041,stroke-width:3px
+</pre>
+</li>
+<li>
+<p class="note"><code>D</code> falls through to <code>E</code>, not yet seen: index 5, low 5.</p>
+<table class="state"><tbody><tr><th>paragraph</th><th>index</th><th>low</th><th>component</th></tr><tr><td>Entry</td><td>0</td><td>0</td><td>·</td></tr><tr><td>A</td><td>1</td><td>1</td><td>·</td></tr><tr><td>B</td><td>2</td><td>2</td><td>·</td></tr><tr><td>C</td><td>3</td><td>1</td><td>·</td></tr><tr><td>D</td><td>4</td><td>4</td><td>·</td></tr><tr><td>E</td><td class="changed">5</td><td class="changed">5</td><td>·</td></tr></tbody></table>
+<p class="dim">Path</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span><span class="chip">B</span><span class="chip">C</span><span class="chip">D</span><span class="chip">E</span></div>
+<p class="dim">Stack, bottom first</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span><span class="chip">B</span><span class="chip">C</span><span class="chip">D</span><span class="chip">E</span></div>
+<p class="dim">Components finished</p><div class="chips"><span class="dim">none yet</span></div>
+<pre class="mermaid">
+flowchart LR
+    Entry --> A
+    A --> B
+    B --> C
+    C --> A
+    C --> D
+    D --> E
+    E --> D
+    E --> Exit
+    class E cur
+    classDef cur fill:#f5b041,stroke:#f5b041,color:#000
+    classDef done stroke-dasharray:4 3
+    linkStyle 5 stroke:#f5b041,stroke-width:3px
+</pre>
+</li>
+<li>
+<p class="note"><code>E</code>'s first arrow, <code>GO TO D-PARA</code>, leads to <code>D</code>: seen, and on the stack. <code>E</code>'s low drops to <code>D</code>'s index, 4. This is step 5 again, one loop further down.</p>
+<table class="state"><tbody><tr><th>paragraph</th><th>index</th><th>low</th><th>component</th></tr><tr><td>Entry</td><td>0</td><td>0</td><td>·</td></tr><tr><td>A</td><td>1</td><td>1</td><td>·</td></tr><tr><td>B</td><td>2</td><td>2</td><td>·</td></tr><tr><td>C</td><td>3</td><td>1</td><td>·</td></tr><tr><td>D</td><td>4</td><td>4</td><td>·</td></tr><tr><td>E</td><td>5</td><td class="changed">4</td><td>·</td></tr></tbody></table>
+<p class="dim">Path</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span><span class="chip">B</span><span class="chip">C</span><span class="chip">D</span><span class="chip">E</span></div>
+<p class="dim">Stack, bottom first</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span><span class="chip">B</span><span class="chip">C</span><span class="chip">D</span><span class="chip">E</span></div>
+<p class="dim">Components finished</p><div class="chips"><span class="dim">none yet</span></div>
+<pre class="mermaid">
+flowchart LR
+    Entry --> A
+    A --> B
+    B --> C
+    C --> A
+    C --> D
+    D --> E
+    E --> D
+    E --> Exit
+    class E cur
+    classDef cur fill:#f5b041,stroke:#f5b041,color:#000
+    classDef done stroke-dasharray:4 3
+    linkStyle 6 stroke:#f5b041,stroke-width:3px
+</pre>
+</li>
+<li>
+<p class="note"><code>E</code>'s second arrow, the fall-through, leads to <code>Exit</code>, not yet seen: index 6, low 6. Every paragraph has now been visited.</p>
+<table class="state"><tbody><tr><th>paragraph</th><th>index</th><th>low</th><th>component</th></tr><tr><td>Entry</td><td>0</td><td>0</td><td>·</td></tr><tr><td>A</td><td>1</td><td>1</td><td>·</td></tr><tr><td>B</td><td>2</td><td>2</td><td>·</td></tr><tr><td>C</td><td>3</td><td>1</td><td>·</td></tr><tr><td>D</td><td>4</td><td>4</td><td>·</td></tr><tr><td>E</td><td>5</td><td>4</td><td>·</td></tr><tr><td>Exit</td><td class="changed">6</td><td class="changed">6</td><td>·</td></tr></tbody></table>
+<p class="dim">Path</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span><span class="chip">B</span><span class="chip">C</span><span class="chip">D</span><span class="chip">E</span><span class="chip">Exit</span></div>
+<p class="dim">Stack, bottom first</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span><span class="chip">B</span><span class="chip">C</span><span class="chip">D</span><span class="chip">E</span><span class="chip">Exit</span></div>
+<p class="dim">Components finished</p><div class="chips"><span class="dim">none yet</span></div>
+<pre class="mermaid">
+flowchart LR
+    Entry --> A
+    A --> B
+    B --> C
+    C --> A
+    C --> D
+    D --> E
+    E --> D
+    E --> Exit
+    class Exit cur
+    classDef cur fill:#f5b041,stroke:#f5b041,color:#000
+    classDef done stroke-dasharray:4 3
+    linkStyle 7 stroke:#f5b041,stroke-width:3px
+</pre>
+</li>
+<li>
+<p class="note"><code>Exit</code> has no arrows, so it backs out: it leaves the path. Its low, 6, equals its index, 6: nothing it reaches gets back above it. Pop the stack down to <code>Exit</code>: the first component, <code>{Exit}</code>, on its own. <code>E</code> takes the smaller of its low and <code>Exit</code>'s: still 4.</p>
+<table class="state"><tbody><tr><th>paragraph</th><th>index</th><th>low</th><th>component</th></tr><tr><td>Entry</td><td>0</td><td>0</td><td>·</td></tr><tr><td>A</td><td>1</td><td>1</td><td>·</td></tr><tr><td>B</td><td>2</td><td>2</td><td>·</td></tr><tr><td>C</td><td>3</td><td>1</td><td>·</td></tr><tr><td>D</td><td>4</td><td>4</td><td>·</td></tr><tr><td>E</td><td>5</td><td>4</td><td>·</td></tr><tr><td>Exit</td><td>6</td><td>6</td><td class="changed">1st</td></tr></tbody></table>
+<p class="dim">Path</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span><span class="chip">B</span><span class="chip">C</span><span class="chip">D</span><span class="chip">E</span></div>
+<p class="dim">Stack, bottom first</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span><span class="chip">B</span><span class="chip">C</span><span class="chip">D</span><span class="chip">E</span></div>
+<p class="dim">Components finished</p><div class="chips"><span class="chip changed">{Exit}</span></div>
+<pre class="mermaid">
+flowchart LR
+    Entry --> A
+    A --> B
+    B --> C
+    C --> A
+    C --> D
+    D --> E
+    E --> D
+    E --> Exit
+    class Exit cur
+    classDef cur fill:#f5b041,stroke:#f5b041,color:#000
+    classDef done stroke-dasharray:4 3
+</pre>
+</li>
+<li>
+<p class="note"><code>E</code> has tried both arrows, so it backs out and leaves the path. Its low, 4, is not its index, 5: it gets back to <code>D</code>, above it. So it is not the first of a component, and it <em>stays on the stack</em>. <code>D</code> takes the smaller low: 4, unchanged.</p>
+<table class="state"><tbody><tr><th>paragraph</th><th>index</th><th>low</th><th>component</th></tr><tr><td>Entry</td><td>0</td><td>0</td><td>·</td></tr><tr><td>A</td><td>1</td><td>1</td><td>·</td></tr><tr><td>B</td><td>2</td><td>2</td><td>·</td></tr><tr><td>C</td><td>3</td><td>1</td><td>·</td></tr><tr><td>D</td><td>4</td><td>4</td><td>·</td></tr><tr><td>E</td><td>5</td><td>4</td><td>·</td></tr><tr><td>Exit</td><td>6</td><td>6</td><td>1st</td></tr></tbody></table>
+<p class="dim">Path</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span><span class="chip">B</span><span class="chip">C</span><span class="chip">D</span></div>
+<p class="dim">Stack, bottom first</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span><span class="chip">B</span><span class="chip">C</span><span class="chip">D</span><span class="chip">E</span></div>
+<p class="dim">Components finished</p><div class="chips"><span class="chip">{Exit}</span></div>
+<pre class="mermaid">
+flowchart LR
+    Entry --> A
+    A --> B
+    B --> C
+    C --> A
+    C --> D
+    D --> E
+    E --> D
+    E --> Exit
+    class Exit done
+    class E cur
+    classDef cur fill:#f5b041,stroke:#f5b041,color:#000
+    classDef done stroke-dasharray:4 3
+</pre>
+</li>
+<li>
+<p class="note"><code>D</code> has tried its one arrow and backs out. Its low, 4, equals its index, 4. Pop the stack down to <code>D</code>: <code>E</code>, then <code>D</code>. The second component is <code>{D, E}</code>, the two-paragraph loop. <code>C</code> takes the smaller of its low, 1, and <code>D</code>'s, 4: still 1.</p>
+<table class="state"><tbody><tr><th>paragraph</th><th>index</th><th>low</th><th>component</th></tr><tr><td>Entry</td><td>0</td><td>0</td><td>·</td></tr><tr><td>A</td><td>1</td><td>1</td><td>·</td></tr><tr><td>B</td><td>2</td><td>2</td><td>·</td></tr><tr><td>C</td><td>3</td><td>1</td><td>·</td></tr><tr><td>D</td><td>4</td><td>4</td><td class="changed">2nd</td></tr><tr><td>E</td><td>5</td><td>4</td><td class="changed">2nd</td></tr><tr><td>Exit</td><td>6</td><td>6</td><td>1st</td></tr></tbody></table>
+<p class="dim">Path</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span><span class="chip">B</span><span class="chip">C</span></div>
+<p class="dim">Stack, bottom first</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span><span class="chip">B</span><span class="chip">C</span></div>
+<p class="dim">Components finished</p><div class="chips"><span class="chip">{Exit}</span><span class="chip changed">{D, E}</span></div>
+<pre class="mermaid">
+flowchart LR
+    Entry --> A
+    A --> B
+    B --> C
+    C --> A
+    C --> D
+    D --> E
+    E --> D
+    E --> Exit
+    class Exit,E done
+    class D cur
+    classDef cur fill:#f5b041,stroke:#f5b041,color:#000
+    classDef done stroke-dasharray:4 3
+</pre>
+</li>
+<li>
+<p class="note"><code>C</code> backs out. Low 1, index 3: not equal, so <code>C</code> stays on the stack. <code>B</code> takes the smaller of its low, 2, and <code>C</code>'s, 1: <code>B</code>'s low drops to 1. What <code>C</code> found at step 5 is handed up the path.</p>
+<table class="state"><tbody><tr><th>paragraph</th><th>index</th><th>low</th><th>component</th></tr><tr><td>Entry</td><td>0</td><td>0</td><td>·</td></tr><tr><td>A</td><td>1</td><td>1</td><td>·</td></tr><tr><td>B</td><td>2</td><td class="changed">1</td><td>·</td></tr><tr><td>C</td><td>3</td><td>1</td><td>·</td></tr><tr><td>D</td><td>4</td><td>4</td><td>2nd</td></tr><tr><td>E</td><td>5</td><td>4</td><td>2nd</td></tr><tr><td>Exit</td><td>6</td><td>6</td><td>1st</td></tr></tbody></table>
+<p class="dim">Path</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span><span class="chip">B</span></div>
+<p class="dim">Stack, bottom first</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span><span class="chip">B</span><span class="chip">C</span></div>
+<p class="dim">Components finished</p><div class="chips"><span class="chip">{Exit}</span><span class="chip">{D, E}</span></div>
+<pre class="mermaid">
+flowchart LR
+    Entry --> A
+    A --> B
+    B --> C
+    C --> A
+    C --> D
+    D --> E
+    E --> D
+    E --> Exit
+    class Exit,D,E done
+    class C cur
+    classDef cur fill:#f5b041,stroke:#f5b041,color:#000
+    classDef done stroke-dasharray:4 3
+</pre>
+</li>
+<li>
+<p class="note"><code>B</code> backs out. Low 1, index 2: it stays on the stack. <code>A</code> takes the smaller of 1 and 1: unchanged.</p>
+<table class="state"><tbody><tr><th>paragraph</th><th>index</th><th>low</th><th>component</th></tr><tr><td>Entry</td><td>0</td><td>0</td><td>·</td></tr><tr><td>A</td><td>1</td><td>1</td><td>·</td></tr><tr><td>B</td><td>2</td><td>1</td><td>·</td></tr><tr><td>C</td><td>3</td><td>1</td><td>·</td></tr><tr><td>D</td><td>4</td><td>4</td><td>2nd</td></tr><tr><td>E</td><td>5</td><td>4</td><td>2nd</td></tr><tr><td>Exit</td><td>6</td><td>6</td><td>1st</td></tr></tbody></table>
+<p class="dim">Path</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span></div>
+<p class="dim">Stack, bottom first</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span><span class="chip">B</span><span class="chip">C</span></div>
+<p class="dim">Components finished</p><div class="chips"><span class="chip">{Exit}</span><span class="chip">{D, E}</span></div>
+<pre class="mermaid">
+flowchart LR
+    Entry --> A
+    A --> B
+    B --> C
+    C --> A
+    C --> D
+    D --> E
+    E --> D
+    E --> Exit
+    class Exit,D,E done
+    class B cur
+    classDef cur fill:#f5b041,stroke:#f5b041,color:#000
+    classDef done stroke-dasharray:4 3
+</pre>
+</li>
+<li>
+<p class="note"><code>A</code> backs out. Low 1 equals index 1. Pop the stack down to <code>A</code>: <code>C</code>, <code>B</code>, <code>A</code>. The third component is <code>{A, B, C}</code>, the three-paragraph ring. <code>Entry</code> takes the smaller of 0 and 1: still 0.</p>
+<table class="state"><tbody><tr><th>paragraph</th><th>index</th><th>low</th><th>component</th></tr><tr><td>Entry</td><td>0</td><td>0</td><td>·</td></tr><tr><td>A</td><td>1</td><td>1</td><td class="changed">3rd</td></tr><tr><td>B</td><td>2</td><td>1</td><td class="changed">3rd</td></tr><tr><td>C</td><td>3</td><td>1</td><td class="changed">3rd</td></tr><tr><td>D</td><td>4</td><td>4</td><td>2nd</td></tr><tr><td>E</td><td>5</td><td>4</td><td>2nd</td></tr><tr><td>Exit</td><td>6</td><td>6</td><td>1st</td></tr></tbody></table>
+<p class="dim">Path</p><div class="chips"><span class="chip">Entry</span></div>
+<p class="dim">Stack, bottom first</p><div class="chips"><span class="chip">Entry</span></div>
+<p class="dim">Components finished</p><div class="chips"><span class="chip">{Exit}</span><span class="chip">{D, E}</span><span class="chip changed">{A, B, C}</span></div>
+<pre class="mermaid">
+flowchart LR
+    Entry --> A
+    A --> B
+    B --> C
+    C --> A
+    C --> D
+    D --> E
+    E --> D
+    E --> Exit
+    class Exit,D,E,B,C done
+    class A cur
+    classDef cur fill:#f5b041,stroke:#f5b041,color:#000
+    classDef done stroke-dasharray:4 3
+</pre>
+</li>
+<li>
+<p class="note"><code>Entry</code> backs out. Low 0 equals index 0: pop it, the fourth component, <code>{Entry}</code>. The path and the stack are empty, and every paragraph is in exactly one component.</p>
+<table class="state"><tbody><tr><th>paragraph</th><th>index</th><th>low</th><th>component</th></tr><tr><td>Entry</td><td>0</td><td>0</td><td class="changed">4th</td></tr><tr><td>A</td><td>1</td><td>1</td><td>3rd</td></tr><tr><td>B</td><td>2</td><td>1</td><td>3rd</td></tr><tr><td>C</td><td>3</td><td>1</td><td>3rd</td></tr><tr><td>D</td><td>4</td><td>4</td><td>2nd</td></tr><tr><td>E</td><td>5</td><td>4</td><td>2nd</td></tr><tr><td>Exit</td><td>6</td><td>6</td><td>1st</td></tr></tbody></table>
+<p class="dim">Path</p><div class="chips"><span class="dim">empty</span></div>
+<p class="dim">Stack, bottom first</p><div class="chips"><span class="dim">empty</span></div>
+<p class="dim">Components finished</p><div class="chips"><span class="chip">{Exit}</span><span class="chip">{D, E}</span><span class="chip">{A, B, C}</span><span class="chip changed">{Entry}</span></div>
+<pre class="mermaid">
+flowchart LR
+    Entry --> A
+    A --> B
+    B --> C
+    C --> A
+    C --> D
+    D --> E
+    E --> D
+    E --> Exit
+    class Exit,D,E,A,B,C done
+    class Entry cur
+    classDef cur fill:#f5b041,stroke:#f5b041,color:#000
+    classDef done stroke-dasharray:4 3
+</pre>
+</li>
+</ol>
+</details>
+<p>The walk's last table holds the whole result. Every row has a component, and the four components came off the stack in the order of the last step's chips: <code>{Exit}</code>, <code>{D, E}</code>, <code>{A, B, C}</code>, <code>{Entry}</code>.</p>
+
+<h2 id="the-intuition">Why one walk is enough</h2>
+<p>The walk visited each paragraph once and tried each arrow once: 1 first visit, 8 arrows and 7 back-outs make the 16 steps. Here is where each happened:</p>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>move</th><th>steps</th><th>count</th></tr>
+<tr><td>try an arrow</td><td>2–9</td><td>8, one per arrow</td></tr>
+<tr><td>visit a paragraph</td><td>1, 2, 3, 4, 6, 7, 9</td><td>7, one per paragraph</td></tr>
+<tr><td>back out</td><td>10–16</td><td>7, one per paragraph</td></tr>
+</tbody></table></div>
+<p>Two facts make that enough. The first is what a low below the index means. At step 5, <code>C</code> tried <code>C → A</code> and found <code>A</code> still on the stack. Look at the path chips at that step: <code>Entry A B C</code>. <code>A</code> is above <code>C</code> on the path, so <code>A</code> reaches <code>C</code> along it, and <code>C</code> reaches <code>A</code> by the arrow. So <code>A</code>, <code>B</code> and <code>C</code> all lie on one cycle, and <code>C</code>'s low of 1 records it. Step 13 passed that 1 up to <code>B</code>, and here are the final numbers:</p>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>paragraph</th><th>index</th><th>low</th><th>low = index?</th><th>popped at step</th></tr>
+<tr><td>Entry</td><td>0</td><td>0</td><td class="changed">yes: first of a component</td><td>16</td></tr>
+<tr><td>A</td><td>1</td><td>1</td><td class="changed">yes: first of a component</td><td>15</td></tr>
+<tr><td>B</td><td>2</td><td>1</td><td>no: gets back to A</td><td>15</td></tr>
+<tr><td>C</td><td>3</td><td>1</td><td>no: gets back to A</td><td>15</td></tr>
+<tr><td>D</td><td>4</td><td>4</td><td class="changed">yes: first of a component</td><td>12</td></tr>
+<tr><td>E</td><td>5</td><td>4</td><td>no: gets back to D</td><td>12</td></tr>
+<tr><td>Exit</td><td>6</td><td>6</td><td class="changed">yes: first of a component</td><td>10</td></tr>
+</tbody></table></div>
+<p>The second fact is when a component is complete. A paragraph that backs out with low equal to index reaches nothing older still on the stack. So nothing it reaches can get back above it, and it is the first paragraph of its component that the walk visited, the component's <strong>root</strong>. Its component is everything on the stack from it upwards: the paragraphs visited after it that are not yet in a finished component. In the table, the amber rows are the four roots, and each root's rows below it share its popped-at step.</p>
+<p>That is why the walk needs the stack as well as the path. At step 11, <code>E</code> backed out and left the path, but its low, 4, said it gets back to <code>D</code>, so it stayed on the stack:</p>
+<p class="dim">Path at step 11</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span><span class="chip">B</span><span class="chip">C</span><span class="chip">D</span></div>
+<p class="dim">Stack at step 11</p><div class="chips"><span class="chip">Entry</span><span class="chip">A</span><span class="chip">B</span><span class="chip">C</span><span class="chip">D</span><span class="chip changed">E</span></div>
+<p>One step later <code>D</code>, the root, backed out and took <code>E</code> off the stack with it. Had the walk kept only the path, <code>E</code> would have been lost at step 11 and <code>{D, E}</code> would have come out as <code>{D}</code>.</p>
+
+<h2 id="finish-order">The order components finish in</h2>
+<p>The components came off the stack in this order, numbered as in the walk's <em>component</em> column:</p>
+<div class="chips"><span class="chip">1st {Exit}</span><span class="chip">2nd {D, E}</span><span class="chip">3rd {A, B, C}</span><span class="chip">4th {Entry}</span></div>
+<p>Shrink each component to one node and keep the arrows between components. The result is the <strong>condensation</strong>. It never has a cycle: if two components led to each other, their members would all reach each other, and they would be one component. Here it is, each box labelled with its finish position, each arrow with the original arrow it stands for:</p>
+<pre class="mermaid">
+flowchart TD
+    S["{Entry} · 4th"] -->|"Entry → A"| R["{A, B, C} · 3rd"]
+    R -->|"C → D"| L["{D, E} · 2nd"]
+    L -->|"E → Exit"| X["{Exit} · 1st"]
+</pre>
+<p>Every arrow points from a later finish to an earlier one. That holds for every graph, not just this one. A root backs out only after everything it reaches has been visited and has backed out. Each component it leads to has therefore been popped already, either earlier in the walk or inside the root's own part of it, as <code>{D, E}</code> was at step 12, inside <code>A</code>'s. So the finish order is a <strong>reverse topological order</strong> of the condensation. Each arrow of the condensation, with its two ends' positions:</p>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>arrow</th><th>from finishes</th><th>to finishes</th><th>points to</th></tr>
+<tr><td>{Entry} → {A, B, C}</td><td>4th (step 16)</td><td>3rd (step 15)</td><td>an earlier finish</td></tr>
+<tr><td>{A, B, C} → {D, E}</td><td>3rd (step 15)</td><td>2nd (step 12)</td><td>an earlier finish</td></tr>
+<tr><td>{D, E} → {Exit}</td><td>2nd (step 12)</td><td>1st (step 10)</td><td>an earlier finish</td></tr>
+</tbody></table></div>
+<p>Both directions are useful. An answer built from what a node leads to, such as where a value could have come from, is filled in the finish order, so each component's answer is ready before anything that leads into it asks. A forward analysis reads the chips right to left, <code>{Entry}</code>, <code>{A, B, C}</code>, <code>{D, E}</code>, <code>{Exit}</code>, and goes round each loop until it settles before moving on.</p>
+
+<h2 id="the-rule">The rule</h2>
+<div class="rule">
+visit(v): index(v) = low(v) = the next number<br>
+&nbsp;&nbsp;v joins the path and is pushed on the stack<br>
+for each arrow v → w, in order:<br>
+&nbsp;&nbsp;w not yet visited:&nbsp;&nbsp;visit(w); when w backs out, low(v) = min(low(v), low(w))<br>
+&nbsp;&nbsp;w on the stack:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;low(v) = min(low(v), index(w))<br>
+&nbsp;&nbsp;w visited, off the stack:&nbsp;&nbsp;ignore it; its component is finished<br>
+v backs out: if low(v) = index(v), pop the stack down to v: one component<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;otherwise v stays on the stack<br>
+repeat from any node not yet visited until none is left
+</div>
+<p>Each line, and the steps of the walk that applied it:</p>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>line</th><th>steps</th><th>what it did</th></tr>
+<tr><td>visit(v), joins, pushed</td><td>1, 2, 3, 4, 6, 7, 9</td><td>indexes 0 to 6, in that order</td></tr>
+<tr><td>w not yet visited</td><td>13</td><td><code>B</code>'s low drops to <code>C</code>'s, 1; at 10, 11, 12, 14 and 15 the min changes nothing</td></tr>
+<tr><td>w on the stack</td><td>5, 8</td><td><code>C</code>'s low to <code>A</code>'s index, 1; <code>E</code>'s to <code>D</code>'s, 4</td></tr>
+<tr><td>w visited, off the stack</td><td>none</td><td>the first bullet under <a href="#what-goes-wrong">what goes wrong</a></td></tr>
+<tr><td>low(v) = index(v): pop</td><td>10, 12, 15, 16</td><td>the four components</td></tr>
+<tr><td>otherwise v stays</td><td>11, 13, 14</td><td><code>E</code>, <code>C</code>, <code>B</code> wait for their roots</td></tr>
+<tr><td>repeat</td><td>none</td><td>every paragraph is reachable from <code>Entry</code>; a paragraph nothing jumps or falls into would need its own start</td></tr>
+</tbody></table></div>
+
+<h2 id="where-this-is-used">Where this is used</h2>
+<p>Three pages build on these components. Each row says what that page does with them, worked on this page's graph:</p>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>page</th><th>uses the components to</th><th>on this page's graph</th></tr>
+<tr><td><a href="memoised-reachability.html#the-intuition">Answering every walk once</a></td><td>solve a ring of places once, as one unit, in finish order</td><td><code>{Exit}</code> is answered first, then <code>{D, E}</code> from it, then <code>{A, B, C}</code> from that: each ring once, whoever asks</td></tr>
+<tr><td><a href="reducibility-and-loops.html#a-quicker-check-for-where-strongly-connected-components">Reducibility and loop detection</a></td><td>see where each component is entered from outside</td><td><code>{A, B, C}</code> only at <code>A</code> (by <code>Entry → A</code>); <code>{D, E}</code> only at <code>D</code> (by <code>C → D</code>): one way in each</td></tr>
+<tr><td><a href="dj-graphs-and-natural-loops.html#when-a-level-is-irreducible-instead">DJ graphs and natural loop bodies</a></td><td>fall back to components at a level with no single header, and collapse each component of 2+ members</td><td>not needed here: both loops have one way in</td></tr>
+</tbody></table></div>
+<p>In the first row, memoised reachability's place graph plays the role of the paragraphs here: its ring of three places is popped in one step, as <code>{A, B, C}</code> is at step 15. The second row is checked against the condensation's picture: one arrow enters each box.</p>
+
+<h2 id="what-goes-wrong">What goes wrong</h2>
+<ul>
+<li><strong>Comparing with a finished node's index.</strong> The rule ignores an arrow to a node that is visited but off the stack. Treat it like an on-stack node instead, and a node can take a low from a component that is already finished. It then never sees low equal to index, and gets merged into the wrong component. Three nodes, arrows tried in the order drawn:
+<pre class="mermaid">
+flowchart LR
+    X --> Y
+    X --> Z
+    Z --> Y
+    linkStyle 2 stroke:#f5b041,stroke-width:3px
+</pre>
+<code>X</code> gets index 0, and <code>Y</code> index 1; <code>Y</code> has no arrows, so it pops as <code>{Y}</code>. <code>Z</code> gets index 2, then tries <code>Z → Y</code> (amber). <code>Y</code> is visited but off the stack:
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th></th><th>low(Z) after Z → Y</th><th>Z backs out</th><th>components</th></tr>
+<tr><td>ignore Y (the rule)</td><td>2</td><td>low = index: pops {Z}</td><td>{Y}, {Z}, {X}</td></tr>
+<tr><td>use index(Y)</td><td class="changed">1</td><td class="changed">1 ≠ 2: stays on the stack</td><td class="changed">{Y}, {Z, X}</td></tr>
+</tbody></table></div>
+<code>Z</code> cannot reach <code>X</code>, so <code>{Z, X}</code> is wrong. On the walk above it never arises: every arrow there leads to a new node or one still on the stack.</li>
+<li><strong>Recursing once per node.</strong> Written as a function that calls itself for each new node, the walk nests one call per node on the path. A long chain makes a deep path:
+<pre class="mermaid">
+flowchart LR
+    N1["S1"] --> N2["S2"] --> N3["S3"] --> N4["…"] --> N5["Sn"]
+</pre>
+Python allows a thousand nested calls by default (<code>sys.getrecursionlimit()</code> is 1000). Run on chains like this one, a recursive Python version of the rule and a Python version that keeps its own lists, as cobble's does, gave:
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>chain of n nodes</th><th>recursive</th><th>own lists</th></tr>
+<tr><td>990</td><td>990 components</td><td>990 components</td></tr>
+<tr><td>1,000</td><td class="changed">RecursionError</td><td>1,000 components</td></tr>
+<tr><td>5,000</td><td class="changed">RecursionError</td><td>5,000 components</td></tr>
+<tr><td>100,000</td><td>not run</td><td>100,000 components</td></tr>
+</tbody></table></div>
+These are runs of short Python scripts written for this page, not of cobble; the recursive one fails at 1,000 because of that default limit. Memoised reachability <a href="memoised-reachability.html#the-intuition">records</a> that cobble's combine had already crashed once on Python's recursion limit, and that a walk across a corpus can be millions of places deep.</li>
+<li><strong>Reading "reachable from" as "in the same component".</strong> <code>A</code> reaches <code>D</code>, <code>E</code> and <code>Exit</code>, but none of them reaches back. A component needs both directions:
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>paragraph</th><th>reaches</th><th>is reached from</th><th>both: its component</th></tr>
+<tr><td>A</td><td>A, B, C, <span class="changed">D, E, Exit</span></td><td>Entry, A, B, C</td><td>A, B, C</td></tr>
+<tr><td>D</td><td>D, E, <span class="changed">Exit</span></td><td>Entry, A, B, C, D, E</td><td>D, E</td></tr>
+</tbody></table></div>
+Call everything <code>A</code> reaches "<code>A</code>'s loop" and the amber paragraphs, the counting loop and <code>EXIT-PARA</code>, land inside the retry ring. A tool reporting loop bodies would print six paragraphs for a three-paragraph loop.</li>
+<li><strong>Taking every one-member component as loop-free.</strong> <code>{Entry}</code> and <code>{Exit}</code> sit on no cycle, but a paragraph that jumps to itself is also a component of one member, and it is a loop:
+<pre class="cobol">       R-PARA.
+           ADD 1 TO WS-COUNT.
+           IF WS-COUNT &lt; 10
+               GO TO R-PARA.</pre>
+<pre class="mermaid">
+flowchart LR
+    Entry --> R
+    R --> R
+    R --> Exit
+    linkStyle 1 stroke:#f5b041,stroke-width:3px
+</pre>
+The walk on it: <code>R</code> gets index 1, and <code>R → R</code> finds <code>R</code> on the stack, so its low becomes min(1, 1) = 1. Nothing changes, and <code>R</code> pops alone:
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>component</th><th>members</th><th>on a cycle?</th></tr>
+<tr><td>{Exit}</td><td>1</td><td>no</td></tr>
+<tr><td>{R}</td><td>1</td><td class="changed">yes: the amber self-loop</td></tr>
+<tr><td>{Entry}</td><td>1</td><td>no</td></tr>
+</tbody></table></div>
+"More than one member" finds <code>{A, B, C}</code> and <code>{D, E}</code> on the main example but misses <code>{R}</code>. A one-member component is a loop exactly when it has an arrow to itself.</li>
+</ul>
+
+<h2 id="in-cobble">In cobble and cobol-rekt</h2>
+<p><strong>Cobble</strong> finds components in its combine with Tarjan's algorithm, written out by hand in <code>Closures._solve</code> in <code>cobble/cobble/dataflow/combine/closures.py</code>. Its docstring says "Tarjan's algorithm with an explicit stack". It does not recurse: <code>visiting</code> is the walk's <em>Path</em> row, <code>positions</code> says which arrow each paragraph on it tries next, and <code>stack</code> is the <em>Stack</em> row. Abridged, with comments added:</p>
+<pre class="cobol">while visiting:
+    vertex = visiting[-1]
+    position = positions[-1]
+    nexts = local[vertex][1]
+    if position &lt; len(nexts):
+        positions[-1] = position + 1
+        following = nexts[position]
+        if following in self._answers:   # settled by an earlier solve
+            continue
+        if following not in index:       # not yet visited
+            visit(following)
+        elif following in on_stack:      # steps 5 and 8
+            low[vertex] = min(low[vertex], index[following])
+        continue
+    visiting.pop()                       # backs out
+    positions.pop()
+    if visiting:
+        parent = visiting[-1]
+        low[parent] = min(low[parent], low[vertex])
+    if low[vertex] == index[vertex]:     # steps 10, 12, 15, 16
+        self._settle(vertex, stack, on_stack, local)</pre>
+<p>Two things differ from the rule box. A successor already answered by an earlier solve is skipped before it is looked at, which is how a second walk stops at the first one's answers. And a visited successor off the stack falls through every branch, which is the rule's "ignore it". <code>_settle</code> gives the popped component one answer. Its <code>_mark</code> flags every member of a component of two or more as revisiting, and a one-member component when, among other cases, <code>vertex in nexts</code>: the self-loop of the last bullet above.</p>
+<p>Elsewhere cobble calls networkx's <code>strongly_connected_components</code>: in <code>_cycle_sizes</code> in <code>cobble/cobble/dataflow/fixpoint/diagnose.py</code>, and in <code>cobble/scripts/cycle_sizes.py</code>, which report component sizes. networkx's documentation for that function, in the version installed locally (3.6.1), says it uses Tarjan's algorithm with Nuutila's modifications, in a non-recursive version.</p>
+<p><strong>cobol-rekt</strong> takes its components from JGraphT. Its reducibility and loop tasks live in the <code>mojo-common</code> submodule. <code>IrreducibleStronglyConnectedComponentsTask</code> and <code>LoopBodyDetectionTask</code>, in <code>src/main/java/com/mojo/algorithms/task/</code>, both build a <code>KosarajuStrongConnectivityInspector</code>:</p>
+<pre class="cobol">StrongConnectivityAlgorithm&lt;V, E&gt; scAlg =
+    new KosarajuStrongConnectivityInspector&lt;&gt;(flowgraph);
+List&lt;Graph&lt;V, E&gt;&gt; stronglyConnectedComponents =
+    scAlg.getStronglyConnectedComponents();</pre>
+<p>The first task then collects, for each component, the edges into it from outside. It reports the component as improper when those edges land on more than one distinct node, which is the check in the second row of the <a href="#where-this-is-used">where this is used</a> table. The second task runs the inspector on the subgraph at an irreducible level, as in the third row. The README says the same: components are detected with JGraphT's built-in Kosaraju inspector.</p>
+<p>Kosaraju's algorithm, published by Sharir,<sup>[2]</sup> gets the same components by a different route: two depth-first passes instead of one.</p>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th></th><th>cobble's combine</th><th>cobol-rekt</th></tr>
+<tr><td>algorithm</td><td>Tarjan</td><td>Kosaraju, via JGraphT</td></tr>
+<tr><td>passes</td><td>one depth-first walk</td><td>two: one over the graph recording the order nodes finish, one over the graph with every arrow reversed, starting each time from the latest-finished node not yet reached</td></tr>
+<tr><td>recursion</td><td>none: lists <code>visiting</code>, <code>positions</code>, <code>stack</code></td><td>none: each pass keeps an <code>ArrayDeque</code></td></tr>
+<tr><td>verified in</td><td><code>closures.py</code> source</td><td>task sources; JGraphT's class read with <code>javap</code> from jgrapht-core 1.5.2, the version the poms name</td></tr>
+</tbody></table></div>
+
+<h2 id="references">References</h2>
+<ol class="refs">
+<li>R. Tarjan. "Depth-First Search and Linear Graph Algorithms." <em>SIAM Journal on Computing</em>, 1(2), 1972, pp. 146–160. The one-walk algorithm with index, low and a stack that this page walks through.</li>
+<li>M. Sharir. "A Strong-Connectivity Algorithm and Its Applications in Data Flow Analysis." <em>Computers &amp; Mathematics with Applications</em>, 7(1), 1981, pp. 67–72. The two-pass algorithm usually credited to Kosaraju and Sharir, which cobol-rekt uses through JGraphT.</li>
+</ol>
+</main>
+</body>
+</html>
