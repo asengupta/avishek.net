@@ -265,8 +265,8 @@ So I added a diagnostic, `class-share`. For each threshold, it counts how much o
 
 | Threshold | Corpus: columns | Class columns | Class share | CardDemo class share |
 |---|---|---|---|---|
-| 10 | 97,756 | 2,627 | **3.8%** | 33.8% |
-| 5 | 160,038 | 3,340 | **3.5%** | 19.2% |
+| 10 | 97,756 | 2,627 | **3.8%** | 34.4% |
+| 5 (CardDemo: 4) | 160,038 | 3,340 | **3.5%** | 19.3% |
 | 2 | 433,755 | 5,091 | **3.1%** | 15.0% |
 
 More than 96% of what NMF sees belongs to a single program. To NMF, the matrix is nearly one block per program.
@@ -313,7 +313,7 @@ Unify's rules are strict on purpose, and on a messy corpus strict means sparse. 
 |---|---|---|---|
 | none (baseline) | 90 | 394 | |
 | ignore edges with no placement | 92 | 448 | 54 fields, all correct in the samples I checked |
-| allow joins inside one program | 434 | 1,727 | real copies, but also 42 fields set from one value merged into one class |
+| allow joins inside one program | 441 | 1,811 | real copies, but also 42 fields set from one value merged into one class |
 | accept 75% of bytes in place | 90 | 394 | nothing |
 | join a field to a bigger one containing it | 45 | 438 | collapse: chains merged distinct fields |
 
@@ -323,18 +323,35 @@ Only the first is cheap, and it is now `--join-unplaced`. The second could work 
 
 How do you show a factorisation is any good, with no labelled answer? The `scorecard` stage reports a headline and seven sub-scores, each on a different axis:
 
-| Score | Planted blocks | CardDemo round 1 | Random matrix |
-|---|---|---|---|
-| **held-out AUC** | 1.000 | 0.973 | 0.49 |
-| fidelity (relative error) | 0.000 | 0.310 | 0.999 |
-| coverage | 100% | 70.4% | 0.4% |
-| stability over resampling | 1.000 | 0.955 | 0.575 |
-| distinctness (largest cosine) | 0.000 | 0.553 | 0.049 |
-| focus | 1.000 | 1.000 | 0.343 |
-| cross-program reach | 50% | 76.7% | n/a |
-| class share | 10% | 19.2% | 0% |
+| Score | Planted blocks | CardDemo round 1 | CardDemo round 2 | Random inside each program |
+|---|---|---|---|---|
+| **held-out AUC** | 1.000 | **0.891** | 0.437 | 0.499 |
+| fidelity (relative error) | 0.000 | 0.310 | 0.806 | 0.999 |
+| coverage | 100% | 70.2% | 15.4% | 0.4% |
+| stability over resampling | 1.000 | 0.976 | 0.970 | 0.512 |
+| distinctness (largest cosine) | 0.000 | 0.553 | 0.115 | 0.000 |
+| focus | 1.000 | 1.000 | 0.850 | 0.750 |
+| cross-program reach | 50% | 76.7%, median 6.5 programs | 20%, median 1 | 10% |
+| class share | 10% | 19.3% | 15.0% | 0% |
 
-The headline hides 10% of the matrix's 1s, fits on the rest, and asks how often a hidden 1 outranks an empty cell. It has a catch, which a reviewing agent spotted. On a matrix that is 99.99% empty and nearly block-diagonal, a random empty cell is almost always in another program, which is an easy call. Until the empty cells are drawn from the same program, the AUC has to be read next to coverage and reach.
+CardDemo ran with `--min-occurrences 4 2 --k 30 10`. The random matrix has 3,000 programs, each paragraph touching its own program's fields at random.
+
+**Round 1 is the result.** Its factors predict which fields a paragraph uses, even against that program's other fields. They explain 70% of field uses, survive resampling almost unchanged, and three in four span programs, like the account record across six.
+
+**Round 2 has nothing left to find.** Its AUC is below chance and its factors explain 15%. What round 1 leaves is a long tail of fields seen in two or three paragraphs.
+
+**What the scores can't see is meaning.** About a third of round 1's factors are hubs: one program's response codes and `FILLER`s, compact and stable but not concepts. Name exclusions still matter, and so does a labelled spot check.
+
+The headline hides 10% of the matrix's 1s, fits on the rest, and asks how often a hidden 1 outranks an empty cell. My first version drew those empty cells from anywhere in the matrix. A reviewing agent pointed out the catch: on a matrix that is 99.99% empty and nearly one block per program, a random empty cell is almost always another program's field, which is an easy call. So the empty cells now come from the paragraph's own program:
+
+| Empty cells drawn from | CardDemo round 1 | CardDemo round 2 |
+|---|---|---|
+| anywhere | 0.979 | 0.676 |
+| the paragraph's own program | **0.891** | **0.437** |
+
+About 0.09 of round 1's score, and all of round 2's lead over chance, came from telling programs apart.
+
+One more thing broke in CI. On the planted blocks, the fit is exact, and scikit-learn's sparse reconstruction error is the square root of an expanded sum that should be 0. On CI's maths library it rounded slightly below zero, giving `nan`. Decompose now computes the error itself, floored at zero; elsewhere the output is unchanged to the byte.
 
 The [scoring explainer](/explainers/scoring-factorisations.html) defines each score and how to read them together.
 
@@ -345,7 +362,7 @@ The [scoring explainer](/explainers/scoring-factorisations.html) defines each sc
 - **An exact rewrite often exists.** The sparse residual, the explicit-stack walk and the barrier fix all changed nothing in the output. Look for the reformulation before reaching for an approximation.
 - **Measure before theorising.** Three plausible root causes fell to three numbers. A diagnostic stage is cheaper than a wrong fix.
 - **Strictness is a dial.** Measure each rule's recall against its precision, and expose only the ones that are cheap.
-- **Check the metric's blind spots.** A headline number on a sparse, blocky matrix can look good for the wrong reason.
+- **Check the metric's blind spots.** A headline number on a sparse, blocky matrix can look good for the wrong reason. Drawing the comparison cells from the same program took CardDemo's from 0.979 to 0.891.
 
 ## Explainers
 
@@ -354,6 +371,6 @@ The [scoring explainer](/explainers/scoring-factorisations.html) defines each sc
 | [From byte provenance to a field graph](/explainers/field-graph.html) | elementary fields, tracing back through undivided buffers, byte placements, dataset slots, memo and stack |
 | [Exact field classes across programs](/explainers/exact-classes.html) | the byte-in-place test, relays, the unplaced rule, each loosening measured |
 | [Domain aggregates by matrix factorisation](/explainers/nmf-aggregates.html) | the encoding, NMF, why it should work, rounds, the sparse residual |
-| [Scoring a factorisation](/explainers/scoring-factorisations.html) | held-out AUC and seven sub-scores, and where the headline flatters |
+| [Scoring a factorisation](/explainers/scoring-factorisations.html) | held-out AUC against same-program empty cells, and seven sub-scores |
 
 The [earlier explainers](/explainers/index.html) cover the dataflow these build on: traversal orders, fixpoints, reaching definitions, byte extents and value sets.

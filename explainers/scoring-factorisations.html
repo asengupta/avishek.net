@@ -14,13 +14,13 @@
 <aside class="tldr"><p><strong>TL;DR</strong>There are no labels for "the right aggregates", so score what can be checked: does the factorisation predict cells it never saw, how much does it rebuild and cover, does it survive resampling, and are its factors distinct, focused and cross-program.</p></aside>
 <p class="prereqs"><strong>Read first:</strong> <a href="nmf-aggregates.html">Domain aggregates by matrix factorisation</a></p>
 <p class="lede">One number hides how a factorisation fails. Here is a headline plus seven sub-scores, each on a different axis, none needing labels.</p>
-<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#headline">The headline</a></li><li><a href="#axes">The axes</a></li><li><a href="#reading">Reading them together</a></li><li><a href="#numbers">Three matrices</a></li><li><a href="#caveat">Where the headline flatters</a></li></ol></nav>
+<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#headline">The headline</a></li><li><a href="#axes">The axes</a></li><li><a href="#reading">Reading them together</a></li><li><a href="#numbers">Four matrices</a></li><li><a href="#caveat">Why the empty cells come from the same program</a></li></ol></nav>
 
 <h2 id="headline">The headline: held-out AUC</h2>
 <ol>
 <li>Hide a random 10% of the matrix's 1s.</li>
 <li>Fit on what remains.</li>
-<li>Score each hidden 1, and as many randomly chosen empty cells, by <code>W H</code>.</li>
+<li>Score each hidden 1 by <code>W H</code>, and, for each, one empty cell from the same paragraph's own program.</li>
 <li>AUC is the chance that a hidden 1 scores above an empty cell.</li>
 </ol>
 <p>0.5 is chance, 1.0 is perfect. It asks whether the factors capture structure that generalises, or just memorise the cells they were shown.</p>
@@ -45,24 +45,33 @@
 <li><strong>Low reach and low class share:</strong> one block per program; cross-program evidence is too thin.</li>
 </ul>
 
-<h2 id="numbers">Three matrices</h2>
+<h2 id="numbers">Four matrices</h2>
 <div class="scroll-x"><table class="state"><tbody>
-<tr><th></th><th>planted blocks</th><th>CardDemo, round 1</th><th>random</th></tr>
-<tr><td>held-out AUC</td><td>1.000</td><td>0.973</td><td>0.49</td></tr>
-<tr><td>fidelity</td><td>0.000</td><td>0.310</td><td>0.999</td></tr>
-<tr><td>coverage</td><td>100%</td><td>70.4%</td><td>0.4%</td></tr>
-<tr><td>stability</td><td>1.000</td><td>0.955</td><td>0.575</td></tr>
-<tr><td>distinctness</td><td>0.000</td><td>0.553</td><td>0.049</td></tr>
-<tr><td>focus</td><td>1.000</td><td>1.000</td><td>0.343</td></tr>
-<tr><td>reach</td><td>50%</td><td>76.7%</td><td>n/a</td></tr>
-<tr><td>class share</td><td>10%</td><td>19.2%</td><td>0%</td></tr>
+<tr><th></th><th>planted blocks</th><th>CardDemo, round 1</th><th>CardDemo, round 2</th><th>random inside each program</th></tr>
+<tr><td>held-out AUC</td><td>1.000</td><td>0.891</td><td>0.437</td><td>0.499</td></tr>
+<tr><td>fidelity</td><td>0.000</td><td>0.310</td><td>0.806</td><td>0.999</td></tr>
+<tr><td>coverage</td><td>100%</td><td>70.2%</td><td>15.4%</td><td>0.4%</td></tr>
+<tr><td>stability</td><td>1.000</td><td>0.976</td><td>0.970</td><td>0.512</td></tr>
+<tr><td>distinctness</td><td>0.000</td><td>0.553</td><td>0.115</td><td>0.000</td></tr>
+<tr><td>focus</td><td>1.000</td><td>1.000</td><td>0.850</td><td>0.750</td></tr>
+<tr><td>reach</td><td>50%</td><td>76.7% (median 6.5 programs)</td><td>20% (median 1)</td><td>10%</td></tr>
+<tr><td>class share</td><td>10%</td><td>19.3%</td><td>15.0%</td><td>0%</td></tr>
 </tbody></table></div>
-<p class="dim">Planted blocks: the 14 × 14 matrix from the previous page, k = 2. CardDemo: threshold 4, k = 30. Random: 100,000 × 600,000 with 4.5 million random 1s, k = 10.</p>
-<p>The random matrix sits at the no-structure end on AUC, fidelity, coverage and stability, which is what a score should do there. Low distinctness alone means nothing: random factors are also unlike each other.</p>
+<p class="dim">Planted blocks: the 14 × 14 matrix from the previous page, k = 2. CardDemo: threshold 4, k = 30, then threshold 2, k = 10. Random: 3,000 programs, each paragraph touching 70 of its own program's 200 fields at random, 66,000 × 600,000 with 3.9 million 1s, k = 10.</p>
+<ul>
+<li><strong>CardDemo round 1 is the result.</strong> It predicts which fields a paragraph uses even against its own program's other fields, explains 70% of field uses, survives resampling, and three factors in four span programs.</li>
+<li><strong>Round 2 has nothing left to find.</strong> Its AUC is below chance and its factors explain 15%: what round 1 leaves is a long tail of fields seen in two or three paragraphs.</li>
+<li><strong>The random matrix sits at the no-structure end</strong> on AUC, fidelity, coverage and stability, as a score should. Low distinctness alone means nothing there: random factors are also unlike each other.</li>
+</ul>
 
-<h2 id="caveat">Where the headline flatters</h2>
-<div class="note-box"><p>A real corpus matrix is about 99.99% empty, and most of it is one block per program. A random empty cell almost always pairs a paragraph with some other program's field. Ranking a hidden 1 above that is easy, so the AUC can look strong even when each factor is one program's block.</p></div>
-<p>The harder test draws each empty cell from the same program as its paragraph. Until the scorecard does that, read the AUC next to coverage and reach, never on its own.</p>
+<h2 id="caveat">Why the empty cells come from the same program</h2>
+<div class="note-box"><p>A real corpus matrix is about 99.99% empty, and most of it is one block per program. An empty cell drawn from anywhere almost always pairs a paragraph with another program's field. Ranking a hidden 1 above that is easy, so the AUC would look strong even when each factor is one program's block.</p></div>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>empty cells drawn from</th><th>CardDemo round 1</th><th>CardDemo round 2</th></tr>
+<tr><td>anywhere in the matrix</td><td>0.979</td><td>0.676</td></tr>
+<tr><td>the paragraph's own program</td><td>0.891</td><td>0.437</td></tr>
+</tbody></table></div>
+<p>About 0.09 of round 1's score, and all of round 2's lead over chance, was the easy call between programs. The scorecard now uses only the second row. A class column counts as belonging to every program its members are in. If no paragraph has an empty cell in its own program, the AUC is <code>nan</code>.</p>
 </main>
 </body>
 </html>

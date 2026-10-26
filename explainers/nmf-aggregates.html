@@ -82,11 +82,11 @@ cost per round = non-zeros × k
 </ul>
 
 <h2 id="carddemo">On CardDemo</h2>
-<p>CardDemo's matrix has 383 paragraphs, 1,606 field columns and 5,090 non-zeros. Round 1, fields in at least 4 paragraphs, <code>k = 30</code>, no exclusions. Three of its 30 factors:</p>
+<p>CardDemo's matrix has 389 paragraphs, 1,621 field columns and 5,114 non-zeros. Round 1, fields in at least 4 paragraphs, <code>k = 30</code>, no exclusions. Three of its 30 factors:</p>
 <p><strong>Factor 4: the account record.</strong> Every top field is a class spanning six programs: CBACT01C, CBACT04C, CBTRN02C, COACTUPC, COACTVWC and COBIL00C.</p>
 <div class="scroll-x"><table class="state"><tbody>
 <tr><th>top fields (loading)</th><th>top paragraphs</th></tr>
-<tr><td>ACCT-CURR-BAL (1.44)<br>ACCT-CREDIT-LIMIT (1.39)<br>ACCT-ACTIVE-STATUS (1.39)<br>ACCT-GROUP-ID (1.34)<br>ACCT-REISSUE-DATE (1.34)<br>ACCT-OPEN-DATE (1.33)<br>…<br>ACCT-ID (1.16)</td><td>CBACT04C 1100-GET-ACCT-DATA<br>CBACT04C 1050-UPDATE-ACCOUNT<br>CBTRN02C 2800-UPDATE-ACCOUNT-REC<br>CBTRN02C 1500-B-LOOKUP-ACCT<br>COACTUPC 9300-GETACCTDATA-BYACCT<br>COACTUPC 9500-STORE-FETCHED-DATA<br>CBACT01C 1300-POPUL-ACCT-RECORD</td></tr>
+<tr><td>ACCT-CURR-BAL (1.43)<br>ACCT-CREDIT-LIMIT (1.39)<br>ACCT-ACTIVE-STATUS (1.39)<br>ACCT-GROUP-ID (1.34)<br>ACCT-REISSUE-DATE (1.34)<br>ACCT-OPEN-DATE (1.33)<br>…<br>ACCT-ID (1.16)</td><td>CBACT04C 1100-GET-ACCT-DATA<br>CBACT04C 1050-UPDATE-ACCOUNT<br>CBTRN02C 2800-UPDATE-ACCOUNT-REC<br>CBTRN02C 1500-B-LOOKUP-ACCT<br>COACTUPC 9300-GETACCTDATA-BYACCT<br>COACTUPC 9500-STORE-FETCHED-DATA<br>CBACT01C 1300-POPUL-ACCT-RECORD</td></tr>
 </tbody></table></div>
 <p>One aggregate, and every paragraph that reads or updates it, across batch and online.</p>
 <p><strong>Factor 20: the user security record.</strong> <code>SEC-USR-ID</code>, <code>SEC-USR-TYPE</code>, <code>SEC-USR-LNAME</code>, <code>SEC-USR-FNAME</code>, each a class over COSGN00C and COUSR00C to COUSR03C, used by the read and update paragraphs of the four user programs. Its next fields are the programs' <code>WS-MESSAGE</code>s, at half the loading: messages set alongside the record.</p>
