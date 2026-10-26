@@ -21,27 +21,25 @@
 <body>
 <main>
 <nav class="back"><a href="index.html">← All explainers</a></nav>
-<div class="kicker">Explainer 7 of 11</div>
+<div class="kicker">Explainer 6 of 13</div>
 <h1>Resolving a dynamic call site inside its own program</h1>
-<aside class="tldr"><p><strong>TL;DR</strong>Most dynamic calls take their target from a literal in the same program. Settling those on the spot stops one unknown call from charging every program’s needs to its program and its callers, which keeps the cross-program analysis small.</p></aside>
-<p class="prereqs"><strong>Read first:</strong> <a href="value-sets.html">Value sets and dynamic calls</a>, <a href="area-need.html">Area need</a></p>
-<p class="lede">Area need charges a dynamic call site whose callees it does not know the union of every member's entry need. Where some programs need thousands of bytes, that union is thousands of bytes, and it spreads from the site's program to its callers.</p>
-<p class="lede"><code>PROGA</code> has three dynamic <code>XCTL</code>s that hand over its commarea. Two take their names from <code>PROGA</code>'s own literals, so a walk over <code>PROGA</code> alone resolves them: they are charged 8 and 16 bytes, their callees' rows. The third copies its name out of the commarea and is charged the union of all four members' rows, 32 bytes.</p>
-<p class="dim">Each site gets one forward <a href="reaching-definitions.html">reaching-definitions</a> walk over its operand's <a href="value-sets.html">value set</a>. Terms are in the <a href="cobol-primer.html">COBOL/CICS primer</a>.</p>
-<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#the-example">The example</a></li><li><a href="#step-by-step">Step by step</a></li><li><a href="#the-intuition">Why literals settle it</a></li><li><a href="#the-problem">What one unresolved site costs</a></li><li><a href="#reverse-engineering">Where this shows up in reverse engineering</a></li><li><a href="#the-rule">The rule</a></li><li><a href="#what-goes-wrong">What goes wrong</a></li><li><a href="#in-cobble">In cobble</a></li></ol></nav>
+<aside class="tldr"><p><strong>TL;DR</strong>Most dynamic calls take their target from a literal in the same program. The fixpoint's value sets settle those per site, on the spot. Only a site whose name came from outside the program, such as a caller's commarea, needs the cross-program walk.</p></aside>
+<p class="prereqs"><strong>Read first:</strong> <a href="value-sets.html">Value sets and dynamic calls</a></p>
+<p class="lede"><code>PROGA</code> has three dynamic <code>XCTL</code>s. Two take their names from <code>PROGA</code>'s own literals, so the walk over <code>PROGA</code> alone finds their targets, with no doubt attached. The third copies its name out of the commarea, so its value set is empty and carries <code>inbound-linkage</code>: a caller decides.</p>
+<p class="dim">Each site's answer is the <a href="value-sets.html">value set</a> of its operand where the site runs, found by a forward <a href="reaching-definitions.html">reaching-definitions</a> walk. Terms are in the <a href="cobol-primer.html">COBOL/CICS primer</a>.</p>
+<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#the-example">The example</a></li><li><a href="#step-by-step">Step by step</a></li><li><a href="#the-intuition">Why literals settle it</a></li><li><a href="#reverse-engineering">Where this shows up in reverse engineering</a></li><li><a href="#the-rule">The rule</a></li><li><a href="#what-goes-wrong">What goes wrong</a></li><li><a href="#in-cobble">In cobble</a></li></ol></nav>
 
 <h2 id="the-example">The example</h2>
-<p><code>PROGA</code>'s sites are on lines 24, 27 and 30, each handing over its 100-byte commarea. PROGB, PROGC and PROGD each <code>XCTL</code> on to a name in their own commarea: PROGB needs bytes [20, 28) on entry, PROGC [40, 48), PROGD [60, 68). Nothing calls PROGD.</p>
+<p><code>PROGA</code>'s sites are on lines 24, 27 and 30, each handing over its 100-byte commarea.</p>
 <pre class="mermaid">
 flowchart LR
-    S24["PROGA line 24<br>XCTL WS-FIRST-PGM"] --> B["PROGB<br>needs [20, 28)"]
+    S24["PROGA line 24<br>XCTL WS-FIRST-PGM"] --> B["PROGB"]
     S27["PROGA line 27<br>XCTL WS-MENU-PGM"] --> B
-    S27 --> C["PROGC<br>needs [40, 48)"]
-    S30["PROGA line 30<br>XCTL WS-NEXT-PGM"] -.->|"callee unknown"| U["every member's row<br>for the commarea"]
-    D["PROGD<br>needs [60, 68)<br>nothing calls it"]
+    S27 --> C["PROGC"]
+    S30["PROGA line 30<br>XCTL WS-NEXT-PGM"] -.->|"a caller decides"| U["?"]
 </pre>
-<p>Solid arrows end at programs found inside <code>PROGA</code>; the dashed one has no known end. That is the whole answer for this example, what each site is charged:</p>
-<div class="chips"><span class="chip">line 24 → PROGB: 8 bytes</span><span class="chip">line 27 → PROGB, PROGC: 16 bytes</span><span class="chip changed">line 30 unresolved: 32 bytes</span></div>
+<p>Solid arrows end at programs found inside <code>PROGA</code>; the dashed one has no known end yet. That is the whole answer for this example:</p>
+<div class="chips"><span class="chip">line 24 → PROGB</span><span class="chip">line 27 → PROGB, PROGC</span><span class="chip changed">line 30: none yet, inbound-linkage</span></div>
 <p>The lines that matter: each site's operand, and every write to it. <code>LK-NEXT</code> is commarea bytes [0, 8).</p>
 <pre class="cobol">* PROGA
 01  WS-FIRST-PGM  PIC X(8) VALUE 'PROGB'.
@@ -62,14 +60,7 @@ flowchart LR
 * line 30, WHEN OTHER
     EXEC CICS XCTL PROGRAM(WS-NEXT-PGM)
         COMMAREA(DFHCOMMAREA) END-EXEC</pre>
-<pre class="cobol">* PROGB
-01  DFHCOMMAREA.
-    05  LK-PAD   PIC X(20).
-    05  LK-TGT   PIC X(8).
-    05  LK-TAIL  PIC X(72).
-    EXEC CICS XCTL PROGRAM(LK-TGT) END-EXEC.</pre>
-<p>PROGC and PROGD are the same with <code>LK-PAD</code> 40 and 60 bytes long (and <code>LK-TAIL</code> shortened to keep 100 bytes). Their own XCTLs hand over no area, so area need has nothing to charge them and does not list them among its dynamic sites.</p>
-<details class="walk listing"><summary>Full listings <span class="dim">(PROGA, PROGB; line numbers count from PROGA's first line)</span></summary>
+<details class="walk listing"><summary>Full listing <span class="dim">(PROGA; line numbers count from its first line)</span></summary>
 <pre class="cobol">       IDENTIFICATION DIVISION.
        PROGRAM-ID. PROGA.
        DATA DIVISION.
@@ -102,16 +93,6 @@ flowchart LR
                    EXEC CICS XCTL PROGRAM(WS-NEXT-PGM)
                        COMMAREA(DFHCOMMAREA) END-EXEC
            END-EVALUATE.</pre>
-<pre class="cobol">       PROGRAM-ID. PROGB.
-       ...
-       LINKAGE SECTION.
-       01  DFHCOMMAREA.
-           05  LK-PAD           PIC X(20).
-           05  LK-TGT           PIC X(8).
-           05  LK-TAIL          PIC X(72).
-       PROCEDURE DIVISION.
-       MAIN-PARA.
-           EXEC CICS XCTL PROGRAM(LK-TGT) END-EXEC.</pre>
 </details>
 <p>In cobble's node names the three sites are <code>MAIN-PARA/2.when.0.0</code>, <code>MAIN-PARA/2.when.1.0</code> and <code>MAIN-PARA/2.when.2.0</code>. The operands are <code>WS-FIRST-PGM@working_storage[0:8]</code>, <code>WS-MENU-PGM@working_storage[8:16]</code> and <code>WS-NEXT-PGM@working_storage[16:24]</code>.</p>
 
@@ -163,63 +144,8 @@ flowchart LR
 </ol>
 </details>
 
-<details class="walk" open>
-<summary>What each site is charged, and PROGA's entry row <span class="dim">(3 steps)</span></summary>
-<ol class="steps">
-<li>
-<p class="note">The entry rows of every member, on the commarea slot. Their union is what an unresolved commarea site is charged. PROGA's own row is in it too, because PROGA reads LK-NEXT (bytes [0, 8)) to pick its target.</p>
-<table class="state"><tbody><tr><th>member</th><th>entry, commarea</th></tr>
-<tr><td>PROGA</td><td>[0, 8)</td></tr>
-<tr><td>PROGB</td><td>[20, 28)</td></tr>
-<tr><td>PROGC</td><td>[40, 48)</td></tr>
-<tr><td>PROGD</td><td>[60, 68)</td></tr>
-<tr><td>union</td><td class="changed">[0, 8) [20, 28) [40, 48) [60, 68) = 32 bytes</td></tr></tbody></table>
-</li>
-<li>
-<p class="note">The charge at each site, as <code>--explain PROGA</code> reports it. A resolved site pays only for the programs it reaches. The unresolved one pays the union, including PROGD, which nothing can reach from here.</p>
-<table class="state"><tbody><tr><th>site</th><th>resolution</th><th>callees</th><th>charge</th></tr>
-<tr><td>line 24</td><td>resolved</td><td>PROGB</td><td class="changed">8 bytes</td></tr>
-<tr><td>line 27</td><td>resolved</td><td>PROGB, PROGC</td><td class="changed">16 bytes</td></tr>
-<tr><td>line 30</td><td>unresolved</td><td>none</td><td class="changed">32 bytes</td></tr></tbody></table>
-</li>
-<li>
-<p class="note">PROGA's entry row across rounds. In round 1 no row is known yet, so only its own target read counts: 8 bytes. In round 2 the charges arrive. The 32 bytes come from line 30 alone; lines 24 and 27 add nothing it does not already hold.</p>
-<table class="state"><tbody><tr><th>round</th><th>PROGA on entry</th></tr>
-<tr><td>1</td><td>[0, 8), 8 bytes</td></tr>
-<tr><td>2</td><td class="changed">[0, 8) [20, 28) [40, 48) [60, 68), 32 bytes</td></tr></tbody></table>
-</li>
-</ol>
-</details>
-
-<p>The <code>--sites</code> file for the same run holds one row per dynamic site, with the operand, the result, the reasons, and every write in the program that touches the operand. The VALUE clause is not a write, so line 24 lists none.</p>
-<pre class="cobol">{"member":"PROGA","resolved":true,"place":"MAIN-PARA line 24","transfer":"XCTL",
- "operand":"WS-FIRST-PGM@working_storage[0:8]","callees":["PROGB"],"reasons":[],
- "definitions":[]}
-{"member":"PROGA","resolved":true,"place":"MAIN-PARA line 27","transfer":"XCTL",
- "operand":"WS-MENU-PGM@working_storage[8:16]","callees":["PROGB","PROGC"],"reasons":[],
- "definitions":[
-  {"place":"MAIN-PARA line 17","kind":"literal","values":["PROGB   "],"sources":[],"reasons":[]},
-  {"place":"MAIN-PARA line 19","kind":"literal","values":["PROGC   "],"sources":[],"reasons":[]}]}
-{"member":"PROGA","resolved":false,"place":"MAIN-PARA line 30","transfer":"XCTL",
- "operand":"WS-NEXT-PGM@working_storage[16:24]","callees":[],"reasons":["inbound-linkage"],
- "definitions":[
-  {"place":"MAIN-PARA line 21","kind":"copy","values":[],"sources":["LK-NEXT@linkage[0:8]"],
-   "reasons":["inbound-linkage"]}]}</pre>
-
-<h3>Other writes, one program each</h3>
-<p>Small programs, each ending in <code>XCTL PROGRAM(WS-PGM) COMMAREA(WS-AREA)</code> unless noted, run through the same stage. The <code>reasons</code> column is the site's; for the copy, the write's own reasons say something different, which is explained under <a href="#the-rule">the rule</a>.</p>
-<div class="scroll-x"><table class="state"><tbody><tr><th>what reaches the operand</th><th>resolved</th><th>reasons</th></tr>
-<tr><td style="white-space:normal"><code>IF ... MOVE 'PROGB' TO WS-PGM END-IF</code>, no ELSE, no VALUE</td><td>yes, PROGB</td><td>uninitialised</td></tr>
-<tr><td style="white-space:normal"><code>MOVE 'PROGB' TO WS-OTHER</code>, <code>MOVE WS-OTHER TO WS-PGM</code></td><td>no</td><td>not-a-literal (write: copy, uninitialised)</td></tr>
-<tr><td style="white-space:normal"><code>MOVE 'PROGB' TO WS-PGM</code>, then <code>LINK PROGRAM('PROGC') COMMAREA(WS-PGM)</code></td><td>no</td><td>from-callee</td></tr>
-<tr><td style="white-space:normal"><code>EXEC CICS RETRIEVE INTO(WS-PGM)</code></td><td>no</td><td>not-a-literal</td></tr>
-<tr><td style="white-space:normal"><code>RETURN TRANSID(WS-TRAN)</code>, <code>VALUE 'TRNB'</code>, CSD maps TRNB to PROGB</td><td>yes, PROGB</td><td>none</td></tr>
-<tr><td style="white-space:normal"><code>START TRANSID(WS-TRAN) FROM(WS-AREA)</code>, same VALUE and CSD</td><td>yes, PROGB</td><td>none</td></tr>
-<tr><td style="white-space:normal"><code>RETURN TRANSID(WS-TRAN)</code>, <code>VALUE 'ZZZZ'</code>, not in the CSD</td><td>yes, nothing</td><td>transaction-not-in-csd</td></tr>
-<tr><td style="white-space:normal">either TRANSID case, run without <code>--config</code></td><td>no</td><td>no-csd</td></tr></tbody></table></div>
-
 <h2 id="the-intuition">Why literals settle it</h2>
-<p>Steps 3 and 4 of the first walk decided line 27. Here is the part of PROGA's graph they covered, with the set of WS-MENU-PGM, line 27's operand, on each edge:</p>
+<p>Steps 3 and 4 of the walk decided line 27. Here is the part of PROGA's graph they covered, with the set of WS-MENU-PGM, line 27's operand, on each edge:</p>
 <pre class="mermaid">
 flowchart TD
     E["entry"] -->|"{} + uninitialised"| I["line 16<br>IF WS-FLAG = 'Y'"]
@@ -229,32 +155,20 @@ flowchart TD
     F -->|"{'PROGC␣␣␣'}"| J
     J -->|"{'PROGB␣␣␣', 'PROGC␣␣␣'}"| V["line 22<br>EVALUATE WS-MODE"]
     V --> S24["line 24 site"]
-    V --> S27["line 27 site<br>resolved: PROGB, PROGC"]
+    V --> S27["line 27 site<br>PROGB, PROGC"]
     V --> S30["line 30 site"]
 </pre>
-<p>In step 3 each arm overwrites all eight bytes with a literal, so it replaces what arrived, the uninitialised doubt included. In step 4 the arms meet at line 21, so the set is their union; line 21 writes WS-NEXT-PGM, not WS-MENU-PGM. Every value reaching line 27 is a literal, so the site is resolved. Line 21's copy is also why step 7 leaves line 30 unresolved: it gives WS-NEXT-PGM inbound-linkage.</p>
-<p>That is the whole test. If every value reaching a site is a literal this program wrote, the site is resolved here. If a copy reaches it, the name may have come from a caller, a callee or a file, which this program alone cannot see, and the site goes to the cross-program walk.</p>
-<p>One doubt is let through: <em>uninitialised</em>. In the fragment below there is no <code>ELSE</code>, so the uninitialised path reaches the site. That storage belongs to this program, and no other program can have put a name in it. The site can reach only the names its literals spell, as cobble reports for it:</p>
-<pre class="cobol">       01  WS-PGM               PIC X(8).
-       ...
-           IF WS-FLAG = 'Y'
-               MOVE 'PROGB' TO WS-PGM
-           END-IF.
-           EXEC CICS XCTL PROGRAM(WS-PGM)
-               COMMAREA(DFHCOMMAREA) END-EXEC.</pre>
-<div class="chips"><span class="chip">arriving: {'PROGB␣␣␣'} + uninitialised</span><span class="chip changed">resolved → PROGB</span><span class="chip">reasons: uninitialised</span><span class="chip">charged 8 bytes</span></div>
-
-<h2 id="the-problem">What one unresolved site costs</h2>
-<p>Area need works out which bytes of a handed-over area each program must keep alive for the fixpoint: at a call site that hands over an area, whatever the callee needs on entry. Step 2 of the second walk charged lines 24 and 27 only their callees' rows. Line 30's dashed arrow has no known end, so the only safe charge is the union of every member's entry row for the commarea, PROGD's included, though nothing reaches PROGD. Step 3 then shows all 32 bytes in PROGA's own entry row, from line 30 alone.</p>
-<p>Without local resolution, all three of PROGA's arrows would be dashed, and every program with even one dashed arrow pays the union. So: for each dynamic site, can its solid arrows be drawn from its own program alone? If yes, charge only the programs at their ends.</p>
+<p>In step 3 each arm overwrites all eight bytes with a literal, so it replaces what arrived, the uninitialised doubt included. In step 4 the arms meet at line 21, so the set is their union; line 21 writes WS-NEXT-PGM, not WS-MENU-PGM. Every value reaching line 27 is a literal this program wrote, so its set is complete.</p>
+<p>That is the whole test. If every value reaching a site is a literal this program wrote, the site's answer is complete here. If the name came from linkage, a callee or a file, this program alone cannot see it: the set carries a reason, and the site goes to the cross-program walk.</p>
 
 <h2 id="reverse-engineering">Where this shows up in reverse engineering</h2>
-<p>On a large CICS corpus (about 3,800 programs and 19,000 jumps), the only goal was a call graph with the dynamic targets filled in. Those targets came in three shapes, and PROGA has one of each; the line numbers are those of the <a href="#the-example">full listing</a>.</p>
+<p>On a large CICS corpus (about 3,800 programs and 19,000 jumps), the dynamic targets came in three shapes, and PROGA has one of each; the line numbers are those of the full listing.</p>
 <div class="scroll-x"><table class="state"><tbody><tr><th>shape</th><th>in PROGA</th><th>site</th><th>needs other programs?</th></tr>
-<tr><td>a literal <code>VALUE</code>, never written</td><td><code>WS-FIRST-PGM ... VALUE 'PROGB'</code> (line 5)</td><td>line 24</td><td>no</td></tr>
-<tr><td>a <code>MOVE 'LITERAL'</code> on each branch</td><td><code>MOVE 'PROGB'</code> / <code>MOVE 'PROGC' TO WS-MENU-PGM</code> (lines 17, 19)</td><td>line 27</td><td>no</td></tr>
-<tr><td>a name read out of <code>DFHCOMMAREA</code></td><td><code>MOVE LK-NEXT TO WS-NEXT-PGM</code> (line 21)</td><td>line 30</td><td class="changed">yes</td></tr></tbody></table></div>
-<p>Only the third row, about 5% of the corpus's sites, needs the cross-program walk: a caller put the next program's name in the commarea. The <a href="area-need.html">area-need</a> stage was charging every dynamic site as if it were the third row. Answering rows 1 and 2 locally stops that, so a program's row reflects the programs it really reaches.</p>
+<tr><td>a literal VALUE, never written</td><td>WS-FIRST-PGM ... VALUE 'PROGB' (line 5)</td><td>line 24</td><td>no</td></tr>
+<tr><td>a MOVE 'LITERAL' on each branch</td><td>MOVE 'PROGB' / MOVE 'PROGC' TO WS-MENU-PGM (lines 17, 19)</td><td>line 27</td><td>no</td></tr>
+<tr><td>a name read out of DFHCOMMAREA</td><td>MOVE LK-NEXT TO WS-NEXT-PGM (line 21)</td><td>line 30</td><td class="changed">yes</td></tr>
+</tbody></table></div>
+<p>Only the third row, about 5% of the corpus's sites, needs the cross-program walk: a caller put the next program's name in the commarea. That walk is the subject of <a href="memoised-reachability.html">answering every walk once</a> and <a href="hop-limits.html">bounding walks by crossings</a>.</p>
 
 <h2 id="the-rule">The rule</h2>
 <div class="rule">
@@ -263,110 +177,51 @@ initial(o) = inbound-linkage, if o is in LINKAGE<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= uninitialised, otherwise<br>
 in(entry) = initial(o);&nbsp;&nbsp;in(n) = ⋃ out(p) for every predecessor p<br>
 out(n) = in(n) after each write w at n:<br>
-&nbsp;&nbsp;w misses o's bytes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ unchanged<br>
-&nbsp;&nbsp;w replaces o (strong, exact, covers o, literal values) → w's values, sliced to o<br>
-&nbsp;&nbsp;otherwise&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ w's reasons − {uninitialised}, or not-a-literal if none remain<br>
-<br>
-resolved(site) ⇔ o is one exact extent ∧ reasons(in(site)) ⊆ {uninitialised}<br>
-callees(site)&nbsp;&nbsp;= program names among values(in(site)); none → resolved to nothing, no-program-name<br>
-<br>
-transaction site: literal TRANSID → resolved to it; then through the CSD<br>
-&nbsp;&nbsp;no CSD&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ unresolved, no-csd<br>
-&nbsp;&nbsp;id not in the CSD → that id reaches nothing; transaction-not-in-csd; still resolved<br>
-<br>
-charge(site, slot) = ⋃ entry(c)[slot] for c in callees(site), if resolved<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= ⋃ entry(m)[slot] for every member m, otherwise
+&nbsp;&nbsp;w misses o's bytes → unchanged<br>
+&nbsp;&nbsp;w replaces o (exact, covers o, complete values) → w's values, sliced to o<br>
+&nbsp;&nbsp;otherwise → in(n) joined with w's values and reasons<br>
+candidates(site) = program names among values(in(site))<br>
+complete(site)&nbsp;&nbsp;⇔ reasons(in(site)) = ∅
 </div>
-<p>Each line of the box has already run once in the walks above. <code>initial(o)</code> is step 1 of the first walk: WS-FIRST-PGM starts at its <code>VALUE</code>, the other two at uninitialised. <code>in(n)</code> as a union is step 4, where the two arms meet at line 21. The <em>replaces</em> line is step 3 (lines 17 and 19); the <em>otherwise</em> line is step 4's copy, which leaves WS-NEXT-PGM with inbound-linkage. <code>resolved(site)</code> is steps 5 to 7, and <code>charge</code> is step 2 of the second walk.</p>
-<p>The last line has two edges the walks do not reach. Two one-site variants of PROGA, run through cobble with PROGB, PROGC and PROGD beside them, show them; each ends in <code>XCTL PROGRAM(WS-PGM) COMMAREA(DFHCOMMAREA)</code>, and DFHCOMMAREA is PROGA's 100 bytes.</p>
-<div class="scroll-x"><table class="state"><tbody><tr><th>WS-PGM</th><th>resolved to</th><th>reasons</th><th>charge</th></tr>
-<tr><td><code>VALUE 'PROGX'</code>, not in the corpus</td><td>PROGX</td><td>none</td><td class="changed">[0, 100), every byte</td></tr>
-<tr><td><code>VALUE SPACES</code></td><td>nothing</td><td>no-program-name</td><td class="changed">0 bytes</td></tr></tbody></table></div>
-<p>Row 1 is a callee outside the corpus, which is charged every byte of the area, as is one that does not receive that slot. Row 2 is a site resolved to nothing, which is charged nothing.</p>
-<h3>Why uninitialised is accepted, and a copy is not</h3>
-<p>Uninitialised means one thing here: on some path, no write reached the operand and no <code>VALUE</code> covers it. In the <code>IF</code>-without-<code>ELSE</code> fragment under <a href="#the-intuition">why literals settle it</a>, that path is the one where WS-FLAG is not <code>'Y'</code>. That storage is this program's own working storage. No caller, callee or file put anything in it. So the only names the site can reach are the literals on the other paths, there PROGB. If that path really runs, the operand holds whatever the storage started as, not a name some other program chose.</p>
-<p>A copy is different. This fragment is plainly PROGB:</p>
-<pre class="cobol">       01  WS-PGM               PIC X(8).
-       01  WS-OTHER             PIC X(8).
-       ...
-           MOVE 'PROGB' TO WS-OTHER.
-           MOVE WS-OTHER TO WS-PGM.
-           EXEC CICS XCTL PROGRAM(WS-PGM)
-               COMMAREA(DFHCOMMAREA) END-EXEC.</pre>
-<p>The writes are computed once per program, without a state, so the second <code>MOVE</code> above looks up <code>WS-OTHER</code> in an empty state and finds it "unwritten". That is a fact about the empty state, not about the program: <code>WS-OTHER</code> holds <code>'PROGB'</code> by then here, and elsewhere might hold a name read from a file. The walk does not follow the copy to find out.</p>
-<p>cobble's <code>--sites</code> row for it is below; its line numbers are those of the full variant program. The copy's own <code>reasons</code> still show <code>uninitialised</code>, but the walk drops that reason, so the write is <strong>not-a-literal</strong> and so is the site. Accepting it would resolve the site to nothing and charge nothing, while the combine, following the copy, links it to PROGB.</p>
-<pre class="cobol">{"member":"PROGA","resolved":false,"place":"MAIN-PARA line 15","transfer":"XCTL",
- "operand":"WS-PGM@working_storage[0:8]","callees":[],"reasons":["not-a-literal"],
- "definitions":[
-  {"place":"MAIN-PARA line 14","kind":"copy","values":[],
-   "sources":["WS-OTHER@working_storage[8:16]"],"reasons":["uninitialised"]}]}</pre>
-<p>A copy whose source carries a real reason keeps it. The table lists them with where on this page each shows up.</p>
-<div class="scroll-x"><table class="state"><tbody><tr><th>what writes the operand</th><th>reason kept</th><th>seen on this page</th></tr>
-<tr><td style="white-space:normal">a copy out of LINKAGE</td><td>inbound-linkage</td><td>PROGA line 21, the third <code>--sites</code> row</td></tr>
-<tr><td style="white-space:normal">a <code>LINK</code> or <code>CALL BY REFERENCE</code> handing the operand over</td><td>from-callee</td><td>row 3 of the "other writes" table</td></tr>
-<tr><td style="white-space:normal">a <code>READ</code> into it</td><td>from-file</td><td>not shown</td></tr>
-<tr><td style="white-space:normal">a <code>RETRIEVE INTO</code>, modelled as CICS state with no literal</td><td>not-a-literal</td><td>row 4 of the "other writes" table</td></tr></tbody></table></div>
+<p>Each line has already run in the walk. <code>initial(o)</code> is step 1: WS-FIRST-PGM starts at its VALUE, the other two at uninitialised. <code>in(n)</code> as a union is step 4, where the arms meet at line 21. The replace line is step 3. Line 21's copy from linkage is why line 30's set carries <code>inbound-linkage</code>.</p>
 
 <h2 id="what-goes-wrong">What goes wrong</h2>
-<p>Each case below is a small variant of PROGA, run through cobble beside PROGB, PROGC and PROGD. Where PROGA itself reads none of its commarea, the union an unresolved site pays is their three rows, [20, 28) [40, 48) [60, 68): 24 bytes.</p>
+<p>Each case is a one-site program ending in <code>XCTL PROGRAM(...)</code>, run through <code>cobble-dataflow-fixpoint</code>; the chips are its <code>targets.jsonl</code> row.</p>
 <ul>
-<li><strong>One unresolved site is enough.</strong> In the example, two of three sites resolved, and PROGA's entry row is still 32 bytes, because line 30 alone pulls in the union. Delete the <code>WHEN OTHER</code> branch (lines 29 to 31) and run again:
-<div class="scroll-x"><table class="state"><tbody><tr><th>PROGA</th><th>entry, commarea</th></tr>
-<tr><td>as written</td><td>[0, 8) [20, 28) [40, 48) [60, 68), 32 bytes</td></tr>
-<tr><td>without line 30</td><td class="changed">[20, 28) [40, 48), 16 bytes</td></tr></tbody></table></div>
-Local resolution shrinks a row only when it resolves every unresolved site that hands over that area. With line 30 gone, LK-NEXT no longer feeds a target either, so [0, 8) goes too.</li>
-<li><strong>A copy of a literal stays unresolved.</strong> The <code>MOVE 'PROGB' TO WS-OTHER</code>, <code>MOVE WS-OTHER TO WS-PGM</code> fragment above is plainly PROGB, but the walk tracks one operand and does not follow copies. The site pays the union. The later cross-program walk does follow it.
-<div class="chips"><span class="chip changed">unresolved: not-a-literal</span><span class="chip">charged 24 bytes</span><span class="chip">PROGB alone: 8 bytes</span></div></li>
-<li><strong>Only one exact extent.</strong> An operand that could be several places, such as a subscripted <code>WS-PGMS(WS-I)</code>, gets <code>operand-not-one-exact-extent</code> and stays unresolved here, even though both slots hold literals, and even though the combine can resolve it.
-<pre class="cobol">       01  WS-TABLE.
-           05  WS-PGMS          PIC X(8) OCCURS 2 TIMES.
-       01  WS-I                 PIC 9.
-       ...
-           MOVE 'PROGB' TO WS-PGMS(1).
-           MOVE 'PROGC' TO WS-PGMS(2).
-           EXEC CICS XCTL PROGRAM(WS-PGMS(WS-I))
-               COMMAREA(DFHCOMMAREA) END-EXEC.</pre>
-<div class="chips"><span class="chip changed">unresolved: operand-not-one-exact-extent</span><span class="chip">charged 24 bytes</span></div></li>
-<li><strong>Conditions are not evaluated.</strong> A literal on a branch that never runs still counts. Below, nothing writes WS-NEVER, so the <code>MOVE 'PROGC'</code> never runs, yet the site is resolved to PROGB and PROGC and charged PROGC's row too. That is loose, not wrong.
+<li><strong>A path with no write.</strong> No <code>ELSE</code>, so on one path nothing writes the operand. The literal is found, and the gap is marked:
+<pre class="cobol">           IF WS-FLAG = 'Y'
+               MOVE 'PROGB' TO WS-PGM
+           END-IF.</pre>
+<div class="chips"><span class="chip">candidates: PROGB</span><span class="chip changed">reasons: uninitialised</span></div></li>
+<li><strong>Conditions are not evaluated.</strong> A literal on a branch that never runs still counts. Nothing writes <code>WS-NEVER</code>, yet <code>PROGC</code> is a candidate. Loose, not wrong:
 <pre class="cobol">       01  WS-PGM               PIC X(8) VALUE 'PROGB'.
        01  WS-NEVER             PIC X VALUE 'N'.
        ...
            IF WS-NEVER = 'Y'
                MOVE 'PROGC' TO WS-PGM
-           END-IF.
-           EXEC CICS XCTL PROGRAM(WS-PGM)
-               COMMAREA(DFHCOMMAREA) END-EXEC.</pre>
-<div class="chips"><span class="chip">resolved → PROGB, PROGC</span><span class="chip changed">charged 16 bytes</span><span class="chip">PROGB alone: 8 bytes</span></div></li>
-<li><strong>Values that are not program names.</strong> If no value could name a program (nothing left once trailing spaces are trimmed, or an unprintable character), the site is resolved to nothing and charged nothing, with <code>no-program-name</code>: row 2 of the table under <a href="#the-rule">the rule</a>. That matches the combine, which links such a site to nothing.</li>
-<li><strong>The walk starts at the program's entry.</strong> It assumes storage holds its <code>VALUE</code> or nothing on entry. A <code>CALL</code>ed batch subprogram keeps its working storage between calls. Below, the site runs before the <code>MOVE</code>, so the walk sees only uninitialised there; on a second call, WS-PGM already holds <code>'PROGB'</code> from the first. The value is still one of this program's literals, but the site's callees miss it.
-<pre class="cobol">       01  WS-PGM               PIC X(8).
-       ...
-           CALL WS-PGM USING DFHCOMMAREA.
+           END-IF.</pre>
+<div class="chips"><span class="chip">candidates: PROGB, PROGC</span><span class="chip">reasons: none</span></div></li>
+<li><strong>The walk starts at the program's entry.</strong> A <code>CALL</code>ed batch subprogram keeps its working storage between calls. Below, the site runs before the <code>MOVE</code>, so the walk sees only uninitialised; on a second call, <code>WS-PGM</code> already holds <code>'PROGB'</code> from the first. The reason says the set may be short, but the candidate is missed:
+<pre class="cobol">           CALL WS-PGM USING DFHCOMMAREA.
            MOVE 'PROGB' TO WS-PGM.
            GOBACK.</pre>
-<div class="chips"><span class="chip">arriving: {} + uninitialised</span><span class="chip changed">resolved → nothing</span><span class="chip">reasons: uninitialised, no-program-name</span></div></li>
-<li><strong>Without a CSD, transactions say so.</strong> A <code>RETURN TRANSID</code> or <code>START</code> without <code>--config</code> is unresolved with <code>no-csd</code>, not resolved to nothing: row 2 of the table below. Resolving to nothing would charge nothing and drop the bytes the started program needs.</li>
-<li><strong>An incomplete CSD drops bytes.</strong> The same argument applies to a transaction id the CSD does not list, but there the site <em>is</em> resolved to nothing and charged nothing, with <code>transaction-not-in-csd</code>: row 3. If the CSD is merely incomplete and ZZZZ does start a program, that program's need is dropped. This is unlike a callee missing from the corpus, which is charged every byte (row 1 of the table under the rule). The tool trusts the CSD it is given; the <code>--sites</code> reason is the only trace.</li>
+<div class="chips"><span class="chip changed">candidates: none</span><span class="chip">reasons: uninitialised</span></div></li>
 </ul>
-<p>The two CSD cases, as one site: <code>RETURN TRANSID(WS-TRAN) COMMAREA(DFHCOMMAREA)</code>, with a CSD whose only line is <code>DEFINE TRANSACTION(TRNB) PROGRAM(PROGB) GROUP(TEST)</code>.</p>
-<div class="scroll-x"><table class="state"><tbody><tr><th>WS-TRAN</th><th>run</th><th>resolved to</th><th>reasons</th><th>charge</th></tr>
-<tr><td><code>VALUE 'TRNB'</code></td><td>with <code>--config</code></td><td>PROGB</td><td>none</td><td>8 bytes</td></tr>
-<tr><td><code>VALUE 'TRNB'</code></td><td>without</td><td>unresolved</td><td>no-csd</td><td class="changed">24 bytes, the union</td></tr>
-<tr><td><code>VALUE 'ZZZZ'</code></td><td>with <code>--config</code></td><td>nothing</td><td>transaction-not-in-csd</td><td class="changed">0 bytes</td></tr></tbody></table></div>
+<p>Two cases that look hard are not. A copy of a literal through another field (<code>MOVE 'PROGB' TO WS-OTHER</code>, <code>MOVE WS-OTHER TO WS-PGM</code>) gives <code>PROGB</code> with no reasons, because the value set travels with the bytes. A table of names read with a computed subscript (<code>XCTL PROGRAM(WS-PGMS(WS-I))</code> over <code>'PROGB'</code> and <code>'PROGC'</code>) gives both, with no reasons.</p>
 
 <h2 id="in-cobble">In cobble</h2>
-<p>The resolution runs inside <code>cobble-dataflow-area-need</code>, once for each member before the rounds. One graph is built per program, and each dynamic site gets its own walk over it, as PROGA's three sites do in the first walk above. The answers split into resolved sites and unresolved ones, the solid and dashed arrows of the graph under <a href="#the-example">the example</a>. A resolved site is charged its callees' rows; an unresolved one, the union of every member's entry need. Transaction ids from <code>RETURN TRANSID</code> and <code>START</code> are mapped to programs through the CSD files of the corpus config named by <code>--config</code>.</p>
-<p>PROGA's <code>--sites</code> rows and charges above came from these commands, run over PROGA to PROGD with the bridge environment sourced and the corpus config listing the four programs:</p>
+<p>The resolution is part of <code>cobble-dataflow-fixpoint</code>: every dynamic site's operand gets its value set where the site runs, and the run writes one <code>targets.jsonl</code> row per site. For PROGA:</p>
+<pre class="cobol">{"caller": "PROGA", "node": "MAIN-PARA/2.when.0.0", "transfer": "CICS_XCTL",
+ "expression": "WS-FIRST-PGM", "candidates": ["PROGB"], "reasons": []}
+{"caller": "PROGA", "node": "MAIN-PARA/2.when.1.0", "transfer": "CICS_XCTL",
+ "expression": "WS-MENU-PGM", "candidates": ["PROGB", "PROGC"], "reasons": []}
+{"caller": "PROGA", "node": "MAIN-PARA/2.when.2.0", "transfer": "CICS_XCTL",
+ "expression": "WS-NEXT-PGM", "candidates": [], "reasons": ["inbound-linkage"]}</pre>
+<p>The commands, with the bridge environment sourced and a corpus config listing PROGA:</p>
 <pre class="cobol">cobble-parse-corpus --config corpus.toml
 cobble-extents --asg-dir asg --out extents.jsonl
-cobble-dataflow-area-need --asg-dir asg --extents extents.jsonl \
-    --out need.jsonl --sites sites.jsonl --explain PROGA</pre>
-<p>PROGA's row in <code>need.jsonl</code> is below. <code>entry</code> holds the four ranges of the second walk's last step as flat start, end pairs. <code>sites</code> lists only the two resolved sites, by node name, with their callees; line 30 is not there.</p>
-<pre class="cobol">{"member":"PROGA","receives":[["commarea",0]],
- "entry":[[["commarea",0],[0,8,20,28,40,48,60,68]]],"back":[],
- "sites":[["MAIN-PARA/2.when.0.0",["PROGB"]],["MAIN-PARA/2.when.1.0",["PROGB","PROGC"]]]}</pre>
-<p><code>--sites</code> writes one row per dynamic site, like the three under <a href="#step-by-step">step by step</a>, with each write that touches the operand marked as a literal, a copy or other. Sites that a finished fixpoint and combine resolved are added from <code>--fixpoint-dir</code> and <code>--combined-dir</code>. The command is documented under <code>cobble-dataflow-area-need</code> in the field dataflow reference.</p>
-<p>Next: <a href="interprocedural-rounds.html">rounds across programs, and walking only what changed</a>.</p>
+cobble-dataflow-fixpoint --asg-dir asg --extents extents.jsonl --out-dir fixpoint --all</pre>
+<p><code>cobble-dataflow-combine</code> then takes every site whose reasons say a caller or callee decides, and walks across programs for it. Next: <a href="bounded-sweeps.html">sweeps</a>.</p>
 </main>
 
 </body>

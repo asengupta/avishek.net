@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Domain aggregates by matrix factorisation</title>
+<link rel="stylesheet" href="explainer.css">
+</head>
+<body>
+<main>
+<nav class="back"><a href="index.html">← All explainers</a></nav>
+<div class="kicker">Explainer 12 of 13</div>
+<h1>Domain aggregates by matrix factorisation</h1>
+<aside class="tldr"><p><strong>TL;DR</strong>Write down which fields each paragraph touches as a 0/1 matrix. Fields that belong to one concept get touched together. Non-negative matrix factorisation splits the matrix into a few groups of fields, each with the paragraphs that use it.</p></aside>
+<p class="prereqs"><strong>Read first:</strong> <a href="exact-classes.html">Exact field classes across programs</a></p>
+<p class="lede">An aggregate is a set of fields that make up one concept and are read and written together. A customer's name and address; an account's balance and limits. This page shows the encoding, why NMF suits it, and how rounds handle fields of very different popularity.</p>
+<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#encoding">The encoding</a></li><li><a href="#nmf">NMF</a></li><li><a href="#why">Why it should work</a></li><li><a href="#example">The example</a></li><li><a href="#rounds">Rounds</a></li><li><a href="#sparse">Keeping it sparse</a></li><li><a href="#wrong">What goes wrong</a></li><li><a href="#carddemo">On CardDemo</a></li></ol></nav>
+
+<h2 id="encoding">The encoding</h2>
+<ul>
+<li><strong>Rows</strong> are paragraphs, <code>(program, paragraph)</code>. A paragraph is a unit of behaviour: it does one job, so the fields it touches belong to the job.</li>
+<li><strong>Columns</strong> are fields, named <code>PROGRAM:RECORD.FIELD</code>. Every member of an <a href="exact-classes.html">exact class</a> is replaced by the class, so one datum is one column across programs. Table occurrences fold into their declared field.</li>
+<li><strong>A 1</strong> where any read in the paragraph covers the field, or where the paragraph wrote what such a read sees.</li>
+</ul>
+<p>Nothing is counted in pairs or weighted. An earlier version scored field pairs by pointwise mutual information. It dropped every field seen in fewer than three paragraphs, so rare fields had empty rows.</p>
+
+<h2 id="nmf">NMF</h2>
+<p>Non-negative matrix factorisation approximates the paragraph × field matrix <code>X</code> as a product of two smaller non-negative matrices:</p>
+<div class="rule">
+X ≈ W H&nbsp;&nbsp;&nbsp;&nbsp;W ≥ 0 (paragraphs × k),&nbsp;&nbsp;H ≥ 0 (k × fields)<br>
+minimise ‖X − W H‖²
+</div>
+<ul>
+<li>Row <code>f</code> of <code>H</code> is factor <code>f</code>'s <strong>field loadings</strong>: what the aggregate is made of.</li>
+<li>Column <code>f</code> of <code>W</code> is its <strong>paragraph loadings</strong>: where it is used.</li>
+<li><code>k</code> is the number of factors, chosen per round.</li>
+</ul>
+
+<h2 id="why">Why it should work</h2>
+<p>Model each paragraph as touching the union of a few aggregates: an update paragraph touches the record it updates and a status field. Then each row of <code>X</code> is roughly a sum of a few aggregate rows, which is exactly what <code>W H</code> can express.</p>
+<p>Non-negativity is what makes the factors readable. Nothing can be subtracted, so a factor can't be "these fields minus those". Each factor has to be a part that adds up with others. Lee and Seung's 1999 paper showed the same effect on faces: NMF learned parts such as noses and mouths, where principal components learned whole-face templates.</p>
+<div class="note-box"><p>That holds only if paragraphs really do work on a few aggregates each. A paragraph that touches a hundred unrelated fields, such as a commarea copied whole, is a row no small <code>k</code> explains well. Hence the field exclusions, and the diagnostics.</p></div>
+
+<h2 id="example">The example</h2>
+<p>Fourteen paragraphs and fourteen fields in three planted blocks. Every cell inside a block is 1:</p>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>block</th><th>fields</th><th>paragraphs</th><th>paragraphs per field</th></tr>
+<tr><td>0</td><td>F0–F4</td><td>P0–P5</td><td>6</td></tr>
+<tr><td>1</td><td>F5–F9</td><td>P6–P11</td><td>6</td></tr>
+<tr><td>2</td><td>F10–F13</td><td>P12–P13</td><td>2</td></tr>
+</tbody></table></div>
+<p>With <code>k = 2</code> over the fields seen in at least 4 paragraphs, NMF returns blocks 0 and 1 as its two factors: each factor's top fields are one block's fields, and its top paragraphs are that block's paragraphs.</p>
+
+<h2 id="rounds">Rounds</h2>
+<p>Popular fields dominate a single fit, so decompose works in rounds of decreasing threshold. Each round:</p>
+<ol>
+<li>keeps the columns of fields seen in at least its threshold of paragraphs;</li>
+<li>subtracts what earlier rounds' factors rebuild there, clipping at zero;</li>
+<li>factors what is left.</li>
+</ol>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>round</th><th>threshold</th><th>k</th><th>columns</th><th>finds</th><th>already explained</th></tr>
+<tr><td>1</td><td>4</td><td>2</td><td>F0–F9</td><td>blocks 0, 1</td><td>0%</td></tr>
+<tr><td>2</td><td>2</td><td>1</td><td>F0–F13</td><td>block 2</td><td>about 60 of 68 entries</td></tr>
+</tbody></table></div>
+<p>Round 2 sees all fourteen columns, but round 1's factors already rebuild blocks 0 and 1, so almost nothing is left of them. Its single factor goes to block 2.</p>
+
+<h2 id="sparse">Keeping it sparse</h2>
+<p>The residual looks dense: <code>max(0, X − rebuilt)</code>, where <code>rebuilt</code> is a full matrix. On a production corpus that is 65,327 paragraphs × 592,104 fields, about 300 GB as doubles. The first version built it, and died before the first fit.</p>
+<p>But factors are never negative, so <code>rebuilt</code> is never negative. Where <code>X</code> is 0, the residual is <code>max(0, 0 − something ≥ 0) = 0</code>. So the residual is non-zero only where <code>X</code> already is:</p>
+<div class="rule">
+residual(i, j) = max(0, X(i, j) − Σ<sub>rounds</sub> W(i, ·) · H(·, j))&nbsp;&nbsp;&nbsp;only at X's non-zeros<br>
+cost per round = non-zeros × k
+</div>
+<p>The answer is the same up to floating-point rounding, at a fraction of the memory. A synthetic matrix of 100,000 paragraphs, 600,000 fields and 4.5 million non-zeros ran three rounds in 50 seconds and 1.2 GB.</p>
+
+<h2 id="wrong">What goes wrong</h2>
+<ul>
+<li><strong>A small k over many programs.</strong> If most columns belong to one program each, the matrix is nearly one block per program. With thousands of programs and k = 16, each factor goes to the biggest remaining block, one program's most-touched fields, and structure inside a program never surfaces.</li>
+<li><strong>Hub fields.</strong> Fields that almost every paragraph of a program touches, such as commarea fields, fill a factor's top fields. Exclude them by pattern, or they are the aggregate every time.</li>
+<li><strong>The threshold.</strong> A field below every round's threshold is never factored.</li>
+</ul>
+
+<h2 id="carddemo">On CardDemo</h2>
+<p>CardDemo's matrix has 383 paragraphs, 1,606 field columns and 5,090 non-zeros. Round 1, fields in at least 4 paragraphs, <code>k = 30</code>, no exclusions. Three of its 30 factors:</p>
+<p><strong>Factor 4: the account record.</strong> Every top field is a class spanning six programs: CBACT01C, CBACT04C, CBTRN02C, COACTUPC, COACTVWC and COBIL00C.</p>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>top fields (loading)</th><th>top paragraphs</th></tr>
+<tr><td>ACCT-CURR-BAL (1.44)<br>ACCT-CREDIT-LIMIT (1.39)<br>ACCT-ACTIVE-STATUS (1.39)<br>ACCT-GROUP-ID (1.34)<br>ACCT-REISSUE-DATE (1.34)<br>ACCT-OPEN-DATE (1.33)<br>…<br>ACCT-ID (1.16)</td><td>CBACT04C 1100-GET-ACCT-DATA<br>CBACT04C 1050-UPDATE-ACCOUNT<br>CBTRN02C 2800-UPDATE-ACCOUNT-REC<br>CBTRN02C 1500-B-LOOKUP-ACCT<br>COACTUPC 9300-GETACCTDATA-BYACCT<br>COACTUPC 9500-STORE-FETCHED-DATA<br>CBACT01C 1300-POPUL-ACCT-RECORD</td></tr>
+</tbody></table></div>
+<p>One aggregate, and every paragraph that reads or updates it, across batch and online.</p>
+<p><strong>Factor 20: the user security record.</strong> <code>SEC-USR-ID</code>, <code>SEC-USR-TYPE</code>, <code>SEC-USR-LNAME</code>, <code>SEC-USR-FNAME</code>, each a class over COSGN00C and COUSR00C to COUSR03C, used by the read and update paragraphs of the four user programs. Its next fields are the programs' <code>WS-MESSAGE</code>s, at half the loading: messages set alongside the record.</p>
+<p><strong>Factor 6: noise.</strong> <code>COACTUPC</code>'s CICS response codes, error fields and <code>FILLER</code>s, all at the same loading, touched by almost every paragraph of that one program. It is a hub, not a concept. About a third of round 1's factors look like this; excluding such names by pattern removes them.</p>
+</main>
+</body>
+</html>

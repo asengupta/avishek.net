@@ -73,7 +73,7 @@ That is the whole idea. Everything else in this post is about cost. The cost is 
 - **The facts.** cobble keeps facts per byte range, not per field. COBOL group moves, `REDEFINES` and reference modification all alias storage by bytes, so a per-field analysis gets them wrong. A 4,000-byte commarea is a lot of bytes to track through every statement of every program.
 - **The revisits.** The same idea applies one level up, across programs. A program's facts depend on what its callers pass it, and the callers' facts can depend on what it hands back. So there are fixpoints over programs as well, and each of those can revisit whole programs.
 
-A longer explanation with a full worked example is in the [fixpoints and worklists](https://github.com/avishek-sen-gupta/red-dragon-forge/blob/main/docs/explainers/fixpoints.html) explainer.
+A longer explanation with a full worked example is in the [fixpoints and worklists](/explainers/fixpoints.html) explainer.
 
 ## The problem
 
@@ -247,11 +247,11 @@ Each technique has an explainer in the repository, with a small COBOL example wo
 
 | Explainer | Covers |
 |---|---|
-| [Area need](https://github.com/avishek-sen-gupta/red-dragon-forge/blob/main/docs/explainers/area-need.html) | backward liveness of handed-over bytes, positional copies, `LENGTH OF`, `START`/`RETRIEVE` |
-| [Resolving a dynamic call site inside its own program](https://github.com/avishek-sen-gupta/red-dragon-forge/blob/main/docs/explainers/local-site-resolution.html) | reaching definitions of literals, the CSD, why the union widened everything |
-| [Rounds across programs](https://github.com/avishek-sen-gupta/red-dragon-forge/blob/main/docs/explainers/interprocedural-rounds.html) | the dirty set, `--max-rounds` |
-| [Sweeps](https://github.com/avishek-sen-gupta/red-dragon-forge/blob/main/docs/explainers/bounded-sweeps.html) | budgeted reverse-postorder passes, `incomplete-walk` |
-| [Answering every walk once](https://github.com/avishek-sen-gupta/red-dragon-forge/blob/main/docs/explainers/memoised-reachability.html) | strongly connected components, the memo, place identity, the edge index |
-| [Bounding walks by crossings](https://github.com/avishek-sen-gupta/red-dragon-forge/blob/main/docs/explainers/hop-limits.html) | `--max-hops`, `--skip-readbacks`, choosing N |
+| Area need (stage since removed) | backward liveness of handed-over bytes, positional copies, `LENGTH OF`, `START`/`RETRIEVE` |
+| [Resolving a dynamic call site inside its own program](/explainers/local-site-resolution.html) | value sets of literals inside one program, and which sites need the cross-program walk |
+| Rounds across programs (stage since removed) | the dirty set, `--max-rounds` |
+| [Sweeps](/explainers/bounded-sweeps.html) | budgeted reverse-postorder passes, `incomplete-walk` |
+| [Answering every walk once](/explainers/memoised-reachability.html) | strongly connected components, the memo, place identity, the edge index |
+| [Bounding walks by crossings](/explainers/hop-limits.html) | `--max-hops`, `--skip-readbacks`, choosing N |
 
-The [earlier explainers](https://github.com/avishek-sen-gupta/red-dragon-forge/blob/main/docs/explainers/index.html) cover the basics these build on: traversal orders, fixpoints and worklists, reaching definitions, byte extents and value sets.
+The [earlier explainers](/explainers/index.html) cover the basics these build on: traversal orders, fixpoints and worklists, reaching definitions, byte extents and value sets.

@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exact field classes across programs</title>
+<link rel="stylesheet" href="explainer.css">
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/+esm";
+  const light = matchMedia("(prefers-color-scheme: light)").matches;
+  mermaid.initialize({
+    deterministicIds: true,
+    startOnLoad: true,
+    theme: "base",
+    themeVariables: light
+      ? { darkMode: false, background: "#fbfaf7", primaryColor: "#e6e3da", primaryTextColor: "#1a1f26", primaryBorderColor: "#d3cfc4", lineColor: "#5d6673", textColor: "#1a1f26", edgeLabelBackground: "#f1efe9", clusterBkg: "#f1efe9", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
+      : { darkMode: true, background: "#0b0f14", primaryColor: "#1a2230", primaryTextColor: "#e6edf3", primaryBorderColor: "#263041", lineColor: "#8b98a9", textColor: "#e6edf3", edgeLabelBackground: "#121821", clusterBkg: "#121821", clusterBorder: "#263041", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" },
+  });
+</script>
+</head>
+<body>
+<main>
+<nav class="back"><a href="index.html">← All explainers</a></nav>
+<div class="kicker">Explainer 11 of 13</div>
+<h1>Exact field classes across programs</h1>
+<aside class="tldr"><p><strong>TL;DR</strong>Two fields in different programs hold the same datum when every byte of one lands, in place, on every byte of the other. Follow bytes, not names, and let table occurrences and file slots pass bytes through without counting as fields themselves.</p></aside>
+<p class="prereqs"><strong>Read first:</strong> <a href="field-graph.html">From byte provenance to a field graph</a></p>
+<p class="lede">A caller and a callee often declare one datum under two names, and only the bytes say so. This page finds such pairs from the field graph's byte placements alone, and joins them into classes.</p>
+<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#test">The test</a></li><li><a href="#example">The example</a></li><li><a href="#relays">Relays</a></li><li><a href="#walk">Each pair, judged</a></li><li><a href="#datasets">Through a file</a></li><li><a href="#rule">The rule</a></li><li><a href="#knobs">Loosening it</a></li><li><a href="#carddemo">On CardDemo</a></li></ol></nav>
+
+<h2 id="test">The test</h2>
+<p>Field A (program P) and field B (program Q, not P) are one class when:</p>
+<ol>
+<li>they are the same size;</li>
+<li>byte <code>i</code> of A lands on byte <code>i</code> of B, for every <code>i</code>;</li>
+<li>no byte of A lands anywhere else in B.</li>
+</ol>
+<p>Classes are the connected components of the pairs that pass. Copies inside one program never join: a program copying a field to a work area is not evidence of a shared datum.</p>
+
+<h2 id="example">The example</h2>
+<p>Program <code>R</code> hands a commarea to program <code>S</code>. <code>S</code> receives it into a linkage table of 1-byte occurrences <code>T(1)</code> to <code>T(4)</code> and moves bytes out into its own fields.</p>
+<pre class="mermaid">
+flowchart LR
+    subgraph R
+      A["CA.A (2)"]
+      C["CA.C (2)"]
+      E["CA.E (4)"]
+      H["CA.H (2)"]
+    end
+    subgraph S
+      T1["T(1)"]
+      T2["T(2)"]
+      T3["T(3)"]
+      T4["T(4)"]
+      B["WS.B (2)"]
+      D["WS.D (2)"]
+      F["WS.F (2)"]
+      G["WS.G (2)"]
+      J["WS.J (2)"]
+      K["WS.K (2)"]
+    end
+    A -->|"byte 0"| T1 -->|"to byte 0"| B
+    A -->|"byte 1"| T2 -->|"to byte 1"| B
+    C -->|"byte 0"| T3 -->|"to byte 1"| D
+    C -->|"byte 1"| T4 -->|"to byte 0"| D
+    E -->|"bytes 0-1"| F
+    B --> G
+    H --> J
+    K -.->|"no placement"| J
+</pre>
+
+<h2 id="relays">Relays</h2>
+<p>The table occurrences <code>T(1)</code> to <code>T(4)</code> are not fields anyone would call a datum. They are just how <code>S</code> declared the bytes it received. So they <em>relay</em>: a byte that lands on a relay keeps going to wherever the relay sends it, and only the far end counts.</p>
+<ul>
+<li>Relays are subscripted fields and dataset slots.</li>
+<li>Following a byte through relays is reachability in a graph of byte-to-byte moves.</li>
+</ul>
+
+<h2 id="walk">Each pair, judged</h2>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>pair</th><th>bytes land</th><th>verdict</th></tr>
+<tr><td>R:CA.A, S:WS.B</td><td>0→0, 1→1, via T(1), T(2)</td><td>joined</td></tr>
+<tr><td>R:CA.C, S:WS.D</td><td>0→1, 1→0</td><td class="changed">no: out of place</td></tr>
+<tr><td>R:CA.E, S:WS.F</td><td>0→0, 1→1, but sizes 4 and 2</td><td class="changed">no: sizes differ</td></tr>
+<tr><td>S:WS.B, S:WS.G</td><td>in place</td><td class="changed">no: same program</td></tr>
+<tr><td>R:CA.H, S:WS.J</td><td>in place</td><td class="changed">no: J is reached by an edge with no placement</td></tr>
+</tbody></table></div>
+<p>The result is one class: <code>{R:CA.A, S:WS.B}</code>.</p>
+<p>The last row is the strict rule. <code>K → J</code> has no known placement, so nobody can say which of <code>J</code>'s bytes it overwrote. A field reached by such an edge neither relays nor joins.</p>
+
+<h2 id="datasets">Through a file</h2>
+<p>Dataset slots relay the same way, over <code>exact</code> dataset edges. <code>W</code> writes an 11-byte <code>ID</code>; <code>R</code> reads it back as one 11-byte field; the record is cut into slots <code>[0:5]</code> and <code>[5:11]</code>:</p>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>edge</th><th>alignment</th></tr>
+<tr><td>W:R.ID → DS[0:5]</td><td>bytes 0–4 to 0–4</td></tr>
+<tr><td>W:R.ID → DS[5:11]</td><td>bytes 5–10 to 0–5</td></tr>
+<tr><td>DS[0:5] → R:R.ID</td><td>0–4 to 0–4</td></tr>
+<tr><td>DS[5:11] → R:R.ID</td><td>0–5 to 5–10</td></tr>
+<tr><td>DS[0:5] → R:R.GRP</td><td>0–4 to 0–4</td></tr>
+<tr><td>DS[0:5] → Q:R.ID</td><td class="changed">possible, no placement</td></tr>
+<tr><td>W:R.ID → Q:R.ID</td><td>0–10 to 0–10</td></tr>
+</tbody></table></div>
+<p>The class is <code>{Q:R.ID, R:R.ID, W:R.ID}</code>. <code>R:R.GRP</code> is five bytes, so it does not join an 11-byte field. The <code>possible</code> edge into <code>Q</code> is ignored, and does not stop <code>Q</code> joining through its direct edge.</p>
+
+<h2 id="rule">The rule</h2>
+<div class="rule">
+moves(byte)    = bytes an aligned edge carries it to<br>
+onward(b)      = {b} if b is not on a relay; else b and everything reachable from it<br>
+landings(a, i) = { onward(m) | m ∈ moves((a, i)) } restricted to non-relay fields<br>
+unplaced       = targets of a field-to-field edge with no placement<br>
+exact(a, b)    = program(a) ≠ program(b) ∧ size(a) = size(b)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;∧ ∀ i: { offsets of b in landings(a, i) } = { i }<br>
+classes        = connected components of exact pairs, unplaced fields left out
+</div>
+
+<h2 id="knobs">Loosening it</h2>
+<p>Each condition costs recall. Measured on CardDemo, loosening one at a time (baseline: 90 classes, 394 fields):</p>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>loosened</th><th>classes</th><th>fields</th><th>precision, by sample</th></tr>
+<tr><td>ignore the unplaced rule</td><td>92</td><td>448</td><td>held: commarea copies joining classes they belong to</td></tr>
+<tr><td>allow joins in one program</td><td>434</td><td>1,727</td><td class="changed">mixed: one value fanned out to 42 fields becomes one class</td></tr>
+<tr><td>accept 75% of bytes in place</td><td>90</td><td>394</td><td>no effect</td></tr>
+<tr><td>a field inside a bigger one</td><td>45</td><td>438</td><td class="changed">collapses: chains merge distinct fields</td></tr>
+</tbody></table></div>
+<p>Only the first is offered, as <code>--join-unplaced</code>.</p>
+
+<h2 id="carddemo">On CardDemo</h2>
+<p><strong>Through a file.</strong> The card number in the cross-reference record is one class of eight fields, one per program, though no program writes the file:</p>
+<div class="chips"><span class="chip">CBACT03C</span><span class="chip">CBACT04C</span><span class="chip">CBTRN02C</span><span class="chip">CBTRN03C</span><span class="chip">COACTUPC</span><span class="chip">COACTVWC</span><span class="chip">COBIL00C</span><span class="chip">COTRN02C</span></div>
+<p>All eight are <code>CARD-XREF-RECORD.XREF-CARD-NUM</code>, 16 bytes, meeting in the record's slot [0:16]. Two readers of the same bytes stay out:</p>
+<ul>
+<li><code>CBSTM03B</code> reads the record into a 1,000-byte field. Its bytes 0–15 do land on slot [0:16], but a 1,000-byte field is not the same size as a 16-byte one.</li>
+<li><code>CBTRN01C</code>'s read never resolved to the dataset (no JCL step runs it), so it has a slot of its own.</li>
+</ul>
+<p><strong>Through a commarea, and the strict rule.</strong> <code>CDEMO-USER-ID</code> in the shared commarea copybook joins three programs under the strict rule, and six with <code>--join-unplaced</code>:</p>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>run</th><th>CDEMO-USER-ID's class</th></tr>
+<tr><td>strict</td><td>COCRDLIC, COCRDSLC, COCRDUPC</td></tr>
+<tr><td>--join-unplaced</td><td>COACTUPC, COACTVWC, COCRDLIC, COCRDSLC, COCRDUPC, <span class="changed">COMEN01C</span></td></tr>
+</tbody></table></div>
+<p>The flag changes only one thing, the unplaced rule, so in the other three programs the commarea field is also reached by a move with no known placement, and the strict rule leaves it out. <code>CDEMO-ACCT-ID</code> forms no class at all under the strict rule, and a six-program one with the flag.</p>
+</main>
+</body>
+</html>

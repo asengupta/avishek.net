@@ -21,12 +21,17 @@
 </ol>
 <p>Making it finish on a large corpus — the techniques that took the dynamic-call-target pipeline from not finishing to finishing, continuing the numbering above:</p>
 <ol start="6">
-<li><a href="area-need.html">Area need</a> — which bytes of a commarea, <code>USING</code> or <code>RETRIEVE INTO</code> area anyone actually reads, so the fixpoint tracks those and not the whole area.</li>
-<li><a href="local-site-resolution.html">Resolving a dynamic call site inside its own program</a> — reaching definitions of literals decide where a site can go, so its program is charged only those callees' needs instead of everyone's.</li>
-<li><a href="interprocedural-rounds.html">Rounds across programs</a> — area need settles in rounds, and each round after the first walks only the programs whose inputs changed.</li>
+<li><a href="local-site-resolution.html">Resolving a dynamic call site inside its own program</a> — the value sets of a program's own literals settle most dynamic sites on the spot; only a name from outside, such as a caller's commarea, needs the cross-program walk.</li>
 <li><a href="bounded-sweeps.html">Sweeps</a> — a fixpoint with a budget of reverse-postorder sweeps, and a mark on every result that did not settle within it.</li>
 <li><a href="memoised-reachability.html">Answering every walk once</a> — strongly connected components and a memo, so thousands of walks over the same places cost one walk; plus place identity and an edge index.</li>
 <li><a href="hop-limits.html">Bounding walks by crossings</a> — a limit on program crossings per walk that marks every result it cut, and how to pick the limit.</li>
+</ol>
+<p>Finding domain aggregates — from byte provenance to groups of fields that make up one concept, continuing the numbering:</p>
+<ol start="10">
+<li><a href="field-graph.html">From byte provenance to a field graph</a> — byte moves become edges between elementary fields, copies through undivided buffers are traced back to the fields that filled them, and files link writers to readers through record slots.</li>
+<li><a href="exact-classes.html">Exact field classes across programs</a> — two programs' fields are one datum when every byte of one lands in place on the other, relayed through table occurrences and file slots; and what each loosening of that rule costs.</li>
+<li><a href="nmf-aggregates.html">Domain aggregates by matrix factorisation</a> — a paragraph × field matrix, why non-negative factorisation suits it, rounds of decreasing threshold, and why the residual stays sparse.</li>
+<li><a href="scoring-factorisations.html">Scoring a factorisation</a> — held-out AUC as the headline and seven sub-scores for fidelity, coverage, stability, distinctness, focus, reach and class share.</li>
 </ol>
 <p>Background — the COBOL and CICS vocabulary, and one graph technique several pages lean on:</p>
 <ul>

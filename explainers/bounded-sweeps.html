@@ -21,7 +21,7 @@
 <body>
 <main>
 <nav class="back"><a href="index.html">← All explainers</a></nav>
-<div class="kicker">Explainer 9 of 11</div>
+<div class="kicker">Explainer 7 of 13</div>
 <h1>Sweeps: a fixpoint with a budget that says when it ran out</h1>
 <aside class="tldr"><p><strong>TL;DR</strong>On a large corpus, a few tangled programs can take most of the run. This puts a known budget on each program and marks every answer it cut short, so you get results on time plus a list of call sites to check by hand — never a silently smaller answer.</p></aside>
 <p class="prereqs"><strong>Read first:</strong> <a href="traversal-orders.html">Visiting a graph</a>, <a href="fixpoints.html">Fixpoints and worklists</a></p>
@@ -151,14 +151,6 @@ PICK-PARA.
 <tr><td>worklist</td><td>—</td><td>yes</td><td>24</td><td>PROGB, PROGC</td><td>none</td></tr>
 </table></div>
 <p>On a program this small the worklist does fewer visits: 24 in the last row against 39 in the two settled sweep rows. What the sweep buys is the bound: a budget of N costs at most N × 13 visits here, known before the walk starts, and its progress is a fraction of a known whole — the "sweep 2 of 10" in the log lines under <a href="#the-intuition">why sweeps can stop early</a>, rather than the queue lengths in the table under <a href="#the-problem">why not the worklist's budget</a>.</p>
-<p>With <code>--call-targets-only</code>, the liveness walk finds that only <code>WS-NEXT</code> matters, as in the byte strips under <a href="#the-intuition">why sweeps can stop early</a>: it is the LINK's operand, and <code>WS-I</code> feeds only the loop test. Cobble's log for the member reads <code>1 of 2 extents tracked</code>: 2 written ranges, of which 1 is relevant. The table compares the two runs:</p>
-<table class="state"><tbody><tr><th>walk</th><th>whole program</th><th>--call-targets-only</th></tr>
-<tr><td>worklist dequeues</td><td>24</td><td>15</td></tr>
-<tr><td>sweep visits to settle</td><td>39 (3 sweeps)</td><td>39 (3 sweeps)</td></tr>
-<tr><td>extents tracked</td><td>2 of 2</td><td>1 of 2</td></tr>
-<tr><td>LINK candidates</td><td>PROGB, PROGC</td><td>PROGB, PROGC</td></tr>
-</tbody></table>
-<p>The worklist's first 13 dequeues are the same in both columns. At dequeue 14 the whole-program run re-queues the <code>PERFORM</code> and the <code>LINK</code>, whose entries both grew (<code>WS-NEXT</code> gained <code>PROGC</code>, <code>WS-I</code> gained <code>not-a-literal</code>), and goes round the body again; with only live bytes carried, the <code>PERFORM</code> is not among the live-node chips, so its entry is empty both times and does not grow, so only the <code>LINK</code> is re-queued and the walk ends at dequeue 15. The sweep walk, in row 2, still visits 13 nodes per sweep and settles on sweep 3, but each visit carries only <code>WS-NEXT</code>. The LINK's candidates, in row 4, are the same either way.</p>
 
 
 <h2 id="the-intuition">Why sweeps can stop early</h2>
@@ -203,15 +195,6 @@ PROGA sweep 3 of 10 done, 13 nodes reached, settled</pre>
 <tr><td>PICK-PARA#end</td><td>{PROGC}</td><td>{PROGC}</td></tr>
 </tbody></table>
 <p>Every value in the middle column is also in the right-hand one, so every flow read off an early state is real; what may be absent is a value that needed more sweeps, like <code>PROGC</code> in row 1. Cobble says so: every dynamic call target and every jump in an unsettled member carries the reason <code>incomplete-walk</code>, as in step 1's target row (see the <a href="value-sets.html#reasons">reasons taxonomy</a> for the full list of reason codes), and the run's summary counts and names the member as unsettled. A walk in the combine that passes through that member's jump facts carries <code>incomplete-walk</code> on into the targets it feeds in other programs.</p>
-<p><strong>Carry less on each sweep.</strong> With <code>--call-targets-only</code>, cobble first runs a backward liveness walk over each program. The two strips below are the example's <code>WS-REC</code>, 10 bytes, with its starting values; outlined bytes are the ones liveness keeps.</p>
-<p class="dim">Bytes [0, 8): WS-NEXT</p>
-<div class="bytes"><div class="byte-index">0</div><div class="byte-index">1</div><div class="byte-index">2</div><div class="byte-index">3</div><div class="byte-index">4</div><div class="byte-index">5</div><div class="byte-index">6</div><div class="byte-index">7</div><div class="span" style="grid-column:1 / 9">WS-NEXT</div><div class="byte w0 read">P</div><div class="byte w0 read">R</div><div class="byte w0 read">O</div><div class="byte w0 read">G</div><div class="byte w0 read">B</div><div class="byte w0 read">␣</div><div class="byte w0 read">␣</div><div class="byte w0 read">␣</div></div>
-<p class="dim">Bytes [8, 10): WS-I</p>
-<div class="bytes"><div class="byte-index">8</div><div class="byte-index">9</div><div class="span" style="grid-column:1 / 3">WS-I</div><div class="byte">0</div><div class="byte">0</div></div>
-<p>Liveness starts from the bytes the answer needs: each dynamic call target's operand, each area handed to another program (only the bytes some program reads, with <a href="area-need.html"><code>--narrow-areas</code></a>), and the <code>LINKAGE</code> areas read at an exit or a CICS <code>RETURN</code>. Working backward, a byte is live on entry to a node if some later node needs it and nothing in between certainly overwrites it; a write into a live byte makes its source bytes live. In the example the only such byte range is the <code>LINK</code>'s operand, <code>WS-NEXT</code>'s bytes [0, 8).</p>
-<p class="dim">Nodes where bytes [0, 8) are live on entry (bytes [8, 10) are live at none)</p>
-<div class="chips"><span class="chip changed">MAIN-PARA#label</span><span class="chip changed">MAIN-PARA/0#loop#test</span><span class="chip changed">MAIN-PARA/1</span><span class="chip changed">PICK-PARA/1</span><span class="chip changed">PICK-PARA#end</span></div>
-<p>The <code>LINK</code> at <code>MAIN-PARA/1</code> reads bytes [0, 8), so they are live there and, going backward, at the test and the entry. <code>PICK-PARA/0</code> certainly overwrites them, so they are live again only after it, at the last two chips; nothing after the <code>LINK</code> reads them. The forward walk drops every state entry that overlaps nothing live where it is handed: <code>WS-I</code> is carried nowhere, <code>WS-NEXT</code> only to those five nodes (the comparison table after the walk).</p>
 
 <h2 id="the-problem">Why not the worklist's budget</h2>
 <p>Cobble's default walk is the worklist from <a href="fixpoints.html">fixpoints and worklists</a>. Its budget is <code>--iteration-factor</code>: that many dequeues per CFG node (150 by default), after which it publishes what it has, unsettled. The example's graph has 14 nodes (<code>MAIN-PARA#end</code> unreachable): a cap of 150 × 14 = 2,100 dequeues; it finishes in 24. On the large corpus the worklist finished every program, but the run spent over an hour waiting on one.</p>
@@ -249,13 +232,12 @@ PROGA sweep 3 of 10 done, 13 nodes reached, settled</pre>
 <div class="rule">
 order    = reverse postorder of the nodes the entry reaches<br>
 one sweep: for n in order: after = transfer_n(in(n));<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for each successor s: in(s) = in(s) ⊔ keep_s(after)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for each successor s: in(s) = in(s) ⊔ after<br>
 repeat sweeps until a sweep changes no in(n), or N sweeps have run<br>
 settled  = the last sweep changed nothing, or the graph has no back edge<br>
-unsettled ⇒ in(n) ⊆ fixpoint in(n) for every n; every target and jump gets incomplete-walk<br>
-keep_s   = everything, or with --call-targets-only only entries overlapping what is live at s
+unsettled ⇒ in(n) ⊆ fixpoint in(n) for every n; every target and jump gets incomplete-walk
 </div>
-<p>Each line is a step of the walk above. <code>order</code> is the 13-node chips row. The <code>in(s) ⊔ …</code> line is sweep 1's last visit, where PICK-PARA#end joins {PROGC} into the test's {PROGB}. "Changes no in(n)" is sweep 3, whose table matches sweep 2's. The <code>unsettled ⇒</code> line is the budget-1 and budget-2 chips with <code>incomplete-walk</code>; "no back edge" is the chain program in <a href="#the-intuition">why sweeps can stop early</a>. <code>keep_s</code> under <code>--call-targets-only</code> is the five live-node chips.</p>
+<p>Each line is a step of the walk above. <code>order</code> is the 13-node chips row. The <code>in(s) ⊔ …</code> line is sweep 1's last visit, where PICK-PARA#end joins {PROGC} into the test's {PROGB}. "Changes no in(n)" is sweep 3, whose table matches sweep 2's. The <code>unsettled ⇒</code> line is the budget-1 and budget-2 chips with <code>incomplete-walk</code>; "no back edge" is the chain program in <a href="#the-intuition">why sweeps can stop early</a>.</p>
 <p>A value written in a loop body reaches a reader after the loop on sweep 2, as the LINK's row in the walk does. Each further step it has to take backward against the order — around another back edge, or to a copy earlier in the same body, as in the second item below — costs one more sweep. Proving the result costs one more sweep than finding it, except on a graph with no back edge, where the first sweep is the fixpoint. Every program on this page, as cobble ran it:</p>
 <div class="scroll-x"><table class="state"><tbody><tr><th>program</th><th>LINK complete on sweep</th><th>last sweep that grew a state</th><th>settled on sweep</th></tr>
 <tr><td>the chain (no back edge)</td><td>—</td><td>1</td><td>1</td></tr>
@@ -320,12 +302,6 @@ flowchart LR
 </pre>
 The dashed edge is the one the settled walk finds. The <code>incomplete-walk</code> reason on the row is the only thing that says it may be there. A consumer that reads candidates and ignores reasons will treat a partial answer as complete.</li>
 <li><strong>A sweep is not cheaper per visit count.</strong> It visits every reachable node every sweep, including nodes nothing has changed for. In the budget table, the settled sweep rows do 39 visits to the worklist's 24: sweep 3 revisits all 13 nodes just to confirm, where the worklist's queue (under <a href="#the-problem">why not the worklist's budget</a>) empties after re-taking only 11. On a small or simple program it can do more visits than the worklist. Its use is the bound.</li>
-<li><strong>Call-targets-only narrows the output too.</strong> The dynamic targets and jumps are the same as a full run's, but <code>graph.jsonl</code> and <code>defs.jsonl</code> keep only rows for writes that are live afterwards, and the field query refuses that output directory. For the example:
-<div class="scroll-x"><table class="state"><tbody><tr><th>file</th><th>whole program</th><th>--call-targets-only</th></tr>
-<tr><td>graph.jsonl edges</td><td>LITERAL → WS-NEXT at PICK-PARA/0; WS-I → WS-I at PICK-PARA/1</td><td>LITERAL → WS-NEXT at PICK-PARA/0</td></tr>
-<tr><td>defs.jsonl rows</td><td>WS-I@working_storage[8:10] at PICK-PARA/1</td><td>none</td></tr>
-</tbody></table></div>
-The <code>WS-I</code> rows are gone because bytes [8, 10) were live nowhere. Liveness also starts from what the jumps and targets read; anything else asked of the same run later is not there.</li>
 </ul>
 
 <h2 id="in-cobble">In cobble</h2>
@@ -337,7 +313,7 @@ cobble-dataflow-fixpoint: error: argument --sweeps: needs at least one sweep, go
 ...
 !! 1 members still growing when their walk's budget ran out (PROGA); their edges are a subset of the flows those programs have
 {"analysed": 1, ..., "unsettled": 1, ...}</pre>
-<p>A walk that stops before settling adds the <code>incomplete-walk</code> reason to the targets and jumps it found, as in the <code>targets.jsonl</code> rows under <a href="#reverse-engineering">where this shows up</a>. With <code>--call-targets-only</code>, a backward liveness walk first works out what the targets and jumps read, narrowed by the area-need table under <code>--narrow-areas</code>; the forward walk then applies that result to every state it hands on, which is the byte strips and live-node chips under <a href="#the-intuition">why sweeps can stop early</a>. The flags are documented in the field dataflow reference. Next: <a href="memoised-reachability.html">answering every walk once</a>.</p>
+<p>A walk that stops before settling adds the <code>incomplete-walk</code> reason to the targets and jumps it found, as in the <code>targets.jsonl</code> rows under <a href="#reverse-engineering">where this shows up</a>. The flags are documented in the field dataflow reference. Next: <a href="memoised-reachability.html">answering every walk once</a>.</p>
 </main>
 
 </body>

@@ -108,3 +108,11 @@ fileignoreconfig:
   checksum: d982b9e67da0e8fcc411c1b2a4eb3a1670a32655b6627ec37379902237011767
 - filename: explainers/strongly-connected-components.html
   checksum: d59511be7a3357c8a1f064ace3bb821193559ed5407a8b666e5e513d0a4ebf1b
+- filename: _posts/2026-10-09-adventures-in-fixpoint-analysis.md
+  checksum: 16eeef7402d5595af413c51b682204b5664844f77c4097f58ce4f2c781364eaf
+- filename: explainers/exact-classes.html
+  checksum: 9d87497614863e400431709aa708f21d1c5eda99356964eb2ae66a6f70a5fe4a
+- filename: explainers/field-graph.html
+  checksum: 20f6559faf52ba1de41f620b457bed7a6cb8dc3b367797dbd33ffcad5843ed42
+- filename: _posts/2026-10-26-mining-domain-aggregates-from-cobol.md
+  checksum: 295670d8a274a7d22545b44d6500eb28521bfc7ad97bfe177890b67e93cbd2a5

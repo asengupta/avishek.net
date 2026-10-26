@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scoring a factorisation</title>
+<link rel="stylesheet" href="explainer.css">
+</head>
+<body>
+<main>
+<nav class="back"><a href="index.html">← All explainers</a></nav>
+<div class="kicker">Explainer 13 of 13</div>
+<h1>Scoring a factorisation</h1>
+<aside class="tldr"><p><strong>TL;DR</strong>There are no labels for "the right aggregates", so score what can be checked: does the factorisation predict cells it never saw, how much does it rebuild and cover, does it survive resampling, and are its factors distinct, focused and cross-program.</p></aside>
+<p class="prereqs"><strong>Read first:</strong> <a href="nmf-aggregates.html">Domain aggregates by matrix factorisation</a></p>
+<p class="lede">One number hides how a factorisation fails. Here is a headline plus seven sub-scores, each on a different axis, none needing labels.</p>
+<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#headline">The headline</a></li><li><a href="#axes">The axes</a></li><li><a href="#reading">Reading them together</a></li><li><a href="#numbers">Three matrices</a></li><li><a href="#caveat">Where the headline flatters</a></li></ol></nav>
+
+<h2 id="headline">The headline: held-out AUC</h2>
+<ol>
+<li>Hide a random 10% of the matrix's 1s.</li>
+<li>Fit on what remains.</li>
+<li>Score each hidden 1, and as many randomly chosen empty cells, by <code>W H</code>.</li>
+<li>AUC is the chance that a hidden 1 scores above an empty cell.</li>
+</ol>
+<p>0.5 is chance, 1.0 is perfect. It asks whether the factors capture structure that generalises, or just memorise the cells they were shown.</p>
+
+<h2 id="axes">The axes</h2>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>score</th><th>computed as</th><th>good is</th></tr>
+<tr><td>fidelity</td><td>‖residual − W H‖ / ‖residual‖</td><td>low</td></tr>
+<tr><td>coverage</td><td>share of 1s inside some factor's top-20 fields × top-20 paragraphs</td><td>high</td></tr>
+<tr><td>stability</td><td>refit on four random 90% samples of the paragraphs; match factors one to one; mean cosine</td><td>near 1</td></tr>
+<tr><td>distinctness</td><td>largest cosine between two factors</td><td>low</td></tr>
+<tr><td>focus</td><td>median share of a factor's loading in its top 20 fields</td><td>high</td></tr>
+<tr><td>reach</td><td>share of factors whose top fields span 2+ programs (a class counts all its members' programs)</td><td>high</td></tr>
+<tr><td>class share</td><td>share of the round's entries in unified-class columns</td><td>high</td></tr>
+</tbody></table></div>
+
+<h2 id="reading">Reading them together</h2>
+<ul>
+<li><strong>High AUC, low coverage:</strong> accurate where it speaks, but it explains little.</li>
+<li><strong>Low reconstruction error, low stability:</strong> overfitted; resampling changes the factors.</li>
+<li><strong>Largest cosine near 1:</strong> near-duplicate factors; <code>k</code> is too big.</li>
+<li><strong>Low reach and low class share:</strong> one block per program; cross-program evidence is too thin.</li>
+</ul>
+
+<h2 id="numbers">Three matrices</h2>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th></th><th>planted blocks</th><th>CardDemo, round 1</th><th>random</th></tr>
+<tr><td>held-out AUC</td><td>1.000</td><td>0.973</td><td>0.49</td></tr>
+<tr><td>fidelity</td><td>0.000</td><td>0.310</td><td>0.999</td></tr>
+<tr><td>coverage</td><td>100%</td><td>70.4%</td><td>0.4%</td></tr>
+<tr><td>stability</td><td>1.000</td><td>0.955</td><td>0.575</td></tr>
+<tr><td>distinctness</td><td>0.000</td><td>0.553</td><td>0.049</td></tr>
+<tr><td>focus</td><td>1.000</td><td>1.000</td><td>0.343</td></tr>
+<tr><td>reach</td><td>50%</td><td>76.7%</td><td>n/a</td></tr>
+<tr><td>class share</td><td>10%</td><td>19.2%</td><td>0%</td></tr>
+</tbody></table></div>
+<p class="dim">Planted blocks: the 14 × 14 matrix from the previous page, k = 2. CardDemo: threshold 4, k = 30. Random: 100,000 × 600,000 with 4.5 million random 1s, k = 10.</p>
+<p>The random matrix sits at the no-structure end on AUC, fidelity, coverage and stability, which is what a score should do there. Low distinctness alone means nothing: random factors are also unlike each other.</p>
+
+<h2 id="caveat">Where the headline flatters</h2>
+<div class="note-box"><p>A real corpus matrix is about 99.99% empty, and most of it is one block per program. A random empty cell almost always pairs a paragraph with some other program's field. Ranking a hidden 1 above that is easy, so the AUC can look strong even when each factor is one program's block.</p></div>
+<p>The harder test draws each empty cell from the same program as its paragraph. Until the scorecard does that, read the AUC next to coverage and reach, never on its own.</p>
+</main>
+</body>
+</html>

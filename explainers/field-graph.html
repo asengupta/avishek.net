@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>From byte provenance to a field graph</title>
+<link rel="stylesheet" href="explainer.css">
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/+esm";
+  const light = matchMedia("(prefers-color-scheme: light)").matches;
+  mermaid.initialize({
+    deterministicIds: true,
+    startOnLoad: true,
+    theme: "base",
+    themeVariables: light
+      ? { darkMode: false, background: "#fbfaf7", primaryColor: "#e6e3da", primaryTextColor: "#1a1f26", primaryBorderColor: "#d3cfc4", lineColor: "#5d6673", textColor: "#1a1f26", edgeLabelBackground: "#f1efe9", clusterBkg: "#f1efe9", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
+      : { darkMode: true, background: "#0b0f14", primaryColor: "#1a2230", primaryTextColor: "#e6edf3", primaryBorderColor: "#263041", lineColor: "#8b98a9", textColor: "#e6edf3", edgeLabelBackground: "#121821", clusterBkg: "#121821", clusterBorder: "#263041", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" },
+  });
+</script>
+</head>
+<body>
+<main>
+<nav class="back"><a href="index.html">← All explainers</a></nav>
+<div class="kicker">Explainer 10 of 13</div>
+<h1>From byte provenance to a field graph</h1>
+<aside class="tldr"><p><strong>TL;DR</strong>The dataflow says which bytes moved where. To find fields that belong together, those moves have to become edges between fields. The hard part is a copy through an undivided buffer: follow it back to the fields that filled the buffer, or every field on the far side looks connected to one blob.</p></aside>
+<p class="prereqs"><strong>Read first:</strong> <a href="byte-extents.html">Byte-extent aliasing</a>, <a href="reaching-definitions.html">Gen/kill and reaching definitions</a></p>
+<p class="lede">The fixpoint's output is byte provenance: for each statement, the source bytes, the target bytes, and the earlier statements (the <em>definers</em>) whose writes the source may hold. This page turns that into a graph whose nodes are elementary fields.</p>
+<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#nodes">Nodes</a></li><li><a href="#example">The example</a></li><li><a href="#naive">Mapping each move by name</a></li><li><a href="#traced">Tracing back through the buffer</a></li><li><a href="#alignments">Where the bytes land</a></li><li><a href="#datasets">Fields that meet through a file</a></li><li><a href="#carddemo">On CardDemo</a></li><li><a href="#cost">What it costs</a></li><li><a href="#rule">The rule</a></li><li><a href="#wrong">What goes wrong</a></li><li><a href="#in-cobble">In cobble</a></li></ol></nav>
+
+<h2 id="nodes">Nodes</h2>
+<p>A node is an elementary field: one with nothing declared under it. It is named <code>PROGRAM:RECORD.FIELD</code>, so two programs' fields never share a node, whatever they are called.</p>
+<ul>
+<li>Each <code>REDEFINES</code> variant has its own fields.</li>
+<li>Each <code>OCCURS</code> occurrence is its own node: <code>LK-COMMAREA(25)</code>, <code>X(2,5)</code>.</li>
+<li>Literals, files, maps and queues are terminal nodes of their own program.</li>
+</ul>
+
+<h2 id="example">The example</h2>
+<p>A record arrives in <code>IN-AREA</code>, passes through an 8-byte buffer declared as one field, and lands in <code>REC</code>:</p>
+<pre class="cobol">01  IN-AREA.
+    05  I-ID     PIC X(4).
+    05  I-AMT    PIC X(4).
+01  BUF          PIC X(8).
+01  REC.
+    05  R-ID     PIC X(4).
+    05  R-AMT    PIC X(4).
+
+/0  MOVE IN-AREA TO BUF.
+/1  MOVE BUF TO REC.</pre>
+<p>The fixpoint's provenance for the two moves:</p>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>site</th><th>source bytes</th><th>target bytes</th><th>definers of the source</th></tr>
+<tr><td>/0</td><td>IN-AREA [0:8]</td><td>BUF [8:16]</td><td>none</td></tr>
+<tr><td>/1</td><td>BUF [8:16]</td><td>REC [16:24]</td><td>/0</td></tr>
+</tbody></table></div>
+
+<h2 id="naive">Mapping each move by name</h2>
+<p>Map each range to the fields declared over it. <code>BUF</code> has one field, so <code>/1</code> links that one field to every target field:</p>
+<pre class="mermaid">
+flowchart LR
+    IID["I-ID"] --> BUF["BUF"]
+    IAMT["I-AMT"] --> BUF
+    BUF --> RID["R-ID"]
+    BUF --> RAMT["R-AMT"]
+</pre>
+<p>Now <code>I-ID</code> reaches both <code>R-ID</code> and <code>R-AMT</code>. Real programs do this constantly, with <code>PIC X(500)</code> work areas and whole-record I/O buffers. One buffer in the middle makes every field on one side look related to every field on the other.</p>
+
+<h2 id="traced">Tracing back through the buffer</h2>
+<p>The read at <code>/1</code> knows its definer, <code>/0</code>. <code>/0</code> copied into an undivided field, so follow it back to its own source and take the fields that filled those bytes instead:</p>
+<p class="dim">BUF's eight bytes, labelled by the field that filled them</p>
+<div class="bytes"><div class="byte-index">0</div><div class="byte-index">1</div><div class="byte-index">2</div><div class="byte-index">3</div><div class="byte-index">4</div><div class="byte-index">5</div><div class="byte-index">6</div><div class="byte-index">7</div><div class="span" style="grid-column:1 / 9">BUF</div><div class="span" style="grid-column:1 / 5">from I-ID</div><div class="span" style="grid-column:5 / 9">from I-AMT</div><div class="byte w0">/0</div><div class="byte w0">/0</div><div class="byte w0">/0</div><div class="byte w0">/0</div><div class="byte w1">/0</div><div class="byte w1">/0</div><div class="byte w1">/0</div><div class="byte w1">/0</div></div>
+<p>The read of <code>BUF</code> now presents two pieces, <code>I-ID</code> at bytes 0–3 and <code>I-AMT</code> at bytes 4–7. They cover all of <code>BUF</code>, so <code>BUF</code> itself drops out of this read. Several fields on both sides align by byte:</p>
+<pre class="mermaid">
+flowchart LR
+    IID["I-ID"] --> BUF["BUF"]
+    IAMT["I-AMT"] --> BUF
+    IID --> RID["R-ID"]
+    IAMT --> RAMT["R-AMT"]
+</pre>
+<p>A trace back takes the finer pieces only when it finds two or more. A buffer filled from one field keeps the field it already has.</p>
+
+<h2 id="alignments">Where the bytes land</h2>
+<p>Every edge records its placements: <code>length</code> bytes from offset <code>source</code> in the source field to offset <code>target</code> in the target field.</p>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>edge</th><th>alignments</th><th>aligned</th></tr>
+<tr><td>I-ID → R-ID</td><td>{source 0, target 0, length 4}</td><td>yes</td></tr>
+<tr><td>I-AMT → R-AMT</td><td>{source 0, target 0, length 4}</td><td>yes</td></tr>
+<tr><td>I-AMT → BUF</td><td>{source 0, target 4, length 4}</td><td>yes</td></tr>
+</tbody></table></div>
+<p><code>aligned</code> is true when every site's placement is known. A move through a clamped range, such as a table element with a computed subscript, has none. The next explainer, <a href="exact-classes.html">exact field classes</a>, depends on these placements.</p>
+
+<h2 id="datasets">Fields that meet through a file</h2>
+<p>Two programs that never call each other can still share data through a file. Program <code>W</code> writes an 11-byte <code>ID</code> to dataset <code>DS.A</code>; program <code>R</code> reads the same record as <code>GRP</code> (bytes 0–4) and <code>SEQ</code> (bytes 5–10). The record is cut at every field boundary any site uses, and each piece becomes a <em>slot</em> node:</p>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>edge</th><th>alignment</th></tr>
+<tr><td>W:WREC.ID → DS.A[0:5]</td><td>{source 0, target 0, length 5}</td></tr>
+<tr><td>W:WREC.ID → DS.A[5:11]</td><td>{source 5, target 0, length 6}</td></tr>
+<tr><td>DS.A[0:5] → R:RREC.GRP</td><td>{source 0, target 0, length 5}</td></tr>
+<tr><td>DS.A[5:11] → R:RREC.SEQ</td><td>{source 0, target 0, length 6}</td></tr>
+</tbody></table></div>
+<p class="dim">These are the edges cobble's dataset-link tests check for this layout.</p>
+<p>Finding the dataset is its own problem. A batch file statement goes through its <code>SELECT</code>, DD name and the JCL step that runs the program. A CICS one goes through the resolved file name and the CSD. Each dataset edge is <code>exact</code>, or <code>possible</code> with its reasons:</p>
+<div class="chips"><span class="chip">candidates</span><span class="chip">no-step</span><span class="chip">dd-unbound</span><span class="chip">clamped</span><span class="chip">overlapping-layouts</span><span class="chip changed">unresolved-file</span></div>
+<p>A <code>possible</code> edge carries no placement. A site that resolves to no dataset gets a slot of its own, which links nothing.</p>
+
+<h2 id="carddemo">On CardDemo</h2>
+<p><strong>A date through an undivided field.</strong> <code>COTRN00C</code> builds the current date as a group, copies it into a plain <code>PIC X(08)</code>, and shows that on the screen:</p>
+<pre class="cobol">       05 WS-CURDATE-MM-DD-YY.                    *> CSDAT01Y
+         10  WS-CURDATE-MM             PIC 9(02).
+         10  FILLER                    PIC X(01) VALUE '/'.
+         10  WS-CURDATE-DD             PIC 9(02).
+         10  FILLER                    PIC X(01) VALUE '/'.
+         10  WS-CURDATE-YY             PIC 9(02).
+       05 WS-TRAN-DATE               PIC X(08) VALUE '00/00/00'.
+       ...
+           MOVE WS-CURDATE-MM-DD-YY       TO WS-TRAN-DATE
+           ...
+                   MOVE WS-TRAN-DATE TO TDATE01I OF COTRN0AI</pre>
+<p>Mapped by name, the last move would link one field, <code>WS-TRAN-DATE</code>, to the screen. Traced back, the screen field gets the date's parts, each at its own bytes:</p>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>source field</th><th>lands in TDATE01I at</th></tr>
+<tr><td>WS-CURDATE-MM</td><td>bytes 0–1</td></tr>
+<tr><td>FILLER '/'</td><td>byte 2</td></tr>
+<tr><td>WS-CURDATE-DD</td><td>bytes 3–4</td></tr>
+<tr><td>FILLER '/'</td><td>byte 5</td></tr>
+<tr><td>WS-CURDATE-YY</td><td>bytes 6–7</td></tr>
+</tbody></table></div>
+<p><strong>A file read by six programs.</strong> The card cross-reference KSDS is read by five batch programs and one CICS one, and written by none. Its record is cut into these slots:</p>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>slot</th><th>read as</th></tr>
+<tr><td>[0:16]</td><td>XREF-CARD-NUM, in CBACT03C, CBACT04C, CBTRN02C, CBTRN03C, COTRN02C</td></tr>
+<tr><td>[16:25]</td><td>XREF-CUST-ID, in the same five</td></tr>
+<tr><td>[25:36]</td><td>XREF-ACCT-ID, in the same five</td></tr>
+<tr><td>[36:50]</td><td>FILLER, in the same five</td></tr>
+<tr><td>[50:1000]</td><td>only CBSTM03B's 1,000-byte I/O area</td></tr>
+</tbody></table></div>
+<p>The last slot exists because <code>CBSTM03B</code>, a file-access subprogram, reads its files into one 1,000-byte field. That field also reaches slots [0:16] to [36:50], at offsets 0, 16, 25 and 36. Every edge here is <code>exact</code>.</p>
+<p><strong>A file that resolves to nothing.</strong> <code>CBTRN01C</code> reads the same record, but no JCL step runs <code>CBTRN01C</code>, so its read gets a slot of its own, <code>CBTRN01C/2000-LOOKUP-XREF/1|?XREF-FILE</code>, with <code>possible</code> edges and the reason <code>no-step</code>. It meets none of the six.</p>
+
+<h2 id="cost">What it costs</h2>
+<p>Tracing back is a walk over definers, and definers branch. Picture a ladder of copies, each step filled from one of two earlier copies:</p>
+<pre class="mermaid">
+flowchart LR
+    A0["copy 0"] --> A1["a1"] & B1["b1"]
+    A1 --> A2["a2"] & B2["b2"]
+    B1 --> A2 & B2
+    A2 --> A3["…"]
+    B2 --> A3
+</pre>
+<p>There are 2<sup>n</sup> paths through n steps, but only 2n copies. A memo keyed on <em>(range, definers)</em> answers each lookup once, so the cost grows with copies, not paths.</p>
+<div class="note-box"><p>The first memo also keyed on the set of sites already on the walk, to cut loops. That set differs on every path, so the memo almost never hit, and the walk enumerated paths: on an 18-step ladder it took 5.5 seconds and doubled with each step.</p></div>
+<p>Depth is the second limit. A recursive walk used about eight Python frames per copy, so a chain of about 130 copies hit Python's recursion limit. The walk now runs on an explicit stack: each lookup is a generator that yields the lookups it needs. Same order, same memo, same answers.</p>
+
+<h2 id="rule">The rule</h2>
+<div class="rule">
+fields(range)        = elementary fields declared over the range's bytes<br>
+traced(read)         = fields(read) + for each definer d that wrote inside read:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if d copied into one undivided field: finer(d) = traced(d's source), shifted<br>
+&nbsp;&nbsp;&nbsp;&nbsp;else: the field d wrote<br>
+finer(d)             = traced pieces if there are 2 or more, else d's own field<br>
+presented(read)      = traced(read) − named fields its pieces cover<br>
+edges(target, source) = one field either side: every pair; else byte-aligned pairs
+</div>
+
+<h2 id="wrong">What goes wrong</h2>
+<ul>
+<li><strong>Loops of copies.</strong> Where copies feed each other in a loop, the walk stops at a copy already on its way back. The first read to reach a range fixes its answer for every later read, so a later read may keep the undivided field where it would have taken the finer pieces.</li>
+<li><strong>Unresolved files.</strong> A file statement whose dataset is not known keeps a slot of its own, so its fields meet no other program through it.</li>
+<li><strong>Clamped moves.</strong> A move whose bytes are not known exactly has no placement, so nothing downstream can line its bytes up.</li>
+</ul>
+
+<h2 id="in-cobble">In cobble</h2>
+<p>Run on this page's program, <code>cobble-dataflow-fixpoint</code> writes the two provenance rows above:</p>
+<pre class="cobol">MAIN-PARA/0  IN-AREA@working_storage[0:8] -&gt; BUF@working_storage[8:16]   definers: none
+MAIN-PARA/1  BUF@working_storage[8:16] -&gt; REC@working_storage[16:24]     definers: MAIN-PARA/0</pre>
+<p>and <code>cobble-experimental-partition-graph</code> writes exactly the traced graph's four edges, as <code>source → target [(source offset, target offset, length)]</code>:</p>
+<pre class="cobol">BUFCOPY:IN-AREA.I-ID  -&gt; BUFCOPY:BUF.BUF     [(0, 0, 4)]
+BUFCOPY:IN-AREA.I-AMT -&gt; BUFCOPY:BUF.BUF     [(0, 4, 4)]
+BUFCOPY:IN-AREA.I-ID  -&gt; BUFCOPY:REC.R-ID    [(0, 0, 4)]
+BUFCOPY:IN-AREA.I-AMT -&gt; BUFCOPY:REC.R-AMT   [(0, 0, 4)]</pre>
+<details class="walk listing"><summary>Full listing <span class="dim">(BUFCOPY)</span></summary>
+<pre class="cobol">       IDENTIFICATION DIVISION.
+       PROGRAM-ID. BUFCOPY.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       01  IN-AREA.
+           05  I-ID             PIC X(4).
+           05  I-AMT            PIC X(4).
+       01  BUF                  PIC X(8).
+       01  REC.
+           05  R-ID             PIC X(4).
+           05  R-AMT            PIC X(4).
+       PROCEDURE DIVISION.
+       MAIN-PARA.
+           MOVE IN-AREA TO BUF.
+           MOVE BUF TO REC.
+           STOP RUN.</pre>
+</details>
+</main>
+</body>
+</html>
