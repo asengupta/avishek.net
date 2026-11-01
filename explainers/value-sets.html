@@ -13,7 +13,7 @@
     startOnLoad: true,
     theme: "base",
     themeVariables: light
-      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#e6e3da", primaryTextColor: "#111", primaryBorderColor: "#d3cfc4", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
+      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#dde6ef", primaryTextColor: "#111", primaryBorderColor: "#8fa3b8", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
       : { darkMode: true, background: "#0b0f14", primaryColor: "#1a2230", primaryTextColor: "#e6edf3", primaryBorderColor: "#263041", lineColor: "#8b98a9", textColor: "#e6edf3", edgeLabelBackground: "#121821", clusterBkg: "#121821", clusterBorder: "#263041", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" },
   });
 </script>
@@ -132,6 +132,7 @@ value set = (values, reasons)<br>
 entry:<br>
 &nbsp;&nbsp;f := ({f's VALUE bytes}, {})<br>
 &nbsp;&nbsp;&nbsp;&nbsp;if f has a VALUE clause,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;({}, {inbound-linkage}) if f is in LINKAGE,<br>
 &nbsp;&nbsp;&nbsp;&nbsp;else ({}, {uninitialised})<br>
 MOVE literal TO f:<br>
 &nbsp;&nbsp;f := ({literal padded or truncated<br>
@@ -148,7 +149,7 @@ call through f:<br>
 </div>
 <p>Each line of the box is one the walk above has already used. The table points every line back at the step that applied it:</p>
 <table class="state"><tbody><tr><th>rule line</th><th>where the walk applied it</th></tr><tr><td>entry</td><td>step 1: none of the three fields has a <code>VALUE</code> clause, so each starts as {} + uninitialised</td></tr><tr><td>MOVE literal TO f</td><td>steps 2 and 3: WS-PGM becomes {'PROGB␣␣␣'}, then {'PROGC␣␣␣'} on the other arm</td></tr><tr><td>MOVE g TO f</td><td>not used: the example has no field-to-field <code>MOVE</code> (but see the fragment just below)</td></tr><tr><td>merge</td><td>step 4: {'PROGB␣␣␣'} ∪ {'PROGC␣␣␣'} is two values, well under 32, so nothing is cut and no over-budget</td></tr><tr><td>call through f</td><td>step 4 (WS-PGM: PROGB, PROGC, no reasons) and step 5 (WS-OTHER: no candidates, uninitialised)</td></tr></tbody></table>
-<p>cobble departs from the <code>MOVE g TO f</code> line in one case: when <code>g</code> holds no known value. Change the example's else-arm to <code>MOVE WS-OTHER TO WS-PGM</code>, as below. By the box, that arm gives <code>WS-PGM</code> the set of <code>WS-OTHER</code>, {} + uninitialised. cobble stores no value for such a move, only that <code>WS-PGM</code> was written, so the call reads that arm as <code>not-a-literal</code> instead. Both reasons say the same thing to the graph: the list may be short.</p>
+<p>cobble departs from the <code>MOVE g TO f</code> line in one case: when <code>g</code>'s set has no values and its only reasons are <code>uninitialised</code> or <code>not-a-literal</code>. Change the example's else-arm to <code>MOVE WS-OTHER TO WS-PGM</code>, as below. By the box, that arm gives <code>WS-PGM</code> the set of <code>WS-OTHER</code>, {} + uninitialised. cobble stores no value for such a move, only that <code>WS-PGM</code> was written, so the call reads that arm as <code>not-a-literal</code> instead. Both reasons say the same thing to the graph: the list may be short. Any other reason is copied as the box says: with the else-arm <code>MOVE LK-PGM TO WS-PGM</code>, where <code>LK-PGM</code> is in <code>LINKAGE</code>, the call gets candidate <code>PROGB</code> and reason <code>inbound-linkage</code>.</p>
 <pre class="cobol">ELSE
     MOVE WS-OTHER TO WS-PGM
 END-IF.
@@ -164,7 +165,7 @@ CALL WS-PGM.   candidates PROGB
 <li><strong>Candidates</strong> — any other site with at least one candidate. One edge per candidate, marked as possible rather than certain: row 1, the two dashed edges in the graph under <a href="#the-example">the example</a>.</li>
 <li><strong>Unresolved</strong> — no candidates. A single dynamic-target node carrying the expression and the reasons, so the hole is visible rather than silent: row 2, the <code>VALSETS.WS-OTHER</code> node in that graph.</li>
 </ul>
-<table class="state"><tbody><tr><th>#</th><th>site</th><th>candidates</th><th>reasons</th><th>in the graph</th></tr><tr><td>1</td><td>VALSETS: CALL WS-PGM</td><td>PROGB, PROGC</td><td>none</td><td>candidates: two <code>CALL_CANDIDATE</code> edges</td></tr><tr><td>2</td><td>VALSETS: CALL WS-OTHER</td><td>none</td><td>uninitialised</td><td>unresolved: a <code>CALL</code> edge to node <code>VALSETS.WS-OTHER</code></td></tr><tr><td>3</td><td>VALSETV: CALL WS-OTHER</td><td>PROGD</td><td>none</td><td>proven: a <code>CALL</code> edge to <code>PROGD</code></td></tr></tbody></table>
+<div class="scroll-x"><table class="state"><tbody><tr><th>#</th><th>site</th><th>candidates</th><th>reasons</th><th>in the graph</th></tr><tr><td>1</td><td>VALSETS: CALL WS-PGM</td><td>PROGB, PROGC</td><td>none</td><td>candidates: two <code>CALL_CANDIDATE</code> edges</td></tr><tr><td>2</td><td>VALSETS: CALL WS-OTHER</td><td>none</td><td>uninitialised</td><td>unresolved: a <code>CALL</code> edge to node <code>VALSETS.WS-OTHER</code></td></tr><tr><td>3</td><td>VALSETV: CALL WS-OTHER</td><td>PROGD</td><td>none</td><td>proven: a <code>CALL</code> edge to <code>PROGD</code></td></tr></tbody></table></div>
 
 <aside class="reasons-box" id="reasons">
 <h3>Reasons taxonomy</h3>
@@ -190,7 +191,7 @@ CALL WS-PGM.  candidates PROG01 … PROG32
               reasons    over-budget</pre>
 <dl>
 <dt>incomplete-walk</dt>
-<dd>The <a href="fixpoints.html">fixpoint</a> stopped before settling because it ran out of its sweep budget — the cap on how many passes over the program it may make. Values that would have arrived on later passes are missing. See <a href="bounded-sweeps.html">bounded sweeps</a>.</dd>
+<dd>The <a href="fixpoints.html">fixpoint</a> stopped before settling because it ran out of its walk budget. By default the budget is a total number of node visits, <code>--iteration-factor</code> times the number of nodes in the program's control-flow graph; with <code>--sweeps N</code> it is N passes over the program instead. Values that would have arrived later are missing. See <a href="bounded-sweeps.html">bounded sweeps</a>.</dd>
 <dt>hop-limit</dt>
 <dd>The cross-program walk — following a field's bytes backwards from one program into the programs that handed them over (<a href="memoised-reachability.html">answering every walk once</a>) — was cut after a fixed number of program crossings. Programs beyond that depth were never visited. See <a href="hop-limits.html">bounding walks by crossings</a>.</dd>
 <dt>readback-skipped</dt>
@@ -224,23 +225,20 @@ CALL WS-OTHER.               not-a-literal</pre>
 <dt>not-recorded</dt>
 <dd>The cross-program walk reached a place where the fixpoint recorded no fact. See <a href="memoised-reachability.html">answering every walk once</a>.</dd>
 </dl>
-<p>Reasons the per-site resolution on <a href="local-site-resolution.html">local site resolution</a> gives about the call site itself, two of them shown here: <code>WS-PGMS</code> is a table of names (<code>OCCURS</code>), and <code>WS-PGM</code> holds only spaces.</p>
-<pre class="cobol">CALL WS-PGMS(I).
-            operand-not-one-exact-extent
-MOVE ' ' TO WS-PGM.
-CALL WS-PGM.   no-program-name</pre>
+<p>One reason is about the call site itself rather than its value set.</p>
 <dl>
 <dt>no-extent</dt>
 <dd>The operand names no storage cobble could lay out, so there is nothing to read.</dd>
-<dt>operand-not-one-exact-extent</dt>
-<dd>The operand could be several places, such as a subscripted <code>WS-PGMS(I)</code>, so the site stays unresolved there.</dd>
-<dt>no-program-name</dt>
-<dd>No value reaching the site looks like a program name; the site is resolved to nothing.</dd>
-<dt>no-csd</dt>
-<dd>A <code>RETURN TRANSID</code> or <code>START</code> was analysed without a CSD, so its transaction id cannot be mapped to a program; the site stays unresolved.</dd>
-<dt>transaction-not-in-csd</dt>
-<dd>The transaction id is not listed in the CSD supplied; the site is resolved to nothing, which is wrong if the CSD is merely incomplete.</dd>
 </dl>
+<p>Two sites that look as if they need a reason of their own do not get one. A table of names read with a subscript merges the values of every occurrence. A field that holds only spaces trims to nothing, which cannot be a program name, so the value goes into the site's <em>dropped</em> list (values set aside as not program names) instead of its candidates. The site has no candidates and no reasons; the graph draws a <code>CALL</code> edge to a <code>DYNAMIC_TARGET</code> node with an empty reason and that dropped list.</p>
+<pre class="cobol">MOVE 'PROGB' TO WS-PGMS(1).
+MOVE 'PROGC' TO WS-PGMS(2).
+CALL WS-PGMS(I).   candidates PROGB, PROGC
+                   reasons    none
+MOVE ' ' TO WS-PGM.
+CALL WS-PGM.       candidates none
+                   reasons    none
+                   dropped    '' (spaces)</pre>
 </aside>
 
 <h2 id="what-goes-wrong">What goes wrong</h2>
@@ -252,20 +250,20 @@ END-IF.
 CALL WS-PGM.   candidates PROGB
                reasons    uninitialised</pre></li>
 <li><strong>One candidate is not proof.</strong> The call above has a single candidate, but it is not a proven edge, because its reasons are not empty. Row 2 of the table below is that call; row 1 is <code>CALL WS-OTHER</code> in the <code>VALUE 'PROGD'</code> variant, which also has one candidate but no reasons. A walk that stopped early can leave a single value in the set in the same way, while a second was still on its way. That is why a proven edge needs an empty set of reasons, not just one candidate.
-<table class="state"><tbody><tr><th>#</th><th>site</th><th>candidates</th><th>reasons</th><th>in the graph</th></tr><tr><td>1</td><td>VALSETV: CALL WS-OTHER</td><td>PROGD</td><td>none</td><td>proven: <code>CALL</code> edge</td></tr><tr><td>2</td><td>no-else variant: CALL WS-PGM</td><td>PROGB</td><td class="changed">uninitialised</td><td>candidates: <code>CALL_CANDIDATE</code> edge</td></tr></tbody></table></li>
+<div class="scroll-x"><table class="state"><tbody><tr><th>#</th><th>site</th><th>candidates</th><th>reasons</th><th>in the graph</th></tr><tr><td>1</td><td>VALSETV: CALL WS-OTHER</td><td>PROGD</td><td>none</td><td>proven: <code>CALL</code> edge</td></tr><tr><td>2</td><td>no-else variant: CALL WS-PGM</td><td>PROGB</td><td class="changed">uninitialised</td><td>candidates: <code>CALL_CANDIDATE</code> edge</td></tr></tbody></table></div></li>
 <li><strong>A value is not always a program name.</strong> A field can hold spaces on some path. Values that cannot be a program name — nothing left after trimming the spaces, or bytes that are not printable — are dropped from the candidates and recorded separately. A sentinel such as <code>'NONE'</code> is not dropped: it trims to a name like any other, so it becomes a candidate edge to a program called <code>NONE</code>. The table shows the example with its else-arm changed to each of the two.
-<table class="state"><tbody><tr><th>else-arm</th><th>values after the arms meet</th><th>candidates</th><th>dropped</th><th>in the graph</th></tr><tr><td>MOVE ' ' TO WS-PGM</td><td>{'PROGB␣␣␣', '␣␣␣␣␣␣␣␣'}</td><td>PROGB</td><td class="changed">'' (spaces)</td><td>proven: <code>CALL</code> edge to PROGB</td></tr><tr><td>MOVE 'NONE' TO WS-PGM</td><td>{'NONE␣␣␣␣', 'PROGB␣␣␣'}</td><td>NONE, PROGB</td><td>none</td><td>two <code>CALL_CANDIDATE</code> edges</td></tr></tbody></table>
+<div class="scroll-x"><table class="state"><tbody><tr><th>else-arm</th><th>values after the arms meet</th><th>candidates</th><th>dropped</th><th>in the graph</th></tr><tr><td>MOVE ' ' TO WS-PGM</td><td>{'PROGB␣␣␣', '␣␣␣␣␣␣␣␣'}</td><td>PROGB</td><td class="changed">'' (spaces)</td><td>proven: <code>CALL</code> edge to PROGB</td></tr><tr><td>MOVE 'NONE' TO WS-PGM</td><td>{'NONE␣␣␣␣', 'PROGB␣␣␣'}</td><td>NONE, PROGB</td><td>none</td><td>two <code>CALL_CANDIDATE</code> edges</td></tr></tbody></table></div>
 In the first row the spaces path leaves one candidate and no reasons, so the edge to <code>PROGB</code> is proven; the spaces stay visible only in the row's dropped list.</li>
 </ul>
 
 <h2 id="in-cobble">In cobble</h2>
-<p>The fixpoint stage (<code>cobble-dataflow-fixpoint</code>) builds the value sets, applies the budget and records the reasons. It writes each dynamic call site as a <code>targets.jsonl</code> row. These are the two rows it writes for <code>VALSETS</code>; <code>MAIN-PARA/1</code> and <code>MAIN-PARA/2</code> are the two <code>CALL</code> statements, and the columns are rows 1 and 2 of the three-way table under <a href="#the-rule">the rule</a>.</p>
+<p>The fixpoint stage (<code>cobble-dataflow-fixpoint</code>) builds the value sets, applies the budget and records the reasons. It writes each dynamic call site as a <code>targets.jsonl</code> row. These are the two rows it writes for <code>VALSETS</code>; <code>MAIN-PARA/1</code> and <code>MAIN-PARA/2</code> are the two <code>CALL</code> statements, <code>kind</code> says the values must name a program, and the two rows are rows 1 and 2 of the three-way table under <a href="#the-rule">the rule</a>.</p>
 <pre class="cobol">{"caller": "VALSETS", "node": "MAIN-PARA/1",
- "transfer": "CALL", "expression": "WS-PGM",
+ "kind": "program", "transfer": "CALL", "expression": "WS-PGM",
  "candidates": ["PROGB", "PROGC"],
  "reasons": [], "dropped": []}
 {"caller": "VALSETS", "node": "MAIN-PARA/2",
- "transfer": "CALL", "expression": "WS-OTHER",
+ "kind": "program", "transfer": "CALL", "expression": "WS-OTHER",
  "candidates": [], "reasons": ["uninitialised"],
  "dropped": []}</pre>
 <p>The graph build (<code>cobble-build</code>) reads those rows and applies the three-way rule. From these two it draws the <em>with value sets</em> box in the graph under <a href="#the-example">the example</a>: two <code>CALL_CANDIDATE</code> edges from the first row, and from the second a <code>CALL</code> edge to a <code>DYNAMIC_TARGET</code> node with id <code>VALSETS.WS-OTHER</code> and reason <code>uninitialised</code>.</p>

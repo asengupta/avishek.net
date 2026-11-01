@@ -331,7 +331,7 @@ L2 → T        X1 → X2</pre>
 </li>
 </ol>
 </details>
-<p>Step 8's label belongs to one run of DFS, not to the graph: try the arrows in another order and a different arrow of a loop can be the back edge. What every run guarantees is that each loop contains at least one, so a graph has a back edge exactly when it has a loop. That is the one thing cobble — the static-analysis tool these pages describe — asks of them here. (Compiler textbooks also use "back edge" for a narrower idea built on <em>dominators</em>: an arrow whose target dominates its source. The fixpoint pages do not need it; the loop-structure pages, starting with <a href="dominance-and-reachability.html">dominance and reachability</a>, do.)</p>
+<p>Step 8's label belongs to one run of DFS, not to the graph: try the arrows in another order and a different arrow of a loop can be the back edge. What every run guarantees is that each loop contains at least one, so a graph has a back edge exactly when it has a loop. Cobble — the static-analysis tool these pages describe — finds them in the same search, but its walk does not use them: only the order matters to it (see <a href="#in-cobble">in cobble</a>). (Compiler textbooks also use "back edge" for a narrower idea built on <em>dominators</em>: an arrow whose target dominates its source. The fixpoint pages do not need it; the loop-structure pages, starting with <a href="dominance-and-reachability.html">dominance and reachability</a>, do.)</p>
 <p class="dim">Postorder, from the walk's last step</p><div class="chips"><span class="chip">X2</span><span class="chip">X1</span><span class="chip">L2</span><span class="chip">L1</span><span class="chip">T</span></div>
 <p class="dim">Reverse postorder</p><div class="chips"><span class="chip">T</span><span class="chip">L1</span><span class="chip">L2</span><span class="chip">X1</span><span class="chip">X2</span></div>
 <p>Each arrow of the loop graph, with its two ends' positions in that reverse postorder:</p>
@@ -441,7 +441,7 @@ L2 → T        X1 → X2</pre>
 </ul>
 
 <h2 id="in-cobble">In cobble</h2>
-<p>Cobble's fixpoint stage orders its walks by this depth-first search, its reverse postorder and its back edges. It tries a statement's arrows in the order the control-flow graph lists them, and handles an arrow's target by the three states in the table under the DFS walk. From <code>depth_first_order</code> in <code>cobble/dataflow/srccfg/order.py</code>:</p>
+<p>Cobble's fixpoint stage orders its walks by this depth-first search's reverse postorder: the walk over the whole program, and each separate walk it makes of a <code>PERFORM</code>ed paragraph, queue statements by their position in it. The search also finds the back edges, but the walk does not use them. It tries a statement's arrows in the order the control-flow graph lists them, and handles an arrow's target by the three states in the table under the DFS walk. From <code>depth_first_order</code> in <code>cobble/dataflow/srccfg/order.py</code>:</p>
 <pre class="cobol">edge = next(remaining, None)
 if edge is None:                 # nothing left: leaves
     stack.pop()
@@ -454,6 +454,9 @@ elif edge.target not in finished:  # never seen: joins
     on_path.add(edge.target)
     stack.append(...)</pre>
 <p>(Abridged: the loop around it is left out, comments are added and the last call is shortened.) A target already in <code>finished</code> falls through all three branches and is skipped, as <code>D</code> is at step 13 of the DFS walk. The search keeps its own stack rather than calling itself, because the corpus's larger programs reach thousands of statements and Python allows a thousand nested calls.</p>
+<p>Cobble's graph lists a loop test's arrow into the body before its arrow out, so on the loop above it gets the second order, the code after the loop first. On the <a href="fixpoints.html">fixpoints</a> page's program its reverse postorder is:</p>
+<div class="chips"><span class="chip">MAIN-PARA#label</span><span class="chip">MAIN-PARA/0#loop#test (T)</span><span class="chip changed">MAIN-PARA/1 (X1)</span><span class="chip changed">MAIN-PARA/2 (X2)</span><span class="chip">MAIN-PARA/0</span><span class="chip">LOOP-PARA#label</span><span class="chip">LOOP-PARA/0 (L1)</span><span class="chip">LOOP-PARA/1 (L2)</span><span class="chip">LOOP-PARA#end</span></div>
+<p><code>#label</code> and <code>#end</code> are the nodes cobble puts at the start and end of each paragraph; <code>MAIN-PARA/0#loop#test</code> is the <code>UNTIL</code> test, and <code>MAIN-PARA/0</code> is the <code>PERFORM</code> itself, which calls <code>LOOP-PARA</code>. Nor does cobble go round this loop by its back edge, <code>LOOP-PARA#end</code> to the test: it walks <code>LOOP-PARA</code> as a walk of its own and hands the result back to the test. It visits <code>X1</code> and <code>X2</code> twice, as in the 10-visit row: 16 visits in all, counting the paragraph nodes and the visits inside <code>LOOP-PARA</code> (listed under <a href="fixpoints.html#in-cobble">fixpoints, In cobble</a>).</p>
 </main>
 </body>
 </html>

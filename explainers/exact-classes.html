@@ -13,7 +13,7 @@
     startOnLoad: true,
     theme: "base",
     themeVariables: light
-      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#e6e3da", primaryTextColor: "#111", primaryBorderColor: "#d3cfc4", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
+      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#dde6ef", primaryTextColor: "#111", primaryBorderColor: "#8fa3b8", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
       : { darkMode: true, background: "#0b0f14", primaryColor: "#1a2230", primaryTextColor: "#e6edf3", primaryBorderColor: "#263041", lineColor: "#8b98a9", textColor: "#e6edf3", edgeLabelBackground: "#121821", clusterBkg: "#121821", clusterBorder: "#263041", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" },
   });
 </script>
@@ -87,6 +87,7 @@ flowchart LR
 </tbody></table></div>
 <p>The result is one class: <code>{R:CA.A, S:WS.B}</code>.</p>
 <p>The last row is the strict rule. <code>K → J</code> has no known placement, so nobody can say which of <code>J</code>'s bytes it overwrote. A field reached by such an edge neither relays nor joins.</p>
+<p>One kind of edge without placement does not count. An edge is <em>rebuilt</em> when every statement behind it built the target's value in place, by arithmetic or <code>STRING</code>: <code>ADD Y TO X</code> gives <code>Y → X</code> no placement, but <code>X</code> is not a copy of anything, so it keeps its class.</p>
 
 <h2 id="datasets">Through a file</h2>
 <p>Dataset slots relay the same way, over <code>exact</code> dataset edges. <code>W</code> writes an 11-byte <code>ID</code>; <code>R</code> reads it back as one 11-byte field; the record is cut into slots <code>[0:5]</code> and <code>[5:11]</code>:</p>
@@ -107,38 +108,43 @@ flowchart LR
 moves(byte)    = bytes an aligned edge carries it to<br>
 onward(b)      = {b} if b is not on a relay; else b and everything reachable from it<br>
 landings(a, i) = { onward(m) | m ∈ moves((a, i)) } restricted to non-relay fields<br>
-unplaced       = targets of a field-to-field edge with no placement<br>
+unplaced       = targets of a field-to-field edge with no placement that is not rebuilt<br>
 exact(a, b)    = program(a) ≠ program(b) ∧ size(a) = size(b)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;∧ ∀ i: { offsets of b in landings(a, i) } = { i }<br>
 classes        = connected components of exact pairs, unplaced fields left out
 </div>
 
 <h2 id="knobs">Loosening it</h2>
-<p>Each condition costs recall. Measured on CardDemo, loosening one at a time (baseline: 90 classes, 394 fields):</p>
+<p>Each condition costs recall. On CardDemo the strict rule gives 111 classes of 510 fields. Ignoring the unplaced rule:</p>
+<div class="scroll-x"><table class="state"><tbody>
+<tr><th>run</th><th>classes</th><th>fields</th><th>what is added</th></tr>
+<tr><td>strict</td><td>111</td><td>510</td><td></td></tr>
+<tr><td>ignore the unplaced rule</td><td>113</td><td>583</td><td>73 fields, 70 of them commarea fields</td></tr>
+</tbody></table></div>
+<p>The other three loosenings were measured on 2026-10-26, when the strict rule gave 90 classes of 394 fields. They are not offered, so they have not been measured since:</p>
 <div class="scroll-x"><table class="state"><tbody>
 <tr><th>loosened</th><th>classes</th><th>fields</th><th>precision, by sample</th></tr>
-<tr><td>ignore the unplaced rule</td><td>92</td><td>448</td><td>held: commarea copies joining classes they belong to</td></tr>
 <tr><td>allow joins in one program</td><td>441</td><td>1,811</td><td class="changed">mixed: one value fanned out to 42 fields becomes one class</td></tr>
 <tr><td>accept 75% of bytes in place</td><td>90</td><td>394</td><td>no effect</td></tr>
 <tr><td>a field inside a bigger one</td><td>45</td><td>438</td><td class="changed">collapses: chains merge distinct fields</td></tr>
 </tbody></table></div>
-<p>Only the first is offered, as <code>--join-unplaced</code>.</p>
+<p>Only ignoring the unplaced rule is offered, as <code>--join-unplaced</code>.</p>
 
 <h2 id="carddemo">On CardDemo</h2>
-<p><strong>Through a file.</strong> The card number in the cross-reference record is one class of eight fields, one per program, though no program writes the file:</p>
-<div class="chips"><span class="chip">CBACT03C</span><span class="chip">CBACT04C</span><span class="chip">CBTRN02C</span><span class="chip">CBTRN03C</span><span class="chip">COACTUPC</span><span class="chip">COACTVWC</span><span class="chip">COBIL00C</span><span class="chip">COTRN02C</span></div>
-<p>All eight are <code>CARD-XREF-RECORD.XREF-CARD-NUM</code>, 16 bytes, meeting in the record's slot [0:16]. Two readers of the same bytes stay out:</p>
+<p><strong>Through a file.</strong> The card number in the cross-reference record is one class of 14 fields over ten programs, though no program writes the file:</p>
+<div class="chips"><span class="chip">CBACT03C</span><span class="chip">CBACT04C</span><span class="chip">CBEXPORT</span><span class="chip">CBSTM03B</span><span class="chip">CBTRN02C</span><span class="chip">CBTRN03C</span><span class="chip">COACTUPC</span><span class="chip">COACTVWC</span><span class="chip">COBIL00C</span><span class="chip">COTRN02C</span></div>
+<p>All 14 are 16 bytes: <code>CARD-XREF-RECORD.XREF-CARD-NUM</code> in nine of the programs, and the file's own record field <code>FD-XREF-CARD-NUM</code> in the five batch readers that declare one (CBACT03C, CBACT04C, CBSTM03B, CBTRN02C, CBTRN03C). The batch readers and <code>COTRN02C</code> meet in the cross-reference file's slot [0:16]. <code>COACTUPC</code>, <code>COACTVWC</code> and <code>COBIL00C</code> read its alternate-index path, a dataset of its own, and meet in that dataset's slot [0:16]. <code>COTRN02C</code> reads both, which joins the two groups. Two readers of the same bytes stay out:</p>
 <ul>
-<li><code>CBSTM03B</code> reads the record into a 1,000-byte field. Its bytes 0–15 do land on slot [0:16], but a 1,000-byte field is not the same size as a 16-byte one.</li>
+<li><code>CBSTM03B</code>'s 1,000-byte I/O area. Its bytes 0–15 do land on slot [0:16], but a 1,000-byte field is not the same size as a 16-byte one. <code>CBSTM03B</code> joins through its <code>FD-XREF-CARD-NUM</code> instead.</li>
 <li><code>CBTRN01C</code>'s read never resolved to the dataset (no JCL step runs it), so it has a slot of its own.</li>
 </ul>
-<p><strong>Through a commarea, and the strict rule.</strong> <code>CDEMO-USER-ID</code> in the shared commarea copybook joins three programs under the strict rule, and six with <code>--join-unplaced</code>:</p>
+<p><strong>Through a commarea, and the strict rule.</strong> <code>CDEMO-USER-ID</code> in the shared commarea copybook forms two classes under the strict rule, of three programs and two, and two with <code>--join-unplaced</code>, of six and three:</p>
 <div class="scroll-x"><table class="state"><tbody>
-<tr><th>run</th><th>CDEMO-USER-ID's class</th></tr>
-<tr><td>strict</td><td>COCRDLIC, COCRDSLC, COCRDUPC</td></tr>
-<tr><td>--join-unplaced</td><td>COACTUPC, COACTVWC, COCRDLIC, COCRDSLC, COCRDUPC, <span class="changed">COMEN01C</span></td></tr>
+<tr><th>run</th><th>CDEMO-USER-ID's classes</th></tr>
+<tr><td>strict</td><td>COCRDLIC, COCRDSLC, COCRDUPC<br>COTRTLIC, COTRTUPC</td></tr>
+<tr><td>--join-unplaced</td><td><span class="changed">COACTUPC</span>, <span class="changed">COACTVWC</span>, COCRDLIC, COCRDSLC, COCRDUPC, <span class="changed">COMEN01C</span><br><span class="changed">COADM01C</span>, COTRTLIC, COTRTUPC</td></tr>
 </tbody></table></div>
-<p>The flag changes only one thing, the unplaced rule, so in the other three programs the commarea field is also reached by a move with no known placement, and the strict rule leaves it out. <code>CDEMO-ACCT-ID</code> forms no class at all under the strict rule, and a six-program one with the flag.</p>
+<p>The flag changes only one thing, the unplaced rule, so in the four added programs the commarea field is also reached by a move with no known placement, and the strict rule leaves it out. <code>CDEMO-ACCT-ID</code> forms only the COTRTLIC, COTRTUPC class under the strict rule, and with the flag the same two classes as <code>CDEMO-USER-ID</code>, in the same programs.</p>
 </main>
 </body>
 </html>

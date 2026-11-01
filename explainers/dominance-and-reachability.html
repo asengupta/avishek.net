@@ -13,7 +13,7 @@
     startOnLoad: true,
     theme: "base",
     themeVariables: light
-      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#e6e3da", primaryTextColor: "#111", primaryBorderColor: "#d3cfc4", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
+      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#dde6ef", primaryTextColor: "#111", primaryBorderColor: "#8fa3b8", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
       : { darkMode: true, background: "#0b0f14", primaryColor: "#1a2230", primaryTextColor: "#e6edf3", primaryBorderColor: "#263041", lineColor: "#8b98a9", textColor: "#e6edf3", edgeLabelBackground: "#121821", clusterBkg: "#121821", clusterBorder: "#263041", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" },
   });
 </script>
@@ -361,7 +361,7 @@ flowchart TD
     L1 --> L2
     L2 -.->|back edge| T
     class T,L2 member
-    classDef member stroke:#4ade80,stroke-width:3px,fill:transparent
+    classDef member stroke:#15803d,stroke-width:3px,fill:transparent
 </pre>
 <p class="dim">To expand</p><div class="chips"><span class="chip">L2</span><span class="chip">T</span></div><p class="dim">Body so far</p><div class="chips"><span class="chip">L2</span><span class="chip">T</span></div></li>
 <li><p class="note">Take <code>T</code> off the list. It is the stopping point: do not expand its predecessors.</p>
@@ -374,7 +374,7 @@ flowchart TD
     L2 -.->|back edge| T
     class L2 member
     class T changed
-    classDef member stroke:#4ade80,stroke-width:3px,fill:transparent
+    classDef member stroke:#15803d,stroke-width:3px,fill:transparent
     classDef changed fill:#f5b041,stroke:#f5b041,color:#000
 </pre>
 <p class="dim">To expand</p><div class="chips"><span class="chip">L2</span></div><p class="dim">Body so far</p><div class="chips"><span class="chip">L2</span><span class="chip">T</span></div></li>
@@ -388,7 +388,7 @@ flowchart TD
     L2 -.->|back edge| T
     class T member
     class L1,L2 changed
-    classDef member stroke:#4ade80,stroke-width:3px,fill:transparent
+    classDef member stroke:#15803d,stroke-width:3px,fill:transparent
     classDef changed fill:#f5b041,stroke:#f5b041,color:#000
 </pre>
 <p class="dim">To expand</p><div class="chips"><span class="chip">L1</span></div><p class="dim">Body so far</p><div class="chips"><span class="chip">L2</span><span class="chip">T</span><span class="chip changed">L1</span></div></li>
@@ -402,7 +402,7 @@ flowchart TD
     L2 -.->|back edge| T
     class T,L2 member
     class L1 changed
-    classDef member stroke:#4ade80,stroke-width:3px,fill:transparent
+    classDef member stroke:#15803d,stroke-width:3px,fill:transparent
     classDef changed fill:#f5b041,stroke:#f5b041,color:#000
 </pre>
 <p class="dim">To expand</p><div class="chips"><span class="dim">empty</span></div><p class="dim">Body so far</p><div class="chips"><span class="chip">L2</span><span class="chip">T</span><span class="chip">L1</span></div></li>

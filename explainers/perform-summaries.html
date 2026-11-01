@@ -22,7 +22,7 @@
     startOnLoad: true,
     theme: "base",
     themeVariables: light
-      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#e6e3da", primaryTextColor: "#111", primaryBorderColor: "#d3cfc4", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
+      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#dde6ef", primaryTextColor: "#111", primaryBorderColor: "#8fa3b8", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
       : { darkMode: true, background: "#0b0f14", primaryColor: "#1a2230", primaryTextColor: "#e6edf3", primaryBorderColor: "#263041", lineColor: "#8b98a9", textColor: "#e6edf3", edgeLabelBackground: "#121821", clusterBkg: "#121821", clusterBorder: "#263041", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" },
   });
 </script>
@@ -32,7 +32,7 @@
 <nav class="back"><a href="index.html">← All explainers</a></nav>
 <div class="kicker">Explainer 14 of 15</div>
 <h1>Summarising a PERFORM</h1>
-<aside class="tldr"><p><strong>TL;DR</strong>Cut each <code>PERFORM</code>ed range out of the walk and treat it as a function from the bytes it touches to the bytes it touches. A <code>PERFORM</code> applies that function and hands the result to its own resume point only. Ranges that perform other ranges are built by composing their functions, and the result is the same as pasting every paragraph's body in at its <code>PERFORM</code>.</p></aside>
+<aside class="tldr"><p><strong>TL;DR</strong>Cut each <code>PERFORM</code>ed range out of the walk and treat it as a function from the bytes it touches to the bytes it touches. A <code>PERFORM</code> applies that function and hands the result to its own resume point only. Ranges that perform other ranges are built by composing their functions, and the result is the same as pasting each range's statements in at its <code>PERFORM</code>, with one exception: when no edge leads to a range's end, cobble also sends the state from before the <code>PERFORM</code> on to the next statement, which a pasted copy would never reach.</p></aside>
 <p class="prereqs"><strong>Read first:</strong> <a href="fixpoints.html">Fixpoints and worklists</a>, <a href="value-sets.html">Value sets and dynamic calls</a></p>
 <h2 id="idea">The solution in one example</h2>
 <pre class="cobol">MAIN-PARA.
@@ -46,6 +46,7 @@ OUTER.
     MOVE WS-B TO WS-C.
 INNER.
     MOVE WS-A TO WS-B.</pre>
+<p class="dim">Values are shown with trailing spaces dropped (<code>PROGA</code> is <code>'PROGA␣␣␣'</code>); <code>U</code> means uninitialised. Every field on this page is <code>PIC X(8)</code>, laid out in declaration order: here WS-A is working-storage bytes [0,8), WS-B [8,16), WS-C [16,24); in section 4's program WS-D is [24,32); in the two-call program below, WS-V is [0,8) and WS-W [8,16).</p>
 <p>Each performed paragraph becomes a function on just the fields it touches. Build them from the inside out:</p>
 <div style="overflow-x:auto"><table class="state"><tr><th>paragraph</th><th>touches</th><th>function</th><th>built how</th></tr>
 <tr><td>INNER</td><td>WS-A, WS-B</td><td><code>f<sub>INNER</sub>(A, B) = (A, A)</code></td><td>its one MOVE</td></tr>
@@ -81,23 +82,23 @@ g_n\big(\mathit{in}(n)[\mathit{reads}(n)]\big)[x] & x \in \mathit{writes}(n),\ \
 \mathit{in}(n)[x] \,\cup\, g_n\big(\mathit{in}(n)[\mathit{reads}(n)]\big)[x] & x \in \mathit{writes}(n),\ \text{weak write}
 \end{cases}
 \]
-<p>For example, for \(n\) = <code>MOVE WS-V TO WS-W</code>: \(\mathit{reads}(n) = \{\texttt{WS-V}\}\), \(\mathit{writes}(n) = \{\texttt{WS-W}\}\), and \(\mathit{out}(n)[\texttt{WS-W}] = \mathit{in}(n)[\texttt{WS-V}]\). A write is <em>weak</em> when cobble cannot be sure it lands on \(x\): the target is a table element with an unknown subscript, or the statement is one cobble does not model. Then the old values are kept as well.</p>
+<p>For example, for \(n\) = <code>MOVE WS-V TO WS-W</code>: \(\mathit{reads}(n) = \{\texttt{WS-V}\}\), \(\mathit{writes}(n) = \{\texttt{WS-W}\}\), and \(\mathit{out}(n)[\texttt{WS-W}] = \mathit{in}(n)[\texttt{WS-V}]\). A write is <em>weak</em> when cobble cannot be sure it lands on \(x\): the target is a table element whose subscript is not a constant, or a reference modification whose start or length is not a constant, or the statement is one cobble has no rule for but whose node lists fields it writes. Then the old values are kept as well. A statement with no rule and no listed writes leaves every field as it was.</p>
 
 <p><strong>The join.</strong> A node with several incoming edges gets the field-by-field union of the states leaving the nodes those edges come from, its predecessors \(p_1, \dots, p_k\). Write \(\sqcup\) for that union:</p>
 \[
 \mathit{in}(n) = \mathit{out}(p_1) \sqcup \dots \sqcup \mathit{out}(p_k), \qquad
 (\sigma_1 \sqcup \sigma_2)[x] = \sigma_1[x] \cup \sigma_2[x]
 \]
-<p>For example, \(\sigma_1[\texttt{WS-V}] = \{\text{PROGA}\}\) and \(\sigma_2[\texttt{WS-V}] = \{\text{PROGB}\}\) give \((\sigma_1 \sqcup \sigma_2)[\texttt{WS-V}] = \{\text{PROGA}, \text{PROGB}\}\).</p>
+<p>For example, \(\sigma_1[\texttt{WS-V}] = \{\text{PROGA}\}\) and \(\sigma_2[\texttt{WS-V}] = \{\text{PROGB}\}\) give \((\sigma_1 \sqcup \sigma_2)[\texttt{WS-V}] = \{\text{PROGA}, \text{PROGB}\}\). \(\bot\) is no state at all: no route has reached that point yet. \(\bot \sqcup \sigma = \sigma\), and every function on this page maps \(\bot\) to \(\bot\).</p>
 
-<p><strong>A performed range.</strong> A range \(Q\) is what one <code>PERFORM</code> runs: from \(Q\)'s entry node to \(Q\)'s end node. Its <strong>footprint</strong> \(F(Q)\) is the set of fields that the statements in \(Q\) read or write, together with the footprints of the ranges \(Q\) performs. The definition is recursive: Its transfer function \(f_Q\) takes the arriving state, kept to \(F(Q)\), to the state after \(Q\)'s end node, kept to \(F(Q)\) as well. Fields in \(F(Q)\) that \(Q\) only reads come out as they went in.</p>
+<p><strong>A performed range.</strong> A range \(Q\) is what one <code>PERFORM</code> runs: from \(Q\)'s entry node \(\mathrm{entry}_Q\) to \(Q\)'s end node \(\mathrm{end}_Q\). \(n \in Q\) means \(n\) is one of \(Q\)'s nodes: those a route from \(\mathrm{entry}_Q\) reaches without passing \(\mathrm{end}_Q\), along every edge but PERFORM and RETURN edges (so a <code>GO TO</code> out of \(Q\)'s paragraphs is followed), a <code>PERFORM</code> node stepping over its range to the statement after it unless that range is entered at \(\mathrm{entry}_Q\). Its <strong>footprint</strong> \(F(Q)\) is the set of fields that \(Q\)'s nodes read or write, together with the footprints of the ranges performed at \(Q\)'s nodes, other than ranges entered at \(\mathrm{entry}_Q\). The definition is recursive:</p>
 \[
-F(Q) = \bigcup_{n \in Q} \big(\mathit{reads}(n) \cup \mathit{writes}(n)\big) \;\cup \bigcup_{Q_2 \text{ performed in } Q} F(Q_2)
+F(Q) = \bigcup_{n \in Q} \big(\mathit{reads}(n) \cup \mathit{writes}(n)\big) \;\cup \bigcup_{\substack{Q_2 \text{ performed at some } n \in Q \\ \mathrm{entry}_{Q_2} \neq \mathrm{entry}_Q}} F(Q_2)
 \]
-<p>Cobble does not evaluate it by recursion. It starts every range's footprint at its own statements' fields, then keeps adding the footprints of the ranges each one performs until no footprint grows. That gives the smallest sets satisfying the equation, and it stops even when <code>PERFORM</code>s form a cycle.</p>
-<p>For a set of fields \(X\), let \(S(X)\) be the set of all states over \(X\): every way of giving each field in \(X\) a value set. \(f_Q\) takes a state over \(Q\)'s footprint and returns a state over the same fields:</p>
+<p>Cobble does not evaluate it by recursion. It starts every range's footprint at its own nodes' fields, then keeps adding the footprints of the ranges each one performs until no footprint grows. That gives the smallest sets satisfying the equation, and it stops even when <code>PERFORM</code>s form a cycle.</p>
+<p>For a set of fields \(X\), let \(S(X)\) be the set of all states over \(X\): every way of giving each field in \(X\) a value set. \(Q\)'s transfer function \(f_Q\) takes the arriving state, kept to \(F(Q)\), to the state leaving \(\mathrm{end}_Q\), kept to \(F(Q)\) as well, or to \(\bot\) when no route reaches \(\mathrm{end}_Q\). Fields in \(F(Q)\) that \(Q\) only reads come out as they went in.</p>
 \[
-f_Q : S(F(Q)) \to S(F(Q))
+f_Q : S(F(Q)) \to S(F(Q)) \cup \{\bot\}
 \]
 <p>For example, for \(P\) = <code>MOVE WS-V TO WS-W</code>, \(F(P) = \{\texttt{WS-V}, \texttt{WS-W}\}\) and</p>
 \[
@@ -110,9 +111,17 @@ f_Q : S(F(Q)) \to S(F(Q))
 \[
 \mathit{out}(p) = f_Q\big(\mathit{in}(p)[F(Q)]\big) \,\oplus\, \mathit{in}(p)[\mathbb{F} \setminus F(Q)]
 \]
-<p>\(\mathit{out}(p)\) goes to one node only, \(\mathit{resume}(p)\): the statement right after that <code>PERFORM</code>.</p>
+<p>with \(\bot \oplus \sigma = \bot\). Where \(p\)'s state goes depends on whether any edge of the graph leads to \(\mathrm{end}_Q\):</p>
+\[
+p \text{ sends }
+\begin{cases}
+\mathit{out}(p) \text{ to } \mathit{resume}(p) \text{ only} & \text{if an edge leads to } \mathrm{end}_Q \\
+\mathit{in}(p) \text{ to the statement after } p \text{ only} & \text{otherwise}
+\end{cases}
+\]
+<p>\(\mathit{resume}(p)\) is the statement right after that <code>PERFORM</code>; sending \(\bot\) sends nothing. In the second case the graph says \(Q\) never returns, so the statement after \(p\) would be dead. Cobble keeps \(p\)'s edge to it anyway, because the graph can be wrong (an <code>ALTER</code>ed <code>GO TO</code>, control flow the parser dropped), and passes on the state from before the <code>PERFORM</code>, ignoring \(Q\)'s writes.</p>
 
-<p><strong>Composition.</strong> For a range whose nodes run in a straight line \(n_1, \dots, n_k\), its function is theirs applied in order, with a nested <code>PERFORM</code> node's rule standing in for the inner range. With branches or loops, \(f_Q(\sigma)\) is the state at \(Q\)'s end once a walk of \(Q\) from \(\sigma\) stops changing.</p>
+<p><strong>Composition.</strong> For a range whose nodes run in a straight line \(n_1, \dots, n_k\), its function is theirs applied in order, with a nested <code>PERFORM</code> node's rule standing in for the inner range. With branches or loops, \(f_Q(\sigma)\) is the state leaving \(\mathrm{end}_Q\) once a walk of \(Q\) from \(\sigma\) stops changing, or \(\bot\) if the walk never reaches \(\mathrm{end}_Q\).</p>
 \[
 f_Q = f_{n_k} \circ \dots \circ f_{n_1}
 \]
@@ -127,11 +136,11 @@ f_{\mathrm{OUTER}} = f_{\texttt{MOVE WS-B TO WS-C}} \circ f_{\mathrm{INNER}}
 f_{\mathrm{OUTER}}(a, b, c) = (a, a, a) \quad \text{over } (\texttt{WS-A}, \texttt{WS-B}, \texttt{WS-C})
 \]
 
-<p><strong>The fixpoint, with summaries.</strong> \(\mathrm{entry}_Q\) and \(\mathrm{end}_Q\) are \(Q\)'s entry node and end node. \(\mathit{walk}(Q, \sigma)\) walks range \(Q\) from input \(\sigma\) and returns \(\mathit{out}(\mathrm{end}_Q)\), the state leaving \(Q\)'s end node. \(\mathit{results}\) is a table of finished walks, keyed by (range, input). The worklist \(L\) holds the nodes whose arriving state has grown and must be visited again. \(\mathit{succ}_Q(n)\) is \(n\)'s successors, never along a RETURN edge, and none if \(n\) is \(Q\)'s end node. \(\varnothing\) is the state whose every field holds the empty set, and \(\mathit{out}(n) \not\sqsubseteq \mathit{in}(m)\) means \(\mathit{out}(n)\) has, for some field, a value \(\mathit{in}(m)\) lacks. \(\mathrm{end}_Q\) is visited like any other node; it differs only in having no successors, so its \(\mathit{out}\) is returned rather than passed on. The whole analysis is \(\mathit{walk}(\text{MAIN}, \sigma_{\text{start}})\), from the program's starting state.</p>
+<p><strong>The fixpoint, with summaries.</strong> \(\mathit{walk}(Q, \sigma)\) walks range \(Q\) from input \(\sigma\) and returns \(\mathit{out}(\mathrm{end}_Q)\), the state leaving \(Q\)'s end node, or \(\bot\) if the walk never reached it. \(\mathit{results}\) is a table of finished walks, keyed by (range, input). The worklist \(L\) holds the nodes whose arriving state has grown and must be visited again. \(\mathit{succ}_Q(n)\) is \(n\)'s successors along every edge but PERFORM and RETURN edges, and none if \(n\) is \(\mathrm{end}_Q\); a <code>PERFORM</code> node with a \(\mathit{resume}\) has no other such edge. \(\sigma' \not\sqsubseteq \mathit{in}(m)\) means \(\mathit{in}(m) = \bot \neq \sigma'\), or \(\sigma'\) has, for some field, a value \(\mathit{in}(m)\) lacks. \(\mathrm{end}_Q\) is visited like any other node; it differs only in having no successors, so its \(\mathit{out}\) is returned rather than passed on. The whole analysis is \(\mathit{walk}(T, \sigma_{\text{start}})\), from the program's starting state, where \(T\) is the whole program taken as a range with no end node: \(\mathrm{entry}_T\) is the first paragraph's start node, and \(\mathit{succ}_T\) cuts no node's successors.</p>
 \[
 \begin{array}{l}
 \mathit{walk}(Q, \sigma): \\
-\quad \mathit{in}(\mathrm{entry}_Q) := \sigma;\ \ \mathit{in}(n) := \varnothing \text{ for every other } n;\ \ \mathit{out}(n) := \varnothing \text{ for every } n \\
+\quad \mathit{in}(\mathrm{entry}_Q) := \sigma;\ \ \mathit{in}(n) := \bot \text{ for every other } n;\ \ \mathit{out}(n) := \bot \text{ for every } n \\
 \quad L := \{\mathrm{entry}_Q\} \\
 \quad \textbf{while } L \neq \varnothing: \\
 \quad\quad \text{take a node } n \text{ out of } L \\
@@ -139,17 +148,17 @@ f_{\mathrm{OUTER}}(a, b, c) = (a, a, a) \quad \text{over } (\texttt{WS-A}, \text
 \quad\quad\quad \mathit{input} := \mathit{in}(n)[F(Q_2)] \\
 \quad\quad\quad \textbf{if } (Q_2, \mathit{input}) \notin \mathit{results}:\ \ \mathit{results}[Q_2, \mathit{input}] := \mathit{walk}(Q_2, \mathit{input}) \\
 \quad\quad\quad \mathit{out}(n) := \mathit{results}[Q_2, \mathit{input}] \oplus \mathit{in}(n)[\mathbb{F} \setminus F(Q_2)] \\
-\quad\quad\quad \mathit{next} := \{\mathit{resume}(n)\} \\
+\quad\quad\quad \textbf{if } \mathit{resume}(n) \text{ exists}:\ \ \mathit{send}(\mathit{out}(n), \mathit{resume}(n)) \\
+\quad\quad\quad \textbf{else}:\ \ \mathit{send}(\mathit{in}(n), m) \text{ for each } m \in \mathit{succ}_Q(n) \\
 \quad\quad \textbf{else}: \\
-\quad\quad\quad \mathit{out}(n) := f_n(\mathit{in}(n));\ \ \mathit{next} := \mathit{succ}_Q(n) \\
-\quad\quad \textbf{for each } m \in \mathit{next}: \\
-\quad\quad\quad \textbf{if } \mathit{out}(n) \not\sqsubseteq \mathit{in}(m):\ \ \mathit{in}(m) := \mathit{in}(m) \sqcup \mathit{out}(n);\ \ L := L \cup \{m\} \\
-\quad \textbf{return } \mathit{out}(\mathrm{end}_Q)
+\quad\quad\quad \mathit{out}(n) := f_n(\mathit{in}(n));\ \ \mathit{send}(\mathit{out}(n), m) \text{ for each } m \in \mathit{succ}_Q(n) \\
+\quad \textbf{return } \mathit{out}(\mathrm{end}_Q) \\[6pt]
+\mathit{send}(\sigma', m): \\
+\quad \textbf{if } \sigma' \not\sqsubseteq \mathit{in}(m):\ \ \mathit{in}(m) := \mathit{in}(m) \sqcup \sigma';\ \ L := L \cup \{m\}
 \end{array}
 \]
-<p><strong>The PERFORM stack.</strong> The recursion of \(\mathit{walk}\) is a stack of <code>PERFORM</code>s. Reaching a <code>PERFORM</code> node \(n\) pushes a new \(\mathit{walk}\) for its range; when that walk returns, it is popped and the outer walk is still at \(n\), so it reads \(\mathit{resume}(n)\) from the right node. That is how each call's result returns to its own call site, which a walk following RETURN edges cannot tell apart. In the nested example the stack is at most three deep: MAIN-PARA, then \((\text{P1} \dots \text{P2})\), then SET-B.</p>
-<p class="dim">Left out for brevity: cobble also keeps the set of ranges on the stack. A <code>PERFORM</code> of a range already on it ends that route (COBOL leaves recursive <code>PERFORM</code> undefined), and that set is part of the table's key. A <code>PERFORM</code> reached again with a larger input continues its earlier walk instead of starting over.</p>
-<p class="dim">Values are shown with trailing spaces dropped (<code>PROGA</code> is <code>'PROGA␣␣␣'</code>); <code>U</code> means uninitialised. Every field is <code>PIC X(8)</code>, laid out in declaration order: in the two-call program WS-V is working-storage bytes [0,8) and WS-W [8,16); in the others WS-A is [0,8), WS-B [8,16), WS-C [16,24), WS-D [24,32).</p>
+<p><strong>The PERFORM stack.</strong> The recursion of \(\mathit{walk}\) is a stack of <code>PERFORM</code>s. Reaching a <code>PERFORM</code> node \(n\) pushes a new \(\mathit{walk}\) for its range; when that walk returns, it is popped and the outer walk is still at \(n\), so it reads \(\mathit{resume}(n)\) from the right node. That is how each call's result returns to its own call site, which a walk following RETURN edges cannot tell apart. In section 4's example, where MAIN-PARA runs <code>PERFORM P1 THRU P2</code> and paragraph P1 runs <code>PERFORM SET-B</code>, the stack is at most three deep: \(T\), then the range from P1's start to P2's end, then SET-B.</p>
+<p class="dim">Left out for brevity: cobble also keeps the set of entry nodes of the ranges on the stack. A <code>PERFORM</code> of a range whose entry is in that set ends that route (COBOL leaves recursive <code>PERFORM</code> undefined), so <code>PERFORM P1</code> inside a walk of P1 THRU P2 is refused. The table's key also holds the part of that set the range's walk can come to a <code>PERFORM</code> of. A <code>PERFORM</code> statement reached again, with the same set and an input that contains its last one, continues its last walk instead of starting over.</p>
 <nav class="toc"><p class="dim">On this page</p><ol><li><a href="#idea">The solution in one example</a></li><li><a href="#notation">The method in notation</a></li><li><a href="#problem">The problem: a walk that follows the graph</a></li><li><a href="#contract">Cutting out a range: the contract</a></li><li><a href="#walk">The walk now</a></li><li><a href="#compose">Composing ranges</a></li><li><a href="#correct">Why composing stays correct</a></li><li><a href="#in-cobble">In cobble</a></li></ol></nav>
 
 <h2 id="problem">1. The problem: a walk that follows the graph</h2>
@@ -212,16 +221,16 @@ flowchart TD
 <div style="overflow-x:auto"><table class="state"><tr><th>statement</th><th>range (entry, end)</th></tr><tr><td><code>PERFORM P</code></td><td>(P#label, P#end)</td></tr><tr><td><code>PERFORM P1 THRU P2</code></td><td>(P1#label, P2#end)</td></tr></table></div>
 <p>At the boundary of a range R, the contract is:</p>
 <ul>
-<li><strong>Footprint.</strong> R's footprint is every byte R's own statements read or write, plus the footprint of every range R performs. For P it is bytes [0,16): WS-V and WS-W.</li>
+<li><strong>Footprint.</strong> R's footprint is every byte R's nodes read or write (every node reached from R's entry before its end, <code>GO TO</code>s out of R's paragraphs followed), plus the footprint of every range R performs. For P it is bytes [0,16): WS-V and WS-W.</li>
 <li><strong>In.</strong> A walk of R starts at R's entry with the caller's state <em>cut</em> to the footprint. Bytes outside it are not passed in.</li>
-<li><strong>Inside.</strong> The walk follows ordinary edges (flow, test outcomes, fall-through into the next paragraph). It never follows a RETURN edge. A <code>PERFORM</code> inside R is handled by this same contract, not by following its edges. The walk stops at R's end node.</li>
-<li><strong>Out.</strong> The state after R's end node is the only thing handed back. It goes to the resume node of the <code>PERFORM</code> that started the walk, which the <code>PERFORM</code> node records: <code>MAIN-PARA/1</code> resumes at <code>MAIN-PARA/2</code>, <code>MAIN-PARA/4</code> at <code>MAIN-PARA/5</code>.</li>
+<li><strong>Inside.</strong> The walk follows ordinary edges (flow, test outcomes, <code>GO TO</code>, fall-through into the next paragraph). It never follows a RETURN edge. A <code>PERFORM</code> inside R is handled by this same contract, not by following its edges. The walk stops at R's end node.</li>
+<li><strong>Out.</strong> The state after R's end node is the only thing handed back. It goes to the resume node of the <code>PERFORM</code> that started the walk, which the <code>PERFORM</code> node records: <code>MAIN-PARA/1</code> resumes at <code>MAIN-PARA/2</code>, <code>MAIN-PARA/4</code> at <code>MAIN-PARA/5</code>. A walk that never reaches R's end hands back nothing. If no edge leads to R's end at all, the <code>PERFORM</code> has no resume node: it keeps its edge to the next statement and sends the state it arrived with along it.</li>
 <li><strong>Frame.</strong> The bytes that were not passed in are put back unchanged. R cannot have changed them: nothing in R, or in any range R performs, writes them.</li>
 </ul>
 <p>What this implies: R becomes a function <code>f<sub>R</sub></code> from a state over its footprint to a state over its footprint, its <strong>transfer function</strong>. A <code>PERFORM</code> of R is then an ordinary node whose transfer is "cut, apply <code>f<sub>R</sub></code>, put the rest back". For P, <code>f</code> maps (WS-V = v, WS-W = w) to (WS-V = v, WS-W = v).</p>
 
 <h2 id="walk">3. The walk now</h2>
-<p>The same program under the contract, printed step by step from cobble's current fixpoint. Numbered rows are visits of the walk of MAIN-PARA. Under a <code>PERFORM</code>'s visit are the rows of that call: the cut, whether the table already had a result, the separate walk of the range (states arriving at each of its nodes), and what is handed back and where. P touches both fields, so nothing is held out here; the opening example and section 4 show fields held out.</p>
+<p>The same program under the contract, printed step by step from cobble's current fixpoint. Numbered rows are visits of the top-level walk, which starts at MAIN-PARA. Under a <code>PERFORM</code>'s visit are the rows of that call: the cut, whether the table already had a result, the separate walk of the range (states arriving at each of its nodes), and what is handed back and where. P touches both fields, so nothing is held out here; the opening example and section 4 show fields held out.</p>
 <div class="side">
 <pre class="cobol src">MAIN-PARA.
     MOVE 'PROGA' TO WS-V.  MAIN-PARA/0
@@ -261,7 +270,7 @@ P.
 
 </div>
 </div>
-<p>Compare with section 1. Each walk of P starts from one call's state, so nothing is joined at <code>P#label</code>. Each hand-back goes to one node: <code>MAIN-PARA/2</code> for the first call, <code>MAIN-PARA/5</code> for the second. The walk of MAIN-PARA visits each statement once, with no cycle, and WS-W arrives at <code>CALL WS-W</code> (visit 4) as PROGA only.</p>
+<p>Compare with section 1. Each walk of P starts from one call's state, so nothing is joined at <code>P#label</code>. Each hand-back goes to one node: <code>MAIN-PARA/2</code> for the first call, <code>MAIN-PARA/5</code> for the second. The top-level walk visits each statement once, with no cycle, and WS-W arrives at <code>CALL WS-W</code> (visit 4) as PROGA only.</p>
 
 <h2 id="compose">4. Composing ranges</h2>
 <p>When a range performs another, its function is built from the inner one. Which function a <code>PERFORM</code> applies depends on its range, not just on the paragraph it names:</p>
@@ -361,15 +370,16 @@ f<sub>(P1, P2#end)</sub> &nbsp;= [P2/0: C := B] ∘ [P1/1: D := 'DONE'] ∘ f<su
 </ul>
 <p>Checked on both examples: the programs with every <code>PERFORM</code> replaced by a pasted copy of its range give cobble the same answers.</p>
 <div style="overflow-x:auto"><table class="state"><tr><th>program</th><th>answer</th></tr><tr><td>two-call program (sections 1–3), with PERFORMs</td><td>CALL WS-W: PROGA</td></tr><tr><td>two-call program, pasted</td><td>CALL WS-W: PROGA</td></tr><tr><td>nested example (section 4), with PERFORMs</td><td>CALL WS-X: PROGA, CALL WS-Y: PROGB</td></tr><tr><td>nested example, pasted</td><td>CALL WS-X: PROGA, CALL WS-Y: PROGB</td></tr></table></div>
-<p>The argument needs three things to hold, and breaks without any one of them:</p>
+<p>The argument needs four things to hold, and breaks without any one of them:</p>
 <ul>
 <li><strong>The footprint covers every byte the range or its callees write.</strong> A missed byte would be put back over a write. Cobble errs large: a subscripted name counts as every occurrence of its table.</li>
-<li><strong>The range is not already being walked.</strong> COBOL leaves a <code>PERFORM</code> of a range that is still running undefined, and pasting would never end. Cobble ends such a route, and adds which ranges are open to the table's key.</li>
+<li><strong>The range is not already being walked.</strong> COBOL leaves a <code>PERFORM</code> of a range that is still running undefined, and pasting would never end. Cobble ends a route at a <code>PERFORM</code> whose range's entry is already being walked, and adds to the table's key the open entries the range's walk can come to a <code>PERFORM</code> of.</li>
 <li><strong>Only the end node hands back.</strong> A route that leaves the range by <code>GO TO</code> or <code>EXEC CICS RETURN</code> is not a return, and pasting would not return there either.</li>
+<li><strong>Some edge leads to the range's end.</strong> If none does, cobble sends the state from before the <code>PERFORM</code> to the next statement, which a pasted copy never reaches. With <code>MOVE 'PROGA' TO WS-X. PERFORM P. CALL WS-X.</code>, where P is <code>MOVE 'PROGB' TO WS-X. GO TO Q.</code>, cobble resolves <code>CALL WS-X</code> to PROGA; pasted, the <code>CALL</code> is never reached and cobble finds no program for it, with WS-X uninitialised.</li>
 </ul>
 
 <h2 id="in-cobble">In cobble</h2>
-<p>The fixpoint stage (<code>cobble-dataflow-fixpoint</code>) handles every <code>PERFORM</code> this way, with no option to turn it off. It computes every range's footprint once per program, before walking. When a <code>PERFORM</code> is reached again with a larger input, as round a loop, it continues the earlier walk of that range instead of starting over.</p>
+<p>The fixpoint stage (<code>cobble-dataflow-fixpoint</code>) handles every <code>PERFORM</code> this way, with no option to turn it off. <code>--sweeps N</code>, which bounds the walk to N passes over the program, bounds every range walk the same way, and marks the program unsettled if any walk stopped with work left. Cobble computes every range's footprint once per program, before walking. A <code>PERFORM</code> of a paragraph the program does not declare has no range and no PERFORM edge: it keeps its edge to the next statement and passes its state on unchanged.</p>
 </main>
 </body>
 </html>

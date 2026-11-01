@@ -20,7 +20,7 @@
 <ul>
 <li><strong>Rows</strong> are paragraphs, <code>(program, paragraph)</code>. A paragraph is a unit of behaviour: it does one job, so the fields it touches belong to the job.</li>
 <li><strong>Columns</strong> are fields, named <code>PROGRAM:RECORD.FIELD</code>. Every member of an <a href="exact-classes.html">exact class</a> is replaced by the class, so one datum is one column across programs. Table occurrences fold into their declared field.</li>
-<li><strong>A 1</strong> where any read in the paragraph covers the field, or where the paragraph wrote what such a read sees.</li>
+<li><strong>A 1</strong> for every field a read covers, in the read's paragraph and in the paragraph of each of its definers, whichever of the read's bytes that definer wrote.</li>
 </ul>
 <p>Nothing is counted in pairs or weighted. An earlier version scored field pairs by pointwise mutual information. It dropped every field seen in fewer than three paragraphs, so rare fields had empty rows.</p>
 
@@ -72,7 +72,7 @@ minimise ‖X − W H‖²
 residual(i, j) = max(0, X(i, j) − Σ<sub>rounds</sub> W(i, ·) · H(·, j))&nbsp;&nbsp;&nbsp;only at X's non-zeros<br>
 cost per round = non-zeros × k
 </div>
-<p>The answer is the same up to floating-point rounding, at a fraction of the memory. A synthetic matrix of 100,000 paragraphs, 600,000 fields and 4.5 million non-zeros ran three rounds in 50 seconds and 1.2 GB.</p>
+<p>The answer is the same up to floating-point rounding, at a fraction of the memory. When the change was made, on 2026-10-26, a synthetic matrix of 600,000 fields and 4.5 million non-zeros ran in 50 seconds within 1.2 GB.</p>
 
 <h2 id="wrong">What goes wrong</h2>
 <ul>
@@ -82,15 +82,16 @@ cost per round = non-zeros × k
 </ul>
 
 <h2 id="carddemo">On CardDemo</h2>
-<p>CardDemo's matrix has 389 paragraphs, 1,621 field columns and 5,114 non-zeros. Round 1, fields in at least 4 paragraphs, <code>k = 30</code>, no exclusions. Three of its 30 factors:</p>
-<p><strong>Factor 4: the account record.</strong> Every top field is a class spanning six programs: CBACT01C, CBACT04C, CBTRN02C, COACTUPC, COACTVWC and COBIL00C.</p>
+<p>CardDemo's matrix has 455 paragraphs, 1,883 field columns and 5,850 non-zeros. Round 1, fields in at least 4 paragraphs, <code>k = 30</code>, no exclusions. Three of its 30 factors:</p>
+<p><strong>Factor 4: the account record.</strong> Its 13 heaviest fields are each a class spanning seven programs: CBACT01C, CBACT04C, CBEXPORT, CBTRN02C, COACTUPC, COACTVWC and COBIL00C. The next field loads 0.22.</p>
 <div class="scroll-x"><table class="state"><tbody>
 <tr><th>top fields (loading)</th><th>top paragraphs</th></tr>
-<tr><td>ACCT-CURR-BAL (1.43)<br>ACCT-CREDIT-LIMIT (1.39)<br>ACCT-ACTIVE-STATUS (1.39)<br>ACCT-GROUP-ID (1.34)<br>ACCT-REISSUE-DATE (1.34)<br>ACCT-OPEN-DATE (1.33)<br>…<br>ACCT-ID (1.16)</td><td>CBACT04C 1100-GET-ACCT-DATA<br>CBACT04C 1050-UPDATE-ACCOUNT<br>CBTRN02C 2800-UPDATE-ACCOUNT-REC<br>CBTRN02C 1500-B-LOOKUP-ACCT<br>COACTUPC 9300-GETACCTDATA-BYACCT<br>COACTUPC 9500-STORE-FETCHED-DATA<br>CBACT01C 1300-POPUL-ACCT-RECORD</td></tr>
+<tr><td>ACCT-CURR-BAL (1.39)<br>ACCT-CREDIT-LIMIT (1.37)<br>ACCT-ACTIVE-STATUS (1.37)<br>ACCT-GROUP-ID (1.33)<br>ACCT-REISSUE-DATE (1.33)<br>ACCT-OPEN-DATE (1.32)<br>…<br>ACCT-ID (1.17)</td><td>CBTRN02C 1500-B-LOOKUP-ACCT<br>CBTRN02C 2800-UPDATE-ACCOUNT-REC<br>CBACT04C 1100-GET-ACCT-DATA<br>CBACT04C 1050-UPDATE-ACCOUNT<br>CBEXPORT 3100-READ-ACCOUNT-RECORD<br>CBEXPORT 3200-CREATE-ACCOUNT-EXP-REC<br>COACTUPC 9300-GETACCTDATA-BYACCT<br>COACTUPC 9500-STORE-FETCHED-DATA<br>CBACT01C 1300-POPUL-ACCT-RECORD<br>…</td></tr>
 </tbody></table></div>
-<p>One aggregate, and every paragraph that reads or updates it, across batch and online.</p>
-<p><strong>Factor 20: the user security record.</strong> <code>SEC-USR-ID</code>, <code>SEC-USR-TYPE</code>, <code>SEC-USR-LNAME</code>, <code>SEC-USR-FNAME</code>, each a class over COSGN00C and COUSR00C to COUSR03C, used by the read and update paragraphs of the four user programs. Its next fields are the programs' <code>WS-MESSAGE</code>s, at half the loading: messages set alongside the record.</p>
-<p><strong>Factor 6: noise.</strong> <code>COACTUPC</code>'s CICS response codes, error fields and <code>FILLER</code>s, all at the same loading, touched by almost every paragraph of that one program. It is a hub, not a concept. About a third of round 1's factors look like this; excluding such names by pattern removes them.</p>
+<p>One aggregate, and the paragraphs that read or update it, across batch and online.</p>
+<p><strong>Factor 19: the user security record.</strong> <code>SEC-USR-TYPE</code>, <code>SEC-USR-LNAME</code>, <code>SEC-USR-FNAME</code>, <code>SEC-USR-ID</code>, each a class over COSGN00C and COUSR00C to COUSR03C, used mostly by the read and update paragraphs of the four user programs. Its next fields are the programs' <code>WS-MESSAGE</code>s, at under half the loading: messages set alongside the record.</p>
+<p><strong>Factor 13: one program's error message.</strong> <code>COACTUPC</code>'s <code>ERROR-OPNAME</code>, <code>ERROR-FILE</code>, <code>ERROR-RESP</code>, <code>ERROR-RESP2</code> and the <code>FILLER</code>s between them, all at loading 1.15, then <code>WS-RETURN-MSG</code> at 0.80. Four paragraphs carry nearly all of it: <code>0000-MAIN</code> and the three that read the account, customer and cross-reference files. It is real, but local to one program.</p>
+<p><strong>Hubs.</strong> Factors 15, 17, 18, 21 and 24 are each one batch program's <code>IO-STAT1</code> and <code>IO-STAT2</code>, status fields, each loading above 0.07 on at least 11 paragraphs of that program. Excluding <code>IO-STAT</code> by pattern drops those five; the account, customer and user security records stay factors.</p>
 </main>
 </body>
 </html>

@@ -13,7 +13,7 @@
     startOnLoad: true,
     theme: "base",
     themeVariables: light
-      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#e6e3da", primaryTextColor: "#111", primaryBorderColor: "#d3cfc4", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
+      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#dde6ef", primaryTextColor: "#111", primaryBorderColor: "#8fa3b8", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
       : { darkMode: true, background: "#0b0f14", primaryColor: "#1a2230", primaryTextColor: "#e6edf3", primaryBorderColor: "#263041", lineColor: "#8b98a9", textColor: "#e6edf3", edgeLabelBackground: "#121821", clusterBkg: "#121821", clusterBorder: "#263041", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" },
   });
 </script>
@@ -88,7 +88,7 @@ flowchart LR
 <tr><td>I-AMT → R-AMT</td><td>{source 0, target 0, length 4}</td><td>yes</td></tr>
 <tr><td>I-AMT → BUF</td><td>{source 0, target 4, length 4}</td><td>yes</td></tr>
 </tbody></table></div>
-<p><code>aligned</code> is true when every site's placement is known. A move through a clamped range, such as a table element with a computed subscript, has none. The next explainer, <a href="exact-classes.html">exact field classes</a>, depends on these placements.</p>
+<p><code>aligned</code> is true when every site's placement is known. A statement that rewrites the bytes (arithmetic, <code>STRING</code>, a conversion between usages or into an edited picture), a move through a clamped range such as a table element with a computed subscript, and every edge from an origin or into a sink have none. <code>rebuilt</code> is true when every site's statement built the target's value in place, by arithmetic or <code>STRING</code>: such an edge has no placement, but its target is not a copy of anything. The next explainer, <a href="exact-classes.html">exact field classes</a>, depends on these placements.</p>
 
 <h2 id="datasets">Fields that meet through a file</h2>
 <p>Two programs that never call each other can still share data through a file. Program <code>W</code> writes an 11-byte <code>ID</code> to dataset <code>DS.A</code>; program <code>R</code> reads the same record as <code>GRP</code> (bytes 0–4) and <code>SEQ</code> (bytes 5–10). The record is cut at every field boundary any site uses, and each piece becomes a <em>slot</em> node:</p>
@@ -99,10 +99,11 @@ flowchart LR
 <tr><td>DS.A[0:5] → R:RREC.GRP</td><td>{source 0, target 0, length 5}</td></tr>
 <tr><td>DS.A[5:11] → R:RREC.SEQ</td><td>{source 0, target 0, length 6}</td></tr>
 </tbody></table></div>
-<p class="dim">These are the edges cobble's dataset-link tests check for this layout.</p>
-<p>Finding the dataset is its own problem. A batch file statement goes through its <code>SELECT</code>, DD name and the JCL step that runs the program. A CICS one goes through the resolved file name and the CSD. Each dataset edge is <code>exact</code>, or <code>possible</code> with its reasons:</p>
-<div class="chips"><span class="chip">candidates</span><span class="chip">no-step</span><span class="chip">dd-unbound</span><span class="chip">clamped</span><span class="chip">overlapping-layouts</span><span class="chip changed">unresolved-file</span></div>
-<p>A <code>possible</code> edge carries no placement. A site that resolves to no dataset gets a slot of its own, which links nothing.</p>
+<p class="dim">These are four of the edges cobble's dataset-link tests check for a layout like this one.</p>
+<p>Finding the dataset is its own problem. A batch file statement goes through its <code>SELECT</code>, DD name and the JCL step that runs the program. A CICS one goes through the resolved file name and the CSD. Each dataset edge is <code>exact</code>, or <code>possible</code> with its reasons: several candidate files, the dataflow's own doubt about the file name (such as <code>incomplete-walk</code>), a step reached only through a dynamic call it may not make, a clamped record extent, or overlapping layouts in the slot:</p>
+<div class="chips"><span class="chip">candidates</span><span class="chip">incomplete-walk, …</span><span class="chip">call-candidate</span><span class="chip">clamped</span><span class="chip">overlapping-layouts</span></div>
+<p>A <code>possible</code> edge carries no placement. A site that resolves to no dataset gets a slot of its own, linked only to that site's fields, by <code>possible</code> edges whose reason says why it did not resolve: no candidate file name, no JCL step runs the program, the step has no such DD, or neither a file target nor a <code>SELECT</code>:</p>
+<div class="chips"><span class="chip changed">uninitialised</span><span class="chip changed">no-step</span><span class="chip changed">dd-unbound</span><span class="chip changed">unresolved-file</span></div>
 
 <h2 id="carddemo">On CardDemo</h2>
 <p><strong>A date through an undivided field.</strong> <code>COTRN00C</code> builds the current date as a group, copies it into a plain <code>PIC X(08)</code>, and shows that on the screen:</p>
@@ -126,17 +127,18 @@ flowchart LR
 <tr><td>FILLER '/'</td><td>byte 5</td></tr>
 <tr><td>WS-CURDATE-YY</td><td>bytes 6–7</td></tr>
 </tbody></table></div>
-<p><strong>A file read by six programs.</strong> The card cross-reference KSDS is read by five batch programs and one CICS one, and written by none. Its record is cut into these slots:</p>
+<p><strong>A file read by seven programs.</strong> The card cross-reference KSDS is read by six batch programs and one CICS one, and written by none. Its record is cut into these slots:</p>
 <div class="scroll-x"><table class="state"><tbody>
-<tr><th>slot</th><th>read as</th></tr>
-<tr><td>[0:16]</td><td>XREF-CARD-NUM, in CBACT03C, CBACT04C, CBTRN02C, CBTRN03C, COTRN02C</td></tr>
-<tr><td>[16:25]</td><td>XREF-CUST-ID, in the same five</td></tr>
-<tr><td>[25:36]</td><td>XREF-ACCT-ID, in the same five</td></tr>
-<tr><td>[36:50]</td><td>FILLER, in the same five</td></tr>
-<tr><td>[50:1000]</td><td>only CBSTM03B's 1,000-byte I/O area</td></tr>
+<tr><th>slot</th><th>read as, in the record copybook</th><th>read as, in the file's own record</th></tr>
+<tr><td>[0:16]</td><td>XREF-CARD-NUM</td><td>FD-XREF-CARD-NUM</td></tr>
+<tr><td>[16:25]</td><td>XREF-CUST-ID</td><td>FD-XREF-DATA at offset 0; FD-XREF-CUST-NUM in CBACT04C</td></tr>
+<tr><td>[25:36]</td><td>XREF-ACCT-ID</td><td>FD-XREF-DATA at offset 9; FD-XREF-ACCT-ID in CBACT04C</td></tr>
+<tr><td>[36:50]</td><td>FILLER</td><td>FD-XREF-DATA at offset 20; FD-XREF-FILLER in CBACT04C</td></tr>
+<tr><td>[50:1000]</td><td colspan="2">only CBSTM03B's 1,000-byte I/O area</td></tr>
 </tbody></table></div>
-<p>The last slot exists because <code>CBSTM03B</code>, a file-access subprogram, reads its files into one 1,000-byte field. That field also reaches slots [0:16] to [36:50], at offsets 0, 16, 25 and 36. Every edge here is <code>exact</code>.</p>
-<p><strong>A file that resolves to nothing.</strong> <code>CBTRN01C</code> reads the same record, but no JCL step runs <code>CBTRN01C</code>, so its read gets a slot of its own, <code>CBTRN01C/2000-LOOKUP-XREF/1|?XREF-FILE</code>, with <code>possible</code> edges and the reason <code>no-step</code>. It meets none of the six.</p>
+<p>The copybook's fields are read in CBACT03C, CBACT04C, CBEXPORT, CBTRN02C, CBTRN03C and COTRN02C. The file's own record fields are read in the batch readers that declare one: CBACT03C, CBACT04C, CBSTM03B, CBTRN02C and CBTRN03C.</p>
+<p>The last slot exists because <code>CBSTM03B</code>, a file-access subprogram, reads its files into one 1,000-byte field as well. That field also reaches slots [0:16] to [36:50], at offsets 0, 16, 25 and 36. Every edge here is <code>exact</code>.</p>
+<p><strong>A file that resolves to nothing.</strong> <code>CBTRN01C</code> reads the same record, but no JCL step runs <code>CBTRN01C</code>, so its read gets a slot of its own, <code>CBTRN01C/2000-LOOKUP-XREF/1|?XREF-FILE</code>, with <code>possible</code> edges and the reason <code>no-step</code>. It meets none of the seven.</p>
 
 <h2 id="cost">What it costs</h2>
 <p>Tracing back is a walk over definers, and definers branch. Picture a ladder of copies, each step filled from one of two earlier copies:</p>
@@ -149,7 +151,7 @@ flowchart LR
     B2 --> A3
 </pre>
 <p>There are 2<sup>n</sup> paths through n steps, but only 2n copies. A memo keyed on <em>(range, definers)</em> answers each lookup once, so the cost grows with copies, not paths.</p>
-<div class="note-box"><p>The first memo also keyed on the set of sites already on the walk, to cut loops. That set differs on every path, so the memo almost never hit, and the walk enumerated paths: on an 18-step ladder it took 5.5 seconds and doubled with each step.</p></div>
+<div class="note-box"><p>The first memo also keyed on the set of sites already on the walk, to cut loops. That set differs on every path, so the memo almost never hit, and the walk enumerated paths: its cost doubled with each step of the ladder.</p></div>
 <p>Depth is the second limit. A recursive walk used about eight Python frames per copy, so a chain of about 130 copies hit Python's recursion limit. The walk now runs on an explicit stack: each lookup is a generator that yields the lookups it needs. Same order, same memo, same answers.</p>
 
 <h2 id="rule">The rule</h2>
@@ -171,7 +173,7 @@ edges(target, source) = one field either side: every pair; else byte-aligned pai
 </ul>
 
 <h2 id="in-cobble">In cobble</h2>
-<p>Run on this page's program, <code>cobble-dataflow-fixpoint</code> writes the two provenance rows above:</p>
+<p>Run on this page's program, <code>cobble-dataflow-fixpoint</code> writes the two provenance rows above. It writes each move and its definers apart; they are joined here, one line per site:</p>
 <pre class="cobol">MAIN-PARA/0  IN-AREA@working_storage[0:8] -&gt; BUF@working_storage[8:16]   definers: none
 MAIN-PARA/1  BUF@working_storage[8:16] -&gt; REC@working_storage[16:24]     definers: MAIN-PARA/0</pre>
 <p>and <code>cobble-experimental-partition-graph</code> writes exactly the traced graph's four edges, as <code>source → target [(source offset, target offset, length)]</code>:</p>

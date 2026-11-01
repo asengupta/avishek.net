@@ -13,7 +13,7 @@
     deterministicIds: true,
     theme: "base",
     themeVariables: light
-      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#e6e3da", primaryTextColor: "#111", primaryBorderColor: "#d3cfc4", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
+      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#dde6ef", primaryTextColor: "#111", primaryBorderColor: "#8fa3b8", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
       : { darkMode: true, background: "#0b0f14", primaryColor: "#1a2230", primaryTextColor: "#e6edf3", primaryBorderColor: "#263041", lineColor: "#8b98a9", textColor: "#e6edf3", edgeLabelBackground: "#121821", clusterBkg: "#121821", clusterBorder: "#263041", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" },
   });
 </script>
@@ -188,7 +188,7 @@ flowchart TD
 <p>The cost is now bounded by the programs within N crossings of the jump, not by the size of the corpus: the picture above has three places whatever lies beyond the dashed arrow.</p>
 
 <h2 id="reverse-engineering">Where this shows up</h2>
-<p>Cobble's last dataflow stage, <code>cobble-dataflow-combine</code>, answers one question for a CICS corpus: where can each dynamic jump go? On a large CICS corpus (about 3,800 programs and 19,000 jumps), a memo over strongly connected components (<a href="memoised-reachability.html">explainer 10</a>), a per-program memo, an edge index, and places told apart by their bytes alone had made each walk cheap; even so, one cyclic group of walks, the ring's shape at scale, grew past a million places on the stack. The goal was narrow. Dynamic targets on that corpus come in three shapes, here as lines of PROGP with the crossings each needs:</p>
+<p>Cobble's last dataflow stage, <code>cobble-dataflow-combine</code>, answers one question for a CICS corpus: where can each dynamic jump go? On a large CICS corpus (about 3,800 programs and 19,000 jumps), a memo over strongly connected components (<a href="memoised-reachability.html">explainer 8</a>), a per-program memo, an edge index, and places told apart by their bytes alone had made each walk cheap; even so, one cyclic group of walks, the ring's shape at scale, grew past a million places on the stack. The goal was narrow. Dynamic targets on that corpus come in three shapes, here as lines of PROGP with the crossings each needs:</p>
 <div class="scroll-x"><table class="state"><tbody>
 <tr><th>shape</th><th>as a line of <a href="#the-example">PROGP</a></th><th>crossings</th></tr>
 <tr><td>VALUE</td><td><code>01 WS-NEXT PIC X(8) VALUE 'PROGT'.</code> (a variant: PROGP itself uses a MOVE)</td><td>0</td></tr>

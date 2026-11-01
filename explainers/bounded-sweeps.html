@@ -13,7 +13,7 @@
     startOnLoad: true,
     theme: "base",
     themeVariables: light
-      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#e6e3da", primaryTextColor: "#111", primaryBorderColor: "#d3cfc4", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
+      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#dde6ef", primaryTextColor: "#111", primaryBorderColor: "#8fa3b8", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
       : { darkMode: true, background: "#0b0f14", primaryColor: "#1a2230", primaryTextColor: "#e6edf3", primaryBorderColor: "#263041", lineColor: "#8b98a9", textColor: "#e6edf3", edgeLabelBackground: "#121821", clusterBkg: "#121821", clusterBorder: "#263041", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" },
   });
 </script>
@@ -25,32 +25,33 @@
 <h1>Sweeps: a fixpoint with a budget that says when it ran out</h1>
 <aside class="tldr"><p><strong>TL;DR</strong>On a large corpus, a few tangled programs can take most of the run. This puts a known budget on each program and marks every answer it cut short, so you get results on time plus a list of call sites to check by hand — never a silently smaller answer.</p></aside>
 <p class="prereqs"><strong>Read first:</strong> <a href="traversal-orders.html">Visiting a graph</a>, <a href="fixpoints.html">Fixpoints and worklists</a></p>
-<p class="lede">A whole-corpus fixpoint is as slow as its slowest program: on a corpus of about 3,800 programs, the last three programs took 1,404 s, 2,324 s and 4,434 s. The default worklist cannot say how far along a program is, and capping it is only safe if a capped program says so instead of quietly returning less.</p>
-<p class="lede"><code>PROGA</code>'s loop writes <code>WS-NEXT</code>; a <code>LINK</code> after the loop reads it. A budget of 10 sweeps over its 13 nodes caps the walk at 130 visits before it starts; it finds both targets on sweep 2 and proves them on sweep 3. Stopped after one sweep, the <code>LINK</code> gets only <code>PROGB</code>, marked <code>incomplete-walk</code>.</p>
-<p class="dim">A <strong>sweep</strong> is one pass over the graph in <a href="traversal-orders.html#reverse-postorder">reverse postorder</a>; the walk it replaces is the worklist from <a href="fixpoints.html">fixpoints and worklists</a>.</p>
-<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#the-example">The example</a></li><li><a href="#step-by-step">Step by step</a></li><li><a href="#the-intuition">Why sweeps can stop early</a></li><li><a href="#the-problem">Why not the worklist's budget</a></li><li><a href="#reverse-engineering">Where this shows up</a></li><li><a href="#the-rule">The rule</a></li><li><a href="#what-goes-wrong">What goes wrong</a></li><li><a href="#in-cobble">In cobble</a></li></ol></nav>
+<p class="lede">A whole-corpus fixpoint is as slow as its slowest program: on a corpus of about 3,800 programs, an earlier version of the walk spent 1,404 s, 2,324 s and 4,434 s on the last three programs. A worklist cannot say how far along a program is, and capping it is only safe if a capped program says so instead of quietly returning less.</p>
+<p class="lede"><code>PROGA</code>'s loop writes <code>WS-NEXT</code>; a <code>LINK</code> after the loop reads it. A budget of 10 passes lets the walk go round the program at most 10 times; it finds both targets and settles on pass 2. Stopped after one pass, the <code>LINK</code> gets only <code>PROGB</code>, marked <code>incomplete-walk</code>.</p>
+<p class="dim">The walk is the worklist from <a href="fixpoints.html">fixpoints and worklists</a>: a queue of nodes whose entry state changed, taken in <a href="traversal-orders.html#reverse-postorder">reverse postorder</a>. A <strong>pass</strong> (cobble's flag and log lines call it a <strong>sweep</strong>) is one trip of the walk's place in that order, its <strong>cursor</strong>, from the start of the order to the end.</p>
+<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#the-example">The example</a></li><li><a href="#step-by-step">Step by step</a></li><li><a href="#the-intuition">Why a pass budget can stop early</a></li><li><a href="#the-problem">Why not the worklist's budget</a></li><li><a href="#reverse-engineering">Where this shows up</a></li><li><a href="#the-rule">The rule</a></li><li><a href="#what-goes-wrong">What goes wrong</a></li><li><a href="#in-cobble">In cobble</a></li></ol></nav>
 
 <h2 id="the-example">The example</h2>
-<p>Cobble's control-flow graph for <code>PROGA</code> has 13 reachable nodes, numbered by their place in the sweep order. The dashed, highlighted edge is the one back edge.</p>
+<p>Cobble's control-flow graph for <code>PROGA</code> has 13 reachable nodes, numbered by their place in reverse postorder. The dashed, highlighted edge is the one <strong>back edge</strong>: an edge to a node earlier in the order.</p>
 <pre class="mermaid">
 flowchart TD
     L["MAIN-PARA#35;label · 1"] --> T["MAIN-PARA/0#35;loop#35;test · 2"]
     T -->|FALSE| M0["MAIN-PARA/0 PERFORM · 9"]
     T -->|TRUE| M1["MAIN-PARA/1 LINK · 3"]
-    M0 --> PL["PICK-PARA#35;label · 10"]
+    M0 -->|PERFORM| PL["PICK-PARA#35;label · 10"]
     PL --> P0["PICK-PARA/0 MOVE 'PROGC' · 11"]
     P0 --> P1["PICK-PARA/1 ADD · 12"]
     P1 --> PE["PICK-PARA#35;end · 13"]
-    PE -.->|back edge| T
+    PE -.->|"RETURN · back edge"| T
     M1 --> M1r["MAIN-PARA/1#35;raise · 4"]
     M1r -->|TRUE| M1d["MAIN-PARA/1#35;dispatch · 8"]
     M1r -->|FALSE| M2["MAIN-PARA/2 RETURN · 5"]
     M2 --> M2r["MAIN-PARA/2#35;raise · 6"]
     M2r -->|TRUE| M2d["MAIN-PARA/2#35;dispatch · 7"]
+    M0 ==>|resume| T
     linkStyle 7 stroke:#f5b041,stroke-width:3px
 </pre>
-<p>The answer: the <code>LINK</code>'s targets under each budget of sweeps, as cobble reports them. Three sweeps or more settle it, and the mark comes off.</p>
-<div class="chips"><span class="chip">--sweeps 1: PROGB · incomplete-walk</span><span class="chip">--sweeps 2: PROGB, PROGC · incomplete-walk</span><span class="chip">--sweeps 3 or more: PROGB, PROGC · settled</span></div>
+<p>The answer: the <code>LINK</code>'s targets under each budget of passes, as cobble reports them. Two passes or more settle it, and the mark comes off.</p>
+<div class="chips"><span class="chip">--sweeps 1: PROGB · incomplete-walk</span><span class="chip">--sweeps 2 or more: PROGB, PROGC · settled</span></div>
 <p>The lines that matter:</p>
 <pre class="cobol">05  WS-NEXT  PIC X(8) VALUE 'PROGB'.
 05  WS-I     PIC 9(2) VALUE 0.
@@ -76,23 +77,23 @@ PICK-PARA.
            MOVE 'PROGC' TO WS-NEXT.
            ADD 1 TO WS-I.</pre>
 </details>
-<p>Besides one node per statement, the graph has a label at the start of each paragraph, a separate node for the loop's test, and for each <code>EXEC CICS</code> a <code>#raise</code> node (did the command raise a handled condition?) and a <code>#dispatch</code> node (where a handler would take it). The test's FALSE arm goes to the <code>PERFORM</code> (<code>MAIN-PARA/0</code>) and into <code>PICK-PARA</code>; its TRUE arm goes to the <code>LINK</code> (<code>MAIN-PARA/1</code>).</p>
-<p>The reverse postorder cobble computes for it — the numbers in the graph — from <a href="traversal-orders.html">depth-first search</a> taking the test's FALSE arm first:</p>
+<p>Besides one node per statement, the graph has a label at the start of each paragraph, a separate node for the loop's test, and for each <code>EXEC CICS</code> a <code>#raise</code> node (did the command raise a handled condition?) and a <code>#dispatch</code> node (where a handler would take it). The test's FALSE arm goes to the <code>PERFORM</code> (<code>MAIN-PARA/0</code>); its TRUE arm goes to the <code>LINK</code> (<code>MAIN-PARA/1</code>). The graph also has a <code>PERFORM</code> edge into <code>PICK-PARA</code> and a <code>RETURN</code> edge out of its end, but the walk follows neither. It walks <code>PICK-PARA</code> on its own, a <strong>range walk</strong>, from the state the <code>PERFORM</code> is visited with, and hands what leaves <code>PICK-PARA#end</code> to the <code>PERFORM</code>'s <strong>resume</strong>, the node control comes back to: here the test (the thick edge). A <code>RETURN</code> edge leads to every caller of the paragraph at once; the resume belongs to one call.</p>
+<p>The reverse postorder cobble computes for it — the numbers in the graph — from <a href="traversal-orders.html">depth-first search</a> over all of these edges, taking the test's FALSE arm first:</p>
 <div class="chips"><span class="chip">MAIN-PARA#label</span><span class="chip">MAIN-PARA/0#loop#test</span><span class="chip">MAIN-PARA/1</span><span class="chip">MAIN-PARA/1#raise</span><span class="chip">MAIN-PARA/2</span><span class="chip">MAIN-PARA/2#raise</span><span class="chip">MAIN-PARA/2#dispatch</span><span class="chip">MAIN-PARA/1#dispatch</span><span class="chip">MAIN-PARA/0</span><span class="chip">PICK-PARA#label</span><span class="chip">PICK-PARA/0</span><span class="chip">PICK-PARA/1</span><span class="chip">PICK-PARA#end</span></div>
-<p>In the chips, the code after the loop (chips 3 to 8) comes ahead of the body (chips 9 to 13). The <a href="traversal-orders.html#with-a-loop">loop on the traversal page</a> put the body first, because its search took the body's arm first. Either way the test, chip 2, comes before both, and that is what decides how many sweeps the loop needs.</p>
-<p>The tables in the walk below show, for each node in the graph, the values <code>WS-NEXT</code> can hold on entry. <code>PROGB</code> is the <code>VALUE</code> clause; <code>PROGC</code> is written by <code>PICK-PARA/0</code>, node 11. <code>WS-I</code> is tracked too, and "settled" needs its states to stop changing as well. <code>ADD 1 TO WS-I</code> (node 12) is not a literal, so it is not evaluated: the write gives <code>WS-I</code> no values, only the reason <code>not-a-literal</code> (see the <a href="value-sets.html#reasons">reasons taxonomy</a>). Joined with the <code>VALUE</code> at the test, that is <code>{00}</code> plus <code>not-a-literal</code> after the first trip round the loop, and it does not grow after that; the sweeps do not count the loop to 4.</p>
+<p>In the chips, the code after the loop (chips 3 to 8) comes ahead of the <code>PERFORM</code> (chip 9). The <a href="traversal-orders.html#with-a-loop">loop on the traversal page</a> put the body first, because its search took the body's arm first. Either way the test, chip 2, comes before both, and the <code>PERFORM</code> resumes at it, behind the cursor: that is what decides how many passes the loop needs. Only the nine <code>MAIN-PARA</code> nodes are ever on the program's own queue; chips 10 to 13 are visited inside the range walks.</p>
+<p>The tables in the walk below show, for each node in the graph, the values <code>WS-NEXT</code> can hold on entry. <code>PROGB</code> is the <code>VALUE</code> clause; <code>PROGC</code> is written by <code>PICK-PARA/0</code>, node 11. <code>WS-I</code> is tracked too, and "settled" needs its states to stop changing as well. <code>ADD 1 TO WS-I</code> (node 12) is not a literal, so it is not evaluated: the write gives <code>WS-I</code> no values, only the reason <code>not-a-literal</code> (see the <a href="value-sets.html#reasons">reasons taxonomy</a>). Joined with the <code>VALUE</code> at the test, that is <code>{00}</code> plus <code>not-a-literal</code> after the first trip round the loop, and it does not grow after that; the walk does not count the loop to 4.</p>
 
 <h2 id="step-by-step">Step by step</h2>
 <details class="walk" open>
-<summary>The sweep walk on PROGA, with a budget of 10 <span class="dim">(3 steps)</span></summary>
+<summary>The walk on PROGA, with a budget of 10 passes <span class="dim">(2 passes)</span></summary>
 <ol class="steps">
 <li class="before">
-<p class="note">Only the entry node has a state: the program's starting image, in which <code>WS-NEXT</code> holds its <code>VALUE</code>. The order above is fixed before the first sweep, so each sweep is exactly 13 visits.</p>
+<p class="note">Only the entry node has a state: the program's starting image, in which <code>WS-NEXT</code> holds its <code>VALUE</code>. The queue holds only the entry. The order above is fixed before the walk starts.</p>
 <p class="dim">Entry state of MAIN-PARA#label</p><table class="state"><tbody><tr><th>field</th><th>can hold</th></tr><tr><td>WS-NEXT</td><td>{PROGB}</td></tr></tbody></table>
 </li>
 <li>
-<p class="note">Sweep 1. The test is visited second and pushes {PROGB} to both arms, so the <code>LINK</code> (MAIN-PARA/1) gets {PROGB}. The body runs last: PICK-PARA/0 moves <code>'PROGC'</code> in. At the very end, PICK-PARA#end pushes {PROGC} back along the back edge, and the test's entry state grows to {PROGB, PROGC}. The test was already visited this sweep, so nothing after it sees that yet. Every node got a state for the first time, so the sweep changed something: not settled.</p>
-<p class="dim">Entry states after sweep 1: what WS-NEXT can hold</p>
+<p class="note">Pass 1, dequeues 1 to 13. The test, taken second, pushes {PROGB} to both arms, so the <code>LINK</code> (MAIN-PARA/1) gets {PROGB}. The cursor runs on through the <code>LINK</code>'s chain and takes the <code>PERFORM</code> ninth. Its range walk takes PICK-PARA's four nodes, from the <code>PERFORM</code>'s {PROGB}: PICK-PARA/0 moves <code>'PROGC'</code> in, and the {PROGC} leaving PICK-PARA#end goes to the resume, the test, whose entry state grows to {PROGB, PROGC}. The test is behind the cursor, so taking it again starts a new pass. The program's own walk took 9 nodes and the range walk 4.</p>
+<p class="dim">Entry states after pass 1: what WS-NEXT can hold (the PICK-PARA rows are the range walk's)</p>
 <table class="state"><tbody><tr><th>node</th><th>statement</th><th>WS-NEXT</th></tr>
 <tr><td>MAIN-PARA#label</td><td>paragraph start</td><td class="changed">{PROGB}</td></tr>
 <tr><td>MAIN-PARA/0#loop#test</td><td>UNTIL WS-I &gt; 3</td><td class="changed">{PROGB, PROGC}</td></tr>
@@ -106,13 +107,13 @@ PICK-PARA.
 <tr><td>PICK-PARA#label</td><td>paragraph start</td><td class="changed">{PROGB}</td></tr>
 <tr><td>PICK-PARA/0</td><td>MOVE 'PROGC' TO WS-NEXT</td><td class="changed">{PROGB}</td></tr>
 <tr><td>PICK-PARA/1</td><td>ADD 1 TO WS-I</td><td class="changed">{PROGC}</td></tr>
-<tr><td>PICK-PARA#end</td><td>return to the test</td><td class="changed">{PROGC}</td></tr>
+<tr><td>PICK-PARA#end</td><td>end of the range</td><td class="changed">{PROGC}</td></tr>
 </tbody></table>
-<p class="dim">If the budget were 1, the walk would stop here. The LINK's target row</p><div class="chips"><span class="chip">candidates: PROGB</span><span class="chip">reasons: incomplete-walk</span></div>
+<p class="dim">If the budget were 1, the walk would stop here, with the test still queued. The LINK's target row</p><div class="chips"><span class="chip">candidates: PROGB</span><span class="chip">reasons: incomplete-walk</span></div>
 </li>
 <li>
-<p class="note">Sweep 2. The test now starts with {PROGB, PROGC} and pushes it to both arms. The <code>LINK</code> sees <code>PROGC</code> for the first time, and so does everything after the test, including the body's own entry. Nine <code>WS-NEXT</code> entries grew (amber), and PICK-PARA/1's entry also gained the body's <code>not-a-literal</code> write to <code>WS-I</code>, so this sweep changed something too: still not settled, even though the LINK's value set is now complete.</p>
-<p class="dim">Entry states after sweep 2 (amber: grew in this sweep)</p>
+<p class="note">Pass 2, dequeues 14 to 24. The test is taken again with {PROGB, PROGC} and pushes it to both arms. The <code>LINK</code> sees <code>PROGC</code> for the first time, and so does everything after the test. The <code>PERFORM</code>, taken last, walks PICK-PARA again from its larger state, picking up from the first walk's states: PICK-PARA#label, PICK-PARA/0 and PICK-PARA/1 grow, PICK-PARA/1's entry also gaining the body's <code>not-a-literal</code> write to <code>WS-I</code>, and PICK-PARA#end's does not, so the state handed back to the test is the one it already has. Nothing is queued any more. The walk stops with 8 passes of the budget unused: the member is settled, and the doubt comes off.</p>
+<p class="dim">Entry states after pass 2 (amber: grew in this pass)</p>
 <table class="state"><tbody><tr><th>node</th><th>statement</th><th>WS-NEXT</th></tr>
 <tr><td>MAIN-PARA#label</td><td>paragraph start</td><td>{PROGB}</td></tr>
 <tr><td>MAIN-PARA/0#loop#test</td><td>UNTIL WS-I &gt; 3</td><td>{PROGB, PROGC}</td></tr>
@@ -126,44 +127,34 @@ PICK-PARA.
 <tr><td>PICK-PARA#label</td><td>paragraph start</td><td class="changed">{PROGB, PROGC}</td></tr>
 <tr><td>PICK-PARA/0</td><td>MOVE 'PROGC' TO WS-NEXT</td><td class="changed">{PROGB, PROGC}</td></tr>
 <tr><td>PICK-PARA/1</td><td>ADD 1 TO WS-I</td><td>{PROGC}</td></tr>
-<tr><td>PICK-PARA#end</td><td>return to the test</td><td>{PROGC}</td></tr>
-</tbody></table>
-<p class="dim">If the budget were 2, the walk would stop here. The LINK's target row</p><div class="chips"><span class="chip">candidates: PROGB, PROGC</span><span class="chip">reasons: incomplete-walk</span></div>
-</li>
-<li>
-<p class="note">Sweep 3. Every node produces the same state it did in sweep 2. The sweep changed nothing, so the walk stops with 7 sweeps of the budget unused. The member is settled, and the doubt comes off.</p>
-<p class="dim">Entry states after sweep 3</p>
-<table class="state"><tbody><tr><th>node</th><th>WS-NEXT</th></tr>
-<tr><td>MAIN-PARA#label</td><td>{PROGB}</td></tr>
-<tr><td>PICK-PARA/1, PICK-PARA#end</td><td>{PROGC}</td></tr>
-<tr><td>the other 10 nodes</td><td>{PROGB, PROGC}</td></tr>
+<tr><td>PICK-PARA#end</td><td>end of the range</td><td>{PROGC}</td></tr>
 </tbody></table>
 <p class="dim">The LINK's target row</p><div class="chips"><span class="chip">candidates: PROGB, PROGC</span><span class="chip">reasons: none</span></div>
 </li>
 </ol>
 </details>
-<p>The same program under each budget, as cobble reports it. "Visits" is sweeps times the 13 reachable nodes for a sweep walk, and dequeues for the worklist.</p>
-<div class="scroll-x"><table class="state"><tr><th>walk</th><th>sweeps run</th><th>settled</th><th>visits</th><th>LINK candidates</th><th>reasons</th></tr>
+<p>The same program under each budget, as cobble reports it. "Dequeues" counts every node the walk took, the range walks' included, counted by stepping cobble's walk one dequeue at a time.</p>
+<div class="scroll-x"><table class="state"><tr><th>walk</th><th>passes run</th><th>settled</th><th>dequeues</th><th>LINK candidates</th><th>reasons</th></tr>
 <tr><td>--sweeps 1</td><td>1</td><td>no</td><td>13</td><td>PROGB</td><td>incomplete-walk</td></tr>
-<tr><td>--sweeps 2</td><td>2</td><td>no</td><td>26</td><td>PROGB, PROGC</td><td>incomplete-walk</td></tr>
-<tr><td>--sweeps 3</td><td>3</td><td>yes</td><td>39</td><td>PROGB, PROGC</td><td>none</td></tr>
-<tr><td>--sweeps 10</td><td>3</td><td>yes</td><td>39</td><td>PROGB, PROGC</td><td>none</td></tr>
-<tr><td>worklist</td><td>—</td><td>yes</td><td>24</td><td>PROGB, PROGC</td><td>none</td></tr>
+<tr><td>--sweeps 2</td><td>2</td><td>yes</td><td>24</td><td>PROGB, PROGC</td><td>none</td></tr>
+<tr><td>--sweeps 3</td><td>2</td><td>yes</td><td>24</td><td>PROGB, PROGC</td><td>none</td></tr>
+<tr><td>--sweeps 10</td><td>2</td><td>yes</td><td>24</td><td>PROGB, PROGC</td><td>none</td></tr>
+<tr><td>no budget of passes</td><td>—</td><td>yes</td><td>24</td><td>PROGB, PROGC</td><td>none</td></tr>
 </table></div>
-<p>On a program this small the worklist does fewer visits: 24 in the last row against 39 in the two settled sweep rows. What the sweep buys is the bound: a budget of N costs at most N × 13 visits here, known before the walk starts, and its progress is a fraction of a known whole — the "sweep 2 of 10" in the log lines under <a href="#the-intuition">why sweeps can stop early</a>, rather than the queue lengths in the table under <a href="#the-problem">why not the worklist's budget</a>.</p>
+<p>A settled row is the unbounded walk: the same 24 dequeues and the same answer. The budget changes only where the walk may stop, and how far along it is becomes a fraction of a known whole — the "sweep 2 of 10" in the log lines under <a href="#the-intuition">why a pass budget can stop early</a>, rather than the queue lengths in the table under <a href="#the-problem">why not the worklist's budget</a>.</p>
 
 
-<h2 id="the-intuition">Why sweeps can stop early</h2>
-<p><strong>One sweep</strong> visits every node the entry reaches, once, in <a href="traversal-orders.html#reverse-postorder">reverse postorder</a>. At each node it applies the statement to the node's entry state and pushes the result into each successor's entry state, joining it with whatever is there. Each step of the walk is one sweep.</p>
-<p><strong>A loop needs a second sweep.</strong> Steps 1 and 2 of the walk, cut down to the four nodes of the loop that matter, in the order a sweep visits them:</p>
-<div class="scroll-x"><table class="state"><tbody><tr><th>visit</th><th>node</th><th>sweep 1</th><th>sweep 2</th></tr>
-<tr><td>2nd</td><td>the test</td><td>pushes {PROGB}</td><td class="changed">pushes {PROGB, PROGC}</td></tr>
-<tr><td>3rd</td><td>the LINK, after the loop</td><td>sees {PROGB}</td><td class="changed">sees {PROGB, PROGC}</td></tr>
-<tr><td>11th</td><td>the body's MOVE 'PROGC'</td><td>writes PROGC</td><td>writes PROGC</td></tr>
-<tr><td>13th</td><td>end of the body</td><td>pushes {PROGC} back to the test</td><td>pushes {PROGC} back</td></tr>
+<h2 id="the-intuition">Why a pass budget can stop early</h2>
+<p><strong>One pass</strong> moves the cursor once along <a href="traversal-orders.html#reverse-postorder">reverse postorder</a>, taking each queued node it comes to. At each node it applies the statement to the node's entry state and pushes the result into each successor's entry state, joining it with whatever is there; a successor whose state grew is queued. A node that is not queued is skipped: its entry state has not changed, so visiting it would change nothing. When nothing queued lies ahead of the cursor, the pass ends and the cursor wraps to the earliest queued node.</p>
+<p><strong>A loop needs a second pass.</strong> Passes 1 and 2 of the walk, cut down to the nodes of the loop that matter, in the order the program's walk takes them:</p>
+<div class="scroll-x"><table class="state"><tbody><tr><th>dequeue in the pass</th><th>node</th><th>pass 1</th><th>pass 2</th></tr>
+<tr><td>1st (2nd in pass 1)</td><td>the test</td><td>pushes {PROGB}</td><td class="changed">pushes {PROGB, PROGC}</td></tr>
+<tr><td>next</td><td>the LINK, after the loop</td><td>sees {PROGB}</td><td class="changed">sees {PROGB, PROGC}</td></tr>
+<tr><td>last</td><td>the PERFORM: its range walk's MOVE 'PROGC'</td><td>writes PROGC</td><td>writes PROGC</td></tr>
+<tr><td>last</td><td>the PERFORM: its resume</td><td>hands {PROGC} back to the test</td><td>hands back the same</td></tr>
 </tbody></table></div>
-<p>The test comes before the body in reverse postorder, because the test is how the body is reached. In step 1 the LINK in row 2 sees only what was true before the loop ran: the write in row 3 reaches the test only at row 4, along the back edge, after the test has had its visit. In step 2 the test starts with the body's write in its state and hands it on. A value has to go round a back edge once before it reaches the code after the loop. That is why two sweeps is the useful floor.</p>
-<p><strong>A forward chain is carried in one sweep, however long.</strong> Reverse postorder puts every node after all the nodes that lead into it, except along back edges. Take <code>PROGX</code>, a chain of copies through two <code>PERFORM</code>s (its four fields are <code>PIC X(4)</code>):</p>
+<p>The test comes before the body in reverse postorder, because the test is how the body is reached. In pass 1 the LINK in row 2 sees only what was true before the loop ran: the write in row 3 reaches the test only at row 4, through the <code>PERFORM</code>'s resume, after the test has had its turn. In pass 2 the test starts with the body's write in its state and hands it on. A value has to go back round the loop once before it reaches the code after the loop. That is why two passes is the useful floor.</p>
+<p><strong>A forward chain is carried in one pass, however long.</strong> Reverse postorder puts every node after all the nodes that lead into it, except along back edges. Take <code>PROGX</code>, a chain of copies through two <code>PERFORM</code>s (its four fields are <code>PIC X(4)</code>):</p>
 <pre class="cobol">       MAIN-PARA.
            MOVE 'X' TO WS-A.
            PERFORM P1.
@@ -176,86 +167,88 @@ PICK-PARA.
            MOVE WS-B TO WS-C.</pre>
 <p class="dim">Cobble's reverse postorder for it, 12 nodes</p>
 <div class="chips"><span class="chip">MAIN-PARA#label</span><span class="chip">MAIN-PARA/0</span><span class="chip">MAIN-PARA/1</span><span class="chip">P1#label</span><span class="chip">P1/0</span><span class="chip">P1/1</span><span class="chip">P2#label</span><span class="chip">P2/0</span><span class="chip">P2#end</span><span class="chip">P1#end</span><span class="chip">MAIN-PARA/2</span><span class="chip">MAIN-PARA/3</span></div>
-<p class="dim">Each read and the definer the first sweep found for it</p>
+<p class="dim">Each read and the definer the first pass found for it</p>
 <table class="state"><tbody><tr><th>read at</th><th>reads</th><th>definer</th></tr>
 <tr><td>P1/0 (5th)</td><td>WS-A</td><td>MAIN-PARA/0 (2nd)</td></tr>
 <tr><td>P2/0 (8th)</td><td>WS-B</td><td>P1/0 (5th)</td></tr>
 <tr><td>MAIN-PARA/2 (11th)</td><td>WS-C</td><td>P2/0 (8th)</td></tr>
 </tbody></table>
-<p>Every definer sits earlier in the chips row than its read, so the first sweep has already pushed its write forward by the time it visits the read. This graph has no back edge, so cobble runs one sweep and calls the member settled — its log line is <code>PROGX sweep 1 of 10 done, 12 nodes reached, settled</code>.</p>
-<p><strong>A sweep that changes nothing proves the fixpoint.</strong> Step 3 of the walk is that sweep: it leaves every entry state as it was, so the next would too, and the answer is exactly the worklist's. The member is <em>settled</em>. If the budget runs out while states are still growing, it is <em>unsettled</em>. Cobble logs which one each sweep was:</p>
-<pre class="cobol">PROGA sweep 1 of 10 done, 13 nodes reached, still growing
-PROGA sweep 2 of 10 done, 13 nodes reached, still growing
-PROGA sweep 3 of 10 done, 13 nodes reached, settled</pre>
-<p>Sweep 2 already had the whole answer, but only the third line, the sweep that changed nothing, proves it.</p>
-<p><strong>Unsettled means missing, never wrong.</strong> Every transfer and the join are monotone (see <a href="fixpoints.html#the-rule">the rule</a>), so a state stopped early is a subset of the fixpoint's. Step 1's table against step 3's:</p>
-<table class="state"><tbody><tr><th>WS-NEXT on entry to</th><th>after 1 sweep</th><th>fixpoint</th></tr>
+<p>Every definer sits earlier in the chips row than its read, and the walk takes them in that order: <code>P1</code> is walked when <code>MAIN-PARA/1</code> is taken, <code>P2</code> inside that walk when <code>P1/1</code> is, and <code>MAIN-PARA/2</code> after both have returned. So each write has been pushed forward by the time its read is visited. This graph has no back edge, and the queue empties in the first pass — its log line is <code>PROGX sweep 1 of 10 done, 5 nodes reached, settled</code>. The 5 nodes are the <code>MAIN-PARA</code> nodes on the program's own queue; <code>P1</code>'s and <code>P2</code>'s are visited inside range walks and not counted there.</p>
+<p><strong>An empty queue proves the fixpoint.</strong> When nothing is queued, every node's entry state already holds what its predecessors last sent, so another visit anywhere would change nothing. That is the end of pass 2 of the walk. The member is <em>settled</em>: the walk ran to the end, and its answer is exactly the unbounded walk's, because it is the same walk. If the budget runs out with nodes still queued, it is <em>unsettled</em>. Cobble logs which one each pass was:</p>
+<pre class="cobol">PROGA sweep 1 of 10 done, 9 nodes reached, still growing
+PROGA sweep 2 of 10 done, 9 nodes reached, settled</pre>
+<p>No pass is spent only on proof: the pass that carries <code>PROGC</code> to the LINK is the one whose queue empties. The 9 nodes are the <code>MAIN-PARA</code> nodes, as in the chain.</p>
+<p><strong>Unsettled means missing, never wrong.</strong> Every transfer and the join are monotone (see <a href="fixpoints.html#the-rule">the rule</a>), so a state stopped early is a subset of the fixpoint's. Pass 1's table against the settled one:</p>
+<table class="state"><tbody><tr><th>WS-NEXT on entry to</th><th>after 1 pass</th><th>fixpoint</th></tr>
 <tr><td>MAIN-PARA/1 (LINK)</td><td>{PROGB}</td><td>{PROGB, PROGC}</td></tr>
 <tr><td>PICK-PARA/0</td><td>{PROGB}</td><td>{PROGB, PROGC}</td></tr>
 <tr><td>PICK-PARA#end</td><td>{PROGC}</td><td>{PROGC}</td></tr>
 </tbody></table>
-<p>Every value in the middle column is also in the right-hand one, so every flow read off an early state is real; what may be absent is a value that needed more sweeps, like <code>PROGC</code> in row 1. Cobble says so: every dynamic call target and every jump in an unsettled member carries the reason <code>incomplete-walk</code>, as in step 1's target row (see the <a href="value-sets.html#reasons">reasons taxonomy</a> for the full list of reason codes), and the run's summary counts and names the member as unsettled. A walk in the combine that passes through that member's jump facts carries <code>incomplete-walk</code> on into the targets it feeds in other programs.</p>
+<p>Every value in the middle column is also in the right-hand one, so every flow read off an early state is real; what may be absent is a value that needed more passes, like <code>PROGC</code> in row 1. Cobble says so: every dynamic call target and every jump in an unsettled member carries the reason <code>incomplete-walk</code>, as in pass 1's target row (see the <a href="value-sets.html#reasons">reasons taxonomy</a> for the full list of reason codes), and the run's summary counts and names the member as unsettled. A walk in the combine that passes through that member's jump facts carries <code>incomplete-walk</code> on into the targets it feeds in other programs.</p>
 
 <h2 id="the-problem">Why not the worklist's budget</h2>
-<p>Cobble's default walk is the worklist from <a href="fixpoints.html">fixpoints and worklists</a>. Its budget is <code>--iteration-factor</code>: that many dequeues per CFG node (150 by default), after which it publishes what it has, unsettled. The example's graph has 14 nodes (<code>MAIN-PARA#end</code> unreachable): a cap of 150 × 14 = 2,100 dequeues; it finishes in 24. On the large corpus the worklist finished every program, but the run spent over an hour waiting on one.</p>
-<p>A worklist is also hard to watch. Its queue on the example, after each of its 24 dequeues, as cobble runs it:</p>
+<p>Without <code>--sweeps</code>, the walk's budget is <code>--iteration-factor</code>: that many dequeues per CFG node (200 by default), counting the range walks' dequeues, after which it publishes what it has, unsettled. The example's graph has 14 nodes (<code>MAIN-PARA#end</code> unreachable): a cap of 200 × 14 = 2,800 dequeues; it finishes in 24. On the large corpus the worklist finished every program, but the run spent over an hour waiting on one.</p>
+<p>A worklist is also hard to watch. Its queue on the example, after each of the program's own 17 dequeues, as cobble runs it; the range walks run inside dequeues 9 and 17 and take 4 and 3 more:</p>
 <div class="scroll-x"><table class="state"><tbody><tr><th>dequeues</th><th>nodes taken</th><th>queue length after each</th></tr>
-<tr><td>1–13</td><td>all 13, MAIN-PARA#label to PICK-PARA#end</td><td>1 2 2 3 3 3 2 1 1 1 1 1 1</td></tr>
-<tr><td>14–24</td><td>11 again, MAIN-PARA/0#loop#test to PICK-PARA/1</td><td>2 2 3 3 3 2 1 1 1 1 0</td></tr>
+<tr><td>1–9</td><td>all 9 MAIN-PARA nodes, MAIN-PARA#label to MAIN-PARA/0</td><td>1 2 2 3 3 3 2 1 1</td></tr>
+<tr><td>10–17</td><td>8 again, MAIN-PARA/0#loop#test to MAIN-PARA/0</td><td>2 2 3 3 3 2 1 0</td></tr>
 </tbody></table></div>
-<p>Nothing in it counts down. After dequeue 13 the queue holds one node, exactly as after dequeues 8 to 12, and yet 11 more follow; after dequeue 23 it holds one again, and only one follows. A progress line can only estimate from how fast the queue drains. The sweep walk's cost is known before it starts, it still gives the exact answer when it has time to, and it marks its results, like the <code>LINK</code>'s row in step 1, when it does not:</p>
+<p>Nothing in it counts down. After dequeue 9 the queue holds one node, exactly as after dequeue 8, and yet 8 more follow; after dequeue 16 it holds one again, and only one follows. A progress line can only estimate from how fast the queue drains. A budget of passes is known before the walk starts, still gives the exact answer when it has time to, and marks its results, like the <code>LINK</code>'s row in pass 1, when it does not:</p>
 <div class="scroll-x"><table class="state"><tbody><tr><th>walk</th><th>cap, known before it starts</th><th>used</th></tr>
-<tr><td>worklist, factor 150</td><td>150 × 14 = 2,100 dequeues</td><td>24</td></tr>
-<tr><td>--sweeps 10</td><td>10 × 13 = 130 visits</td><td>39 (3 sweeps)</td></tr>
+<tr><td>--iteration-factor 200</td><td>200 × 14 = 2,800 dequeues</td><td>24</td></tr>
+<tr><td>--sweeps 10</td><td>10 passes</td><td>2 passes (24 dequeues)</td></tr>
 </tbody></table></div>
-<p>Both caps are known up front, but only the second says how far along the walk is: after sweep 2 it is 26 visits into at most 130, and its log line says <code>sweep 2 of 10</code>.</p>
+<p>Both caps are known up front, but only the second says how far along the walk is: after pass 1 it is one pass into at most 10, and its log line says <code>sweep 1 of 10</code>.</p>
 
 <h2 id="reverse-engineering">Where this shows up</h2>
 <p>When the goal is one answer — which programs each <code>CALL WS-PGM</code> or <code>EXEC CICS XCTL/LINK PROGRAM(WS-...)</code> can reach — a few tangled programs should not hold the rest back, nor quietly return less than they found.</p>
 <ul>
 <li><strong>Dynamic call targets across a large CICS corpus.</strong> On the corpus of about 3,800 programs, the per-program fixpoint decided how long the pipeline took. Most programs settled in seconds. A handful took most of the run.</li>
-<li><strong>A budget a reviewer can read.</strong> A call target that comes back with <code>incomplete-walk</code> means "these programs at least, maybe more": a list of call sites to check by hand, not a silent gap. Cobble's <code>targets.jsonl</code> rows for the example's <code>LINK</code>, at one sweep and at three:</li>
+<li><strong>A budget a reviewer can read.</strong> A call target that comes back with <code>incomplete-walk</code> means "these programs at least, maybe more": a list of call sites to check by hand, not a silent gap. Cobble's <code>targets.jsonl</code> rows for the example's <code>LINK</code>, at one pass and at two:</li>
 </ul>
 <pre class="cobol">--sweeps 1:
-{"caller": "PROGA", "node": "MAIN-PARA/1",
+{"caller": "PROGA", "node": "MAIN-PARA/1", "kind": "program",
  "transfer": "CICS_LINK", "expression": "WS-NEXT",
  "candidates": ["PROGB"],
  "reasons": ["incomplete-walk"], "dropped": []}
---sweeps 3:
-{"caller": "PROGA", "node": "MAIN-PARA/1",
+--sweeps 2:
+{"caller": "PROGA", "node": "MAIN-PARA/1", "kind": "program",
  "transfer": "CICS_LINK", "expression": "WS-NEXT",
  "candidates": ["PROGB", "PROGC"],
  "reasons": [], "dropped": []}</pre>
 <p>The first row's <code>"reasons": ["incomplete-walk"]</code> is what tells a reviewer that <code>"candidates": ["PROGB"]</code> may be short, and the second row adds <code>PROGC</code>. Any whole-program analysis run under a time limit makes the same trade: let every program finish, or cap the work and mark what the cap touched. The marking is what makes the cap safe to use.</p>
 
 <h2 id="the-rule">The rule</h2>
+<p class="dim">in(n) is node n's entry state; transfer_n applies n's statement to a state; ⊔ is the join, which keeps every value either side holds; N is the <code>--sweeps</code> budget.</p>
 <div class="rule">
-order    = reverse postorder of the nodes the entry reaches<br>
-one sweep: for n in order: after = transfer_n(in(n));<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for each successor s: in(s) = in(s) ⊔ after<br>
-repeat sweeps until a sweep changes no in(n), or N sweeps have run<br>
-settled  = the last sweep changed nothing, or the graph has no back edge<br>
+order    = reverse postorder of the nodes the entry reaches; queue = {entry}<br>
+one step: take the first queued n at or after the cursor, else wrap to the earliest;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;after = transfer_n(in(n)); for each successor s: in(s) = in(s) ⊔ after, queue s if it grew<br>
+a PERFORM: walk its range from after, by this same rule and budget;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;in(resume) = in(resume) ⊔ what leaves the range's end; RETURN edges are never followed<br>
+a pass ends at each wrap; stop when the queue is empty, or when pass N + 1 would start<br>
+settled  = this walk's queue and every range walk's queue emptied<br>
 unsettled ⇒ in(n) ⊆ fixpoint in(n) for every n; every target and jump gets incomplete-walk
 </div>
-<p>Each line is a step of the walk above. <code>order</code> is the 13-node chips row. The <code>in(s) ⊔ …</code> line is sweep 1's last visit, where PICK-PARA#end joins {PROGC} into the test's {PROGB}. "Changes no in(n)" is sweep 3, whose table matches sweep 2's. The <code>unsettled ⇒</code> line is the budget-1 and budget-2 chips with <code>incomplete-walk</code>; "no back edge" is the chain program in <a href="#the-intuition">why sweeps can stop early</a>.</p>
-<p>A value written in a loop body reaches a reader after the loop on sweep 2, as the LINK's row in the walk does. Each further step it has to take backward against the order — around another back edge, or to a copy earlier in the same body, as in the second item below — costs one more sweep. Proving the result costs one more sweep than finding it, except on a graph with no back edge, where the first sweep is the fixpoint. Every program on this page, as cobble ran it:</p>
-<div class="scroll-x"><table class="state"><tbody><tr><th>program</th><th>LINK complete on sweep</th><th>last sweep that grew a state</th><th>settled on sweep</th></tr>
-<tr><td>the chain (no back edge)</td><td>—</td><td>1</td><td>1</td></tr>
-<tr><td>the example</td><td>2</td><td>2</td><td>3</td></tr>
-<tr><td>the copy-the-other-way variant</td><td>3</td><td>3</td><td>4</td></tr>
-<tr><td>the PERFORM-twice program</td><td>1</td><td>2</td><td>3</td></tr>
+<p>Each line is a step of the walk above. <code>order</code> is the 13-node chips row. The <code>PERFORM</code> line is dequeue 9, whose range walk hands {PROGC} back to the test and grows its {PROGB}. The wrap is the start of pass 2, and the empty queue is its end. The <code>unsettled ⇒</code> line is the budget-1 chips with <code>incomplete-walk</code>.</p>
+<p>A value written in a loop body reaches a reader after the loop on pass 2, as the LINK's row in the walk does. Each further step it has to take backward against the order — round the loop again, or to a copy earlier in the same body, as in the second item below — costs one more pass. Every program on this page, as cobble ran it:</p>
+<div class="scroll-x"><table class="state"><tbody><tr><th>program</th><th>LINK complete from</th><th>settled from</th></tr>
+<tr><td>the chain (no back edge)</td><td>—</td><td>--sweeps 1</td></tr>
+<tr><td>the example</td><td>--sweeps 2</td><td>--sweeps 2</td></tr>
+<tr><td>the copy-the-other-way variant</td><td>--sweeps 3</td><td>--sweeps 3</td></tr>
+<tr><td>the PERFORM-twice program</td><td>--sweeps 1</td><td>--sweeps 2</td></tr>
 </tbody></table></div>
-<p>The last two columns always differ by one where there is a back edge. The first column can run ahead of them, as in row 4, which the third item below explains.</p>
+<p>The two columns agree in the loops. The first can run ahead of the second, as in row 4, which the third item below explains.</p>
 
 <h2 id="what-goes-wrong">What goes wrong</h2>
 <ul>
-<li><strong>Finding is not proving.</strong> In the example, two sweeps found every candidate, but the walk only knows that after a third sweep changes nothing. In the budget table's rows:
+<li><strong>Found is not settled.</strong> A budget can stop the walk with every candidate already in the LINK's entry state and nodes still queued. The run is unsettled, and the mark stays on a complete answer. In the PERFORM-twice program below:
 <div class="scroll-x"><table class="state"><tbody><tr><th>walk</th><th>LINK candidates</th><th>reasons</th></tr>
-<tr><td>--sweeps 2</td><td>PROGB, PROGC</td><td class="changed">incomplete-walk</td></tr>
-<tr><td>--sweeps 3</td><td>PROGB, PROGC</td><td>none</td></tr>
+<tr><td>--sweeps 1</td><td>PROGC</td><td class="changed">incomplete-walk</td></tr>
+<tr><td>--sweeps 2</td><td>PROGC</td><td>none</td></tr>
 </tbody></table></div>
-The candidates are identical, and row 1 still carries <code>incomplete-walk</code>. Two is the floor for finding a loop's write after the loop, not for settling it.</li>
-<li><strong>Some loops need more.</strong> If the body copies the other way round, the value has to go round the back edge twice to reach the LINK. In this variant <code>WS-CODE</code> has a <code>VALUE</code> of its own:
+The candidates are identical, and row 1 still carries <code>incomplete-walk</code>: the walk cannot know a state is final until its queue is empty.</li>
+<li><strong>Some loops need more.</strong> If the body copies the other way round, the value has to go round the loop twice to reach the LINK. In this variant <code>WS-CODE</code> has a <code>VALUE</code> of its own:
 <pre class="cobol">           05  WS-CODE          PIC X(8) VALUE 'PROGD'.
       ...
        PICK-PARA.
@@ -265,11 +258,11 @@ The candidates are identical, and row 1 still carries <code>incomplete-walk</cod
 <div class="scroll-x"><table class="state"><tbody><tr><th>budget</th><th>LINK candidates</th><th>settled</th></tr>
 <tr><td>--sweeps 1</td><td>PROGB</td><td>no</td></tr>
 <tr><td>--sweeps 2</td><td>PROGB, <span class="changed">PROGD</span></td><td>no</td></tr>
-<tr><td>--sweeps 3</td><td>PROGB, <span class="changed">PROGC</span>, PROGD</td><td>no</td></tr>
+<tr><td>--sweeps 3</td><td>PROGB, <span class="changed">PROGC</span>, PROGD</td><td>yes</td></tr>
 <tr><td>--sweeps 4</td><td>PROGB, PROGC, PROGD</td><td>yes</td></tr>
 </tbody></table></div>
-On sweep 1 the body copies <code>WS-CODE</code>'s <code>PROGD</code> into <code>WS-NEXT</code> and only then writes <code>PROGC</code> into <code>WS-CODE</code>; both reach the test along the back edge. Sweep 2 carries <code>PROGD</code> to the LINK, and copies the <code>PROGC</code> now in <code>WS-CODE</code> into <code>WS-NEXT</code>, which goes round the back edge a second time. Sweep 3 carries it to the LINK, and sweep 4 changes nothing. The LINK gains one candidate on sweep 2 and another on sweep 3, and the walk settles on sweep 4.</li>
-<li><strong>Back edges without a loop.</strong> Cobble's graph has one copy of each paragraph, so a paragraph <code>PERFORM</code>ed from two places returns to both: the second <code>PERFORM</code> becomes a back edge. A paragraph that falls through into one that was <code>PERFORM</code>ed earlier does the same. This program has no loop in its source:
+In pass 1 the range walk copies <code>WS-CODE</code>'s <code>PROGD</code> into <code>WS-NEXT</code> and only then writes <code>PROGC</code> into <code>WS-CODE</code>; both go back to the test through the <code>PERFORM</code>'s resume. Pass 2 carries <code>PROGD</code> to the LINK, and its range walk copies the <code>PROGC</code> now in <code>WS-CODE</code> into <code>WS-NEXT</code>, which goes back to the test a second time. Pass 3 carries it to the LINK; its range walk changes nothing at the range's end, and the queue empties. The LINK gains one candidate on pass 2 and another on pass 3, and the walk settles in pass 3.</li>
+<li><strong>Back edges without a loop.</strong> Reverse postorder is computed over every edge in the graph, <code>PERFORM</code> and <code>RETURN</code> edges included. A paragraph <code>PERFORM</code>ed from two places has <code>RETURN</code> edges to both, so the second <code>PERFORM</code> can be reached through the paragraph's end and comes after it in the order, and its edge back into the paragraph is a back edge. This program has no loop in its source:
 <pre class="cobol">       MAIN-PARA.
            PERFORM SET-PARA.
            PERFORM SET-PARA.
@@ -279,21 +272,24 @@ On sweep 1 the body copies <code>WS-CODE</code>'s <code>PROGD</code> into <code>
            MOVE 'PROGC' TO WS-NEXT.</pre>
 <pre class="mermaid">
 flowchart TD
-    A["MAIN-PARA/0 first PERFORM"] --> S["SET-PARA#35;label"]
-    S --> W["SET-PARA/0 MOVE 'PROGC'"]
-    W --> E["SET-PARA#35;end"]
-    E -->|RETURN| B["MAIN-PARA/1 second PERFORM"]
-    E -->|RETURN| K["MAIN-PARA/2 LINK"]
-    B -.->|back edge| S
+    A["MAIN-PARA/0 first PERFORM · 2"] -->|PERFORM| S["SET-PARA#35;label · 3"]
+    S --> W["SET-PARA/0 MOVE 'PROGC' · 4"]
+    W --> E["SET-PARA#35;end · 5"]
+    E -->|RETURN| B["MAIN-PARA/1 second PERFORM · 12"]
+    E -->|RETURN| K["MAIN-PARA/2 LINK · 6"]
+    B -.->|"PERFORM · back edge"| S
+    A ==>|resume| B
+    B ==>|resume| K
     linkStyle 5 stroke:#f5b041,stroke-width:3px
 </pre>
-The graph shows the nodes around <code>SET-PARA</code>, leaving out the entry and the <code>#raise</code> and <code>#dispatch</code> nodes. In it, <code>SET-PARA#end</code> returns to both <code>PERFORM</code>s, and the second one's edge back into <code>SET-PARA#label</code> is the highlighted back edge. Sweep 1 gives the LINK {PROGC}, which is already the whole answer, and the back edge pushes {PROGC} into <code>SET-PARA#label</code>, which held only {PROGB}. Sweep 2 carries that grown state on into <code>SET-PARA/0</code>'s entry, a change, though the write overwrites it. Sweep 3 changes nothing. So the program found every definition on sweep 1 and was settled on sweep 3.</li>
-<li><strong>The mark is per program, not per site.</strong> An unsettled program marks every dynamic target and every jump with <code>incomplete-walk</code>, including ones whose values stopped changing several sweeps earlier. The walk does not track which sites were still growing. Put a second <code>LINK</code> ahead of the loop, <code>EXEC CICS LINK PROGRAM(WS-FIRST)</code> with <code>WS-FIRST</code> given <code>VALUE 'PROGD'</code> and never written, and run it with <code>--sweeps 2</code>:
+The graph shows the nodes around <code>SET-PARA</code>, leaving out the entry and the <code>#raise</code> and <code>#dispatch</code> nodes; the numbers are places in reverse postorder. The second <code>PERFORM</code> is last, 12th, and its resume, the LINK, is 6th. The walk follows the thick resume edges, not the <code>RETURN</code>s. It takes the first <code>PERFORM</code>, walks <code>SET-PARA</code> from {PROGB}, and hands {PROGC} to the second; that one walks <code>SET-PARA</code> again from {PROGC} and hands {PROGC} to the LINK. The LINK lies behind the cursor, so visiting it starts pass 2. With <code>--sweeps 1</code> the LINK's entry already holds {PROGC}, the whole answer, but it is still queued; <code>--sweeps 2</code> visits it and the chain after it, and the queue empties.</li>
+<li><strong>The budget binds range walks too.</strong> Each range walk counts its own passes over its own order and stops at the same budget. A member is settled only if its own walk and every range walk it ran emptied their queues. Move the example's loop into a paragraph of its own, <code>OUTER-PARA. PERFORM PICK-PARA UNTIL WS-I &gt; 3.</code>, and <code>PERFORM OUTER-PARA</code> before the <code>LINK</code>: the program's own walk has no loop and empties its queue in pass 1, but with <code>--sweeps 1</code> the walk of <code>OUTER-PARA</code> stops with its test still queued, and the member comes out <code>NOT SETTLED after 1 sweeps</code>, its LINK at <code>PROGB</code> with <code>incomplete-walk</code>. With <code>--sweeps 2</code> it is <code>settled in 1 sweeps</code> — the count is the program's own walk's passes — with <code>PROGB</code> and <code>PROGC</code>.</li>
+<li><strong>The mark is per program, not per site.</strong> An unsettled program marks every dynamic target and every jump with <code>incomplete-walk</code>, including ones whose values could not change any more. The walk does not track which sites were still growing. Put a second <code>LINK</code> ahead of the loop, <code>EXEC CICS LINK PROGRAM(WS-FIRST)</code> with <code>WS-FIRST</code> given <code>VALUE 'PROGD'</code> and never written, and run it with <code>--sweeps 1</code>:
 <div class="scroll-x"><table class="state"><tbody><tr><th>site</th><th>candidates</th><th>reasons</th></tr>
 <tr><td>LINK PROGRAM(WS-FIRST)</td><td>PROGD</td><td class="changed">incomplete-walk</td></tr>
-<tr><td>LINK PROGRAM(WS-NEXT)</td><td>PROGB, PROGC</td><td class="changed">incomplete-walk</td></tr>
+<tr><td>LINK PROGRAM(WS-NEXT)</td><td>PROGB</td><td class="changed">incomplete-walk</td></tr>
 </tbody></table></div>
-Row 1 had its whole answer from sweep 1 and nothing in the loop can change it, but it carries the mark because the member as a whole did not settle in two sweeps. With <code>--sweeps 3</code> both rows lose it.</li>
+Row 1 has its whole answer and nothing in the loop can change it, but it carries the mark because the member as a whole did not settle in one pass. With <code>--sweeps 2</code> both rows lose it, and row 2 gains <code>PROGC</code>.</li>
 <li><strong>Missing is still missing.</strong> No value in an unsettled result is invented, but a missing candidate is a missing edge in the call graph. Read the <code>--sweeps 1</code> row under <a href="#reverse-engineering">where this shows up</a> without its reasons and the call graph is:
 <pre class="mermaid">
 flowchart LR
@@ -301,15 +297,15 @@ flowchart LR
     A -.->|"missing at --sweeps 1"| C["PROGC"]
 </pre>
 The dashed edge is the one the settled walk finds. The <code>incomplete-walk</code> reason on the row is the only thing that says it may be there. A consumer that reads candidates and ignores reasons will treat a partial answer as complete.</li>
-<li><strong>A sweep is not cheaper per visit count.</strong> It visits every reachable node every sweep, including nodes nothing has changed for. In the budget table, the settled sweep rows do 39 visits to the worklist's 24: sweep 3 revisits all 13 nodes just to confirm, where the worklist's queue (under <a href="#the-problem">why not the worklist's budget</a>) empties after re-taking only 11. On a small or simple program it can do more visits than the worklist. Its use is the bound.</li>
+<li><strong>The budget bounds passes, not work.</strong> A pass takes each queued node of the program's own walk at most once, but every <code>PERFORM</code> it takes can run a range walk of up to N passes of its own, and ranges perform other ranges. So N does not fix the number of dequeues: pass 1 of the example took 13, 4 of them in a range walk. What the budget fixes is how many times each walk may go round, and a settled run costs exactly what the unbounded walk costs.</li>
 </ul>
 
 <h2 id="in-cobble">In cobble</h2>
-<p>The fixpoint (<code>cobble-dataflow-fixpoint</code>) runs the worklist by default, capped at <code>--iteration-factor</code> × nodes dequeues (default 150) — the 2,100 for the example under <a href="#the-problem">why not the worklist's budget</a>. <code>--sweeps N</code> runs reverse-postorder sweeps instead, until one changes nothing or N are spent. The two flags cannot be combined, and <code>--sweeps 0</code> is rejected:</p>
+<p>The fixpoint (<code>cobble-dataflow-fixpoint</code>) runs the worklist capped at <code>--iteration-factor</code> × nodes dequeues by default (factor 200) — the 2,800 for the example under <a href="#the-problem">why not the worklist's budget</a>. <code>--sweeps N</code> bounds the same walk by N passes instead, in every <code>PERFORM</code> range walk as well as the program's own. The two flags cannot be combined, and <code>--sweeps 0</code> is rejected:</p>
 <pre class="cobol">cobble-dataflow-fixpoint: error: argument --iteration-factor: not allowed with argument --sweeps
 cobble-dataflow-fixpoint: error: argument --sweeps: needs at least one sweep, got 0</pre>
-<p>A member with no back edge is settled after one sweep, as the chain program's log line in <a href="#the-intuition">why sweeps can stop early</a> shows. For each member the log says <code>settled in N sweeps</code> or <code>NOT SETTLED after N sweeps</code>; the closing warning names every unsettled member, and the summary counts them under <code>unsettled</code>. For the example with <code>--sweeps 2</code>:</p>
-<pre class="cobol">PROGA 2/3 writes covered, 1 unhandled, 0 unmodelled, 2 edges, 2 of 2 extents tracked, 0.0s, NOT SETTLED after 2 sweeps -- edges are a subset
+<p>A member with no back edge empties its queue in one pass, as the chain program's log line in <a href="#the-intuition">why a pass budget can stop early</a> shows. For each member the log says <code>settled in N sweeps</code> or <code>NOT SETTLED after N sweeps</code>; the closing warning names every unsettled member, and the summary counts them under <code>unsettled</code>. For the example with <code>--sweeps 1</code>:</p>
+<pre class="cobol">PROGA 2/2 writes covered, 1 unhandled, 0 unmodelled, 3 edges, 2 of 2 extents tracked, 0.0s, NOT SETTLED after 1 sweeps -- edges are a subset
 ...
 !! 1 members still growing when their walk's budget ran out (PROGA); their edges are a subset of the flows those programs have
 {"analysed": 1, ..., "unsettled": 1, ...}</pre>

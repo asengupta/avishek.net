@@ -13,7 +13,7 @@
     startOnLoad: true,
     theme: "base",
     themeVariables: light
-      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#e6e3da", primaryTextColor: "#111", primaryBorderColor: "#d3cfc4", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
+      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#dde6ef", primaryTextColor: "#111", primaryBorderColor: "#8fa3b8", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
       : { darkMode: true, background: "#0b0f14", primaryColor: "#1a2230", primaryTextColor: "#e6edf3", primaryBorderColor: "#263041", lineColor: "#8b98a9", textColor: "#e6edf3", edgeLabelBackground: "#121821", clusterBkg: "#121821", clusterBorder: "#263041", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" },
   });
 </script>
@@ -93,7 +93,7 @@ flowchart TD
     D --> Exit["Exit · d7"]
     class B,B1 member
     class B2 changed
-    classDef member stroke:#4ade80,stroke-width:3px,fill:transparent
+    classDef member stroke:#15803d,stroke-width:3px,fill:transparent
     classDef changed fill:#f5b041,stroke:#f5b041,color:#000
     linkStyle 4 stroke:#f5b041,stroke-width:3px
 </pre>
@@ -121,7 +121,7 @@ flowchart TD
     D --> Exit["Exit · d7"]
     class A,B,C member
     class D changed
-    classDef member stroke:#4ade80,stroke-width:3px,fill:transparent
+    classDef member stroke:#15803d,stroke-width:3px,fill:transparent
     classDef changed fill:#f5b041,stroke:#f5b041,color:#000
     linkStyle 4 stroke:#f5b041,stroke-width:3px
 </pre>
@@ -165,7 +165,7 @@ flowchart TD
     D --> Exit["Exit · d7"]
     class A,B,B1,B2,C member
     class D changed
-    classDef member stroke:#4ade80,stroke-width:3px,fill:transparent
+    classDef member stroke:#15803d,stroke-width:3px,fill:transparent
     classDef changed fill:#f5b041,stroke:#f5b041,color:#000
     linkStyle 7 stroke:#f5b041,stroke-width:3px
 </pre>
@@ -218,7 +218,7 @@ flowchart TD
     A -->|cross-join| B
     B -.->|"cross-join, back edge"| A
     class A,B member
-    classDef member stroke:#4ade80,stroke-width:3px,fill:transparent
+    classDef member stroke:#15803d,stroke-width:3px,fill:transparent
 </pre></li>
 <li><p class="note">Fall back to <a href="reducibility-and-loops.html#a-quicker-check-for-where-strongly-connected-components">the quicker check</a>: take every statement still at this dominator depth or deeper that is still in the graph — here, just <code>{A, B}</code> — and find its strongly connected components. One, with more than one member: <code>{A, B}</code> itself.</p>
 <pre class="mermaid">

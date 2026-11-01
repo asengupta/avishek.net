@@ -13,7 +13,7 @@
     startOnLoad: true,
     theme: "base",
     themeVariables: light
-      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#e6e3da", primaryTextColor: "#111", primaryBorderColor: "#d3cfc4", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
+      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#dde6ef", primaryTextColor: "#111", primaryBorderColor: "#8fa3b8", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
       : { darkMode: true, background: "#0b0f14", primaryColor: "#1a2230", primaryTextColor: "#e6edf3", primaryBorderColor: "#263041", lineColor: "#8b98a9", textColor: "#e6edf3", edgeLabelBackground: "#121821", clusterBkg: "#121821", clusterBorder: "#263041", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" },
   });
 </script>
@@ -97,9 +97,9 @@ flowchart LR
 <p>In cobble's node names the three sites are <code>MAIN-PARA/2.when.0.0</code>, <code>MAIN-PARA/2.when.1.0</code> and <code>MAIN-PARA/2.when.2.0</code>. The operands are <code>WS-FIRST-PGM@working_storage[0:8]</code>, <code>WS-MENU-PGM@working_storage[8:16]</code> and <code>WS-NEXT-PGM@working_storage[16:24]</code>.</p>
 
 <h2 id="step-by-step">Step by step</h2>
-<p>Each site gets its own walk, over its own operand. The three walks are shown side by side because they visit the same nodes. Each row is the set <em>arriving</em> at that node, which is what the walk reports for a site. Values are shown as stored: <code>PIC X(8)</code> pads <code>'PROGB'</code> with three spaces, written <code>␣</code>. The program has no loop, so the worklist visits each node once, in order.</p>
+<p>One walk over PROGA carries the set of every field at once; the tables follow the three sites' operands. Each row is the set <em>arriving</em> at that node, which is what the walk reports for a site. Values are shown as stored: <code>PIC X(8)</code> pads <code>'PROGB'</code> with three spaces, written <code>␣</code>. The program has no loop, so the worklist visits each node once, in order.</p>
 <details class="walk" open>
-<summary>Three forward walks over PROGA <span class="dim">(7 steps)</span></summary>
+<summary>One forward walk over PROGA <span class="dim">(7 steps)</span></summary>
 <ol class="steps">
 <li>
 <p class="note">Entry. Each operand starts at what the program holds before any statement runs. WS-FIRST-PGM is covered by a <code>VALUE</code>, so it starts at that literal. The other two have no <code>VALUE</code>: uninitialised. An operand in LINKAGE would start as inbound-linkage.</p>
@@ -116,21 +116,21 @@ flowchart LR
 <tr><td>WS-NEXT-PGM</td><td>{} + uninitialised</td></tr></tbody></table>
 </li>
 <li>
-<p class="note">Each arm moves a literal into all eight bytes of WS-MENU-PGM. The write is exact, not weak, covers the whole operand, and its values are complete: it <strong>replaces</strong>. The then arm leaves {'PROGB␣␣␣'}, the else arm {'PROGC␣␣␣'}. The uninitialised doubt is gone on both: the write killed it.</p>
+<p class="note">Each arm moves a literal into all eight bytes of WS-MENU-PGM. The write is exact, not weak, and covers the whole operand: it <strong>replaces</strong>. The then arm leaves {'PROGB␣␣␣'}, the else arm {'PROGC␣␣␣'}. The uninitialised doubt is gone on both: the write killed it.</p>
 <table class="state"><tbody><tr><th>operand</th><th>leaving then</th><th>leaving else</th></tr>
 <tr><td>WS-FIRST-PGM</td><td>{'PROGB␣␣␣'}</td><td>{'PROGB␣␣␣'}</td></tr>
 <tr><td>WS-MENU-PGM</td><td class="changed">{'PROGB␣␣␣'}</td><td class="changed">{'PROGC␣␣␣'}</td></tr>
 <tr><td>WS-NEXT-PGM</td><td>{} + uninitialised</td><td>{} + uninitialised</td></tr></tbody></table>
 </li>
 <li>
-<p class="note">The arms meet at <code>MOVE LK-NEXT TO WS-NEXT-PGM</code> (<code>MAIN-PARA/1</code>), so its arriving set is the union of both. Then the move: it covers all of WS-NEXT-PGM, but it copies rather than storing a literal, so it does not replace. Its source is in LINKAGE, and the write carries inbound-linkage, which is kept.</p>
+<p class="note">The arms meet at <code>MOVE LK-NEXT TO WS-NEXT-PGM</code> (<code>MAIN-PARA/1</code>), so its arriving set is the union of both. Then the move: it is exact and covers all of WS-NEXT-PGM, so it <strong>replaces</strong>, as in step 3, though it stores no literal. The uninitialised doubt is gone, and WS-NEXT-PGM takes what its source holds: LK-NEXT is in LINKAGE, so that is {} + inbound-linkage.</p>
 <table class="state"><tbody><tr><th>operand</th><th>arriving</th><th>leaving</th></tr>
 <tr><td>WS-FIRST-PGM</td><td>{'PROGB␣␣␣'}</td><td>{'PROGB␣␣␣'}</td></tr>
 <tr><td>WS-MENU-PGM</td><td class="changed">{'PROGB␣␣␣', 'PROGC␣␣␣'}</td><td>{'PROGB␣␣␣', 'PROGC␣␣␣'}</td></tr>
 <tr><td>WS-NEXT-PGM</td><td>{} + uninitialised</td><td>{} <span class="changed">+ inbound-linkage</span></td></tr></tbody></table>
 </li>
 <li>
-<p class="note">Line 24: <code>XCTL PROGRAM(WS-FIRST-PGM)</code>. Its walk arrives with {'PROGB␣␣␣'} and no doubt. Trimmed, that spells PROGB. <strong>Resolved</strong> to PROGB. The XCTL writes nothing in PROGA and never returns, so it changes none of the three sets.</p>
+<p class="note">Line 24: <code>XCTL PROGRAM(WS-FIRST-PGM)</code>. Its operand arrives with {'PROGB␣␣␣'} and no doubt. Trimmed, that spells PROGB. <strong>Resolved</strong> to PROGB. The XCTL never returns. Its one write in PROGA is to the commarea it hands over, DFHCOMMAREA bytes [0, 100), which none of the three operands lies in, so it changes none of the three sets.</p>
 <div class="chips"><span class="chip changed">line 24 → PROGB</span></div>
 </li>
 <li>
@@ -138,7 +138,7 @@ flowchart LR
 <div class="chips"><span class="chip">line 24 → PROGB</span><span class="chip changed">line 27 → PROGB, PROGC</span></div>
 </li>
 <li>
-<p class="note">Line 30: <code>XCTL PROGRAM(WS-NEXT-PGM)</code>. Arrives with {} + inbound-linkage. That doubt is not uninitialised, so the site is <strong>unresolved</strong>: a caller supplies the name. The site goes to the cross-program walk later.</p>
+<p class="note">Line 30: <code>XCTL PROGRAM(WS-NEXT-PGM)</code>. Arrives with {} + inbound-linkage. No candidates, so the site is <strong>unresolved</strong>, and its reason says why: a caller supplies the name. The site goes to the cross-program walk later.</p>
 <div class="chips"><span class="chip">line 24 → PROGB</span><span class="chip">line 27 → PROGB, PROGC</span><span class="chip changed">line 30 unresolved: inbound-linkage</span></div>
 </li>
 </ol>
@@ -158,7 +158,7 @@ flowchart TD
     V --> S27["line 27 site<br>PROGB, PROGC"]
     V --> S30["line 30 site"]
 </pre>
-<p>In step 3 each arm overwrites all eight bytes with a literal, so it replaces what arrived, the uninitialised doubt included. In step 4 the arms meet at line 21, so the set is their union; line 21 writes WS-NEXT-PGM, not WS-MENU-PGM. Every value reaching line 27 is a literal this program wrote, so its set is complete.</p>
+<p>In step 3 each arm writes all eight bytes exactly, so it replaces what arrived, the uninitialised doubt included. In step 4 the arms meet at line 21, so the set is their union; line 21 writes WS-NEXT-PGM, not WS-MENU-PGM. Every value reaching line 27 is a literal this program wrote, so its set is complete.</p>
 <p>That is the whole test. If every value reaching a site is a literal this program wrote, the site's answer is complete here. If the name came from linkage, a callee or a file, this program alone cannot see it: the set carries a reason, and the site goes to the cross-program walk.</p>
 
 <h2 id="reverse-engineering">Where this shows up in reverse engineering</h2>
@@ -178,15 +178,21 @@ initial(o) = inbound-linkage, if o is in LINKAGE<br>
 in(entry) = initial(o);&nbsp;&nbsp;in(n) = ⋃ out(p) for every predecessor p<br>
 out(n) = in(n) after each write w at n:<br>
 &nbsp;&nbsp;w misses o's bytes → unchanged<br>
-&nbsp;&nbsp;w replaces o (exact, covers o, complete values) → w's values, sliced to o<br>
-&nbsp;&nbsp;otherwise → in(n) joined with w's values and reasons<br>
+&nbsp;&nbsp;w is exact and covers o → w's values and reasons, sliced to o<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(whatever w holds; uninitialised goes too)<br>
+&nbsp;&nbsp;w may land anywhere over o (a computed subscript or offset),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;or is a statement cobble does not model<br>
+&nbsp;&nbsp;&nbsp;&nbsp;→ in(n) joined with w's values and reasons<br>
+&nbsp;&nbsp;w overwrites only part of o → no values; not-a-literal,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;plus uninitialised while a byte of o has had no exact write<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(inbound-linkage instead, if o is in LINKAGE)<br>
 candidates(site) = program names among values(in(site))<br>
 complete(site)&nbsp;&nbsp;⇔ reasons(in(site)) = ∅
 </div>
-<p>Each line has already run in the walk. <code>initial(o)</code> is step 1: WS-FIRST-PGM starts at its VALUE, the other two at uninitialised. <code>in(n)</code> as a union is step 4, where the arms meet at line 21. The replace line is step 3. Line 21's copy from linkage is why line 30's set carries <code>inbound-linkage</code>.</p>
+<p>Each line has already run in the walk. <code>initial(o)</code> is step 1: WS-FIRST-PGM starts at its VALUE, the other two at uninitialised. <code>in(n)</code> as a union is step 4, where the arms meet at line 21. The exact-and-covers line is steps 3 and 4: in step 4 it removes WS-NEXT-PGM's uninitialised and leaves the inbound-linkage of its LINKAGE source, which is why line 30's set carries <code>inbound-linkage</code>. The last two write lines are not used by PROGA.</p>
 
 <h2 id="what-goes-wrong">What goes wrong</h2>
-<p>Each case is a one-site program ending in <code>XCTL PROGRAM(...)</code>, run through <code>cobble-dataflow-fixpoint</code>; the chips are its <code>targets.jsonl</code> row.</p>
+<p>Each case is a one-site program, run through <code>cobble-dataflow-fixpoint</code>; the chips are the candidates and reasons of its <code>targets.jsonl</code> row.</p>
 <ul>
 <li><strong>A path with no write.</strong> No <code>ELSE</code>, so on one path nothing writes the operand. The literal is found, and the gap is marked:
 <pre class="cobol">           IF WS-FLAG = 'Y'
@@ -211,12 +217,16 @@ complete(site)&nbsp;&nbsp;⇔ reasons(in(site)) = ∅
 
 <h2 id="in-cobble">In cobble</h2>
 <p>The resolution is part of <code>cobble-dataflow-fixpoint</code>: every dynamic site's operand gets its value set where the site runs, and the run writes one <code>targets.jsonl</code> row per site. For PROGA:</p>
-<pre class="cobol">{"caller": "PROGA", "node": "MAIN-PARA/2.when.0.0", "transfer": "CICS_XCTL",
- "expression": "WS-FIRST-PGM", "candidates": ["PROGB"], "reasons": []}
-{"caller": "PROGA", "node": "MAIN-PARA/2.when.1.0", "transfer": "CICS_XCTL",
- "expression": "WS-MENU-PGM", "candidates": ["PROGB", "PROGC"], "reasons": []}
-{"caller": "PROGA", "node": "MAIN-PARA/2.when.2.0", "transfer": "CICS_XCTL",
- "expression": "WS-NEXT-PGM", "candidates": [], "reasons": ["inbound-linkage"]}</pre>
+<pre class="cobol">{"caller": "PROGA", "node": "MAIN-PARA/2.when.0.0", "kind": "program",
+ "transfer": "CICS_XCTL", "expression": "WS-FIRST-PGM",
+ "candidates": ["PROGB"], "reasons": [], "dropped": []}
+{"caller": "PROGA", "node": "MAIN-PARA/2.when.1.0", "kind": "program",
+ "transfer": "CICS_XCTL", "expression": "WS-MENU-PGM",
+ "candidates": ["PROGB", "PROGC"], "reasons": [], "dropped": []}
+{"caller": "PROGA", "node": "MAIN-PARA/2.when.2.0", "kind": "program",
+ "transfer": "CICS_XCTL", "expression": "WS-NEXT-PGM",
+ "candidates": [], "reasons": ["inbound-linkage"], "dropped": []}</pre>
+<p><code>kind</code> says the values must name a program; <code>dropped</code> lists values set aside because they cannot be a program name, such as a field of spaces.</p>
 <p>The commands, with the bridge environment sourced and a corpus config listing PROGA:</p>
 <pre class="cobol">cobble-parse-corpus --config corpus.toml
 cobble-extents --asg-dir asg --out extents.jsonl

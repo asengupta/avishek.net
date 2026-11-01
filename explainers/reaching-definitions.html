@@ -13,7 +13,7 @@
     startOnLoad: true,
     theme: "base",
     themeVariables: light
-      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#e6e3da", primaryTextColor: "#111", primaryBorderColor: "#d3cfc4", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
+      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#dde6ef", primaryTextColor: "#111", primaryBorderColor: "#8fa3b8", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
       : { darkMode: true, background: "#0b0f14", primaryColor: "#1a2230", primaryTextColor: "#e6edf3", primaryBorderColor: "#263041", lineColor: "#8b98a9", textColor: "#e6edf3", edgeLabelBackground: "#121821", clusterBkg: "#121821", clusterBorder: "#263041", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" },
   });
 </script>
@@ -34,13 +34,13 @@
 <p>Both arms of an <code>IF</code> write <code>WS-A</code>. Then it is read, overwritten, and read again. Each box in the graph is one statement, named the way cobble names it. The labels on the arrows into the two reads say which write of <code>WS-A</code> arrives along that arrow.</p>
 <pre class="mermaid">
 flowchart TD
-    I["MAIN-PARA/0<br>IF WS-FLAG = 'Y'"] -->|"true"| T["MAIN-PARA/0.then.0<br>MOVE 'YES ' TO WS-A"]
+    I["MAIN-PARA/0#35;test<br>IF WS-FLAG = 'Y'"] -->|"true"| T["MAIN-PARA/0.then.0<br>MOVE 'YES ' TO WS-A"]
     I -->|"false"| E["MAIN-PARA/0.else.0<br>MOVE 'NO#nbsp;#nbsp;' TO WS-A"]
     T -->|"WS-A ← then.0"| M1["MAIN-PARA/1<br>MOVE WS-A TO WS-B"]
     E -->|"WS-A ← else.0"| M1
     M1 --> M2["MAIN-PARA/2<br>MOVE 'DONE' TO WS-A"]
     M2 -->|"WS-A ← MAIN-PARA/2"| M3["MAIN-PARA/3<br>MOVE WS-A TO WS-C"]
-    M3 --> S["STOP RUN"]
+    M3 --> S["MAIN-PARA/4<br>STOP RUN"]
 </pre>
 <p>That is the whole answer: one row per read of <code>WS-A</code>, listing the writes it could see. The first read has two, one from each arm of the <code>IF</code>. The second has one, because <code>MAIN-PARA/2</code> sits between it and both arms.</p>
 <div class="scroll-x"><table class="state"><tbody><tr><th>read at</th><th>reads</th><th>definers</th></tr><tr><td>MAIN-PARA/1</td><td>WS-A@working_storage[1:5]</td><td>MAIN-PARA/0.else.0, MAIN-PARA/0.then.0</td></tr><tr><td>MAIN-PARA/3</td><td>WS-A@working_storage[1:5]</td><td>MAIN-PARA/2</td></tr></tbody></table></div>
@@ -75,7 +75,7 @@ STOP RUN.</pre>
            MOVE WS-A TO WS-C.
            STOP RUN.</pre>
 </details>
-<p>In the graph, <code>MAIN-PARA/0</code> is the <code>IF</code>, and <code>MAIN-PARA/0.then.0</code> and <code>MAIN-PARA/0.else.0</code> are the first statement in each arm; the arrow labels shorten those two to <code>then.0</code> and <code>else.0</code>. In the table, a read is identified by its statement and the bytes it reads: <code>WS-A@working_storage[1:5]</code> is <code>WS-A</code>, occupying bytes <code>[1, 5)</code> of working storage — bytes 1, 2, 3 and 4, after the one-byte <code>WS-FLAG</code> at byte 0. Byte ranges in these pages count from 0 and are half-open: <code>[start, end)</code> includes <code>start</code> and stops just before <code>end</code>, and cobble writes the same range as <code>[1:5]</code>; <a href="byte-extents.html">byte extents</a> builds on this.</p>
+<p>In the graph, <code>MAIN-PARA/0#test</code> is the <code>IF</code>'s test: the <code>IF</code> is statement 0 of <code>MAIN-PARA</code>, and cobble adds <code>#test</code> for the node that chooses an arm. <code>MAIN-PARA/0.then.0</code> and <code>MAIN-PARA/0.then.0</code> and <code>MAIN-PARA/0.else.0</code> are the first statement in each arm; the arrow labels shorten those two to <code>then.0</code> and <code>else.0</code>. In the table, a read is identified by its statement and the bytes it reads: <code>WS-A@working_storage[1:5]</code> is <code>WS-A</code>, occupying bytes <code>[1, 5)</code> of working storage — bytes 1, 2, 3 and 4, after the one-byte <code>WS-FLAG</code> at byte 0. Byte ranges in these pages count from 0 and are half-open: <code>[start, end)</code> includes <code>start</code> and stops just before <code>end</code>, and cobble writes the same range as <code>[1:5]</code>; <a href="byte-extents.html">byte extents</a> builds on this.</p>
 
 <h2 id="step-by-step">Step by step</h2>
 <p>The walk below carries a set of <strong>definitions</strong>, each one “statement S wrote variable V”, written <code>V ← S</code>. It starts from an empty set, as cobble's does. <a href="fixpoints.html">Fixpoints</a> instead credits every field to a <code>start</code> pseudo-definition on entry; that is a teaching device cobble does not have (see the last point under <a href="#what-goes-wrong">what goes wrong</a>).</p>
@@ -190,7 +190,7 @@ Its value comes from outside the program, or from its initial state. With the <c
 </ul>
 
 <h2 id="in-cobble">In cobble</h2>
-<p>The fixpoint stage (<code>cobble-dataflow-fixpoint</code>) collects each read's definers as it walks and writes one row per read whose value goes into a write into <code>defs.jsonl</code>. Its definitions are kept per byte range, not per variable name. These are the commands as run on this page's program, and the two rows it wrote — the table under <a href="#the-example">the example</a>. The <code>values</code> column holds what those definers can have left there, which <a href="value-sets.html">value sets</a> builds on.</p>
+<p>The fixpoint stage (<code>cobble-dataflow-fixpoint</code>) walks to the fixpoint first, then reads each read's definers off the settled state at its statement and writes one row per read whose value goes into a write into <code>defs.jsonl</code>. Its walk takes the arms in the other order from the walk above: its reverse postorder is <code>MAIN-PARA#label</code> (the node cobble puts at the start of each paragraph), <code>MAIN-PARA/0#test</code>, <code>MAIN-PARA/0.else.0</code>, <code>MAIN-PARA/0.then.0</code>, then <code>MAIN-PARA/1</code> to <code>MAIN-PARA/4</code>, one visit each. The union at <code>MAIN-PARA/1</code> is the same either way. Its definitions are kept per byte range, not per variable name. These are the commands as run on this page's program, and the two rows it wrote — the table under <a href="#the-example">the example</a>. The <code>values</code> column holds what those definers can have left there, which <a href="value-sets.html">value sets</a> builds on.</p>
 <pre class="cobol">cobble-parse-corpus --config corpus.toml
 cobble-extents --asg-dir parsed --out extents.jsonl
 cobble-dataflow-fixpoint --asg-dir parsed \

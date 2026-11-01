@@ -13,7 +13,7 @@
     startOnLoad: true,
     theme: "base",
     themeVariables: light
-      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#e6e3da", primaryTextColor: "#111", primaryBorderColor: "#d3cfc4", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
+      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#dde6ef", primaryTextColor: "#111", primaryBorderColor: "#8fa3b8", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
       : { darkMode: true, background: "#0b0f14", primaryColor: "#1a2230", primaryTextColor: "#e6edf3", primaryBorderColor: "#263041", lineColor: "#8b98a9", textColor: "#e6edf3", edgeLabelBackground: "#121821", clusterBkg: "#121821", clusterBorder: "#263041", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" },
   });
 </script>
@@ -584,7 +584,7 @@ The walk on it: <code>R</code> gets index 1, and <code>R → R</code> finds <cod
 </ul>
 
 <h2 id="in-cobble">In cobble and cobol-rekt</h2>
-<p><strong>Cobble</strong> finds components in its combine with Tarjan's algorithm, written out by hand in <code>Closures._solve</code> in <code>cobble/cobble/dataflow/combine/closures.py</code>. Its docstring says "Tarjan's algorithm with an explicit stack". It does not recurse: <code>visiting</code> is the walk's <em>Path</em> row, <code>positions</code> says which arrow each paragraph on it tries next, and <code>stack</code> is the <em>Stack</em> row. Abridged, with comments added:</p>
+<p><strong>Cobble</strong> finds components in its combine with Tarjan's algorithm, written out by hand in <code>Closures._solve</code> in <code>cobble/cobble/dataflow/combine/closures.py</code>. Its docstring says "Tarjan's algorithm with an explicit stack". It does not recurse: <code>visiting</code> is the walk's <em>Path</em> row, <code>positions</code> says which arrow each vertex on it tries next (here a vertex is not a paragraph but a place: a node and the bytes asked about there), and <code>stack</code> is the <em>Stack</em> row. Abridged, with comments added:</p>
 <pre class="cobol">while visiting:
     vertex = visiting[-1]
     position = positions[-1]

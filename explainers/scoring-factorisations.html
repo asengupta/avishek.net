@@ -18,10 +18,10 @@
 
 <h2 id="headline">The headline: held-out AUC</h2>
 <ol>
-<li>Hide a random 10% of the matrix's 1s.</li>
+<li>Hide a random 10% of the round's entries: what is left of the matrix after earlier rounds, so in round 2 they are fractions, and a cell earlier rounds fully explained counts as empty.</li>
 <li>Fit on what remains.</li>
-<li>Score each hidden 1 by <code>W H</code>, and, for each, one empty cell from the same paragraph's own program.</li>
-<li>AUC is the chance that a hidden 1 scores above an empty cell.</li>
+<li>Score each hidden entry by <code>W H</code>, and, for each, one empty cell from the same paragraph's own program: up to eight random picks among that program's columns, keeping the first empty one.</li>
+<li>AUC is the chance that a hidden entry scores above an empty cell.</li>
 </ol>
 <p>0.5 is chance, 1.0 is perfect. It asks whether the factors capture structure that generalises, or just memorise the cells they were shown.</p>
 
@@ -48,30 +48,30 @@
 <h2 id="numbers">Four matrices</h2>
 <div class="scroll-x"><table class="state"><tbody>
 <tr><th></th><th>planted blocks</th><th>CardDemo, round 1</th><th>CardDemo, round 2</th><th>random inside each program</th></tr>
-<tr><td>held-out AUC</td><td>1.000</td><td>0.891</td><td>0.437</td><td>0.499</td></tr>
-<tr><td>fidelity</td><td>0.000</td><td>0.310</td><td>0.806</td><td>0.999</td></tr>
-<tr><td>coverage</td><td>100%</td><td>70.2%</td><td>15.4%</td><td>0.4%</td></tr>
-<tr><td>stability</td><td>1.000</td><td>0.976</td><td>0.970</td><td>0.512</td></tr>
-<tr><td>distinctness</td><td>0.000</td><td>0.553</td><td>0.115</td><td>0.000</td></tr>
-<tr><td>focus</td><td>1.000</td><td>1.000</td><td>0.850</td><td>0.750</td></tr>
-<tr><td>reach</td><td>50%</td><td>76.7% (median 6.5 programs)</td><td>20% (median 1)</td><td>10%</td></tr>
-<tr><td>class share</td><td>10%</td><td>19.3%</td><td>15.0%</td><td>0%</td></tr>
+<tr><td>held-out AUC</td><td>1.000</td><td>0.910</td><td>0.479</td><td>0.500</td></tr>
+<tr><td>fidelity</td><td>0.000</td><td>0.339</td><td>0.838</td><td>0.999</td></tr>
+<tr><td>coverage</td><td>100%</td><td>72.8%</td><td>14.3%</td><td>0.1%</td></tr>
+<tr><td>stability</td><td>1.000</td><td>0.975</td><td>0.949</td><td>0.134</td></tr>
+<tr><td>distinctness</td><td>0.000</td><td>0.557</td><td>0.101</td><td>0.000</td></tr>
+<tr><td>focus</td><td>1.000</td><td>0.997</td><td>0.844</td><td>0.132</td></tr>
+<tr><td>reach</td><td>50% (median 1.5 programs)</td><td>73.3% (median 5.5 programs)</td><td>30% (median 1)</td><td>10% (median 1)</td></tr>
+<tr><td>class share</td><td>10%</td><td>21.4%</td><td>16.6%</td><td>0%</td></tr>
 </tbody></table></div>
-<p class="dim">Planted blocks: the 14 × 14 matrix from the previous page, k = 2. CardDemo: threshold 4, k = 30, then threshold 2, k = 10. Random: 3,000 programs, each paragraph touching 70 of its own program's 200 fields at random, 66,000 × 600,000 with 3.9 million 1s, k = 10.</p>
+<p class="dim">Planted blocks: the 14 × 14 matrix from the previous page, threshold 4, k = 2. Its program labels are made up: blocks 0 and 1 are one program's, and <code>F0</code> is put in a class with a field of an invented second program, which is all its reach and class share come from. CardDemo: threshold 4, k = 30, then threshold 2, k = 10. Random: 3,000 programs of 22 paragraphs, each paragraph making 70 random picks, repeats allowed, among its own program's 200 fields: 66,000 × 600,000 with 3.9 million 1s, threshold 2, k = 10.</p>
 <ul>
-<li><strong>CardDemo round 1 is the result.</strong> It predicts which fields a paragraph uses even against its own program's other fields, explains 70% of field uses, survives resampling, and three factors in four span programs.</li>
-<li><strong>Round 2 has nothing left to find.</strong> Its AUC is below chance and its factors explain 15%: what round 1 leaves is a long tail of fields seen in two or three paragraphs.</li>
-<li><strong>The random matrix sits at the no-structure end</strong> on AUC, fidelity, coverage and stability, as a score should. Low distinctness alone means nothing there: random factors are also unlike each other.</li>
+<li><strong>CardDemo round 1 is the result.</strong> It predicts which fields a paragraph uses even against its own program's other fields, covers 73% of field uses with its factors' top blocks, survives resampling, and 22 of its 30 factors span programs.</li>
+<li><strong>Round 2 has nothing left to find.</strong> Its AUC is below chance and its factors cover 14%: what round 1 leaves is a long tail of fields seen in two or three paragraphs.</li>
+<li><strong>The random matrix sits at the no-structure end</strong> on AUC, fidelity, coverage, stability and focus, as a score should. Low distinctness alone means nothing there: random factors are also unlike each other.</li>
 </ul>
 
 <h2 id="caveat">Why the empty cells come from the same program</h2>
 <div class="note-box"><p>A real corpus matrix is about 99.99% empty, and most of it is one block per program. An empty cell drawn from anywhere almost always pairs a paragraph with another program's field. Ranking a hidden 1 above that is easy, so the AUC would look strong even when each factor is one program's block.</p></div>
 <div class="scroll-x"><table class="state"><tbody>
 <tr><th>empty cells drawn from</th><th>CardDemo round 1</th><th>CardDemo round 2</th></tr>
-<tr><td>anywhere in the matrix</td><td>0.979</td><td>0.676</td></tr>
-<tr><td>the paragraph's own program</td><td>0.891</td><td>0.437</td></tr>
+<tr><td>anywhere in the matrix</td><td>0.981</td><td>0.731</td></tr>
+<tr><td>the paragraph's own program</td><td>0.910</td><td>0.479</td></tr>
 </tbody></table></div>
-<p>About 0.09 of round 1's score, and all of round 2's lead over chance, was the easy call between programs. The scorecard now uses only the second row. A class column counts as belonging to every program its members are in. If no paragraph has an empty cell in its own program, the AUC is <code>nan</code>.</p>
+<p>About 0.07 of round 1's score, and all of round 2's lead over chance, is the easy call between programs. The scorecard uses only the second row; the first is the same fit and the same hidden entries, scored once for this page against empty cells drawn uniformly from the whole matrix. A class column counts as belonging to every program its members are in. A hidden entry whose eight picks find no empty cell gets no partner; if none finds one, the AUC is <code>nan</code>.</p>
 </main>
 </body>
 </html>

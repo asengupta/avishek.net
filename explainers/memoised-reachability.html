@@ -13,7 +13,7 @@
     deterministicIds: true,
     theme: "base",
     themeVariables: light
-      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#e6e3da", primaryTextColor: "#111", primaryBorderColor: "#d3cfc4", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
+      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#dde6ef", primaryTextColor: "#111", primaryBorderColor: "#8fa3b8", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
       : { darkMode: true, background: "#0b0f14", primaryColor: "#1a2230", primaryTextColor: "#e6edf3", primaryBorderColor: "#263041", lineColor: "#8b98a9", textColor: "#e6edf3", edgeLabelBackground: "#121821", clusterBkg: "#121821", clusterBorder: "#263041", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" },
   });
 </script>
@@ -219,7 +219,7 @@ EXEC CICS XCTL PROGRAM('PROGA')
 </ol>
 </details>
 <p>A third jump starting at any of these six places would expand nothing: the memo returns the stored answer straight away, from the last table of step 12. Both answers are what the naive walks in the <a href="#step-by-step">table above the walk</a> give: {PROGE}, and both naive walks would meet a place twice going round the box in the place graph.</p>
-<p>The gap grows with the ring. A walk from inside a ring of <em>n</em> places expands all <em>n</em>; <em>n</em> jumps on it expand about <em>n</em>² between them. With the memo the ring is expanded once. The first two rows below are this page's example, from the table above the walk; the last is a test of a 15-program <code>XCTL</code> ring, with identical output.</p>
+<p>The gap grows with the ring. A walk from inside a ring of <em>n</em> places expands all <em>n</em>; <em>n</em> jumps on it expand about <em>n</em>² between them. With the memo the ring is expanded once. The first two rows below are this page's example, from the table above the walk; the last is a 15-program <code>XCTL</code> ring, measured when the memo was added, whose output was identical with and without it.</p>
 <table class="state"><tr><th>jumps answered</th><th>naive expansions</th><th>with the memo</th></tr>
 <tr><td>B-jump only</td><td>5</td><td>5</td></tr>
 <tr><td>B-jump and C-jump</td><td>10</td><td>6</td></tr>

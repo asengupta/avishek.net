@@ -13,7 +13,7 @@
     startOnLoad: true,
     theme: "base",
     themeVariables: light
-      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#e6e3da", primaryTextColor: "#111", primaryBorderColor: "#d3cfc4", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
+      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#dde6ef", primaryTextColor: "#111", primaryBorderColor: "#8fa3b8", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
       : { darkMode: true, background: "#0b0f14", primaryColor: "#1a2230", primaryTextColor: "#e6edf3", primaryBorderColor: "#263041", lineColor: "#8b98a9", textColor: "#e6edf3", edgeLabelBackground: "#121821", clusterBkg: "#121821", clusterBorder: "#263041", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" },
   });
 </script>
@@ -157,7 +157,7 @@ flowchart TD
     A1 --> X
     class Root member
     class A changed
-    classDef member stroke:#4ade80,stroke-width:3px,fill:transparent
+    classDef member stroke:#15803d,stroke-width:3px,fill:transparent
     classDef changed fill:#f5b041,stroke:#f5b041,color:#000
 </pre>
 <p class="dim">Current</p><div class="chips"><span class="chip changed">A</span></div><p class="dim">Trail, nearest first</p><div class="chips"><span class="chip changed">Root</span></div></li>
@@ -171,7 +171,7 @@ flowchart TD
     A1 --> X
     class Root,A member
     class A1 changed
-    classDef member stroke:#4ade80,stroke-width:3px,fill:transparent
+    classDef member stroke:#15803d,stroke-width:3px,fill:transparent
     classDef changed fill:#f5b041,stroke:#f5b041,color:#000
 </pre>
 <p class="dim">Current</p><div class="chips"><span class="chip changed">A1</span></div><p class="dim">Trail, nearest first</p><div class="chips"><span class="chip changed">A</span><span class="chip">Root</span></div></li>
@@ -185,7 +185,7 @@ flowchart TD
     A1 --> X
     class Root,A,A1 member
     class X changed
-    classDef member stroke:#4ade80,stroke-width:3px,fill:transparent
+    classDef member stroke:#15803d,stroke-width:3px,fill:transparent
     classDef changed fill:#f5b041,stroke:#f5b041,color:#000
 </pre>
 <p class="dim">Current</p><div class="chips"><span class="chip changed">X</span></div><p class="dim">Trail, nearest first</p><div class="chips"><span class="chip changed">A1</span><span class="chip">A</span><span class="chip">Root</span></div></li>
@@ -208,7 +208,7 @@ flowchart TD
     A1 --> X
     class Root,A member
     class A1 changed
-    classDef member stroke:#4ade80,stroke-width:3px,fill:transparent
+    classDef member stroke:#15803d,stroke-width:3px,fill:transparent
     classDef changed fill:#f5b041,stroke:#f5b041,color:#000
 </pre>
 <p class="dim">Current</p><div class="chips"><span class="chip changed">A1</span></div><p class="dim">Trail, nearest first</p><div class="chips"><span class="chip">A</span><span class="chip">Root</span></div></li>
@@ -231,7 +231,7 @@ flowchart TD
     A1 --> X
     class Root,A member
     class A1 changed
-    classDef member stroke:#4ade80,stroke-width:3px,fill:transparent
+    classDef member stroke:#15803d,stroke-width:3px,fill:transparent
     classDef changed fill:#f5b041,stroke:#f5b041,color:#000
 </pre></li>
 <li><p class="note">Build a new <code>A1</code> with children <code>[X, Y]</code>. The trail's front, <code>A</code>, becomes current — the new <code>A1</code> is substituted into <strong>its</strong> children. Build a new <code>A</code> holding <code>[new-A1, A2]</code> in place of the old <code>[A1, A2]</code>.</p>
@@ -245,7 +245,7 @@ flowchart TD
     newA1 --> Y
     class newA changed
     class newA1 member
-    classDef member stroke:#4ade80,stroke-width:3px,fill:transparent
+    classDef member stroke:#15803d,stroke-width:3px,fill:transparent
     classDef changed fill:#f5b041,stroke:#f5b041,color:#000
 </pre>
 <p class="dim">Just built</p><div class="chips"><span class="chip changed">new-A1 = A1(X, Y)</span></div><p class="dim">Current</p><div class="chips"><span class="chip changed">new-A = A(new-A1, A2)</span></div><p class="dim">Trail, nearest first</p><div class="chips"><span class="chip">Root</span></div></li>
@@ -260,7 +260,7 @@ flowchart TD
     newA1 --> Y
     class newRoot changed
     class newA member
-    classDef member stroke:#4ade80,stroke-width:3px,fill:transparent
+    classDef member stroke:#15803d,stroke-width:3px,fill:transparent
     classDef changed fill:#f5b041,stroke:#f5b041,color:#000
 </pre>
 <p class="dim">Just built</p><div class="chips"><span class="chip">new-A = A(new-A1, A2)</span></div><p class="dim">Current</p><div class="chips"><span class="chip changed">new-Root = Root(new-A, B)</span></div><p class="dim">Trail, nearest first</p><div class="chips"><span class="dim">empty</span></div></li>
