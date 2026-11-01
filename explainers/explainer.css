@@ -1,37 +1,20 @@
-/* Shared look for the algorithm explainers: the presentation deck's ink palette, light and dark. */
+/* Shared look for the algorithm explainers: dark ink on a warm paper ground. */
 
 :root {
-  --ground: #0b0f14;
-  --panel: #121821;
-  --panel-2: #1a2230;
-  --rule: #263041;
-  --text: #e6edf3;
-  --muted: #8b98a9;
-  --accent: #4ade80;
-  --accent-dim: #1f6f43;
-  --amber: #f5b041;
-  --red: #f87171;
-  --blue: #7aa2ff;
+  --ground: #f4f1ea;
+  --panel: #ebe7dd;
+  --panel-2: #e1dccf;
+  --rule: #cfc9ba;
+  --text: #111;
+  --muted: #555d68;
+  --accent: #15803d;
+  --accent-dim: #bfe3cb;
+  --amber: #a15c00;
+  --red: #b91c1c;
+  --blue: #1d4ed8;
   --sans: "IBM Plex Sans", "Inter", "Helvetica Neue", Arial, sans-serif;
   --mono: "IBM Plex Mono", "JetBrains Mono", Menlo, Consolas, monospace;
-  color-scheme: dark;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    --ground: #fbfaf7;
-    --panel: #f1efe9;
-    --panel-2: #e6e3da;
-    --rule: #d3cfc4;
-    --text: #1a1f26;
-    --muted: #5d6673;
-    --accent: #15803d;
-    --accent-dim: #bfe3cb;
-    --amber: #a15c00;
-    --red: #b91c1c;
-    --blue: #1d4ed8;
-    color-scheme: light;
-  }
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; }

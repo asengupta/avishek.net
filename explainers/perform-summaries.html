@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Summarising a PERFORM</title>
+<link rel="stylesheet" href="explainer.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<style>
+.MJXc-display { overflow-x: auto; overflow-y: hidden; }
+@media (min-width: 1400px) {
+  .side { --g: 18.5rem; --gap: 1.25rem; display: grid; grid-template-columns: var(--g) minmax(0, 1fr); column-gap: var(--gap); align-items: start; width: calc(100% + var(--g) + var(--gap)); margin-left: calc(-1 * (var(--g) + var(--gap))); }
+  .side > pre.src { position: sticky; top: 0.75rem; max-height: calc(100vh - 1.5rem); overflow: auto; margin: 0; font-size: 0.72rem; padding: 0.7rem 0.75rem; }
+  .side > div { min-width: 0; }
+}
+</style>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/+esm";
+  const light = true;
+  mermaid.initialize({
+    deterministicIds: true,
+    startOnLoad: true,
+    theme: "base",
+    themeVariables: light
+      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#e6e3da", primaryTextColor: "#111", primaryBorderColor: "#d3cfc4", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
+      : { darkMode: true, background: "#0b0f14", primaryColor: "#1a2230", primaryTextColor: "#e6edf3", primaryBorderColor: "#263041", lineColor: "#8b98a9", textColor: "#e6edf3", edgeLabelBackground: "#121821", clusterBkg: "#121821", clusterBorder: "#263041", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" },
+  });
+</script>
+</head>
+<body>
+<main>
+<nav class="back"><a href="index.html">← All explainers</a></nav>
+<div class="kicker">Explainer 14 of 15</div>
+<h1>Summarising a PERFORM</h1>
+<aside class="tldr"><p><strong>TL;DR</strong>Cut each <code>PERFORM</code>ed range out of the walk and treat it as a function from the bytes it touches to the bytes it touches. A <code>PERFORM</code> applies that function and hands the result to its own resume point only. Ranges that perform other ranges are built by composing their functions, and the result is the same as pasting every paragraph's body in at its <code>PERFORM</code>.</p></aside>
+<p class="prereqs"><strong>Read first:</strong> <a href="fixpoints.html">Fixpoints and worklists</a>, <a href="value-sets.html">Value sets and dynamic calls</a></p>
+<h2 id="idea">The solution in one example</h2>
+<pre class="cobol">MAIN-PARA.
+    MOVE 'PROGA' TO WS-A.
+    PERFORM OUTER.
+    MOVE WS-C TO WS-X.
+    CALL WS-X.
+    STOP RUN.
+OUTER.
+    PERFORM INNER.
+    MOVE WS-B TO WS-C.
+INNER.
+    MOVE WS-A TO WS-B.</pre>
+<p>Each performed paragraph becomes a function on just the fields it touches. Build them from the inside out:</p>
+<div style="overflow-x:auto"><table class="state"><tr><th>paragraph</th><th>touches</th><th>function</th><th>built how</th></tr>
+<tr><td>INNER</td><td>WS-A, WS-B</td><td><code>f<sub>INNER</sub>(A, B) = (A, A)</code></td><td>its one MOVE</td></tr>
+<tr><td>OUTER</td><td>WS-B, WS-C, plus INNER's WS-A, WS-B</td><td><code>f<sub>OUTER</sub>(A, B, C) = (A, A, A)</code></td><td><code>[C := B] ∘ f<sub>INNER</sub></code>: apply INNER, then OUTER's MOVE</td></tr></table></div>
+<p>The <code>PERFORM OUTER</code> in MAIN-PARA then applies <code>f<sub>OUTER</sub></code> to (A = PROGA, B = U, C = U), gets (PROGA, PROGA, PROGA), and hands it to the statement after itself. WS-X is not in OUTER's fields, so it skips the call unchanged. <code>MOVE WS-C TO WS-X</code> makes it PROGA, and cobble resolves <code>CALL WS-X</code> to PROGA. Cobble's footprints for the two paragraphs are working-storage bytes [0,16) (WS-A, WS-B) and [0,24) (WS-A to WS-C).</p>
+<p>The same functions keep two calls of one paragraph apart. P is performed twice, and a real run calls PROGA at <code>CALL WS-W</code>:</p>
+<pre class="cobol">MAIN-PARA.
+    MOVE 'PROGA' TO WS-V.        MAIN-PARA/0
+    PERFORM P.                   MAIN-PARA/1
+    CALL WS-W.                   MAIN-PARA/2
+    MOVE 'PROGB' TO WS-V.        MAIN-PARA/3
+    PERFORM P.                   MAIN-PARA/4
+    STOP RUN.                    MAIN-PARA/5
+P.
+    MOVE WS-V TO WS-W.           P/0</pre>
+<p>P touches WS-V and WS-W, so it becomes <code>f<sub>P</sub>(V, W) = (V, V)</code>. Each <code>PERFORM</code> applies it to its own state and hands the result only to the statement after itself:</p>
+<div style="overflow-x:auto"><table class="state"><tr><th></th><th>goes in</th><th>f<sub>P</sub> gives</th><th>goes back to</th></tr>
+<tr><td>MAIN-PARA/1</td><td>V = PROGA, W = U</td><td>V = PROGA, W = PROGA</td><td>MAIN-PARA/2 <span class="dim">CALL WS-W</span> only</td></tr>
+<tr><td>MAIN-PARA/4</td><td>V = PROGB, W = PROGA</td><td>V = PROGB, W = PROGB</td><td>MAIN-PARA/5 <span class="dim">STOP RUN</span> only</td></tr></table></div>
+<p>So <code>CALL WS-W</code> sees only PROGA, as in a real run. An analysis that just follows the control-flow graph also lets the second call's result reach <code>CALL WS-W</code>, and says PROGA or PROGB. The rest of the page shows that failure, the rules at the boundary of a performed paragraph, the new walk, and how nested <code>PERFORM</code>s compose.</p>
+<h2 id="notation">The method in notation</h2>
+<p><strong>A state.</strong> A state \(\sigma\) is what the analysis knows at one point in the program: for each field \(x\), \(\sigma[x]\) is the set of values \(x\) may hold there. For a set of fields \(X\), \(\sigma[X]\) is the same, kept only for the fields in \(X\). \(U\) in a set means "may be uninitialised". (Cobble works per byte range rather than per field.)</p>
+
+<p><strong>A node.</strong> Each node \(n\) has two states: \(\mathit{in}(n)\), arriving at it, and \(\mathit{out}(n)\), leaving it. It reads the fields \(\mathit{reads}(n)\) and writes the fields \(\mathit{writes}(n)\). Let \(g_n\) be what \(n\)'s statement computes: it takes the state of the fields \(n\) reads and returns a state of the fields \(n\) writes, holding their new values. So \(g_n(\mathit{in}(n)[\mathit{reads}(n)])\) is a state, and \(g_n(\mathit{in}(n)[\mathit{reads}(n)])[x]\) is the new value set it gives field \(x\).</p>
+\[
+\mathit{out}(n) = f_n(\mathit{in}(n))
+\]
+\[
+\mathit{out}(n)[x] =
+\begin{cases}
+\mathit{in}(n)[x] & x \notin \mathit{writes}(n) \\
+g_n\big(\mathit{in}(n)[\mathit{reads}(n)]\big)[x] & x \in \mathit{writes}(n),\ \text{strong write} \\
+\mathit{in}(n)[x] \,\cup\, g_n\big(\mathit{in}(n)[\mathit{reads}(n)]\big)[x] & x \in \mathit{writes}(n),\ \text{weak write}
+\end{cases}
+\]
+<p>For example, for \(n\) = <code>MOVE WS-V TO WS-W</code>: \(\mathit{reads}(n) = \{\texttt{WS-V}\}\), \(\mathit{writes}(n) = \{\texttt{WS-W}\}\), and \(\mathit{out}(n)[\texttt{WS-W}] = \mathit{in}(n)[\texttt{WS-V}]\). A write is <em>weak</em> when cobble cannot be sure it lands on \(x\): the target is a table element with an unknown subscript, or the statement is one cobble does not model. Then the old values are kept as well.</p>
+
+<p><strong>The join.</strong> A node with several incoming edges gets the field-by-field union of the states leaving the nodes those edges come from, its predecessors \(p_1, \dots, p_k\). Write \(\sqcup\) for that union:</p>
+\[
+\mathit{in}(n) = \mathit{out}(p_1) \sqcup \dots \sqcup \mathit{out}(p_k), \qquad
+(\sigma_1 \sqcup \sigma_2)[x] = \sigma_1[x] \cup \sigma_2[x]
+\]
+<p>For example, \(\sigma_1[\texttt{WS-V}] = \{\text{PROGA}\}\) and \(\sigma_2[\texttt{WS-V}] = \{\text{PROGB}\}\) give \((\sigma_1 \sqcup \sigma_2)[\texttt{WS-V}] = \{\text{PROGA}, \text{PROGB}\}\).</p>
+
+<p><strong>A performed range.</strong> A range \(Q\) is what one <code>PERFORM</code> runs: from \(Q\)'s entry node to \(Q\)'s end node. Its <strong>footprint</strong> \(F(Q)\) is the set of fields that the statements in \(Q\) read or write, together with the footprints of the ranges \(Q\) performs. The definition is recursive: Its transfer function \(f_Q\) takes the arriving state, kept to \(F(Q)\), to the state after \(Q\)'s end node, kept to \(F(Q)\) as well. Fields in \(F(Q)\) that \(Q\) only reads come out as they went in.</p>
+\[
+F(Q) = \bigcup_{n \in Q} \big(\mathit{reads}(n) \cup \mathit{writes}(n)\big) \;\cup \bigcup_{Q_2 \text{ performed in } Q} F(Q_2)
+\]
+<p>Cobble does not evaluate it by recursion. It starts every range's footprint at its own statements' fields, then keeps adding the footprints of the ranges each one performs until no footprint grows. That gives the smallest sets satisfying the equation, and it stops even when <code>PERFORM</code>s form a cycle.</p>
+<p>For a set of fields \(X\), let \(S(X)\) be the set of all states over \(X\): every way of giving each field in \(X\) a value set. \(f_Q\) takes a state over \(Q\)'s footprint and returns a state over the same fields:</p>
+\[
+f_Q : S(F(Q)) \to S(F(Q))
+\]
+<p>For example, for \(P\) = <code>MOVE WS-V TO WS-W</code>, \(F(P) = \{\texttt{WS-V}, \texttt{WS-W}\}\) and</p>
+\[
+\begin{aligned}
+&f_P\big(\texttt{WS-V} \mapsto \{\text{PROGA}\},\ \texttt{WS-W} \mapsto \{U\}\big) \\
+&\quad = \big(\texttt{WS-V} \mapsto \{\text{PROGA}\},\ \texttt{WS-W} \mapsto \{\text{PROGA}\}\big)
+\end{aligned}
+\]
+<p>A <code>PERFORM</code> node \(p\) of range \(Q\) applies \(f_Q\) to the fields in \(F(Q)\) and keeps every other field as it arrived. Let \(\mathbb{F}\) be the set of all the program's fields, so \(\mathbb{F} \setminus F(Q)\) is the fields \(Q\) never touches, and write \(\sigma_1 \oplus \sigma_2\) for putting together two states over disjoint sets of fields:</p>
+\[
+\mathit{out}(p) = f_Q\big(\mathit{in}(p)[F(Q)]\big) \,\oplus\, \mathit{in}(p)[\mathbb{F} \setminus F(Q)]
+\]
+<p>\(\mathit{out}(p)\) goes to one node only, \(\mathit{resume}(p)\): the statement right after that <code>PERFORM</code>.</p>
+
+<p><strong>Composition.</strong> For a range whose nodes run in a straight line \(n_1, \dots, n_k\), its function is theirs applied in order, with a nested <code>PERFORM</code> node's rule standing in for the inner range. With branches or loops, \(f_Q(\sigma)\) is the state at \(Q\)'s end once a walk of \(Q\) from \(\sigma\) stops changing.</p>
+\[
+f_Q = f_{n_k} \circ \dots \circ f_{n_1}
+\]
+<p>For example, with OUTER = <code>PERFORM INNER</code>, then <code>MOVE WS-B TO WS-C</code>, and INNER = <code>MOVE WS-A TO WS-B</code>:</p>
+\[
+f_{\mathrm{INNER}}(a, b) = (a, a) \quad \text{over } (\texttt{WS-A}, \texttt{WS-B})
+\]
+\[
+f_{\mathrm{OUTER}} = f_{\texttt{MOVE WS-B TO WS-C}} \circ f_{\mathrm{INNER}}
+\]
+\[
+f_{\mathrm{OUTER}}(a, b, c) = (a, a, a) \quad \text{over } (\texttt{WS-A}, \texttt{WS-B}, \texttt{WS-C})
+\]
+
+<p><strong>The fixpoint, with summaries.</strong> \(\mathrm{entry}_Q\) and \(\mathrm{end}_Q\) are \(Q\)'s entry node and end node. \(\mathit{walk}(Q, \sigma)\) walks range \(Q\) from input \(\sigma\) and returns \(\mathit{out}(\mathrm{end}_Q)\), the state leaving \(Q\)'s end node. \(\mathit{results}\) is a table of finished walks, keyed by (range, input). The worklist \(L\) holds the nodes whose arriving state has grown and must be visited again. \(\mathit{succ}_Q(n)\) is \(n\)'s successors, never along a RETURN edge, and none if \(n\) is \(Q\)'s end node. \(\varnothing\) is the state whose every field holds the empty set, and \(\mathit{out}(n) \not\sqsubseteq \mathit{in}(m)\) means \(\mathit{out}(n)\) has, for some field, a value \(\mathit{in}(m)\) lacks. \(\mathrm{end}_Q\) is visited like any other node; it differs only in having no successors, so its \(\mathit{out}\) is returned rather than passed on. The whole analysis is \(\mathit{walk}(\text{MAIN}, \sigma_{\text{start}})\), from the program's starting state.</p>
+\[
+\begin{array}{l}
+\mathit{walk}(Q, \sigma): \\
+\quad \mathit{in}(\mathrm{entry}_Q) := \sigma;\ \ \mathit{in}(n) := \varnothing \text{ for every other } n;\ \ \mathit{out}(n) := \varnothing \text{ for every } n \\
+\quad L := \{\mathrm{entry}_Q\} \\
+\quad \textbf{while } L \neq \varnothing: \\
+\quad\quad \text{take a node } n \text{ out of } L \\
+\quad\quad \textbf{if } n \text{ is a PERFORM of } Q_2: \\
+\quad\quad\quad \mathit{input} := \mathit{in}(n)[F(Q_2)] \\
+\quad\quad\quad \textbf{if } (Q_2, \mathit{input}) \notin \mathit{results}:\ \ \mathit{results}[Q_2, \mathit{input}] := \mathit{walk}(Q_2, \mathit{input}) \\
+\quad\quad\quad \mathit{out}(n) := \mathit{results}[Q_2, \mathit{input}] \oplus \mathit{in}(n)[\mathbb{F} \setminus F(Q_2)] \\
+\quad\quad\quad \mathit{next} := \{\mathit{resume}(n)\} \\
+\quad\quad \textbf{else}: \\
+\quad\quad\quad \mathit{out}(n) := f_n(\mathit{in}(n));\ \ \mathit{next} := \mathit{succ}_Q(n) \\
+\quad\quad \textbf{for each } m \in \mathit{next}: \\
+\quad\quad\quad \textbf{if } \mathit{out}(n) \not\sqsubseteq \mathit{in}(m):\ \ \mathit{in}(m) := \mathit{in}(m) \sqcup \mathit{out}(n);\ \ L := L \cup \{m\} \\
+\quad \textbf{return } \mathit{out}(\mathrm{end}_Q)
+\end{array}
+\]
+<p><strong>The PERFORM stack.</strong> The recursion of \(\mathit{walk}\) is a stack of <code>PERFORM</code>s. Reaching a <code>PERFORM</code> node \(n\) pushes a new \(\mathit{walk}\) for its range; when that walk returns, it is popped and the outer walk is still at \(n\), so it reads \(\mathit{resume}(n)\) from the right node. That is how each call's result returns to its own call site, which a walk following RETURN edges cannot tell apart. In the nested example the stack is at most three deep: MAIN-PARA, then \((\text{P1} \dots \text{P2})\), then SET-B.</p>
+<p class="dim">Left out for brevity: cobble also keeps the set of ranges on the stack. A <code>PERFORM</code> of a range already on it ends that route (COBOL leaves recursive <code>PERFORM</code> undefined), and that set is part of the table's key. A <code>PERFORM</code> reached again with a larger input continues its earlier walk instead of starting over.</p>
+<p class="dim">Values are shown with trailing spaces dropped (<code>PROGA</code> is <code>'PROGA␣␣␣'</code>); <code>U</code> means uninitialised. Every field is <code>PIC X(8)</code>, laid out in declaration order: in the two-call program WS-V is working-storage bytes [0,8) and WS-W [8,16); in the others WS-A is [0,8), WS-B [8,16), WS-C [16,24), WS-D [24,32).</p>
+<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#idea">The solution in one example</a></li><li><a href="#notation">The method in notation</a></li><li><a href="#problem">The problem: a walk that follows the graph</a></li><li><a href="#contract">Cutting out a range: the contract</a></li><li><a href="#walk">The walk now</a></li><li><a href="#compose">Composing ranges</a></li><li><a href="#correct">Why composing stays correct</a></li><li><a href="#in-cobble">In cobble</a></li></ol></nav>
+
+<h2 id="problem">1. The problem: a walk that follows the graph</h2>
+<div class="side">
+<pre class="cobol src">MAIN-PARA.
+    MOVE 'PROGA' TO WS-V.  MAIN-PARA/0
+    PERFORM P.             MAIN-PARA/1
+    CALL WS-W.             MAIN-PARA/2
+    MOVE 'PROGB' TO WS-V.  MAIN-PARA/3
+    PERFORM P.             MAIN-PARA/4
+    STOP RUN.              MAIN-PARA/5
+P.
+    MOVE WS-V TO WS-W.     P/0</pre>
+<div>
+<p>A real run calls PROGA at <code>MAIN-PARA/2</code>. Cobble's control-flow graph has these edges into and out of P, where <code>P#label</code> and <code>P#end</code> are nodes marking the paragraph's start and end:</p>
+<pre class="mermaid">
+flowchart TD
+    M1["MAIN-PARA/1 PERFORM P"] -->|PERFORM| PL["P#label"]
+    M4["MAIN-PARA/4 PERFORM P"] -->|PERFORM| PL
+    PL --> P0["P/0 MOVE WS-V TO WS-W"]
+    P0 --> PE["P#end"]
+    PE -->|RETURN| M2["MAIN-PARA/2 CALL WS-W"]
+    PE -->|RETURN| M5["MAIN-PARA/5 STOP RUN"]
+</pre>
+<p>Below is the walk cobble's fixpoint made before this change, printed step by step from that version of the code run on this program. Each row is one visit: the node taken off the worklist, the value sets <em>arriving</em> at it, and the nodes whose arriving state it changed (they are queued). The walk is not one run: it takes nodes off the worklist until none is left, so the <code>STOP RUN</code> at <code>MAIN-PARA/5</code>, which has no successors, ends only that line of the walk.</p>
+<div style="overflow-x:auto"><table class="state">
+<tr><th>visit</th><th>node</th><th>WS-V</th><th>WS-W</th><th>changes the state arriving at</th></tr>
+<tr><td>1</td><td>MAIN-PARA#label <span class="dim">MAIN-PARA. (start)</span></td><td>U</td><td>U</td><td>MAIN-PARA/0 <span class="dim">MOVE 'PROGA' TO WS-V</span></td></tr>
+<tr><td>2</td><td>MAIN-PARA/0 <span class="dim">MOVE 'PROGA' TO WS-V</span></td><td>U</td><td>U</td><td>MAIN-PARA/1 <span class="dim">PERFORM P</span></td></tr>
+<tr><td>3</td><td>MAIN-PARA/1 <span class="dim">PERFORM P</span></td><td>PROGA</td><td>U</td><td>P#label <span class="dim">P. (start)</span></td></tr>
+<tr><td>4</td><td>P#label <span class="dim">P. (start)</span></td><td>PROGA</td><td>U</td><td>P/0 <span class="dim">MOVE WS-V TO WS-W</span></td></tr>
+<tr><td>5</td><td>P/0 <span class="dim">MOVE WS-V TO WS-W</span></td><td>PROGA</td><td>U</td><td>P#end <span class="dim">end of P</span></td></tr>
+<tr><td>6</td><td>P#end <span class="dim">end of P</span></td><td>PROGA</td><td>PROGA</td><td>MAIN-PARA/2 <span class="dim">CALL WS-W</span>, MAIN-PARA/5 <span class="dim">STOP RUN</span></td></tr>
+<tr><td>7</td><td>MAIN-PARA/5 <span class="dim">STOP RUN</span></td><td>PROGA</td><td>PROGA</td><td>nothing changed</td></tr>
+<tr><td>8</td><td>MAIN-PARA/2 <span class="dim">CALL WS-W</span></td><td>PROGA</td><td>PROGA</td><td>MAIN-PARA/3 <span class="dim">MOVE 'PROGB' TO WS-V</span></td></tr>
+<tr><td>9</td><td>MAIN-PARA/3 <span class="dim">MOVE 'PROGB' TO WS-V</span></td><td>PROGA</td><td>PROGA</td><td>MAIN-PARA/4 <span class="dim">PERFORM P</span></td></tr>
+<tr><td>10</td><td>MAIN-PARA/4 <span class="dim">PERFORM P</span></td><td>PROGB</td><td>PROGA</td><td>P#label <span class="dim">P. (start)</span></td></tr>
+<tr><td>11</td><td>P#label <span class="dim">P. (start)</span></td><td class="changed">PROGA, PROGB</td><td class="changed">PROGA, U</td><td>P/0 <span class="dim">MOVE WS-V TO WS-W</span></td></tr>
+<tr><td>12</td><td>P/0 <span class="dim">MOVE WS-V TO WS-W</span></td><td class="changed">PROGA, PROGB</td><td class="changed">PROGA, U</td><td>P#end <span class="dim">end of P</span></td></tr>
+<tr><td>13</td><td>P#end <span class="dim">end of P</span></td><td class="changed">PROGA, PROGB</td><td class="changed">PROGA, PROGB</td><td>MAIN-PARA/2 <span class="dim">CALL WS-W</span>, MAIN-PARA/5 <span class="dim">STOP RUN</span></td></tr>
+<tr><td>14</td><td>MAIN-PARA/5 <span class="dim">STOP RUN</span></td><td class="changed">PROGA, PROGB</td><td class="changed">PROGA, PROGB</td><td>nothing changed</td></tr>
+<tr><td>15</td><td>MAIN-PARA/2 <span class="dim">CALL WS-W</span></td><td class="changed">PROGA, PROGB</td><td class="changed">PROGA, PROGB</td><td>MAIN-PARA/3 <span class="dim">MOVE 'PROGB' TO WS-V</span></td></tr>
+<tr><td>16</td><td>MAIN-PARA/3 <span class="dim">MOVE 'PROGB' TO WS-V</span></td><td class="changed">PROGA, PROGB</td><td class="changed">PROGA, PROGB</td><td>MAIN-PARA/4 <span class="dim">PERFORM P</span></td></tr>
+<tr><td>17</td><td>MAIN-PARA/4 <span class="dim">PERFORM P</span></td><td>PROGB</td><td class="changed">PROGA, PROGB</td><td>P#label <span class="dim">P. (start)</span></td></tr>
+<tr><td>18</td><td>P#label <span class="dim">P. (start)</span></td><td>PROGA, PROGB</td><td class="changed">PROGA, PROGB, U</td><td>P/0 <span class="dim">MOVE WS-V TO WS-W</span></td></tr>
+<tr><td>19</td><td>P/0 <span class="dim">MOVE WS-V TO WS-W</span></td><td>PROGA, PROGB</td><td class="changed">PROGA, PROGB, U</td><td>nothing changed</td></tr>
+</table></div>
+<ul>
+<li><strong>Visit 6:</strong> <code>P#end</code> sends the first call's state down <em>both</em> RETURN edges, so <code>MAIN-PARA/2</code> and <code>MAIN-PARA/5</code> are both queued. Visit 7 takes <code>MAIN-PARA/5</code>, the STOP RUN; visit 8 takes <code>MAIN-PARA/2</code>.</li>
+<li><strong>Visit 11:</strong> the state arriving at <code>P#label</code> is the <strong>join</strong> of both calls': WS-V is PROGA, PROGB.</li>
+<li><strong>Visit 13:</strong> <code>P#end</code> sends that joined state down both RETURN edges again, so the second call's PROGB reaches the first call's resume point.</li>
+<li><strong>Visit 15:</strong> the state arriving at <code>CALL WS-W</code> has WS-W = PROGA, PROGB. That is what cobble reported before this change; it now reports PROGA.</li>
+</ul>
+</div>
+</div>
+<p>Both mistakes happen at P: its start joins the two calls' states, and its end sends the result to both resume points. The walk also goes round <code>MAIN-PARA/2</code> → <code>/3</code> → <code>/4</code> → P → <code>MAIN-PARA/2</code>, a cycle the program does not have.</p>
+
+<h2 id="contract">2. Cutting out a range: the contract</h2>
+<p>The fix is to stop treating a performed paragraph as part of the graph the walk wanders through, and treat it as a unit with a boundary. Each <code>PERFORM</code> names a <strong>range</strong>: where it enters, and the end node it returns from.</p>
+<div style="overflow-x:auto"><table class="state"><tr><th>statement</th><th>range (entry, end)</th></tr><tr><td><code>PERFORM P</code></td><td>(P#label, P#end)</td></tr><tr><td><code>PERFORM P1 THRU P2</code></td><td>(P1#label, P2#end)</td></tr></table></div>
+<p>At the boundary of a range R, the contract is:</p>
+<ul>
+<li><strong>Footprint.</strong> R's footprint is every byte R's own statements read or write, plus the footprint of every range R performs. For P it is bytes [0,16): WS-V and WS-W.</li>
+<li><strong>In.</strong> A walk of R starts at R's entry with the caller's state <em>cut</em> to the footprint. Bytes outside it are not passed in.</li>
+<li><strong>Inside.</strong> The walk follows ordinary edges (flow, test outcomes, fall-through into the next paragraph). It never follows a RETURN edge. A <code>PERFORM</code> inside R is handled by this same contract, not by following its edges. The walk stops at R's end node.</li>
+<li><strong>Out.</strong> The state after R's end node is the only thing handed back. It goes to the resume node of the <code>PERFORM</code> that started the walk, which the <code>PERFORM</code> node records: <code>MAIN-PARA/1</code> resumes at <code>MAIN-PARA/2</code>, <code>MAIN-PARA/4</code> at <code>MAIN-PARA/5</code>.</li>
+<li><strong>Frame.</strong> The bytes that were not passed in are put back unchanged. R cannot have changed them: nothing in R, or in any range R performs, writes them.</li>
+</ul>
+<p>What this implies: R becomes a function <code>f<sub>R</sub></code> from a state over its footprint to a state over its footprint, its <strong>transfer function</strong>. A <code>PERFORM</code> of R is then an ordinary node whose transfer is "cut, apply <code>f<sub>R</sub></code>, put the rest back". For P, <code>f</code> maps (WS-V = v, WS-W = w) to (WS-V = v, WS-W = v).</p>
+
+<h2 id="walk">3. The walk now</h2>
+<p>The same program under the contract, printed step by step from cobble's current fixpoint. Numbered rows are visits of the walk of MAIN-PARA. Under a <code>PERFORM</code>'s visit are the rows of that call: the cut, whether the table already had a result, the separate walk of the range (states arriving at each of its nodes), and what is handed back and where. P touches both fields, so nothing is held out here; the opening example and section 4 show fields held out.</p>
+<div class="side">
+<pre class="cobol src">MAIN-PARA.
+    MOVE 'PROGA' TO WS-V.  MAIN-PARA/0
+    PERFORM P.             MAIN-PARA/1
+    CALL WS-W.             MAIN-PARA/2
+    MOVE 'PROGB' TO WS-V.  MAIN-PARA/3
+    PERFORM P.             MAIN-PARA/4
+    STOP RUN.              MAIN-PARA/5
+P.
+    MOVE WS-V TO WS-W.     P/0</pre>
+<div><div style="overflow-x:auto"><table class="state">
+<tr><th>visit</th><th>node / action</th><th>WS-V</th><th>WS-W</th></tr>
+<tr><td>1</td><td>MAIN-PARA#label <span class="dim">MAIN-PARA. (start)</span></td><td>U</td><td>U</td></tr>
+<tr><td>2</td><td>MAIN-PARA/0 <span class="dim">MOVE 'PROGA' TO WS-V</span></td><td>U</td><td>U</td></tr>
+<tr><td>3</td><td>MAIN-PARA/1 <span class="dim">PERFORM P</span></td><td>PROGA</td><td>U</td></tr>
+<tr class="current"><td></td><td colspan="3"><strong>PERFORM at MAIN-PARA/1</strong>: range P … P#end</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;cut: passed in</td><td>PROGA</td><td>U</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;cut: held out</td><td>·</td><td>·</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;table</td><td colspan="2">miss, walked</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;walk: arriving at P#label <span class="dim">P. (start)</span></td><td>PROGA</td><td>U</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;walk: arriving at P/0 <span class="dim">MOVE WS-V TO WS-W</span></td><td>PROGA</td><td>U</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;walk: arriving at P#end <span class="dim">end of P</span></td><td>PROGA</td><td>PROGA</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;hand back, sent to MAIN-PARA/2 <span class="dim">CALL WS-W</span></td><td>PROGA</td><td>PROGA</td></tr>
+<tr><td>4</td><td>MAIN-PARA/2 <span class="dim">CALL WS-W</span></td><td>PROGA</td><td>PROGA</td></tr>
+<tr><td>5</td><td>MAIN-PARA/3 <span class="dim">MOVE 'PROGB' TO WS-V</span></td><td>PROGA</td><td>PROGA</td></tr>
+<tr><td>6</td><td>MAIN-PARA/4 <span class="dim">PERFORM P</span></td><td>PROGB</td><td>PROGA</td></tr>
+<tr class="current"><td></td><td colspan="3"><strong>PERFORM at MAIN-PARA/4</strong>: range P … P#end</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;cut: passed in</td><td>PROGB</td><td>PROGA</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;cut: held out</td><td>·</td><td>·</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;table</td><td colspan="2">miss, walked</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;walk: arriving at P#label <span class="dim">P. (start)</span></td><td>PROGB</td><td>PROGA</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;walk: arriving at P/0 <span class="dim">MOVE WS-V TO WS-W</span></td><td>PROGB</td><td>PROGA</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;walk: arriving at P#end <span class="dim">end of P</span></td><td>PROGB</td><td>PROGB</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;hand back, sent to MAIN-PARA/5 <span class="dim">STOP RUN</span></td><td>PROGB</td><td>PROGB</td></tr>
+<tr><td>7</td><td>MAIN-PARA/5 <span class="dim">STOP RUN</span></td><td>PROGB</td><td>PROGB</td></tr>
+</table></div>
+
+</div>
+</div>
+<p>Compare with section 1. Each walk of P starts from one call's state, so nothing is joined at <code>P#label</code>. Each hand-back goes to one node: <code>MAIN-PARA/2</code> for the first call, <code>MAIN-PARA/5</code> for the second. The walk of MAIN-PARA visits each statement once, with no cycle, and WS-W arrives at <code>CALL WS-W</code> (visit 4) as PROGA only.</p>
+
+<h2 id="compose">4. Composing ranges</h2>
+<p>When a range performs another, its function is built from the inner one. Which function a <code>PERFORM</code> applies depends on its range, not just on the paragraph it names:</p>
+<div class="side">
+<pre class="cobol src">MAIN-PARA.
+    MOVE 'PROGA' TO WS-A.  MAIN-PARA/0
+    PERFORM P1.            MAIN-PARA/1
+    MOVE WS-B TO WS-X.     MAIN-PARA/2
+    MOVE 'PROGB' TO WS-A.  MAIN-PARA/3
+    PERFORM P1 THRU P2.    MAIN-PARA/4
+    MOVE WS-C TO WS-Y.     MAIN-PARA/5
+    CALL WS-X.             MAIN-PARA/6
+    CALL WS-Y.             MAIN-PARA/7
+    STOP RUN.              MAIN-PARA/8
+P1.
+    PERFORM SET-B.         P1/0
+    MOVE 'DONE' TO WS-D.   P1/1
+P2.
+    MOVE WS-B TO WS-C.     P2/0
+SET-B.
+    MOVE WS-A TO WS-B.     SET-B/0</pre>
+<div>
+<p>Cobble's footprints for the three ranges, printed from its own computation:</p>
+<div style="overflow-x:auto"><table class="state"><tr><th>range</th><th>own statements touch</th><th>plus ranges it performs</th><th>footprint (bytes)</th><th>function</th></tr>
+<tr><td>(SET-B, SET-B#end <span class="dim">end of SET-B</span>)</td><td>WS-A, WS-B</td><td>none</td><td>[0,16)</td><td>(a, b) ↦ (a, a)</td></tr>
+<tr><td>(P1, P1#end <span class="dim">end of P1</span>)</td><td>WS-D</td><td>SET-B: WS-A, WS-B</td><td>[0,16) ∪ [24,32)</td><td>(a, b, d) ↦ (a, a, DONE)</td></tr>
+<tr><td>(P1, P2#end <span class="dim">end of P2</span>)</td><td>WS-D, WS-B, WS-C</td><td>SET-B: WS-A, WS-B</td><td>[0,32)</td><td>(a, b, c, d) ↦ (a, a, a, DONE)</td></tr>
+</table></div>
+<p>The two ranges entered at P1 are different functions. <code>PERFORM P1</code> stops at <code>P1#end</code>. <code>PERFORM P1 THRU P2</code> falls through from <code>P1#end</code> into <code>P2</code>, so it also copies WS-B into WS-C. Each is a composition along its walk, with the inner range's function standing in at <code>P1/0</code>:</p>
+<div class="rule">
+f<sub>(P1, P1#end)</sub> &nbsp;= [P1/1: D := 'DONE'] ∘ f<sub>SET-B</sub><br>
+f<sub>(P1, P2#end)</sub> &nbsp;= [P2/0: C := B] ∘ [P1/1: D := 'DONE'] ∘ f<sub>SET-B</sub>
+</div>
+<p>How the calls play out, printed from cobble's current fixpoint the same way. The nested <code>PERFORM SET-B</code> at <code>P1/0</code> appears inside each walk of a range entered at P1, at the point that walk reaches <code>P1/0</code>:</p>
+<div style="overflow-x:auto"><table class="state">
+<tr><th>visit</th><th>node / action</th><th>WS-A</th><th>WS-B</th><th>WS-C</th><th>WS-D</th><th>WS-X</th><th>WS-Y</th></tr>
+<tr><td>1</td><td>MAIN-PARA#label <span class="dim">MAIN-PARA. (start)</span></td><td>U</td><td>U</td><td>U</td><td>U</td><td>U</td><td>U</td></tr>
+<tr><td>2</td><td>MAIN-PARA/0 <span class="dim">MOVE 'PROGA' TO WS-A</span></td><td>U</td><td>U</td><td>U</td><td>U</td><td>U</td><td>U</td></tr>
+<tr><td>3</td><td>MAIN-PARA/1 <span class="dim">PERFORM P1</span></td><td>PROGA</td><td>U</td><td>U</td><td>U</td><td>U</td><td>U</td></tr>
+<tr class="current"><td></td><td colspan="7"><strong>PERFORM at MAIN-PARA/1</strong>: range P1 … P1#end</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;cut: passed in</td><td>PROGA</td><td>U</td><td>·</td><td>U</td><td>·</td><td>·</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;cut: held out</td><td>·</td><td>·</td><td>U</td><td>·</td><td>U</td><td>U</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;table</td><td colspan="6">miss, walked</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;walk: arriving at P1#label <span class="dim">P1. (start)</span></td><td>PROGA</td><td>U</td><td>·</td><td>U</td><td>·</td><td>·</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;walk: arriving at P1/0 <span class="dim">PERFORM SET-B</span></td><td>PROGA</td><td>U</td><td>·</td><td>U</td><td>·</td><td>·</td></tr>
+<tr class="current"><td></td><td colspan="7"><strong>&nbsp;&nbsp;PERFORM at P1/0</strong>: range SET-B … SET-B#end</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;cut: passed in</td><td>PROGA</td><td>U</td><td>·</td><td>·</td><td>·</td><td>·</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;cut: held out</td><td>·</td><td>·</td><td>·</td><td>U</td><td>·</td><td>·</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;table</td><td colspan="6">miss, walked</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;walk: arriving at SET-B#label <span class="dim">SET-B. (start)</span></td><td>PROGA</td><td>U</td><td>·</td><td>·</td><td>·</td><td>·</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;walk: arriving at SET-B/0 <span class="dim">MOVE WS-A TO WS-B</span></td><td>PROGA</td><td>U</td><td>·</td><td>·</td><td>·</td><td>·</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;walk: arriving at SET-B#end <span class="dim">end of SET-B</span></td><td>PROGA</td><td>PROGA</td><td>·</td><td>·</td><td>·</td><td>·</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;hand back, sent to P1/1 <span class="dim">MOVE 'DONE' TO WS-D</span></td><td>PROGA</td><td>PROGA</td><td>·</td><td>U</td><td>·</td><td>·</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;walk: arriving at P1/1 <span class="dim">MOVE 'DONE' TO WS-D</span></td><td>PROGA</td><td>PROGA</td><td>·</td><td>U</td><td>·</td><td>·</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;walk: arriving at P1#end <span class="dim">end of P1</span></td><td>PROGA</td><td>PROGA</td><td>·</td><td>DONE</td><td>·</td><td>·</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;hand back, sent to MAIN-PARA/2 <span class="dim">MOVE WS-B TO WS-X</span></td><td>PROGA</td><td>PROGA</td><td>U</td><td>DONE</td><td>U</td><td>U</td></tr>
+<tr><td>4</td><td>MAIN-PARA/2 <span class="dim">MOVE WS-B TO WS-X</span></td><td>PROGA</td><td>PROGA</td><td>U</td><td>DONE</td><td>U</td><td>U</td></tr>
+<tr><td>5</td><td>MAIN-PARA/3 <span class="dim">MOVE 'PROGB' TO WS-A</span></td><td>PROGA</td><td>PROGA</td><td>U</td><td>DONE</td><td>PROGA</td><td>U</td></tr>
+<tr><td>6</td><td>MAIN-PARA/4 <span class="dim">PERFORM P1 THRU P2</span></td><td>PROGB</td><td>PROGA</td><td>U</td><td>DONE</td><td>PROGA</td><td>U</td></tr>
+<tr class="current"><td></td><td colspan="7"><strong>PERFORM at MAIN-PARA/4</strong>: range P1 … P2#end</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;cut: passed in</td><td>PROGB</td><td>PROGA</td><td>U</td><td>DONE</td><td>·</td><td>·</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;cut: held out</td><td>·</td><td>·</td><td>·</td><td>·</td><td>PROGA</td><td>U</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;table</td><td colspan="6">miss, walked</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;walk: arriving at P1#label <span class="dim">P1. (start)</span></td><td>PROGB</td><td>PROGA</td><td>U</td><td>DONE</td><td>·</td><td>·</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;walk: arriving at P1/0 <span class="dim">PERFORM SET-B</span></td><td>PROGB</td><td>PROGA</td><td>U</td><td>DONE</td><td>·</td><td>·</td></tr>
+<tr class="current"><td></td><td colspan="7"><strong>&nbsp;&nbsp;PERFORM at P1/0</strong>: range SET-B … SET-B#end</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;cut: passed in</td><td>PROGB</td><td>PROGA</td><td>·</td><td>·</td><td>·</td><td>·</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;cut: held out</td><td>·</td><td>·</td><td>U</td><td>DONE</td><td>·</td><td>·</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;table</td><td colspan="6">miss, walked</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;walk: arriving at SET-B#label <span class="dim">SET-B. (start)</span></td><td>PROGB</td><td>PROGA</td><td>·</td><td>·</td><td>·</td><td>·</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;walk: arriving at SET-B/0 <span class="dim">MOVE WS-A TO WS-B</span></td><td>PROGB</td><td>PROGA</td><td>·</td><td>·</td><td>·</td><td>·</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;walk: arriving at SET-B#end <span class="dim">end of SET-B</span></td><td>PROGB</td><td>PROGB</td><td>·</td><td>·</td><td>·</td><td>·</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;hand back, sent to P1/1 <span class="dim">MOVE 'DONE' TO WS-D</span></td><td>PROGB</td><td>PROGB</td><td>U</td><td>DONE</td><td>·</td><td>·</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;walk: arriving at P1/1 <span class="dim">MOVE 'DONE' TO WS-D</span></td><td>PROGB</td><td>PROGB</td><td>U</td><td>DONE</td><td>·</td><td>·</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;walk: arriving at P1#end <span class="dim">end of P1</span></td><td>PROGB</td><td>PROGB</td><td>U</td><td>DONE</td><td>·</td><td>·</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;walk: arriving at P2#label <span class="dim">P2. (start)</span></td><td>PROGB</td><td>PROGB</td><td>U</td><td>DONE</td><td>·</td><td>·</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;walk: arriving at P2/0 <span class="dim">MOVE WS-B TO WS-C</span></td><td>PROGB</td><td>PROGB</td><td>U</td><td>DONE</td><td>·</td><td>·</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;walk: arriving at P2#end <span class="dim">end of P2</span></td><td>PROGB</td><td>PROGB</td><td>PROGB</td><td>DONE</td><td>·</td><td>·</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;hand back, sent to MAIN-PARA/5 <span class="dim">MOVE WS-C TO WS-Y</span></td><td>PROGB</td><td>PROGB</td><td>PROGB</td><td>DONE</td><td>PROGA</td><td>U</td></tr>
+<tr><td>7</td><td>MAIN-PARA/5 <span class="dim">MOVE WS-C TO WS-Y</span></td><td>PROGB</td><td>PROGB</td><td>PROGB</td><td>DONE</td><td>PROGA</td><td>U</td></tr>
+<tr><td>8</td><td>MAIN-PARA/6 <span class="dim">CALL WS-X</span></td><td>PROGB</td><td>PROGB</td><td>PROGB</td><td>DONE</td><td>PROGA</td><td>PROGB</td></tr>
+<tr><td>9</td><td>MAIN-PARA/7 <span class="dim">CALL WS-Y</span></td><td>PROGB</td><td>PROGB</td><td>PROGB</td><td>DONE</td><td>PROGA</td><td>PROGB</td></tr>
+<tr><td>10</td><td>MAIN-PARA/8 <span class="dim">STOP RUN</span></td><td>PROGB</td><td>PROGB</td><td>PROGB</td><td>DONE</td><td>PROGA</td><td>PROGB</td></tr>
+</table></div>
+
+</div>
+</div>
+<p>Inside the walk of (P1, P1#end), the nested cut holds out only WS-D, the one field of that range SET-B does not touch. Inside the walk of (P1, P2#end) it holds out WS-C and WS-D. Either way SET-B hands back to <code>P1/1</code>, because that is <code>P1/0</code>'s resume node. Both walks of SET-B were table misses, because they were passed different values. Counted in cobble's fixpoint on this program: 2 walks of a range entered at P1 (one per range) and 2 walks of SET-B. It resolves <code>CALL WS-X</code> to PROGA and <code>CALL WS-Y</code> to PROGB.</p>
+
+<h2 id="correct">5. Why composing stays correct</h2>
+<p>The claim: the state a <code>PERFORM</code> hands back is the state you would get by pasting the range's statements in place of the <code>PERFORM</code> and walking them there. Pasting is correct by construction, since each pasted copy can only return to where it was pasted. The argument, by how deeply ranges nest:</p>
+<ul>
+<li><strong>A range with no <code>PERFORM</code> in it.</strong> Its statements only read bytes in its footprint, so cutting the state to the footprint does not change what any of them computes. They only write bytes in its footprint, so every other byte leaves the pasted copy exactly as it entered, which is what the frame puts back.</li>
+<li><strong>A range that performs others.</strong> Assume each inner <code>PERFORM</code> already hands back what pasting the inner range would. Then walking the outer range with those <code>PERFORM</code>s is walking the outer range with the inner ranges pasted in, which is the outer range pasted. The outer footprint includes the inner footprints, so the frame argument above still holds for the outer cut.</li>
+<li><strong>Reusing a stored result.</strong> <code>f<sub>R</sub></code> depends only on what is passed in. An identical input gives the identical result, so taking it from the table is the same as walking again.</li>
+<li><strong>Loops and joins.</strong> Each statement's transfer is monotone (more in never gives less out), and a composition of monotone functions is monotone. So a fixpoint over composed functions is reached, and joins where routes meet behave as they would over the pasted program.</li>
+</ul>
+<p>Checked on both examples: the programs with every <code>PERFORM</code> replaced by a pasted copy of its range give cobble the same answers.</p>
+<div style="overflow-x:auto"><table class="state"><tr><th>program</th><th>answer</th></tr><tr><td>two-call program (sections 1–3), with PERFORMs</td><td>CALL WS-W: PROGA</td></tr><tr><td>two-call program, pasted</td><td>CALL WS-W: PROGA</td></tr><tr><td>nested example (section 4), with PERFORMs</td><td>CALL WS-X: PROGA, CALL WS-Y: PROGB</td></tr><tr><td>nested example, pasted</td><td>CALL WS-X: PROGA, CALL WS-Y: PROGB</td></tr></table></div>
+<p>The argument needs three things to hold, and breaks without any one of them:</p>
+<ul>
+<li><strong>The footprint covers every byte the range or its callees write.</strong> A missed byte would be put back over a write. Cobble errs large: a subscripted name counts as every occurrence of its table.</li>
+<li><strong>The range is not already being walked.</strong> COBOL leaves a <code>PERFORM</code> of a range that is still running undefined, and pasting would never end. Cobble ends such a route, and adds which ranges are open to the table's key.</li>
+<li><strong>Only the end node hands back.</strong> A route that leaves the range by <code>GO TO</code> or <code>EXEC CICS RETURN</code> is not a return, and pasting would not return there either.</li>
+</ul>
+
+<h2 id="in-cobble">In cobble</h2>
+<p>The fixpoint stage (<code>cobble-dataflow-fixpoint</code>) handles every <code>PERFORM</code> this way, with no option to turn it off. It computes every range's footprint once per program, before walking. When a <code>PERFORM</code> is reached again with a larger input, as round a loop, it continues the earlier walk of that range instead of starting over.</p>
+</main>
+</body>
+</html>

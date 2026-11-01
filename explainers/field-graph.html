@@ -7,13 +7,13 @@
 <link rel="stylesheet" href="explainer.css">
 <script type="module">
   import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/+esm";
-  const light = matchMedia("(prefers-color-scheme: light)").matches;
+  const light = true;
   mermaid.initialize({
     deterministicIds: true,
     startOnLoad: true,
     theme: "base",
     themeVariables: light
-      ? { darkMode: false, background: "#fbfaf7", primaryColor: "#e6e3da", primaryTextColor: "#1a1f26", primaryBorderColor: "#d3cfc4", lineColor: "#5d6673", textColor: "#1a1f26", edgeLabelBackground: "#f1efe9", clusterBkg: "#f1efe9", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
+      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#e6e3da", primaryTextColor: "#111", primaryBorderColor: "#d3cfc4", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
       : { darkMode: true, background: "#0b0f14", primaryColor: "#1a2230", primaryTextColor: "#e6edf3", primaryBorderColor: "#263041", lineColor: "#8b98a9", textColor: "#e6edf3", edgeLabelBackground: "#121821", clusterBkg: "#121821", clusterBorder: "#263041", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" },
   });
 </script>
@@ -21,7 +21,7 @@
 <body>
 <main>
 <nav class="back"><a href="index.html">← All explainers</a></nav>
-<div class="kicker">Explainer 10 of 13</div>
+<div class="kicker">Explainer 10 of 15</div>
 <h1>From byte provenance to a field graph</h1>
 <aside class="tldr"><p><strong>TL;DR</strong>The dataflow says which bytes moved where. To find fields that belong together, those moves have to become edges between fields. The hard part is a copy through an undivided buffer: follow it back to the fields that filled the buffer, or every field on the far side looks connected to one blob.</p></aside>
 <p class="prereqs"><strong>Read first:</strong> <a href="byte-extents.html">Byte-extent aliasing</a>, <a href="reaching-definitions.html">Gen/kill and reaching definitions</a></p>

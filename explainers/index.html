@@ -33,6 +33,11 @@
 <li><a href="nmf-aggregates.html">Domain aggregates by matrix factorisation</a> — a paragraph × field matrix, why non-negative factorisation suits it, rounds of decreasing threshold, and why the residual stays sparse.</li>
 <li><a href="scoring-factorisations.html">Scoring a factorisation</a> — held-out AUC as the headline and seven sub-scores for fidelity, coverage, stability, distinctness, focus, reach and class share.</li>
 </ol>
+<p>Calls inside a program and questions over the results, continuing the numbering:</p>
+<ol start="14">
+<li><a href="perform-summaries.html">Summarising a PERFORM</a> — each <code>PERFORM</code> walks its paragraph on only the bytes it can touch, keeps the result per entry state, and returns it to its own caller alone, so callers stop leaking into each other and a call that brings nothing new costs no walk.</li>
+<li><a href="proofs-over-facts.html">Answers with proofs</a> — an English question becomes Datalog rules over the analysis's facts, under a checker that holds the rules to the question's words; every answer row comes with a derivation, and what that derivation does and does not prove.</li>
+</ol>
 <p>Background — the COBOL and CICS vocabulary, and one graph technique several pages lean on:</p>
 <ul>
 <li><a href="cobol-primer.html">COBOL and CICS in 60 seconds</a> — the minimum vocabulary to follow the explainers: fields, MOVE, PERFORM, REDEFINES, commarea, LINK, XCTL, and the CSD.</li>

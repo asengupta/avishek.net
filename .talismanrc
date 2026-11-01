@@ -116,3 +116,7 @@ fileignoreconfig:
   checksum: 20f6559faf52ba1de41f620b457bed7a6cb8dc3b367797dbd33ffcad5843ed42
 - filename: _posts/2026-10-26-mining-domain-aggregates-from-cobol.md
   checksum: 295670d8a274a7d22545b44d6500eb28521bfc7ad97bfe177890b67e93cbd2a5
+- filename: explainers/proofs-over-facts.html
+  checksum: 17d160702a273c9e0f953b0f4b8cb191254f6bd23abfce8646fc8cd03dc4831c
+- filename: explainers/perform-summaries.html
+  checksum: fac1d2d4152be5d48c466d0c9b9a98e62f0fb5db42ddd7ede84627c221265474

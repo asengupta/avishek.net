@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Answers with proofs</title>
+<link rel="stylesheet" href="explainer.css">
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/+esm";
+  const light = true;
+  mermaid.initialize({
+    deterministicIds: true,
+    startOnLoad: true,
+    theme: "base",
+    themeVariables: light
+      ? { darkMode: false, background: "#f4f1ea", primaryColor: "#e6e3da", primaryTextColor: "#111", primaryBorderColor: "#d3cfc4", lineColor: "#5d6673", textColor: "#111", edgeLabelBackground: "#ebe7dd", clusterBkg: "#ebe7dd", clusterBorder: "#d3cfc4", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" }
+      : { darkMode: true, background: "#0b0f14", primaryColor: "#1a2230", primaryTextColor: "#e6edf3", primaryBorderColor: "#263041", lineColor: "#8b98a9", textColor: "#e6edf3", edgeLabelBackground: "#121821", clusterBkg: "#121821", clusterBorder: "#263041", fontFamily: "IBM Plex Mono, JetBrains Mono, Menlo, Consolas, monospace" },
+  });
+</script>
+</head>
+<body>
+<main>
+<nav class="back"><a href="index.html">← All explainers</a></nav>
+<div class="kicker">Explainer 15 of 15</div>
+<h1>Answers with proofs</h1>
+<aside class="tldr"><p><strong>TL;DR</strong>Ask a question about a COBOL program in English. A language model turns it into Datalog rules over facts the analysis already wrote, and Soufflé evaluates them. Every row of the answer then has a derivation that can be printed and checked down to the facts. The derivation proves the row follows from the rules. Whether the rules mean what the question asked, and whether the facts are complete, still have to be checked separately.</p></aside>
+<p class="prereqs"><strong>Read first:</strong> <a href="fixpoints.html">Fixpoints and worklists</a>, <a href="perform-summaries.html">Summarising a PERFORM</a></p>
+<p class="lede">A model asked to read the source and answer gives prose: plausible, uncheckable, and sometimes drawn from what it remembers about a well-known program rather than from the program in front of it. This page keeps the model, but takes away its pen. It may only write rules. The answer is whatever those rules derive from the facts, and each row comes with the steps that derived it.</p>
+<p class="lede">The example is a real question about CardDemo's transaction-add program, <code>COTRN02C</code>: <em>before it writes a new transaction record to the transaction file, which fields typed on its screen does it check, and what kind of check is each? Count a check only if one of its outcomes can stop the write.</em></p>
+<nav class="toc"><p class="dim">On this page</p><ol><li><a href="#the-pipeline">The pipeline</a></li><li><a href="#a-derivation">One row's derivation</a></li><li><a href="#the-intuition">What the proof proves</a></li><li><a href="#checks">Checking the rules</a></li><li><a href="#reverse-engineering">Where this shows up</a></li><li><a href="#what-goes-wrong">What goes wrong</a></li><li><a href="#in-cobble">In cobble</a></li></ol></nav>
+
+<h2 id="the-pipeline">The pipeline</h2>
+<pre class="mermaid">
+flowchart LR
+    S["COBOL, JCL, CSD, BMS"] -->|parse and analyse| F["facts: CFG, byte flows, definitions, sinks, links"]
+    Q["question in English"] --> A["model, blind to the source"]
+    D["what each relation's columns mean"] --> A
+    A -->|rules only| C["checker"]
+    C -->|accepted| E["Soufflé"]
+    F --> E
+    E --> R["answer rows"]
+    E -->|explain| P["a derivation per row"]
+</pre>
+<ul>
+<li><strong>Facts.</strong> The analysis's outputs are written out as typed rows: the control-flow graph's nodes and edges, the atoms of each test, which bytes each statement reads and writes, which definitions reach each use, which bytes go to a file, a screen or another program. They are written once, as relations, and never by the model.</li>
+<li><strong>The model sees the question and the relations' documentation, not the source.</strong> It writes rules, runs them, reads the rows back and refines them.</li>
+<li><strong>The checker refuses constants.</strong> A rule may not name a program, field, paragraph, file or node of the corpus. The one way in is <code>ground("phrase", value)</code>, and the phrase has to occur in the question: <code>ground("transaction file", "TRANSACT")</code> is allowed because the question says "transaction file". So no rule can keep or drop a particular row by name.</li>
+<li><strong>Every rule cites its reason.</strong> The model is told to put a line above each rule: <code>// Q:</code> and the words of the question it encodes, or <code>// R:</code> and the documentation of the relation it relies on. The checker does not enforce this; a reviewer reads it.</li>
+</ul>
+<p>The rules the model wrote for this question split it into four parts, plus rules of the same shape for two more kinds of check, <em>call</em> and <em>lookup</em>:</p>
+<table class="state"><tr><th>relation</th><th>the question's words it encodes</th></tr><tr><td><code>write_node(w)</code></td><td>"writes a new transaction record to the transaction file": a file sink whose file operand holds the grounded file name</td></tr><tr><td><code>tested(f, t)</code></td><td>"fields typed on its screen": a value the map receive put in field <code>f</code>, carried through copies, reaches the bytes test <code>t</code> reads</td></tr><tr><td><code>kind_of(t, k)</code></td><td>"what kind of check": a class test is <em>numeric</em>, a compare with spaces or low-values <em>empty</em>, with another constant <em>value</em></td></tr><tr><td><code>stopping(t)</code></td><td>"one of its outcomes can stop the write": one outcome can still reach the write, another is <em>doomed</em>, it cannot</td></tr></table>
+<p>The answer is 28 rows of (field, kind), for example <code>(TRNAMTI, numeric)</code>, <code>(TRNAMTI, value)</code>, <code>(CARDNINI, lookup)</code>.</p>
+
+<h2 id="a-derivation">One row's derivation</h2>
+<p>Soufflé can print, for any row, the rule that produced it and the rows that rule used, down to facts. Here is <code>(TRNAMTI, numeric)</code>, taken from the renamed run described <a href="#checks">below</a>, with the names mapped back, node names shortened and the source lines added. The test is the second <code>WHEN</code> of the amount check:</p>
+<pre class="cobol">           EVALUATE TRUE
+               WHEN TRNAMTI OF COTRN2AI(1:1) NOT EQUAL '-' AND '+'
+               WHEN TRNAMTI OF COTRN2AI(2:8) NOT NUMERIC        &lt;- t
+               ...
+                   MOVE 'Y'     TO WS-ERR-FLG                  &lt;- m
+                   ...
+                   PERFORM SEND-TRNADD-SCREEN</pre>
+<pre class="cobol">checks(TRNAMTI, numeric)
+├─ tested(TRNAMTI, t)          t reads TRNAMTI's bytes,
+│                              filled by the map receive
+├─ kind_of(t, numeric)         t's atom: CLASS NUMERIC
+└─ stopping(t)
+   ├─ outcome(t, next)         edge t → next WHEN, TRUE
+   ├─ write_node(w)            FILE sink, file 'TRANSACT'
+   ├─ reach(next, w)
+   ├─ outcome(t, m)            edge t → m, FALSE
+   └─ doomed(m)
+      ├─ write_node(w)
+      ├─ <strong>not</strong> write_node(m)
+      └─ <strong>not</strong> reach(m, w)</pre>
+<p class="dim">w is WRITE-TRANSACT-FILE/0. The facts hold the test as <code>IS NUMERIC</code>; the source's <code>NOT</code> shows up in which edge is TRUE, so TRUE (numeric) goes on to the next <code>WHEN</code> and FALSE goes to the error branch. The rows without a note have derivations of their own, folded here; the two <strong>not</strong> rows have none.</p>
+<p>Read bottom-up, it is the argument a reviewer would make by hand. If the amount's digits are numeric, control goes on to the next <code>WHEN</code>, which can still reach the write. If not, it goes to the <code>MOVE 'Y'</code>, from which nothing reaches the write: the error branch performs <code>SEND-TRNADD-SCREEN</code>, which ends with <code>EXEC CICS RETURN</code>, so that <code>PERFORM</code> never comes back (see <a href="perform-summaries.html#limits">a paragraph that always leaves some other way</a>). Every step is either a fact or a rule applied to rows above it.</p>
+<p>The two leaves marked <strong>not</strong> are different in kind. Every other leaf is a row the analysis wrote down. A <strong>not</strong> leaf is a fact that is <em>absent</em>: no derivation of <code>reach(m, …)</code> exists. Datalog reads a missing fact as false, so this leaf is only as good as the completeness of the control-flow edges.</p>
+
+<h2 id="the-intuition">What the proof proves</h2>
+<p>Soufflé does not make derivations up. A row is output only if a derivation exists, so the proof is real: given these facts, these rules yield <code>(TRNAMTI, numeric)</code>. Nobody has to trust the model about that.</p>
+<p>What the proof does not show is that <code>stopping</code> means "one of its outcomes can stop the write". That is the model's reading of the question, written as a rule. So the review moves. One no longer checks the answer row by row against the source. One checks a handful of definitions against the question's words, and the citation line above each definition says which words it claims to encode. The derivation then shows, for each row, exactly which definitions it depended on.</p>
+
+<h2 id="checks">Checking the rules</h2>
+<p>For this question, four checks were run:</p>
+<ul>
+<li><strong>An answer key from the source alone</strong>, written before the model ran and compared row for row. The final run's 28 rows matched it exactly.</li>
+<li><strong>Breaks.</strong> Fourteen one-rule mutations, each a plausible mistake: drop the reach condition from <code>stopping</code>, let any constant count as <em>empty</em>, follow <code>PERFORM</code> edges as plain flow. Nine of them changed the answer. Five did not, which says this program does not exercise those rules. Several different rule sets give the same answer here.</li>
+<li><strong>Renamed facts.</strong> Every corpus name in the facts became <code>Z</code> and five digits, the same name everywhere. A model cannot then lean on what it remembers about CardDemo. The final run above is the renamed one.</li>
+<li><strong>An adversarial hunt</strong> by a second agent, which was allowed to read the source, looking for a row that is wrong or a check that is missed. It found none, but found rules that were right only because of how this program happens to be laid out.</li>
+</ul>
+
+<h2 id="reverse-engineering">Where this shows up</h2>
+<ul>
+<li><strong>Questions people actually ask about legacy code</strong> are of this shape: where does this balance come from, which checks guard this write, which programs can a user reach from this menu. Each is a join over control flow, data flow and the resource definitions, which Datalog states directly.</li>
+<li><strong>The same idea on the Java side.</strong> Program analysers such as Doop write points-to analysis as Datalog over facts extracted from bytecode, and CodeQL queries are a Datalog dialect over a database of the code. The difference here is who writes the query: a model, from an English question, under a checker that holds it to the question's words.</li>
+</ul>
+
+<h2 id="what-goes-wrong">What goes wrong</h2>
+<ul>
+<li><strong>A missing fact turns a <em>not</em> leaf true.</strong> If the control-flow graph lacked an edge, say a handler a CICS condition jumps to, <code>reach(m, …)</code> would fail for a node that can in fact reach the write. <code>doomed(m)</code> would hold, and the answer would gain a check that does not stop the write, with a derivation Soufflé is happy to print. Rules that only add rows are safe against missing facts: they miss rows, and every row they give is right. Rules with negation are only right if the relation they negate is complete. The remedy is for each relation to say what it leaves out.</li>
+<li><strong>A gap in the facts can hide behind a right answer.</strong> The facts do not record which field a CICS <code>READ</code> uses as its key. The model's <em>lookup</em> rule stood in for it with "a screen value moved into the record the read fills". On this program that gives the right rows, because the key fields sit inside that record. On a program whose key is held elsewhere, the same rule would lose the row.</li>
+<li><strong>The reading of the question is not proved.</strong> The answer key itself had to be corrected. Under the question's literal wording, a test counts only if one outcome reaches the write and another cannot. Two tests the key had first counted fail that. In one, the outcome that looks like a failure goes on to further tests that can still reach the write. The other runs only once the write is already ruled out, so neither of its outcomes can reach it. The rules were right, and the key was wrong.</li>
+<li><strong>Facts computed elsewhere are trusted, not proved.</strong> Some relations are results of analysis, not syntax: the bytes each statement moves where, and which definitions reach each use, come from the analysis's own fixpoint. A derivation that uses them starts from those results and takes them on trust. For this question the model rebuilt reaching definitions itself, in rules, from the per-statement byte flows, so that part is inside the proof and only the flows are trusted. Rebuilding more of the analysis in rules brings more inside the proof, at the cost of speed.</li>
+</ul>
+
+<h2 id="in-cobble">In cobble</h2>
+<p>The facts stage (<code>cobble-experimental-datalog-facts --run RUN_DIR --out FACTS_DIR</code>) writes every relation as a Soufflé facts file, with a schema that declares them. A question is a <code>.dl</code> file that includes that schema, adds its rules and asks for its outputs. Running it is a plain Soufflé call, and adding <code>-t explain</code> opens the prompt where <code>explain checks("TRNAMTI", "numeric")</code> prints the derivation above. The blind model, the checker and the four checks are an experiment around the stage, not part of it.</p>
+</main>
+
+</body>
+</html>
