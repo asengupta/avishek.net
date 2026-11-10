@@ -3,11 +3,11 @@ title: "Automated domain object candidate extraction in COBOL using matrix facto
 author: avishek
 usemathjax: true
 mermaid: false
-tags: ["Software Engineering", "Program Analysis", "Static Analysis", "COBOL", "Reverse Engineering", "Machine Learning", "NMF"]
+tags: ["Program Analysis", "Static Analysis", "COBOL", "Reverse Engineering", "Machine Learning", "Linear Algebra"]
 draft: false
 ---
 
-*This post explains **non-negative matrix factorisation (NMF)**, and how we may use it as an **extremely fast first-pass technique** to find domain object candidates when reverse engineering a legacy COBOL codebase. A domain object is a group of fields that belong to one thing, such as one account or one customer. The post uses one run on AWS CardDemo, the public CICS sample application. It shows the matrix statistics, the factors that the run found, and the scores that say how good they are. It then follows the same pipeline on a production corpus of about 4+ MLoC, describing the **speed of factorisation at that size**, and what the factorisation found.*
+*This post explains **non-negative matrix factorisation (NMF)**, and how we may use it as an **extremely fast first-pass technique** (when combined with byte-level dataflow analysis) to find domain object candidates when reverse engineering a legacy COBOL codebase. A domain object is a group of fields that belong to one thing, such as one account or one customer. The post uses one run on AWS CardDemo, the public CICS sample application. It shows the matrix statistics, the factors that the run found, and the scores that say how good they are. It then follows the same pipeline on a production corpus of about 4+ MLoC, describing the **speed of factorisation at that size**, and what the factorisation found.*
 
 ---
 
