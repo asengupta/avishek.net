@@ -7,7 +7,7 @@ tags: ["Software Engineering", "Program Analysis", "Static Analysis", "COBOL", "
 draft: false
 ---
 
-*This post explains non-negative matrix factorisation (NMF), and how we may use it to find domain object candidates when reverse engineering a legacy COBOL codebase. A domain object is a group of fields that belong to one thing, such as one account or one customer. The post uses one run on AWS CardDemo, the public CICS sample application. It shows the matrix statistics, the factors that the run found, and the scores that say how good they are. It then follows the same pipeline on a production corpus of about 4+ MLoC, describing the speed of factorisation at that size, and what the factorisation found.*
+*This post explains **non-negative matrix factorisation (NMF)**, and how we may use it as an **extremely fast first-pass technique** to find domain object candidates when reverse engineering a legacy COBOL codebase. A domain object is a group of fields that belong to one thing, such as one account or one customer. The post uses one run on AWS CardDemo, the public CICS sample application. It shows the matrix statistics, the factors that the run found, and the scores that say how good they are. It then follows the same pipeline on a production corpus of about 4+ MLoC, describing the **speed of factorisation at that size**, and what the factorisation found.*
 
 ---
 
@@ -23,7 +23,7 @@ draft: false
   - [What the bytes give the matrix](#what-the-bytes-give-the-matrix)
 - [The CardDemo matrix](#the-carddemo-matrix)
 - [Rounds](#rounds)
-- [What round 1 found](#what-round-1-found)
+- [Round 1 findings](#round-1-findings)
   - [Account](#account)
   - [Card cross-reference](#card-cross-reference)
   - [Transaction](#transaction)
@@ -34,7 +34,7 @@ draft: false
   - [Session, split in two](#session-split-in-two)
   - [Records inside one program](#records-inside-one-program)
   - [What is left: hubs](#what-is-left-hubs)
-- [What round 2 found](#what-round-2-found)
+- [Round 2 findings](#round-2-findings)
 - [The scores](#the-scores)
 - [Scaling to a production corpus](#into-a-production-corpus)
 - [Conclusions and Takeaways](#conclusions-and-takeaways)
@@ -97,7 +97,7 @@ There are other things that may surface, but the idea is to be able to extract o
 
 ## Ye Olde Linear Algebra
 
-Remember the classic Netflix recommender system idea? Users rate a bunch of movies they have watched, and the recommender system can usually unearth both the genre and the taste of each user. Let's refresh that idea really quick.
+Remember the classic movie recommender system idea? Users rate a bunch of movies they have watched, and the recommender system can usually unearth both the genre and the taste of each user. Let's refresh that idea really quick.
 
 Put the ratings in a matrix, with one row per user and one column per movie:
 
@@ -119,7 +119,7 @@ Now replace users with paragraphs, and movies with fields. A "rating" is 1 when 
 
 The rough correspondence is shown below.
 
-| Netflix | CardDemo |
+| Movie Domain | CardDemo |
 |---|---|
 | user | paragraph |
 | movie | field |
@@ -128,7 +128,7 @@ The rough correspondence is shown below.
 | a user's taste | the entities a paragraph uses |
 | recommending an unseen movie | predicting a field a paragraph does not touch |
 
-One difference here is that the factorisations from the Netflix Prize allowed negative numbers. The variant this experiment does not, because either a paragraph either uses a field, or it does not; there is no "negative use" of a field in a paragraph.
+One difference here is that the factorisations from the movie recommender matrix allowed negative numbers. The variant this experiment does not, because either a paragraph either uses a field, or it does not; there is no "negative use" of a field in a paragraph.
 
 Thus, three properties of the problem lead to NMF:
 
@@ -283,7 +283,7 @@ A factor needs evidence. A field that only one paragraph touches cannot show whi
 Each fit took under a second. Round 1 ran 51 iterations and round 2 ran 16.
 Each extracted group was then passed to an LLM for naming an appropriate domain object. The sections which follow describe the groupings and the names that were assigned to those groups.
 
-## What round 1 found
+## Round 1 findings
 
 A factor's `W` column says which paragraphs use it. Nine of round 1's 30 factors have strong users, with a loading above 0.1, in more than one program. Seven of the nine are entities, and two are the session. Four more factors are records seen through one program. The rest are noise. This section reads each interesting factor in turn.
 
@@ -394,7 +394,7 @@ The other 17 factors are *hubs*: one program's own working storage, used by a fe
 
 A hub is compact and stable. It is a real pattern in the data, but is not a domain concept.
 
-## What round 2 found
+## Round 2 findings
 
 Round 2 found less. All ten of its factors have strong users in one program only. Some of them are screens:
 
@@ -405,7 +405,7 @@ Others are records seen in fewer paragraphs, such as the export record in `CBIMP
 
 ## The scores
 
-cobble's scorecard measures each round from several sides.
+The analysis scorecard measures each round from several sides.
 
 | Score | Round 1 | Round 2 | What it measures |
 |---|---|---|---|
@@ -484,4 +484,8 @@ An LLM interpretation of every factor against the corpus' glossary give these es
 - **The outputs are explainable.** There is a very clear reason why a group has been constituted, given the metric of co-occurrence. There is also a very clear reason why different-sounding names share the same grouping, and that is because of the byte level unification.
 - **Remove the noise sources before factorisation.** On the production corpus, commareas and other fields that every paragraph uses would overwhelm the factors with nooise, this basic preprocessing by excluding very common factors is important. In this example, I used an LLM to build the exclude list.
 
-The [factorisation explainer](/explainers/nmf-aggregates.html) and the [scoring explainer](/explainers/scoring-factorisations.html) have the details.
+## References
+
+- [RedDragonForge](https://github.com/avishek-sen-gupta/red-dragon-forge): Tools for running mainframe COBOL programs
+- [Compilers: Principles, Techniques, and Tools](https://www.amazon.in/Compilers-Principles-Techniques-Updated-Pearson-ebook/dp/B0CYHDX2RG?th=1)
+- [Adventures in Fixpoint Analysis](/2026/10/09/adventures-in-fixpoint-analysis.html)
