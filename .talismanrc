@@ -122,3 +122,8 @@ fileignoreconfig:
   checksum: 823a5fb31003f0067411a1379d4be49da9b2d4ce62169098a00173d1c30a0753
 - filename: explainers/bounded-sweeps.html
   checksum: dabbc1ec263d399d5f4608e7ca59223e137a142f077b110ba6a613f106c25962
+- filename: _posts/2026-11-10-asking-z3-about-cobol-programs.md
+  checksum: af12a55c43f673c81ee8fa3804fb6cc01afc4fe917761eca257e2238e7b0281f
+- filename: _posts/2026-11-10-non-negative-matrix-factorisation-on-carddemo.md
+  checksum: 183a2ec9f03b33e6e15300ef0b182dbc6ecb325074e485029a438d094f808a0d
+
