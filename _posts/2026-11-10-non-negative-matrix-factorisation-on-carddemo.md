@@ -7,7 +7,7 @@ tags: ["Program Analysis", "Static Analysis", "COBOL", "Reverse Engineering", "M
 draft: false
 ---
 
-*This post explains **non-negative matrix factorisation (NMF)**, and how we may use it as an **extremely fast first-pass technique** (when combined with byte-level dataflow analysis) to find domain object candidates when reverse engineering a legacy COBOL codebase. A domain object is a group of fields that belong to one thing, such as one account or one customer. The post uses one run on AWS CardDemo, the public CICS sample application. It shows the matrix statistics, the factors that the run found, and the scores that say how good they are. It then follows the same pipeline on a large corpus of about 4+ MLoC, describing the **speed of factorisation at that size**, and what the factorisation found.*
+*This post how to use **non-negative matrix factorisation (NMF)** as an **extremely fast first-pass technique** (when combined with byte-level dataflow analysis) to **find domain object candidates** when **reverse engineering a legacy COBOL codebase**. A domain object is a group of fields that belong to one thing, such as one account or one customer. The post does a walkthrough of the technique applied to AWS CardDemo, an open source CICS sample application, to explain the concepts. It shows the matrix statistics, the factors that the run found, and the scores that say how good they are. It then follows the same pipeline on a large corpus of about 4+ MLoC, describing the **speed of factorisation at that size**, and what the factorisation found.*
 
 ---
 
