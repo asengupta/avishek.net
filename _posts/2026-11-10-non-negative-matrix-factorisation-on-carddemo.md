@@ -145,7 +145,7 @@ NMF approximates `X` as the product of two smaller matrices, `W × H`:
 - `H` has one row per **factor**. A row gives each field a loading: how much the field belongs to the factor. This is what the aggregate is made of.
 - `W` has one column per factor. A column gives each paragraph a loading: how much the paragraph uses the factor. This is where the aggregate is used.
 
-You choose the number of factors, `k`. Every entry of `W` and `H` must be zero or more. The fit finds the `W` and `H` that make `W × H` as close to `X` as it can, in squared error. cobble uses scikit-learn's `NMF` with the `nndsvda` start.
+You choose the number of factors, `k`. Every entry of `W` and `H` must be zero or more. The fit finds the `W` and `H` that make `W × H` as close to `X` as it can, in squared error. RedDragonForge uses scikit-learn's `NMF` with the `nndsvda` start.
 
 Mathematically:
 
@@ -184,7 +184,7 @@ Factor 0 is the account and factor 1 is the customer. `SHOW-ACCOUNT` uses both, 
 
 ## Bytes and Names
 
-The matrix is only as good as its answer to "does this paragraph touch this field?", and to "are these two columns the same datum?". In COBOL, names answer neither question well. Bytes answer both. The matrix stands on cobble's byte-level dataflow, which the [earlier post on fixpoint analysis](/2026/10/09/adventures-in-fixpoint-analysis.html) describes.
+The matrix is only as good as its answer to "does this paragraph touch this field?", and to "are these two columns the same datum?". In COBOL, names answer neither question well. Bytes answer both. The matrix stands on RedDragonForge's byte-level dataflow.
 
 The reverse engineering pyramid this stands upon is, roughly:
 
@@ -234,7 +234,7 @@ Two steps use the byte-level dataflow before NMF runs:
 
 Without step 2, each of the seven programs that hold the account record would have its own account columns. Nothing in the matrix would join them. Each factor could then only group one program's fields. I did not run that comparison. With step 2, the fit found one account factor with strong users in six programs. Every cross-program factor below rests on such classes.
 
-The byte-level dataflow of this run, drawn as cobble's program map:
+The byte-level dataflow of this run, drawn as RedDragonForge's program map:
 
 ![CardDemo program map: programs and dataset records joined by byte-level dataflow edges](/assets/images/nmf-carddemo-program-map.png){: width="640"}
 
@@ -488,4 +488,3 @@ An LLM interpretation of every factor against the corpus' glossary give these es
 
 - [RedDragonForge](https://github.com/avishek-sen-gupta/red-dragon-forge): Tools for running mainframe COBOL programs
 - [Compilers: Principles, Techniques, and Tools](https://www.amazon.in/Compilers-Principles-Techniques-Updated-Pearson-ebook/dp/B0CYHDX2RG?th=1)
-- [Adventures in Fixpoint Analysis](/2026/10/09/adventures-in-fixpoint-analysis.html)
