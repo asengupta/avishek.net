@@ -7,7 +7,7 @@ tags: ["Program Analysis", "Static Analysis", "COBOL", "Reverse Engineering", "M
 draft: false
 ---
 
-*This post explains **non-negative matrix factorisation (NMF)**, and how we may use it as an **extremely fast first-pass technique** (when combined with byte-level dataflow analysis) to find domain object candidates when reverse engineering a legacy COBOL codebase. A domain object is a group of fields that belong to one thing, such as one account or one customer. The post uses one run on AWS CardDemo, the public CICS sample application. It shows the matrix statistics, the factors that the run found, and the scores that say how good they are. It then follows the same pipeline on a production corpus of about 4+ MLoC, describing the **speed of factorisation at that size**, and what the factorisation found.*
+*This post explains **non-negative matrix factorisation (NMF)**, and how we may use it as an **extremely fast first-pass technique** (when combined with byte-level dataflow analysis) to find domain object candidates when reverse engineering a legacy COBOL codebase. A domain object is a group of fields that belong to one thing, such as one account or one customer. The post uses one run on AWS CardDemo, the public CICS sample application. It shows the matrix statistics, the factors that the run found, and the scores that say how good they are. It then follows the same pipeline on a large corpus of about 4+ MLoC, describing the **speed of factorisation at that size**, and what the factorisation found.*
 
 ---
 
@@ -36,7 +36,7 @@ draft: false
   - [What is left: hubs](#what-is-left-hubs)
 - [Round 2 findings](#round-2-findings)
 - [The scores](#the-scores)
-- [Scaling to a production corpus](#into-a-production-corpus)
+- [Scaling to a large corpus](#scaling-to-a-large-corpus)
 - [Conclusions and Takeaways](#conclusions-and-takeaways)
 
 ---
@@ -428,9 +428,9 @@ Round 1 is the result. It predicts hidden uses well above chance, and it survive
 
 What the scores cannot see is meaning. A hub scores well on stability and focus, because it is compact. Only a person can say that factor 4 is the account and factor 2 is padding, which is why an LLM is a suitable initial stand-in to make that judgment, before a human gets involved.
 
-## Scaling to a production corpus
+## Scaling to a large corpus
 
-CardDemo is small. Running the same set of techniques on a production COBOL corpus (online CICS with batch) of about 4 million LoC gives interesting results.
+CardDemo is small. Running the same set of techniques on a large COBOL corpus (online CICS with batch) of about 4 million LoC gives interesting results.
 
 There are several things which do not work as-is when scaling up to real world corpuses. Some of these require targeted preprocessing, for example, removing fields from consideration which occur nearly everywhere; this is to prevent noise from overwhelming the matrix factorisation. The exclude list removes about 240k of ~590k fields (41%):
 
@@ -482,7 +482,7 @@ An LLM interpretation of every factor against the corpus' glossary give these es
 - **The factors answer modelling questions.** The model for factorisation in this case was closely tied to co-occurrence in paragraphs coupled with the byte extents instead of names. Modelling choice is important, depending upon the language and how domain-related data is expressed. In this example, bytes make the columns, and the columns matter more than the algorithm. The account factor has strong users in six programs only because the byte-level classes made one column for each account field. Each column covers the seven programs that hold the field.
 - **Once you have cast the problem as matrix factorisation, the results can be blindingly fast, even on massive corpora.** This does not preclude the use of LLMs; rather, think of this step as a first, fast, cheap pass of extracting candidates. In this post, I have described domain object extraction, but we can, with a little effort, think of other creative applications of this family of techniques to other reverse engineering demands.
 - **The outputs are explainable.** There is a very clear reason why a group has been constituted, given the metric of co-occurrence. There is also a very clear reason why different-sounding names share the same grouping, and that is because of the byte level unification.
-- **Remove the noise sources before factorisation.** On the production corpus, commareas and other fields that every paragraph uses would overwhelm the factors with nooise, this basic preprocessing by excluding very common factors is important. In this example, I used an LLM to build the exclude list.
+- **Remove the noise sources before factorisation.** On the bigger corpus, commareas and other fields that every paragraph uses would overwhelm the factors with nooise, this basic preprocessing by excluding very common factors is important. In this example, I used an LLM to build the exclude list.
 
 ## References
 
