@@ -5,6 +5,7 @@ usemathjax: false
 mermaid: false
 tags: ["Software Engineering", "Program Analysis", "Static Analysis", "COBOL", "Reverse Engineering", "Formal Methods", "Z3", "Horn Clauses"]
 draft: true
+published: false
 ---
 
 *This post is about asking a solver questions about COBOL programs. The solver is Z3's Spacer engine, and it reads the programs as constrained Horn clauses. The questions are about CardDemo, the public CICS sample application. Examples are "can the account be rewritten without a confirmation?" and "can a card be saved without a change check?". The post follows the work from the first spike to a specification in Quint that the solver checks against the code. It includes each place where the solver was too slow, or where it gave an answer that was wrong.*
