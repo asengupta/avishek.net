@@ -125,5 +125,4 @@ fileignoreconfig:
 - filename: _posts/2026-11-10-asking-z3-about-cobol-programs.md
   checksum: af12a55c43f673c81ee8fa3804fb6cc01afc4fe917761eca257e2238e7b0281f
 - filename: _posts/2026-11-10-non-negative-matrix-factorisation-on-carddemo.md
-  checksum: 183a2ec9f03b33e6e15300ef0b182dbc6ecb325074e485029a438d094f808a0d
-
+  checksum: 525458d28c32b244b0cf16ed9c7aedb0e3782eac1fff70d0cf8b4ab2fe7f121c

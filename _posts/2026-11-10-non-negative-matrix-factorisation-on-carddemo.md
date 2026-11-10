@@ -7,13 +7,13 @@ tags: ["Software Engineering", "Program Analysis", "Static Analysis", "COBOL", "
 draft: false
 ---
 
-*This post explains non-negative matrix factorisation (NMF), and how cobble uses it to find domain aggregates in a COBOL codebase. A domain aggregate is a group of fields that belong to one thing, such as one account or one customer. The post uses one run on CardDemo, the public CICS sample application. It shows the matrix, the factors that the run found, and the scores that say how good they are. It then follows the same pipeline on a production corpus of about 3,800 programs: what broke at that size, and what the factorisation found.*
+*This post explains non-negative matrix factorisation (NMF), and how we may use it to find domain object candidates when reverse engineering a legacy COBOL codebase. A domain object is a group of fields that belong to one thing, such as one account or one customer. The post uses one run on AWS CardDemo, the public CICS sample application. It shows the matrix statistics, the factors that the run found, and the scores that say how good they are. It then follows the same pipeline on a production corpus of about 4+ MLoC, describing the speed of factorisation at that size, and what the factorisation found.*
 
 ---
 
 ## Table of Contents
 
-- [Why look for aggregates](#why-look-for-aggregates)
+- [Why look for domain objects](#why-look-for-domain-objects)
 - [What we hope to find](#what-we-hope-to-find)
 - [Ye Olde Linear Algebra](#ye-olde-linear-algebra)
 - [What NMF does](#what-nmf-does)
@@ -39,15 +39,16 @@ draft: false
 - [Into a production corpus](#into-a-production-corpus)
   - [Making it run](#making-it-run)
   - [The final run](#the-final-run)
-- [What I took from it](#what-i-took-from-it)
+- [Conclusions and Takeaways](#conclusions-and-takeaways)
 
 ---
 
-## Why look for aggregates
+## Why look for domain objects
 
 One of the common things to do when modernising a system (or building it from scratch) is to figure out the domain. This is essentially the world model of the system, exact enough to replicate the process that needs to happen to get a business get its work done. There are several ways of teasing this out, but there are always some underlying things that emerge regardless of the process followed. One of those things is the domain objects. domain objects encapsulate both behaviour and data; how that is represented depends upon how the process models them.
 
-As an example, there is an exercise called event storming; it is a collaborative process for extracting a set of entities:
+As an example, there is an exercise called **event storming**; it is a collaborative process for extracting a set of entities:
+
 - Domain aggregates
 - Commands
 - Events
@@ -55,15 +56,19 @@ As an example, there is an exercise called event storming; it is a collaborative
 
 The **Domain Aggregates** are the closest to what would come to mind when talking about a domain model, though they aren't 1:1 mappings. Aggregates are clusters of domain objects which form a natural boundary; this boundary is usually meant to be an abstraction boundary, expressed as an interface, transaction, etc. Before we get to domain aggregates, however, we need to conceptualise the domain objects themselves.
 
-What constitutes a domain object?
+**What constitutes a domain object?**
 
 If you are in the room with an SME in a particular domain, the answer may be obvious. Alternatively, literature on specific domains may provide clear concepts which can be mapped to these objects without too much headache. One of the common issues in legacy modernisation is that, oftentimes, even though the code may be available, SMEs and documentation are not. This may or may not be a blocker depending upon how the system has been designed / written. Languages that have been written with data aggregation in mind, may expose models which naturally express the domain, eg: classes, structures, etc. in Java, C#, etc. (though this is not a guarantee, transpiled Java code from legacy languages can be *more* unreadable than the original legacy code). In this post, I will use COBOL as an example of where the domain objects aren't naturally expressed in the data structures, and talk of using a simple, well-known technique from Linear Algebra to extract out clusters of fields which are potential candidates for domain objects.
 
 We thus return to the previous question, but rephrase it:
 
-_What constitutes a domain object, given there is no documentation and no SME?_
+**What constitutes a domain object, given there is no documentation and no SME?**
 
-There may be many answers to this question, and in the mind of a domain expert, there will usually be one or two, depending upon the domain / subdomain and the context. Absent such information, we'd still like to build some sort of a fitness function which can at least approximate what these domain objects would look like, even if we cannot name them immediately. The characterisation I find useful is that the domain objects are things whose constituent data / fields have a high degree of co-occurrence. If you know that two pieces of data are used together a lot, whether it is reading or writing, there is a **higher probability** that they belong together in the same domain. Note again that this is not an immutable rule; a logging object used whenever an account is updated, co-occurs with accounts a lot, but that doesn't imply it is part of the same domain object. But it is a useful heuristic, which can give us potential candidates which can then be sliced and / or aggregated further: that's where LLMs come into the loop of naming, slicing, and dicing.
+There may be many answers to this question, and in the mind of a domain expert, there will usually be one or two, depending upon the domain / subdomain and the context. Absent such information, we'd still like to build some sort of a fitness function which can at least approximate what these domain objects would look like, even if we cannot name them immediately.
+
+**The characterisation I find useful is that the domain objects are things whose constituent data / fields have a high degree of co-occurrence.**
+
+If you know that two pieces of data are used together a lot, whether it is reading or writing, there is a **higher probability** that they belong together in the same domain. Note again that this is not an immutable rule; a logging object used whenever an account is updated, co-occurs with accounts a lot, but that doesn't imply it is part of the same domain object. But it is a useful heuristic, which can give us potential candidates which can then be sliced and / or aggregated further: that's where LLMs come into the loop of naming, slicing, and dicing.
 
 In an object-oriented system, the classes give this first answer. A COBOL codebase has no classes. The nearest thing is the copybook. It is a weak guide, for three reasons:
 
@@ -71,14 +76,16 @@ In an object-oriented system, the classes give this first answer. A COBOL codeba
 - **One record can hold several things.** A commarea carries the user, the customer, the account, the card and the screen navigation, all together.
 - **Working storage holds part-copies.** A program keeps a few fields of a record, such as the "old" values on an update screen, under its own names.
 
-So the question "what are the domain entities of this system?" has no immediate direct answer in the code. It has an indirect answer in how the code uses data. A paragraph does one job. A job reads or writes the fields of one or a few entities. So fields that the same paragraphs use, across many programs, probably belong to one entity.
+We will discuss it in more detail in the [Bytes and Names](#bytes-and-names) section.
+
+So the question "what are the domain entities of this system?" often may not have an immediate direct answer in (COBOL in this example) code. It has an indirect answer in how the code uses data. A paragraph does one job. A job reads or writes the fields of one or a few entities. So fields that the same paragraphs use, across many programs, probably belong to one entity.
 
 ## What we hope to find
 
 Technically, you can use LLMs to go through your entire codebase, and fish out candidates. There are a few points to think about, though:
 
-- LLMs need to reason through the aliasing of memory regions across programs. This might not the biggest problem if you are using more advanced models, but much of my current work focuses on allowing less stronger models to do better inference.
-- Contexts are huge in legacy codebases. Reasoning across all this costs tokens. There is definitely scope to do a lot of cheap deterministic analysis before bringing in models of any kind.
+- LLMs need to reason through the aliasing of memory regions across programs. This might not the biggest problem if you are using more advanced models, but attention wandering is an ever-present risk.
+- Contexts are huge in legacy codebases. Reasoning across all this costs tokens. There is definitely scope to do a lot of cheap deterministic analysis before bringing in models of any kind. Much of my current interests focus on allowing less stronger models to do better inference, by leveraging deterministic analyses.
 - The outcome is neither determministic, nor traceable; there may be skips.
 
 For this to be useful, we expect to get a few things:
@@ -470,17 +477,11 @@ An LLM interpretation of every factor against the corpus' glossary give these es
 - About 16 factors come from families of programs with the same logic and different field prefixes.
 - After merging these, about 75 to 95 distinct domain object candidates remain.
 
-## What I took from it
+## Conclusions and Takeaways
 
-- **The factors answer modelling questions.** The account is changed by batch and online code. The customer lives inside the account's aggregate. The user is a separate area. The session splits into two flows.
-- **NMF finds the parts because nothing can cancel.** Each factor must add up with the others, so the factors behave like parts of a paragraph's data.
-- **Bytes make the columns, and the columns matter more than the algorithm.** The account factor has strong users in six programs only because the byte-level classes made one column for each account field. Each column covers the seven programs that hold the field.
-- **Rounds give each factor enough evidence.** The first round uses only fields with four or more uses. The second round adds little, and its scores say so.
-- **Hubs are the main noise.** 17 of round 1's 30 factors are one program's working storage. They are stable and compact, so the scores do not separate them from entities.
-- **Where a factor is used says more than what it is made of.** The nine factors with strong users in several programs are all entities or the session. Reach, which counts the programs of a factor's fields, rates 23 factors as spanning programs.
-- **Score against the hard case.** The AUC compares each hidden use against an empty cell in the same program, not an easy one from another program.
-- **Small corpora hide every scaling problem.** CardDemo confirmed each stage's output and showed none of the six problems that the production corpus found.
-- **An exact rewrite often exists.** The sparse residual and the explicit-stack walk changed nothing in the output. Look for the reformulation before an approximation.
-- **Remove the hubs before the fit.** On the production corpus, commareas and other fields that every paragraph uses would take every factor.
+- **The factors answer modelling questions.** The model for factorisation in this case was closely tied to co-occurrence in paragraphs coupled with the byte extents instead of names. Modelling choice is important, depending upon the language and how domain-related data is expressed. In this example, bytes make the columns, and the columns matter more than the algorithm. The account factor has strong users in six programs only because the byte-level classes made one column for each account field. Each column covers the seven programs that hold the field.
+- **Once you have cast the problem as matrix factorisation, the results can be blindingly fast, even on massive corpora.** This does not preclude the use of LLMs; rather, think of this step as a first, fast, cheap pass of extracting candidates. In this post, I have described domain object extraction, but we can, with a little effort, think of other creative applications of this family of techniques to other reverse engineering demands.
+- **The outputs are explainable.** There is a very clear reason why a group has been constituted, given the metric of co-occurrence. There is also a very clear reason why different-sounding names share the same grouping, and that is because of the byte level unification.
+- **Remove the noise sources before factorisation.** On the production corpus, commareas and other fields that every paragraph uses would overwhelm the factors with nooise, this basic preprocessing by excluding very common factors is important. In this example, I used an LLM to build the exclude list.
 
 The [factorisation explainer](/explainers/nmf-aggregates.html) and the [scoring explainer](/explainers/scoring-factorisations.html) have the details.
