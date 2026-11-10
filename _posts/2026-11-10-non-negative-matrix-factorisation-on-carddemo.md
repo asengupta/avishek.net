@@ -430,9 +430,9 @@ What the scores cannot see is meaning. A hub scores well on stability and focus,
 
 ## Scaling to a production corpus
 
-CardDemo is small. Running the same set of techniques on a production COBOL estate of about 4 million LoC (7700 files). It has about 3,800 programs, mostly CICS online with some batch.
+CardDemo is small. Running the same set of techniques on a production COBOL corpus (online CICS with batch) of about 4 million LoC gives interesting results.
 
-There are several things which do not work as-is when scaling up to real world corpuses. Some of these require targeted preprocessing, for example, removing fields from consideration which occur nearly everywhere; this is to prevent noise from overwhelming the matrix factorisation. The exclude list removes about 240,000 of 592,104 fields (41%):
+There are several things which do not work as-is when scaling up to real world corpuses. Some of these require targeted preprocessing, for example, removing fields from consideration which occur nearly everywhere; this is to prevent noise from overwhelming the matrix factorisation. The exclude list removes about 240k of ~590k fields (41%):
 
 | Removed | Fields |
 |---|---|
@@ -444,7 +444,7 @@ There are several things which do not work as-is when scaling up to real world c
 | date and time work areas | about 2,500 |
 | literals, constants, sort areas, CICS interface fields | about 800 |
 
-There are other optimisations that needed to be done, for example, avoiding storing the full matrix model in memory; I may describe it in a future post.
+There are other optimisations that needed to be done, for example, avoiding storing the full matrix model in memory; I may describe some of these techniques in a future post.
 
 | | CardDemo | Larger corpus |
 |---|---|---|
