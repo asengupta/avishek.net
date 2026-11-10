@@ -43,3 +43,14 @@ sass:
   quiet_deps: true
   silence_deprecations:
     - import
+
+exclude:
+  - precommit-scripts
+  - book-drafts
+  - README.md
+  - package.json
+  - package-lock.json
+  - node_modules
+  - Gemfile
+  - Gemfile.lock
+  - vendor
