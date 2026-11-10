@@ -36,9 +36,7 @@ draft: false
   - [What is left: hubs](#what-is-left-hubs)
 - [What round 2 found](#what-round-2-found)
 - [The scores](#the-scores)
-- [Into a production corpus](#into-a-production-corpus)
-  - [Making it run](#making-it-run)
-  - [The final run](#the-final-run)
+- [Scaling to a production corpus](#into-a-production-corpus)
 - [Conclusions and Takeaways](#conclusions-and-takeaways)
 
 ---
@@ -187,6 +185,10 @@ Factor 0 is the account and factor 1 is the customer. `SHOW-ACCOUNT` uses both, 
 ## Bytes and Names
 
 The matrix is only as good as its answer to "does this paragraph touch this field?", and to "are these two columns the same datum?". In COBOL, names answer neither question well. Bytes answer both. The matrix stands on cobble's byte-level dataflow, which the [earlier post on fixpoint analysis](/2026/10/09/adventures-in-fixpoint-analysis.html) describes.
+
+The reverse engineering pyramid this stands upon is, roughly:
+
+![The reverse engineering pyramid, bottom to top: corpus, syntax, control flow, data flow, dynamic analysis, query and deduction, classical ML, Gen AI, and on top the agent harness, specs and reports. A Gen AI column reaches down to control flow](/assets/images/nmf-reverse-engineering-pyramid.png){: width="800"}
 
 ### Why names fail in COBOL
 
@@ -426,7 +428,7 @@ Round 1 is the result. It predicts hidden uses well above chance, and it survive
 
 What the scores cannot see is meaning. A hub scores well on stability and focus, because it is compact. Only a person can say that factor 4 is the account and factor 2 is padding, which is why an LLM is a suitable initial stand-in to make that judgment, before a human gets involved.
 
-## Into a production corpus
+## Scaling to a production corpus
 
 CardDemo is small. Running the same set of techniques on a production COBOL estate of about 4 million LoC (7700 files). It has about 3,800 programs, mostly CICS online with some batch.
 
@@ -443,8 +445,6 @@ There are several things which do not work as-is when scaling up to real world c
 | literals, constants, sort areas, CICS interface fields | about 800 |
 
 There are other optimisations that needed to be done, for example, avoiding storing the full matrix model in memory; I may describe it in a future post.
-
-### The final run
 
 | | CardDemo | Larger corpus |
 |---|---|---|
@@ -472,10 +472,10 @@ Each round fits what the earlier rounds leave. Round 2 is 52.6% explained by rou
 
 An LLM interpretation of every factor against the corpus' glossary give these estimates:
 
-- About 270 of the 288 factors have a clear business meaning.
-- About 115 to 130 factors are duplicates. Each program's copy of a file record gets its own columns, because the run does not join a file's layouts across programs. So each program that reads one ten-field block of a master record gets its own factor for that block. This one block gives 108 of round 3's 128 factors.
-- About 16 factors come from families of programs with the same logic and different field prefixes.
-- After merging these, about 75 to 95 distinct domain object candidates remain.
+- About **270 of the 288** factors have a **clear business meaning**.
+- **~115 factors are duplicates**. Each program's copy of a file record gets its own columns, because the run does not join a file's layouts across programs. So each program that reads one ten-field block of a master record gets its own factor for that block. This one block gives 108 of round 3's 128 factors.
+- About **16 factors** come from families of **programs with the same logic and different field prefixes**. This showcases how the matrix factorisation can surface almost or complete duplicates.
+- After merging these, about **75 to 95 distinct domain object candidates** remain. These then become candidates for further inspection and judgment, by a human and/or an LLM. This part is important, because it shows that any **downstream system has to work with substantially less low-level data, and has access to more organised groupings of this data**.
 
 ## Conclusions and Takeaways
 
