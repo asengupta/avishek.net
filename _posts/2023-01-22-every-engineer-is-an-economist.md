@@ -53,7 +53,7 @@ For these ideas to effectively work, they must permeate all the way across devel
 ## Key Concepts
 
 ### 1. Net Present Value and Discounted Cash Flow
-The concept behind the **Time Value of Money** is to calibrate some amount of money in the future to the present value of money. The idea is that a certain amount of money today is worth more in the future. This is because this money can be invested at some rate of return, which gives you returns in the future. Hence, receiving money earlier is better than receiving it late (because you can invest it right now). Similarly, spending money later is better than spending it right now, because that unspent money can earn interest. If $$r$$ is the rate of return (sometimes also called the hurdle rate), then $$P_0$$ (the amount of money right now) and the equivalent amount of money $$P_t$$ after $$t$$ time periods are related as:
+The concept behind the **Time Value of Money** is to calibrate some amount of money in the future to the present value of money. The idea is that a certain amount of money today is worth more than that same amount in the future. This is because this money can be invested at some rate of return, which gives you returns in the future. Hence, receiving money earlier is better than receiving it late (because you can invest it right now). Similarly, spending money later is better than spending it right now, because that unspent money can earn interest. If $$r$$ is the rate of return (sometimes also called the hurdle rate), then $$P_0$$ (the amount of money right now) and the equivalent amount of money $$P_t$$ after $$t$$ time periods are related as:
 
 $$
 P_0=\frac{P_t}{ {(1+r)}^t }
@@ -119,7 +119,7 @@ As you can see, the attempt to find a naive lower and upper bounds by summing th
 
 This is what the above calculation brings out. In this simplifying example, we have chosen the estimates to be normal distributions, to keep calculations simply. It could even be a fat-tailed distribution like a Log-Normal Distribution (to bias it towards higher estimates), but then we'd need to run Monte Carlo simulations to come up with the data. So, let's keep it simple for now.
 
-The correct approach of convolving the estimate sdistributions of all the stories results in the single normal distribution above. With this graph, we can answer questions like:
+The correct approach of convolving the estimate distributions of all the stories results in the single normal distribution above. With this graph, we can answer questions like:
 
 - **What are the upper and lower bounds with 90% confidence?** 324 and 270, respectively, which is different from the result of naively summing the upper and lower bounds.
 - **Suppose we want to use a lower estimate of the upper bound, say, 310; what then is the risk of being wrong?** The answer is 23%, which you can calculate for yourself by going to the spreadsheet directly.
@@ -426,7 +426,7 @@ time_value-->|High|more_invest[Invest More]
 
 It is also important to note that a single metric does not contribute to the speed effect. Other factors like development effort are key input factors in custom software development. Let's speak of the values which a metric can be traced to.
 
-- **First Mover/Fast Follower Economic Advantage:** The advantage gained by getting to market first with a novel product or feature is not to be underestimated. This is the First Mover Advantage. However, the First Mover Advantage has been disputed with the proposition that the Second Mover / Fast Follower Advantage may be significantly less riskier, and as profitable, if note more. Regardless of debate in this area, speed plays a key contribution in gaining this advantage.
+- **First Mover/Fast Follower Economic Advantage:** The advantage gained by getting to market first with a novel product or feature is not to be underestimated. This is the First Mover Advantage. However, the First Mover Advantage has been disputed with the proposition that the Second Mover / Fast Follower Advantage may be significantly less riskier, and as profitable, if not more. Regardless of debate in this area, speed plays a key contribution in gaining this advantage.
 - **Time Value of Savings/Profits:** The value of speed not only lies in a first mover advantage. Even if we discount such an advantage, we can see that a savings (or profit) made earlier is always more valuable than the same amount gained at a later point in time, as we noted in [Key Concepts](#key-concepts). Essentially, the later the client starts seeing the profits/savings, the more money they are losing. At the risk of repeating the concept, this is because the savings or profits made right now could be invested and gaining returns from that interest.
 
 
