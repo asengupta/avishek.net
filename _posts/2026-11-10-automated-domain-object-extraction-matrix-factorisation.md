@@ -205,9 +205,38 @@ A small program shows the idea. `REC` is eight bytes. `WS-A` is its first four a
 
 *The four rows of names are labels on the same eight bytes. Each cell shows its final character and the statement that last wrote it. Statement 0 wrote `WS-B` without naming it. Neither statement names `WHOLE`, but both wrote its bytes. From the [byte extents explainer](/explainers/byte-extents.html).*
 
+CardDemo does the same thing. The account update program, `COACTUPC`, declares the new expiry date twice over the same eight bytes:
+
+```cobol
+15  ACUP-NEW-EXPIRAION-DATE            PIC X(08).
+15  ACUP-NEW-EXPIRAION-DATE-PARTS      REDEFINES
+    ACUP-NEW-EXPIRAION-DATE.
+    20 ACUP-NEW-EXP-YEAR                PIC X(4).
+    20 ACUP-NEW-EXP-MON                 PIC X(2).
+    20 ACUP-NEW-EXP-DAY                 PIC X(2).
+```
+
+`1100-RECEIVE-MAP` fills it one part at a time from the screen. These are the `ELSE` branches of three `IF`s:
+
+```cobol
+/0  MOVE EXPYEARI OF CACTUPAI TO ACUP-NEW-EXP-YEAR
+/1  MOVE EXPMONI OF CACTUPAI TO  ACUP-NEW-EXP-MON
+/2  MOVE EXPDAYI OF CACTUPAI TO  ACUP-NEW-EXP-DAY
+```
+
+`1200-EDIT-MAP-INPUTS` then reads it whole, to check that it is a valid date:
+
+```cobol
+MOVE ACUP-NEW-EXPIRAION-DATE  TO WS-EDIT-DATE-CCYYMMDD
+```
+
+![Eight bytes under three rows of names: ACUP-NEW-EXPIRAION-DATE over all eight, ACUP-NEW-EXP-YEAR over bytes 0 to 3, ACUP-NEW-EXP-MON over 4 and 5, ACUP-NEW-EXP-DAY over 6 and 7. Bytes 0 to 3 were written by statement 0, 4 and 5 by statement 1, 6 and 7 by statement 2. All eight are outlined as the bytes the read covers](/assets/images/nmf-byte-extents-coactupc-expiry.png){: width="640"}
+
+*Each cell shows the statement that last wrote it. The outlined cells are the bytes covered by the read of `ACUP-NEW-EXPIRAION-DATE`. Its writers are statements 0, 1 and 2, and none of them names it directly.*
+
 The features that cause this:
 
-- **`REDEFINES`.** Two fields with different names, and often different pictures, share the same bytes. A write to one is a write to the other.
+- **`REDEFINES`.** Two fields with different names, and often different memory layouts, share the same bytes. A write to one is a write to the other.
 - **Group moves.** A move such as `MOVE ACCOUNT-RECORD TO WS-ACCOUNT` copies every byte of the record. No elementary field is named, but every one of them moves.
 - **Undivided buffers.** A record read into a `PIC X(500)` area, then moved into a structured record, loses its field names on the way through.
 - **Reference modification.** A statement can move a part of a field by position. Card update fills its "old" expiry year like this:
@@ -217,9 +246,9 @@ The features that cause this:
   ```
 
   The names say nothing about each other. The bytes say that `CCUP-OLD-EXPYEAR` holds bytes 1 to 4 of the expiry date.
-- **Commareas and files.** Programs pass data to each other as a block of bytes. Thirteen CardDemo programs take in their commarea with `MOVE DFHCOMMAREA(1:EIBCALEN) TO CARDDEMO-COMMAREA`. The receiving program lays its own names over those bytes. A file record works the same way: each program that reads the file has its own layout, with its own names, over the same record.
+- **Commareas and files.** Programs pass data to each other as a block of bytes. Several CardDemo programs take in their commarea with `MOVE DFHCOMMAREA(1:EIBCALEN) TO CARDDEMO-COMMAREA`. The receiving program lays its own names over those bytes.
 
-So the same datum has many names, and one name can mean different data in different programs. An analysis that follows names joins things that are different, and splits things that are the same.
+So the same memory region can have many names; in fact, the same memory region might contribute only partially to multiple overlapping layouts, within the same program, or across multiple. An analysis that follows names joins things that are different, and splits things that are the same. This mapping is usually what RedDragonForge first does, before building any dataflow analysis.
 
 ### What the bytes give the matrix
 
@@ -250,7 +279,7 @@ Zoomed in, the edges are byte moves between named fields. Here is the card's exp
 
 ![Zoomed dataflow: card file bytes 80 to 90 flow into CARD-EXPIRAION-DATE, which splits into CCUP-OLD-EXPYEAR, CCUP-OLD-EXPMON and CCUP-OLD-EXPDAY, each of which flows to a screen field, a working-storage field and WS-COMMAREA](/assets/images/nmf-carddemo-cocrdupc-expiry-chain.png){: width="640"}
 
-*The read of the card file puts bytes 80 to 90 of the record into `CARD-EXPIRAION-DATE`. Card update then splits the date by position: bytes 0 to 3 go to `CCUP-OLD-EXPYEAR`, 5 and 6 to `CCUP-OLD-EXPMON`, and 8 and 9 to `CCUP-OLD-EXPDAY`. Each part then goes to a screen output field (`EXPYEARO` and so on), to a working-storage field, and into the saved commarea `WS-COMMAREA`. No name links `CARD-EXPIRAION-DATE` to `CCUP-OLD-EXPYEAR`. The bytes do. I picked these twelve nodes and dragged them into columns. The page has other neighbours of these fields, such as literal moves and the incoming commarea bytes, which I left out.*
+*The read of the card file puts bytes 80 to 90 of the record into `CARD-EXPIRAION-DATE`. Card update then splits the date by position: bytes 0 to 3 go to `CCUP-OLD-EXPYEAR`, 5 and 6 to `CCUP-OLD-EXPMON`, and 8 and 9 to `CCUP-OLD-EXPDAY`. Each part then goes to a screen output field (`EXPYEARO` and so on), to a working-storage field, and into the saved commarea `WS-COMMAREA`. No name links `CARD-EXPIRAION-DATE` to `CCUP-OLD-EXPYEAR`; the byte extents link them. The page has other neighbours of these fields, such as literal moves and the incoming commarea bytes, which I left out.*
 
 The above byte level dataflows require running a set of COBOL-specific static analyses. Some of these are:
 
