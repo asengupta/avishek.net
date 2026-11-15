@@ -7,7 +7,7 @@ tags: ["Y Combinator", "Lambda Calculus", "Recursion", "Scheme"]
 draft: false
 ---
 
-*In this post, we discuss the Y Combinator (no, not the company!) and attempt to gently introduce you to the derivation of the construct through small bite-sized refactoring steps done on a simple recursive function. The example is in Scheme, and runs in Racket (and in Scheme if you replace the `λ` with `lambda`), and is simple enough to be ported without effort into most languages, functional-first or not.*
+*In this post, we discuss the Y Combinator (no, not the company!) and attempt to gently introduce you to the derivation of the construct through small bite-sized refactoring steps done on a simple recursive function. The example is in Racket (and can run in Scheme if you replace the `λ` with `lambda`). It is simple enough to be ported without effort into most languages, functional-first or not.*
 
 ## Contents
 
