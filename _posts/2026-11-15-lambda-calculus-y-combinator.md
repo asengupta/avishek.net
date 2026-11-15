@@ -1,5 +1,5 @@
 ---
-title: "Y Combinator for Fun and No Profit"
+title: "Y Combinators for Fun and (No) Profit"
 author: avishek
 usemathjax: false
 mermaid: false
