@@ -9,6 +9,16 @@ draft: false
 
 *In this post, we discuss the Y Combinator (no, not the company!) and attempt to gently introduce you to the derivation of the construct through small bite-sized refactoring steps done on a simple recursive function. The example is in Scheme, and runs in Racket (and in Scheme if you replace the `λ` with `lambda`), and is simple enough to be ported without effort into most languages, functional-first or not.*
 
+## Contents
+
+- [Why the Y Combinator?](#why-the-y-combinator)
+- [A Tentative Stab](#a-tentative-stab)
+- [Interlude: Why does it recurse?](#interlude-why-does-it-recurse)
+- [Delayed Evaluations vs. Infinity](#delayed-evaluations-vs-infinity)
+- [Interlude: Why does this not recurse infinitely?](#interlude-why-does-this-not-recurse-infinitely)
+- [Expansion: The Attack of the Parentheses](#expansion-the-attack-of-the-parentheses)
+- [References](#references)
+
 I have been revisiting **"The Little Schemer"** recently, and I keep continually getting reminded what a gem of a language Lisp is (any variant). Though I have arrived at Functional Programming through various angles, it was never a straight line; instead being a series of progressive dead ends, half-completed exercises, re-reading things from the start, applying some concepts over and over again in languages not originally meant to be functional, going over-zealous about it and burning myself...oh so many detours.
 
 I still consider myself mostly a novice in this area.
@@ -17,6 +27,8 @@ So, I started re-reading the part about the Y Combinator, followed through the "
 This post is an attempt to distill all of those hours of banging my head to come up with a coherent model of how the Y combinator works. Of course, none of this is new: it has been around since Haskell Curry discovered it, and there are tons of good explainers of the idea out there. This is just my spin on it.
 
 I will be using **Scheme** for this post. I actually ran all of it on Racket, and the original Scheme interpreter works just as well. I will not deny that I find walls of parentheses rather unreadable beyond a certain threshold, but that probably speaks to how code should be structured in the first place, rather than how readable a Lisp is. In any case, as we will see, the constraints of the problem that leads us to the Y Combinator, somewhat force us to deal with more parentheses than I would normally find comfortable.
+
+## Why the Y Combinator?
 
 Most material about the Y-Combinator treats its rationale from a couple of different angles.
 
@@ -74,7 +86,7 @@ This is a slightly different way of imposing our first constraint, i.e., perform
 
 We will explore the solution by performing small refactoring steps, so that the path from named functions to the final result is traceable.
 
-## Stage 1: A Tentative Stab
+## A Tentative Stab
 
 One of the first things we usually reach for, when attempting to hide implementation details from a function, is to have it simply call another function that has been passed in. This by itself, does not solve the problem, but it is a start. Accordingly, we pass in a lambda `foo` that `sum-of-n` calls instead of invoking itself for recursion. But let's take a smaller step: pass in a `foo` which is not used at all, and thus, is effectively an unused argument, like so:
 
