@@ -127,4 +127,4 @@ fileignoreconfig:
 - filename: _posts/2026-11-10-automated-domain-object-extraction-matrix-factorisation.md
   checksum: 4c608e69fccbcad94a9b402cc6330cf064498b5cf1a5ab861a0bb0f9972f0404
 - filename: _posts/2026-11-15-lambda-calculus-y-combinator.md
-  checksum: cedb92c028cb4b5275cb6b8bda99703eab1b3ebfd9cc79911932ecd141548097
+  checksum: 7c45439703fcbd2be144d1125b57bf72cbcf3838d889aeac54e91603a8431799
