@@ -17,6 +17,10 @@ draft: false
 - [Delayed Evaluations vs. Infinity](#delayed-evaluations-vs-infinity)
 - [Interlude: Why does this not recurse infinitely?](#interlude-why-does-this-not-recurse-infinitely)
 - [Expansion: The Attack of the Parentheses](#expansion-the-attack-of-the-parentheses)
+- [An Alternative Path to the Y Combinator](#an-alternative-path-to-the-y-combinator)
+- [An infinite loop](#an-infinite-loop)
+- [Making the infinite loop stop](#making-the-infinite-loop-stop)
+- [Making the infinite loop do something useful](#making-the-infinite-loop-do-something-useful)
 - [References](#references)
 
 I have been revisiting **"The Little Schemer"** recently, and I keep continually getting reminded what a gem of a language Lisp is (any variant). Though I have arrived at Functional Programming through various angles, it was never a straight line; instead being a series of progressive dead ends, half-completed exercises, re-reading things from the start, applying some concepts over and over again in languages not originally meant to be functional, going over-zealous about it and burning myself...oh so many detours.
@@ -60,7 +64,7 @@ At an abstract level, a function like this is doing two things:
 The reason I separate out the two aspects is this: let's look at another function, the factorial:
 
 ```scheme
-(define factorial (lambda (n)
+(define factorial (λ(n)
                     (cond ((zero? n) 1)
                           (else (* n (factorial (sub1 n))))
                       )
@@ -70,7 +74,7 @@ The reason I separate out the two aspects is this: let's look at another functio
 If you examine this and the `sum-of-n` function, you will see that the recursion mechanic in both cases is the same, i.e., a call to itself with some new updated value. To drive the point home, look at the Fibonacci function, which has differently-shaped logic:
 
 ```scheme
-(define fib (lambda (n)
+(define fib (λ(n)
           (cond
             ((or (eq? n 1) (eq? n 2)) 1)
             (else (+ (fib (sub1 n)) (fib (- n 2)))
@@ -337,6 +341,86 @@ We can call this like:
 ((y-combinator sum-of-n-step-factory) 10)
 ```
 Note what we have done: the `sum-of-n-step-factory` knows nothing about recursion. All it gets is a `foo-recur` lambda which it invokes when it needs to run the next step; from that angle, it contains only the program logic, not control flow logic. The **Y Combinator** knows nothing about the program logic, whether it be factorial, Fibonacci, or something completely different; all it knows is to take the program logic lambda, and convert it into a recursive lambda which fuses the program logic and control flow (in this case, recursion).
+
+## An Alternative Path to the Y Combinator
+
+We started with the `sum-of-n` function, and then tried to extract the recursion aspect out of it. We can arrive at the same definition, in a more piecemeal version. This path, in my opinion, starts much more simply, and is how I got to the Y Combinator *myself* without constantly getting lost; thus mentally it is a superior path for me to remember the basis for the Y Combinator. Remember though, that this is how my own journey of understanding went: yours may very well differ, and I urge you to build your own mental model to understanding.
+
+## An infinite loop
+
+First, we start with the infinite loop: it does nothing, and it runs forever.
+
+```scheme
+(define infinite-loop (λ(step) (step step)))
+
+(infinite-loop infinite-loop)
+```
+
+How does this work? Let's trace it:
+
+```scheme
+((λ(step) (step step)) infinite-loop)
+=> (infinite-loop infinite-loop)
+...
+```
+The second step ends up being the same as the original invocation, so it repeats ad infinitum.
+
+Our task is two-fold:
+
+- Make this infinite loop stop at some point
+- Make this infinite loop do something useful
+
+## Making the infinite loop stop
+
+Let's start with the first task: making this infinite loop stop. We can simplify this task further, by making it stop immediately.
+
+```scheme
+(define immediately-stopping-infinite (λ(step) 
+    (cond
+      ((eq? #t #t) 0)
+      (else (step step))
+    )
+  )
+)
+
+(immediately-stopping-infinite immediately-stopping-infinite)
+```
+
+The above stops immediately because it checks whether `#t == #t` (which is obviously true) and returns 0. The `else` branch, which would have taken the infinite loop path, is never invoked.
+
+## Making the infinite loop do something useful
+
+We are now in a good position to build out our `sum-of-n` functionality straight away; the pieces are all there. The `(eq? #t #t)` is the placeholder for the recursion termination condition, and the `else` branch does the recursive part, in addition to adding to the current value. We need to add the `n` parameter to this function to carry the decrementing counter.
+
+```scheme
+(define sum-of-n-1 (λ(step n)
+    (cond
+      ((zero? n) 0)
+      (else (+ n (step step (sub1 n))))
+    )
+  )
+)
+
+(sum-of-n-1 sum-of-n-1 5)
+```
+
+We are almost at the point at which we can extract out the Y Combinator; technically, you can inline the invocation right here, and you'd have achieved your goal, but the Y Combinator requires some more mechanical refactoring. The next step is very mechanical: break up `λ(step n)` into two separate curried functions.
+
+```scheme
+(define sum-of-n-curried
+  (λ(next)
+    (λ(n)
+      (cond 
+        ((zero? n) 0)
+        (else (+ n ((next next) (sub1 n))))
+      )
+    )
+  )
+)
+
+((sum-of-n-curried sum-of-n-curried) 5)
+```
+I won't get into the rest of the derivation here, since it is the same from here on out.
 
 ## References
 
