@@ -210,7 +210,7 @@ Note that the extra brackets around `foo-recur` are no longer present because we
 
 ```scheme
 sum-of-n-logic-factory = (λ(foo-recur) (λ(n) ...(else (+ n (foo-recur (sub1 n))))))
-(sum-of-n-logic-factory (λ(n)(foo foo) n))
+(sum-of-n-logic-factory (λ(n)((foo foo) n)))
 ```
 
 ## Interlude: Why does this not recurse infinitely?
