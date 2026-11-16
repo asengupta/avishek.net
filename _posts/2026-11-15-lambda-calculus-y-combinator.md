@@ -30,7 +30,7 @@ So, I started re-reading the part about the Y Combinator, followed through the "
 
 This post is an attempt to distill all of those hours of banging my head to come up with a coherent model of how the Y combinator works. Of course, none of this is new: it has been around since Haskell Curry discovered it, and there are tons of good explainers of the idea out there. This is just my spin on it.
 
-I will be using **Scheme** for this post. I actually ran all of it on Racket, and the original Scheme interpreter works just as well. I will not deny that I find walls of parentheses rather unreadable beyond a certain threshold, but that probably speaks to how code should be structured in the first place, rather than how readable a Lisp is. In any case, as we will see, the constraints of the problem that leads us to the Y Combinator, somewhat force us to deal with more parentheses than I would normally find comfortable.
+I will be using **Racket / Scheme** for this post. I actually ran all of it on Racket, and the original Scheme interpreter works just as well, as long as you replace the `λ`s with `lambda`s. I will not deny that I find walls of parentheses rather unreadable beyond a certain threshold, but that probably speaks to how code should be structured in the first place, rather than how readable a Lisp is. In any case, as we will see, the constraints of the problem that leads us to the Y Combinator, somewhat force us to deal with more parentheses than I would normally find comfortable.
 
 ## Why the Y Combinator?
 
