@@ -46,7 +46,7 @@ The motivation behind Y Combinator may be best understood when we start with a v
 
 We start with the example of a recursive function which calculates the sum of numbers up to `n`. No special tricks here, just basic recursion.
 
-```Racket
+```racket
 (define sum-of-n (λ(n)
                   (cond
                     ((zero? n) 0)
@@ -63,7 +63,7 @@ At an abstract level, a function like this is doing two things:
 
 The reason I separate out the two aspects is this: let's look at another function, the factorial:
 
-```Racket
+```racket
 (define factorial (λ(n)
                     (cond ((zero? n) 1)
                           (else (* n (factorial (sub1 n))))
@@ -73,7 +73,7 @@ The reason I separate out the two aspects is this: let's look at another functio
 
 If you examine this and the `sum-of-n` function, you will see that the recursion mechanic in both cases is the same, i.e., a call to itself with some new updated value. To drive the point home, look at the Fibonacci function, which has differently-shaped logic:
 
-```Racket
+```racket
 (define fib (λ(n)
           (cond
             ((or (eq? n 1) (eq? n 2)) 1)
@@ -94,7 +94,7 @@ We will explore the solution by performing small refactoring steps, so that the 
 
 One of the first things we usually reach for, when attempting to hide implementation details from a function, is to have it simply call another function that has been passed in. This by itself, does not solve the problem, but it is a start. Accordingly, we pass in a lambda `foo` that `sum-of-n` calls instead of invoking itself for recursion. But let's take a smaller step: pass in a `foo` which is not used at all, and thus, is effectively an unused argument, like so:
 
-```Racket
+```racket
 (define sum-of-n-taking-foo (λ(foo n)
                   (cond
                     ((zero? n) 0)
@@ -108,7 +108,7 @@ We can call this function like `(sum-of-n-taking-foo (λ() '()) 3)`, and this wi
 
 Let's try using `foo`, for recursion. For that we need to invoke `foo` as the recursive lambda instead of directly calling `sum-of-n-taking-foo`.
 
-```Racket
+```racket
 (define sum-of-n-taking-foo-no-ref (λ(foo n)
                   (cond
                     ((zero? n) 0)
@@ -120,7 +120,7 @@ Let's try using `foo`, for recursion. For that we need to invoke `foo` as the re
 
 This makes sense, but we need to talk about how we invoke such a method:
 
-```Racket
+```racket
 (sum-of-n-taking-foo-no-ref sum-of-n-taking-foo-no-ref 10)
 ```
 
@@ -128,14 +128,14 @@ This should have the same desired effect because the `foo` that we are passing i
 
 For compactness, let's put the body in a single line. This ends up being a lot more parentheses on a single line, but we will not need to parse all of the details on every line.
 
-```Racket
+```racket
 (define sum-of-n-explicit-1
     (λ(foo n) (cond ((zero? n) 0) (else (+ n (foo foo (sub1 n)))))))
 ```
 
 The next small refactoring: let's break up the outer lambda into two separate curried functions.
 
-```Racket
+```racket
 (define sum-of-n-explicit-2
 (λ(foo) (λ(n) (cond ((zero? n) 0) (else (+ n ((foo foo) (sub1 n))))))))
 ```
@@ -145,13 +145,13 @@ One of the things we are aiming for is for the `sum-of-n` function to not worry 
 
 Loosely speaking, we are aiming for something like below:
 
-```Racket
+```racket
 sum-of-n-logic-factory = (λ(foo-recur) (λ(n) ...(else (+ n (foo-recur (sub1 n))))))
 (sum-of-n-logic-factory (foo foo))
 ```
 Written out properly without the `sum-of-n-logic-factory` name, we might write something like:
 
-```Racket
+```racket
 (define sum-of-n-explicit-3
 (λ(foo) ((λ(foo-recur) (λ(n) (cond ((zero? n) 0) (else (+ n (foo-recur (sub1 n)))))))(foo foo))))
 ```
@@ -162,19 +162,19 @@ Written out properly without the `sum-of-n-logic-factory` name, we might write s
 
 Let's evaluate the following to understand why it recurses forever:
 
-```Racket
+```racket
 ((sum-of-n-explicit-3 sum-of-n-explicit-3) 1)
 ```
 
 Let's put in some shorthand, so that our eyes don't bleed looking at all the parentheses. Assume that:
 
-```Racket
+```racket
 LADDER = (λ(foo-recur) (λ(n) (cond ((zero? n) 0) (else (+ n (foo-recur (sub1 n)))))))
 ```
 
 so that we can write:
 
-```Racket
+```racket
 E = (λ(foo) (LADDER (foo foo)))
 ```
 
@@ -184,7 +184,7 @@ E = (λ(foo) (LADDER (foo foo)))
 
 We unwrap one level of λ, and put `E` wherever `foo` is, to get:
 
-```Racket
+```racket
 (E E) = (LADDER (E E))
 ```
 
@@ -194,21 +194,21 @@ We unwrap one level of λ, and put `E` wherever `foo` is, to get:
 
 One fix is to delay the evaluation of `(foo foo)`, by wrapping it in a λ, evaluate it inside, like `(foo-recur)`, and then apply it to `n-1`. This works, but the sum-of-n logic has to remember to evaluate the λ, then apply it.
 
-```Racket
+```racket
 (define sum-of-n-explicit-no-arg-recur
 (λ(foo) ((λ(foo-recur) (λ(n) (cond ((zero? n) 0) (else (+ n ((foo-recur) (sub1 n)))))))(λ() (foo foo)))))
 ```
 
 To make the function oblivious of worrying about evaluating `foo-recur` and then applying it to `n-1`, we can enhance the `(λ() (foo foo))` lambda to also take in the `n-1` parameter and evaluate it. Now the `sum-of-n` logic just assumes the recursion lambda is a plain function it can just apply on `n-1`.
 
-```Racket
+```racket
 (define sum-of-n-explicit-1-arg-recur
 (λ(foo) ((λ(foo-recur) (λ(n) (cond ((zero? n) 0) (else (+ n (foo-recur (sub1 n)))))))(λ(n) ((foo foo) n)))))
 ```
 
 Note that the extra brackets around `foo-recur` are no longer present because we do not need to evaluate + apply inline: the evaluation happens inside `foo-recur` itself. Loosely speaking, we now have (in some Scheme-like pseudocode):
 
-```Racket
+```racket
 sum-of-n-logic-factory = (λ(foo-recur) (λ(n) ...(else (+ n (foo-recur (sub1 n))))))
 (sum-of-n-logic-factory (λ(n)((foo foo) n)))
 ```
@@ -219,13 +219,13 @@ Let's verify that this does NOT recurse. The simple, if somewhat blase, explanat
 
 Let's evaluate `(E E)` again.
 
-```Racket
+```racket
 E=(λ(foo) (LADDER (λ(n) ((foo foo) n))))
 ```
 
 `LADDER` is the same, but we get a different result, on substitution:
 
-```Racket
+```racket
 (E E) = (LADDER (λ(n) ((E E) n)))
 ```
 
@@ -235,50 +235,24 @@ What is more instructive is to see the trace of what happens through a complete 
 
 Let `E = sum-of-n-explicit-1-arg-recur`, then evaluate `((E E) 2)`. Then, substituting `E` everywhere `foo` is, we get:
 
-```Racket
+```racket
 ((λ(foo-recur) (λ(n) (cond ((zero? n) 0) (else (+ n (foo-recur (sub1 n))))))) (λ(n) ((E E) n) ))
 => P = (E E) = (λ(n) (cond ((zero? n) 0) (else (+ n ( (λ(n) ((E E) n) ) (sub1 n))))))
 ```
 
 Let's call `P(2)`:
 
-```Racket
+```racket
 => P(2) = (cond ((zero? 2) 0) (else (+ 2 ( (λ(n) ((E E) n)  ) (sub1 2)))))
 => P(2) = (+ 2 ( (λ(n) ((E E) n)  ) 1))
 => P(2) = (+ 2 ( (E E) 1))
-=> P(2) = (+ 2 ( 
-            (λ(n) (cond ((zero? n) 0) (else (+ n ( (λ(n) ((E E) n) ) (sub1 n))))))
-                                              1))
-
-=> P(2) = (+ 2
-  (cond ((zero? 1) 0) (else (+ 1 ((λ(n) ((E E) n)) (sub1 1)))))
-                          )
-
-=> P(2) = (+ 2
-  (cond ((zero? 1) 0) (else (+ 1 ((λ(n) ((E E) n)) 0))))
-                          )
-
-=> P(2) = (+ 2 
-  (+ 1 ((λ(n) ((E E) n)) 0))
-          )
-
-=> P(2) = (+ 2 
-  (+ 1 ((E E) 0))
-          )
-
-
-=> P(2) = (+ 2 
-  (+ 1 (
-            (λ(n) (cond ((zero? n) 0) (else (+ n ( (λ(n) ((E E) n) ) (sub1 n))))))
-              0))
-          )
-
-=> P(2) = (+ 2 
-  (+ 1
-            (cond ((zero? 0) 0) (else (+ 0 ( (λ(n) ((E E) n) ) (sub1 0)))))
-              )
-          )
-
+=> P(2) = (+ 2 ( (λ(n) (cond ((zero? n) 0) (else (+ n ( (λ(n) ((E E) n) ) (sub1 n)))))) 1))
+=> P(2) = (+ 2 (cond ((zero? 1) 0) (else (+ 1 ((λ(n) ((E E) n)) (sub1 1)))))
+=> P(2) = (+ 2 (cond ((zero? 1) 0) (else (+ 1 ((λ(n) ((E E) n)) 0)))))
+=> P(2) = (+ 2 (+ 1 ((λ(n) ((E E) n)) 0)))
+=> P(2) = (+ 2 (+ 1 ((E E) 0)))
+=> P(2) = (+ 2 (+ 1 ( (λ(n) (cond ((zero? n) 0) (else (+ n ( (λ(n) ((E E) n) ) (sub1 n)))))) 0)))
+=> P(2) = (+ 2 (+ 1 (cond ((zero? 0) 0) (else (+ 0 ( (λ(n) ((E E) n) ) (sub1 0)))))))
 => P(2) = (+ 2 (+ 1 0)) = 3
 ```
 
@@ -287,20 +261,20 @@ Let's call `P(2)`:
 You can run `((sum-of-n-explicit-1-arg-recur sum-of-n-explicit-1-arg-recur) 10)` for the above. Now that we have (hopefully) convinced ourselves that this does work, let's take stock of where we are.
 We have a function called `sum-of-n-explicit-1-arg-recur` which looks like:
 
-```Racket
+```racket
 (define sum-of-n-explicit-1-arg-recur
 (λ(foo) ((λ(foo-recur) (λ(n) (cond ((zero? n) 0) (else (+ n (foo-recur (sub1 n)))))))(λ(n) ((foo foo) n)))))
 ```
 
 We can call it like:
 
-```Racket
+```racket
 ((sum-of-n-explicit-1-arg-recur sum-of-n-explicit-1-arg-recur) 10)
 ```
 
 As you can see, we are still using names. As the next step, if we go in and blindly expand `sum-of-n-explicit-1-arg-recur` into its body, we get the following:
 
-```Racket
+```racket
 (
  (λ(foo) ((λ(foo-recur) (λ(n) (cond ((zero? n) 0) (else (+ n (foo-recur (sub1 n)))))))(λ(n) ((foo foo) n))))
   (λ(foo) ((λ(foo-recur) (λ(n) (cond ((zero? n) 0) (else (+ n (foo-recur (sub1 n)))))))(λ(n) ((foo foo) n))))
@@ -311,7 +285,7 @@ We are actually very close to the end, because, if you see the above definition,
 
 Let's refactor by pulling out the `sum-of-n` logic, which is the thing which differs in recursive walks; the recursion itself is always a standard pattern.
 
-```Racket
+```racket
 (define sum-of-n-step-factory
   (λ(foo-recur) (λ(n) (cond ((zero? n) 0) (else (+ n (foo-recur (sub1 n)))))))
 )
@@ -326,7 +300,7 @@ Let's refactor by pulling out the `sum-of-n` logic, which is the thing which dif
 
 `sum-of-n-step-factory` is a hardcoded step function in `sum-of-n-explicit-5`; it is called a step function because it returns a function which tells us how to take the next step; this can be either termination or further recursion. We can make the above more general by passing a (generic) step function into a factory function. **This factory function is the Y Combinator.** 
 
-```Racket
+```racket
 (define y-combinator (λ(step-fn-factory)
 (
  (λ(foo) (step-fn-factory (λ(n) ((foo foo) n))))
@@ -337,7 +311,7 @@ Let's refactor by pulling out the `sum-of-n` logic, which is the thing which dif
 
 We can call this like:
 
-```Racket
+```racket
 ((y-combinator sum-of-n-step-factory) 10)
 ```
 Note what we have done: the `sum-of-n-step-factory` knows nothing about recursion. All it gets is a `foo-recur` lambda which it invokes when it needs to run the next step; from that angle, it contains only the program logic, not control flow logic. The **Y Combinator** knows nothing about the program logic, whether it be factorial, Fibonacci, or something completely different; all it knows is to take the program logic lambda, and convert it into a recursive lambda which fuses the program logic and control flow (in this case, recursion).
@@ -350,7 +324,7 @@ We started with the `sum-of-n` function, and then tried to extract the recursion
 
 First, we start with the infinite loop: it does nothing, and it runs forever.
 
-```Racket
+```racket
 (define infinite-loop (λ(step) (step step)))
 
 (infinite-loop infinite-loop)
@@ -358,7 +332,7 @@ First, we start with the infinite loop: it does nothing, and it runs forever.
 
 How does this work? Let's trace it:
 
-```Racket
+```racket
 ((λ(step) (step step)) infinite-loop)
 => (infinite-loop infinite-loop)
 ...
@@ -374,7 +348,7 @@ Our task is two-fold:
 
 Let's start with the first task: making this infinite loop stop. We can simplify this task further, by making it stop immediately.
 
-```Racket
+```racket
 (define immediately-stopping-infinite (λ(step) 
     (cond
       ((eq? #t #t) 0)
@@ -392,7 +366,7 @@ The above stops immediately because it checks whether `#t == #t` (which is obvio
 
 We are now in a good position to build out our `sum-of-n` functionality straight away; the pieces are all there. The `(eq? #t #t)` is the placeholder for the recursion termination condition, and the `else` branch does the recursive part, in addition to adding to the current value. We need to add the `n` parameter to this function to carry the decrementing counter.
 
-```Racket
+```racket
 (define sum-of-n-1 (λ(step n)
     (cond
       ((zero? n) 0)
@@ -406,7 +380,7 @@ We are now in a good position to build out our `sum-of-n` functionality straight
 
 We are almost at the point at which we can extract out the Y Combinator; technically, you can inline the invocation right here, and you'd have achieved your goal, but the Y Combinator requires some more mechanical refactoring. The next step is very mechanical: break up `λ(step n)` into two separate curried functions.
 
-```Racket
+```racket
 (define sum-of-n-curried
   (λ(next)
     (λ(n)
