@@ -6,7 +6,6 @@ tags: ["Vim", "Text Editing"]
 draft: false
 ---
 
-This short post lists the Neovim (Vim) shortcuts I am getting used to. I've recently switched to trying the Vim mode for my IDE needs, and having used Vim previously only for very simple tasks, am having a blast practising the basic Vim shortcuts. Ultimately, I will probably move to doing more IDE-related work in native Vim too.
 
 I've also added TMux shortcuts because I'm learning to use that too.
 
@@ -52,7 +51,9 @@ I've also added TMux shortcuts because I'm learning to use that too.
 - `.`, `.+/-n`: Refers to the current line / Refers to `n` lines after/before current line.
 - `$`, `$+/-n`: Refers to the last line of the document (Compare to going to last character in line in Vim's Normal mode). `+/-n` navigates `n` lines after/before last line.
 - `%`: Refers to all lines (same as `1,$`)
-- `/pattern/` and `?pattern?`: Searches forward and backward for `pattern`. This can be used as a location argument in other commands.
+- `<scope>s/<pattern>/<replacement>` does search and replace, but only for the first occurrence of `pattern` on a given line. No specified scope limits it to the current line. Add `/g` at the end for it to process every occurrence of `pattern` on a given line.
+- Commands can be `d`, `y`, `c`, etc. Append `/e` to include the `pattern`.
+- Use `:<scope>g/<pattern>/<Command>` to match every line in `scope` which matches `pattern`, and then runs the `Command` on that line.
 
 ### TMux commands
 
