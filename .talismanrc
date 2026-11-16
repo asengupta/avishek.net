@@ -123,7 +123,7 @@ fileignoreconfig:
 - filename: explainers/bounded-sweeps.html
   checksum: dabbc1ec263d399d5f4608e7ca59223e137a142f077b110ba6a613f106c25962
 - filename: _posts/2026-11-10-asking-z3-about-cobol-programs.md
-  checksum: af12a55c43f673c81ee8fa3804fb6cc01afc4fe917761eca257e2238e7b0281f
+  checksum: 3b93b0ca325b074defcd54adcc883b827c3833859651ed45d4640613795343c9 
 - filename: _posts/2026-11-10-automated-domain-object-extraction-matrix-factorisation.md
   checksum: 4c608e69fccbcad94a9b402cc6330cf064498b5cf1a5ab861a0bb0f9972f0404
 - filename: _posts/2026-11-15-lambda-calculus-y-combinator.md

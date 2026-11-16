@@ -14,30 +14,35 @@ I've also added TMux shortcuts because I'm learning to use that too.
 - ```u```/```<C-r>```: Undo/Redo
 - ```.```: Repeat last command
 - ```w```/```b```: Move forward/backward by a word
-- ```s``` refers to a sentence. Thus ```diw``` and ```daw``` deletes a sentence from anywhere inside it, and everything around the sentence, respectively.
+- ```e```: Move to end of word (last character)
+- ```s``` refers to a sentence. Thus ```dis``` and ```das``` deletes a sentence from anywhere inside it, and everything around the sentence, respectively.
 - ```(```/```)```: Jump to previous/next sentence
 - ```i```/```a```/```I```/```A```: Start editing before/after cursor, before start/after end of line
   - ```i```: Considers whitespace as words too, so ```i2w``` selects a word and any whitespace after it.
   - ```a```: Considers word + whitespace as a text object, so ```a2w``` selects ```"text1 text2 "```.
-- ```0```/```_```/```$```: Go to starting character / starting non-whitespace character / end of line
+- ```0```/```^```/```$```: Go to starting character / starting non-whitespace character / end of line
+    - ```+```/```-```: Jump to starting non-whitespace character of next/previous line
 - ```d```: Delete (suffix with counter and text object, like ```d2w```, ```dd```) 
 - ```c```: Change (suffix with counter and text object, like ```c2w```, ```cc```) 
-- ```r```: Replace (suffix with counter and text object, like ```r2w```, ```rr```)
+- ```r```: Replace the single character under cursor
+    - `R` keeps you in replace mode
 - ```y```: Yank (suffix with counter and text object, like ```y2w```, ```yy```) 
     - **Interesting Use Case**: ```ny$``` yanks from cursor to end of line ```n``` times, so ```n``` lines, starting from the current cursor position.
-- ```F-x```/```f-x```: Find character ```x``` before/after
+- ```f-x```/```F-x```: Find character ```x``` forward / backward from cursor
+- ```t-x```/```T-x```: Find "just before" character ```x``` forward / backward from cursor
 - ```*```: Search forward word under cursor
 - ```/``` and ```?```: Find string forward/backward
+    - NOTE: You can chain this with other normal mode commands, e.g.: `d/lol` deletes all the way upto, but excluding, `lol`.
 - ```P```/```p```: Paste before/after cursor
 - ```x```: Delete character under cursor
 - ```nG```/```ngg```: Go to line number ```n```
 - ```G```: Go to end of file
 - ```i```: "Everything inside" qualifier used in conjunction with other verbs, like ```diw```, ```ci"```
+- ```a```: "Everything around" qualifier used in conjunction with other verbs, like ```daw```, ```ca"```
 - ```<C-v>```: Visual Block Mode, use ```I``` to insert en-masse
 - ```<C-o>```/```<C-i>```: Go to old/new positions
 - ```<C-u>```/```<C-d>```: Move up/down half a page
 - ```{```/```}```: Jump forward/back across a contiguous block of text
-- ```+```/```-```: Jump to start of next/previous line
 
 ### Ex commands
 
@@ -48,7 +53,6 @@ I've also added TMux shortcuts because I'm learning to use that too.
 - ```$```, ```$+/-n```: Refers to the last line of the document (Compare to going to last character in line in Vim's Normal mode). ```+/-n``` navigates ```n``` lines after/before last line.
 - ```%```: Refers to all lines (same as ```1,$```)
 - ```/pattern/``` and ```?pattern?```: Searches forward and backward for ```pattern```. This can be used as a location argument in other commands.
-- ```:<C-p>/:<C-n>```: Moves backwards/forwards through command history.
 
 ### TMux commands
 
