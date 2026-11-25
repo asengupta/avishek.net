@@ -183,3 +183,49 @@ A few things to note:
 - From the structural point of view, the last calculation is the innermost lambda, and it is the last to execute. The ordinary return-version of the recursive `sum-n` is structurally inverted (`((+. 3) (+ 2 ((+. 1) 0)))`), but correspondingly, it is the innermost calculations run first.
 - There is no way to delay the ordinary return version of the computation; you must put the 0 at the time of writing the expression. Writing `((+. 3) ((+. 2) (+. 1)))` is an error; whereas the expression `(add-1-cc (add-2-cc (add-3-cc (lambda(x) x))))` can be delayed as long as we like until we invoke it with 0.
 
+This manual construction of the sum of 1, 2, 3, is the first step towards building the recursive definition in the Continuation Passing Style. But before moving to building the recursive version, I want to share the mental model which helps me visualise the structure that builds the core intuition about this way of doing things.
+
+# Boxes within boxes
+
+Picture the lambda as a box. If you are from an OO background, think of it as an object with a method and some state in it. The state is what is already in the box, i.e., the box does not depend upon anything outside to know the values of its state. This state is put in the box the moment it is constructed.
+This box is inert, and does nothing unless the method in it is invoked. The computation the method does depends upon both the state of the box and the arguments to the method. Thus, the computation is dependent upon some things specified at construction time, and some things specified at execution time.`add-1-cc` is one such a box. It has some state which is specified at construction time, the `lhs` 1 when it is defined. Seen this way, the construction `(add-1-cc (add-2-cc (add-3-cc (lambda(x) x))))` is effectively a set of boxes within boxes. Each box has two items as its state: the `lhs` value and a smaller box.
+To make this more explicit, this is what the boxes contain:
+
+- Innermost box (identity): `(lambda(x) x)`
+- Outer box 3 (`(add-3-cc (lambda(x) x))`): `lhs=3` and `next`= `(lambda(x) x)`
+- Outer box 2 (`(add-2-cc (add-3-cc (lambda(x) x)))`): `lhs=2` and `next`= `(add-3-cc (lambda(x) x))`
+- Outer box 1 (`(add-1-cc (add-2-cc (add-3-cc (lambda(x) x))))`): `lhs=1` and `next`= `(add-2-cc (add-3-cc (lambda(x) x)))`
+
+This is the execution trace in words:
+
+- When the outer box 1 is triggered with 0, it sums 0 and `lhs`=1, and calls its `next` (outer box 2) with 1.
+- Outer box 2 is triggered with 1, it sums 1 and its `lhs`=2, and calls its `next` (outer box 1) with 3.
+- Outer box 3 is triggered with 3, it sums 3 and its `lhs`=3, and calls its `next` (innermost box) with 6.
+- The innermost box receives 6, and simply returns 6.
+
+Another intuitive way of thinking of this construction is as a set of nested decorators. Each decorator calls its wrapped box with values: these values could be part of the decorator data itself as well as the parameters the outer decorator receives.
+
+# Recursive construction
+
+Having seen how the box unlocking works when constructed manually, we now have all the pieces to recursively construct `sum-n-cc` such that it gives us the same "boxes-within-boxes" artifact as above.
+
+```racket
+(define sum-n-cc
+  (λ(n next)
+    (cond
+      ((zero? n) (next 0))
+      (else
+        (sum-n-cc (sub1 n)
+              (λ(running-total)
+                (next (+ n running-total))
+                )
+              )
+      )
+    )
+  )
+)
+```
+
+Every call to `sum-n-cc` with a value `n` wraps the current `next` lambda into a new lambda (box, decorator, etc.), and recursively calls `sum-n-cc` with this new wrapping lambda and `n - 1`, until `n` reaches 0; at which point the current lambda is triggered with a 0. Recognise that the unnamed lambda in `sum-n-cc` is the same as the innermost lambda in `add-n-cc`. In the manual recursion example, the values for `lhs` and `next` came from the wiring we did by hand; here, they are both wired in by the parameters of the recursive function, `n` and `next`.
+
+
