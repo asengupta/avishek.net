@@ -7,7 +7,7 @@ tags: ["Continuations", "Lambda Calculus", "Lisp", "Racket"]
 draft: false
 ---
 
-*In this post, we build up Continuation Passing Style (CPS) from scratch in Racket, starting from basic addition and working up to recursion over nested lists. Along the way, we introduce a "boxes within boxes" mental model which can help you visualise and plan how a chain of continuations is built up and then unwound. We finish by looking at how writing code in this way, helps.*
+*In this post, we build up Continuation Passing Style (CPS) from scratch in Racket, starting from basic addition and working up to recursion over nested lists. Along the way, we introduce a "boxes within boxes" mental model which can help you visualise and plan how a chain of continuations is built up and then unwound. We finish by looking at how writing code in this way is a useful technique in programming language engineering, from early exits to how compilers represent control flow.*
 
 ## Contents
 
@@ -217,14 +217,14 @@ To make this more explicit, this is what the boxes contain:
 - Box 2 (`(add-2-cc (add-3-cc (λ(x) x)))`): `lhs=2` and `next`= `(add-3-cc (λ(x) x))`
 - Box 1 (`(add-1-cc (add-2-cc (add-3-cc (λ(x) x))))`): `lhs=1` and `next`= `(add-2-cc (add-3-cc (λ(x) x)))`
 
-This is the execution trace in words:
+When the outermost box is triggered, it "unlocks" the immediate box inside it by calling it with the result the outermost box computes. This is the execution trace in words:
 
 - When box 1 is triggered with 0, it sums 0 and its `lhs`=1, and calls its `next` (unlocks box 2) with 1.
 - Box 2 is triggered with 1, it sums 1 and its `lhs`=2, and calls its `next` (unlocks box 3) with 3.
 - Box 3 is triggered with 3, it sums 3 and its `lhs`=3, and calls its `next` (unlocks the innermost box) with 6.
 - The innermost box receives 6, and simply returns 6.
 
-Another intuitive way of thinking of this construction is as a set of nested decorators. Each decorator adds its own `lhs` to the value it receives, and passes the result to the box it wraps.
+**Another intuitive way of thinking of this construction is as a set of nested decorators.** Each decorator adds its own `lhs` to the value it receives, and passes the result to the box it wraps.
 
 **Important note:** The boxes in the diagram below are labelled `add-1-cc`, `add-2-cc`, etc., but it may be slightly misleading. In reality, the `add-1-cc` box is `add-1-cc` plus the `next` injected into it, resulting in a curried version of `add-n-cc` with `lhs` and `next` fixed; `add-1-cc`, in contrast, only has its `lhs` fixed.
 
@@ -326,6 +326,8 @@ As you can see, they are exactly the same, save for the variable names. Thus, we
 Every call to `sum-n-cc` with a value `n` wraps the current `next` lambda into a new lambda (box, decorator, etc.), and recursively calls `sum-n-cc` with this new wrapping lambda and `n - 1`, until `n` reaches 0; at which point the current lambda is triggered with a 0.
 
 **Recognise that the unnamed lambda in `sum-n-cc` is the same as the innermost lambda in `add-n-cc`.** In the manual recursion example, the values for `lhs` and `next` came from the wiring we did by hand; here, they are both wired in by the parameters of the recursive function, `n` and `next`.
+
+Keep in mind that the actual recursive function `sum-n-cc` is simply there for the construction of the nested lambdas. Only the lambdas are the boxes within boxes; **the recursive function is just the builder of the nested boxes**.
 
 # List operations using continuations
 
