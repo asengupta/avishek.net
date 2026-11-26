@@ -155,7 +155,6 @@ This fills up the `next`-shaped holes in each of the three `add-n-cc` variants, 
 
 Note that this does not actually give you the result immediately; the above is still a lambda, which has been built and primed, but not triggered. To run this, we need to invoke this with 0, the starting running total (0 is to addition what the empty list `'()` will be to `cons` later). Let's perform the substitution step-by-step to see what happens:
 
-
 ```racket
     ((λ(rhs-1)
         ((λ(rhs-2)
@@ -309,7 +308,6 @@ For thoroughness and comparison with the manual construction, let's trace `(sum-
 ```
 
 Compare the above construction with the handmade construction we did earlier, reproduced below (I have replaced the identity with `I` and reformatted the code to better bring out the sameness):
-
 
 ```racket
 ((λ(rhs-1)
@@ -500,7 +498,7 @@ Having built all of this up, it is fair to ask what we gain from writing code in
 )
 ```
 
-The `zero?` clause simply never calls `next`. None of the multiplications waiting in the boxes ever run; `(product-cc '(5 0 7 8) (λ(x) x))` gives 0 without performing a single multiplication. This is deliberately breaking our own rule of not using return values, and that is the point: since every call is a tail call, a plain return goes straight back to the original caller, abandoning the whole chain of boxes. Early exits, exceptions, generators and coroutines can all be built out of this idea of choosing which continuation to run.
+The `zero?` clause simply never calls `next`. None of the multiplications waiting in the boxes ever run; `(product-cc '(5 0 7 8) (λ(x) x))` gives 0 without performing a single multiplication. This is deliberately breaking our own rule of not using return values, and that is the point: since every call is a tail call, a plain return goes straight back to the original caller, abandoning the whole chain of boxes. Early exits, exceptions, generators and coroutines can all be built out of this idea of choosing which continuation to run. Python's `yield` is a limited form of this: it pauses the function, and the rest of the function becomes a continuation which you resume, fittingly, by calling `next()` on the generator.
 
 **Evaluation order is spelled out.** As we saw with `double-nested-cc`, CPS forces you to decide what runs first, because each step has to be written inside the continuation of the one before it. Nothing is left to the language's evaluation order.
 
