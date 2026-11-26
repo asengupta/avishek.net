@@ -81,7 +81,7 @@ Well, what do we pass in as the last lambda? Why, the next operation of course. 
 (add-cc 2 3 (λ(r1) (add-cc 1 r1 (λ(r2) r2))))
 ```
 
-We get the same result 6. This post concerns different ways to put together the above sequence of operations in an automated fashion. What we have done is write the essence of a continuation. Programming in the continuation style implies write functions which never return; they simply call the next function that needs to be invoked. This also implies (as the example above shows) that functions know what their next step is, usually through a parameter pointing to the next step.
+We get the same result 6. What we have done is write the essence of a continuation. Programming in the continuation style implies writing functions which never return; they simply call the next function that needs to be invoked. This also implies (as the example above shows) that functions know what their next step is, usually through a parameter pointing to the next step.
 
 # Recursive construction of continuations by hand
 
@@ -202,7 +202,7 @@ A few things to note:
 - From the structural point of view, the last calculation is the innermost lambda, and it is the last to execute. The ordinary return-version of the recursive `sum-n` is structurally inverted (`((+. 3) ((+. 2) ((+. 1) 0)))`), but correspondingly, the innermost calculations run first.
 - The ordinary return version needs the 0 at the time of writing the expression: `((+. 3) ((+. 2) (+. 1)))` is an error. To delay it, you have to wrap it in a lambda by hand, as in `(λ(x) ((+. 3) ((+. 2) ((+. 1) x))))`. The continuation version is delayed by construction: `(add-1-cc (add-2-cc (add-3-cc (λ(x) x))))` is already a function waiting for its 0, because every `next`-shaped hole has been filled but the `rhs` has not.
 
-This manual construction of the sum of 1, 2, 3, is the first step towards building the recursive definition in the Continuation Passing Style. In fact, this nested expression is exactly the stack of pending additions that `sum-n 3` would build, written out by hand as a value: `add-1-cc` plays the part of the top of the stack, which finishes first, and `add-3-cc` the bottom. But before moving to building the recursive version, I want to share the mental model that helped me build intuition for this.
+This manual construction of the sum of 1, 2, 3 is the first step towards building the recursive definition in the Continuation Passing Style. In fact, this nested expression is exactly the stack of pending additions that `sum-n 3` would build, written out by hand as a value: `add-1-cc` plays the part of the top of the stack, which finishes first, and `add-3-cc` the bottom. But before moving to building the recursive version, I want to share the mental model that helped me build intuition for this.
 
 # Boxes within boxes
 
@@ -219,9 +219,9 @@ To make this more explicit, this is what the boxes contain:
 
 This is the execution trace in words:
 
-- When box 1 is triggered with 0, it sums 0 and its `lhs`=1, and calls its `next` (box 2) with 1.
-- Box 2 is triggered with 1, it sums 1 and its `lhs`=2, and calls its `next` (box 3) with 3.
-- Box 3 is triggered with 3, it sums 3 and its `lhs`=3, and calls its `next` (innermost box) with 6.
+- When box 1 is triggered with 0, it sums 0 and its `lhs`=1, and calls its `next` (unlocks box 2) with 1.
+- Box 2 is triggered with 1, it sums 1 and its `lhs`=2, and calls its `next` (unlocks box 3) with 3.
+- Box 3 is triggered with 3, it sums 3 and its `lhs`=3, and calls its `next` (unlocks the innermost box) with 6.
 - The innermost box receives 6, and simply returns 6.
 
 Another intuitive way of thinking of this construction is as a set of nested decorators. Each decorator adds its own `lhs` to the value it receives, and passes the result to the box it wraps.
@@ -272,10 +272,12 @@ Having seen how the box unlocking works when constructed manually, we now have a
 )
 ```
 
-For thoroughness and comparison with the manual construction, let's trace `(sum-n-cc 3 I)` by hand, where I have noted the identity function by `I`.
+For thoroughness and comparison with the manual construction, let's trace `(sum-n-cc 3 I)` by hand, where I have denoted the identity function by `I`.
 
 ```racket
-(sum-n-cc 2
+(sum-n-cc 3 I)
+
+= (sum-n-cc 2
     (λ(total-3) (I (+ 3 total-3)))
 )
 
@@ -294,6 +296,7 @@ For thoroughness and comparison with the manual construction, let's trace `(sum-
                 (+ 2 total-2)
             )) (+ 1 total-1)
         )
+    )
 )
 
 = ((λ(total-1)
@@ -318,7 +321,7 @@ Compare the above construction with the handmade construction we did earlier, re
 ) 0)
 ```
 
-As you can see, they are exactly the same. Thus, we can conclude that the recursive construction reproduces the handmade construction with more generality.
+As you can see, they are exactly the same, save for the variable names. Thus, we can conclude that the recursive construction reproduces the handmade construction with more generality.
 
 Every call to `sum-n-cc` with a value `n` wraps the current `next` lambda into a new lambda (box, decorator, etc.), and recursively calls `sum-n-cc` with this new wrapping lambda and `n - 1`, until `n` reaches 0; at which point the current lambda is triggered with a 0.
 
@@ -364,28 +367,28 @@ This works when you run, say:
 (double-cc '(1 2 3) (λ(x) x))
 ```
 
-Let's trace a few steps by hand, For convenience, I'll denote `(λ(x) x)` by `I` First, the construction:
-
-First iteration:
+Let's trace a few steps by hand. For convenience, I'll denote `(λ(x) x)` by `I`. First, the construction:
 
 ```racket
-(double-cc '(2 3)
+(double-cc '(1 2 3) I)
+
+= (double-cc '(2 3)
     (λ(rest-1) (I (cons (* 2 1) rest-1)))
 )
 
 = (double-cc '(3)
-    (λ(rest-2) (
+    (λ(rest-2)
         ((λ(rest-1) (I (cons (* 2 1) rest-1)))
             (cons (* 2 2) rest-2))
-    ))
+    )
 )
 
 = (double-cc '()
     (λ(rest-3)
-        ((λ(rest-2) (
+        ((λ(rest-2)
             ((λ(rest-1) (I (cons (* 2 1) rest-1)))
                 (cons (* 2 2) rest-2))
-        ))
+        )
             (cons (* 2 3) rest-3))
     )
 )
@@ -395,10 +398,10 @@ The last step is the base case, so the entire expression gets triggered with `'(
 
 ```racket
     ((λ(rest-3)
-        ((λ(rest-2) (
+        ((λ(rest-2)
             ((λ(rest-1) (I (cons (* 2 1) rest-1)))
                 (cons (* 2 2) rest-2))
-        ))
+        )
             (cons (* 2 3) rest-3))
     ) '())
 ```
@@ -406,10 +409,10 @@ The last step is the base case, so the entire expression gets triggered with `'(
 If we now start resolving the above expression, we get the following trace:
 
 ```racket
-        ((λ(rest-2) (
+        ((λ(rest-2)
             ((λ(rest-1) (I (cons (* 2 1) rest-1)))
                 (cons (* 2 2) rest-2))
-        )) '(6))
+        ) '(6))
 =       ((λ(rest-1) (I (cons (* 2 1) rest-1)))
             '(4 6))
 =       (I (cons (* 2 1) '(4 6)))
