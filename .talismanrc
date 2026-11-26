@@ -131,4 +131,4 @@ fileignoreconfig:
 - filename: _posts/2023-01-05-vim-tmux-commands-galore.md
   checksum: e6c44dd802456aca4313c996be0c4d209f831d19960972788163c6585be0b984
 - filename: _posts/2026-11-25-continuations-racket.md
-  checksum: 3f2f8518de7eb639164922124add85c2ba4b23f97b99e293e746b9ffd3525d5d
+  checksum: 4f0f93ff4f9078756d461c04968916b0dd4411b944817bafa3f9f335f74da2e5
