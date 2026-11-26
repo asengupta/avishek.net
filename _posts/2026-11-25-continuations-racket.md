@@ -81,7 +81,7 @@ Well, what do we pass in as the last lambda? Why, the next operation of course. 
 (add-cc 2 3 (λ(r1) (add-cc 1 r1 (λ(r2) r2))))
 ```
 
-We get the same result 6. What we have done is write the essence of a continuation. Programming in the continuation style implies writing functions which never return; they simply call the next function that needs to be invoked. This also implies (as the example above shows) that functions know what their next step is, usually through a parameter pointing to the next step.
+We get the same result 6. What we have done is write the essence of a continuation. Programming in the continuation style implies writing functions which never use a return value; they simply call the next function that needs to be invoked. This also implies (as the example above shows) that functions know what their next step is, usually through a parameter pointing to the next step.
 
 # Recursive construction of continuations by hand
 
@@ -207,7 +207,7 @@ This manual construction of the sum of 1, 2, 3 is the first step towards buildin
 
 Picture the lambda as a box. If you are from an OO background, think of it as an object with a method and some state in it. The state is what is already in the box, i.e., the box does not depend upon anything outside to know the values of its state. This state is put in the box the moment it is constructed.
 
-This box is inert, and does nothing unless the method in it is invoked. The computation the method does depends upon both the state of the box and the arguments to the method. Thus, the computation is dependent upon some things specified at construction time, and some things specified at execution time. `add-1-cc` is one such box. It has some state which is specified at construction time, the `lhs` 1 when it is defined. Seen this way, the construction `(add-1-cc (add-2-cc (add-3-cc (λ(x) x))))` is effectively a set of boxes within boxes. Each box has two items as its state: the `lhs` value and a smaller box.
+This box is inert, and does nothing unless the method in it is invoked. The computation the method does depends upon both the state of the box and the arguments to the method. Thus, the computation is dependent upon some things specified at construction time, and some things specified at execution time. `(add-1-cc next)` is one such box. It has some state which is specified at construction time, the `lhs` 1, and `next` (which is the big s-expression following `add-1-cc` in `(add-1-cc (add-2-cc (add-3-cc (λ(x) x))))`) when it is defined. Seen this way, the construction `(add-1-cc (add-2-cc (add-3-cc (λ(x) x))))` is effectively a set of boxes within boxes. Each box has two items as its state: the `lhs` value and a smaller box (the `next` lambda).
 
 To make this more explicit, this is what the boxes contain:
 
@@ -230,13 +230,13 @@ When the outermost box is triggered, it "unlocks" the immediate box inside it by
 ```
               0
               │
-╭─────────────▼── add-1-cc · lhs = 1 ──────────────────╮
+╭─────────────▼── add-1-cc next· lhs = 1 ──────────────╮
 │             0 + 1 = 1                                │
 │             │ next(1)                                │
-│  ╭──────────▼── add-2-cc · lhs = 2 ───────────────╮  │
+│  ╭──────────▼── add-2-cc next· lhs = 2 ───────────╮  │
 │  │          1 + 2 = 3                             │  │
 │  │          │ next(3)                             │  │
-│  │  ╭───────▼── add-3-cc · lhs = 3 ────────────╮  │  │
+│  │  ╭───────▼── add-3-cc next· lhs = 3 ────────╮  │  │
 │  │  │       3 + 3 = 6                          │  │  │
 │  │  │       │ next(6)                          │  │  │
 │  │  │  ╭────▼── λ(x) x · identity ──────────╮  │  │  │
@@ -468,7 +468,7 @@ Let's pick another example. This time, we will enhance the `double` function to 
 Compare `double-nested` and `double-nested-cc`:
 
 - In `double-nested`, when the head is a list (not an atom), it is processed through `double-nested` independently, and the tail is also processed independently. The results are then `cons`ed together. These _could_ potentially be parallelised, because they do not depend upon each other.
-- In `double-nested-cc`, the head is processed completely independently, but its `next` operation is the processing of the tail. This implies that the two operations are strictly serial in nature. Also note that `next` is only called once processing of both `car ls` and `cdr ls` has finished.
+- In `double-nested-cc`, the head is processed, and its `next` operation is the processing of the tail. This implies that the two operations are strictly serial in nature. Also note that `next` is only called once processing of both `car ls` and `cdr ls` has finished.
 
 If it helps, think of the call on `car ls` as starting its own sub-computation: if it doesn't contain any lists itself, it proceeds like `double-cc`, and at the end calls the inner `cdr-dbl`-consuming boxes-within-boxes construction, which then triggers processing of the tail. Of course, if `car ls` itself contains lists, the `else` clause is again invoked recursively.
 
