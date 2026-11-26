@@ -205,6 +205,31 @@ This is the execution trace in words:
 
 Another intuitive way of thinking of this construction is as a set of nested decorators. Each decorator calls its wrapped box with values: these values could be part of the decorator data itself as well as the parameters the outer decorator receives.
 
+```
+              0
+              │
+╭─────────────▼── add-1-cc · lhs = 1 ──────────────────╮
+│             0 + 1 = 1                                │
+│             │ next(1)                                │
+│  ╭──────────▼── add-2-cc · lhs = 2 ───────────────╮  │
+│  │          1 + 2 = 3                             │  │
+│  │          │ next(3)                             │  │
+│  │  ╭───────▼── add-3-cc · lhs = 3 ────────────╮  │  │
+│  │  │       3 + 3 = 6                          │  │  │
+│  │  │       │ next(6)                          │  │  │
+│  │  │  ╭────▼── λ(x) x · identity ──────────╮  │  │  │
+│  │  │  │    returns 6                       │  │  │  │
+│  │  │  ╰────────────────────────────────────╯  │  │  │
+│  │  ╰──────────────────────────────────────────╯  │  │
+│  ╰────────────────────────────────────────────────╯  │
+╰──────────────────────────────────────────────────────╯
+              │
+              ▼
+              6
+```
+
+**Important note:** The boxes are labelled `add-1-cc`, `add-2-cc`, etc., but it may be slightly misleading. In reality, the `add-1-cc` box is `add-1-cc` plus the `next` injected into it, resulting in a curried version of `add-n-cc` with `lhs` and `next` fixed; `add-1-cc`, in contrast, only has its `lhs` fixed.
+
 # Recursive construction
 
 Having seen how the box unlocking works when constructed manually, we now have all the pieces to recursively construct `sum-n-cc` such that it gives us the same "boxes-within-boxes" artifact as above.
@@ -226,6 +251,85 @@ Having seen how the box unlocking works when constructed manually, we now have a
 )
 ```
 
-Every call to `sum-n-cc` with a value `n` wraps the current `next` lambda into a new lambda (box, decorator, etc.), and recursively calls `sum-n-cc` with this new wrapping lambda and `n - 1`, until `n` reaches 0; at which point the current lambda is triggered with a 0. Recognise that the unnamed lambda in `sum-n-cc` is the same as the innermost lambda in `add-n-cc`. In the manual recursion example, the values for `lhs` and `next` came from the wiring we did by hand; here, they are both wired in by the parameters of the recursive function, `n` and `next`.
+Every call to `sum-n-cc` with a value `n` wraps the current `next` lambda into a new lambda (box, decorator, etc.), and recursively calls `sum-n-cc` with this new wrapping lambda and `n - 1`, until `n` reaches 0; at which point the current lambda is triggered with a 0.
 
+**Recognise that the unnamed lambda in `sum-n-cc` is the same as the innermost lambda in `add-n-cc`.** In the manual recursion example, the values for `lhs` and `next` came from the wiring we did by hand; here, they are both wired in by the parameters of the recursive function, `n` and `next`.
+
+# List operations using continuations
+
+The general pattern works:
+
+```racket
+(define double-cc
+    (λ(ls next)
+        (cond
+            ((null? ls) (next '()))
+            (else 
+                (double-cc (cdr ls)
+                    (λ(rest)
+                        (next (cons (* 2 (car ls)) rest))
+                    )
+                )
+            )
+        )
+    )
+)
+```
+
+This works when you run, say:
+
+```racket
+(double-cc '(1 2 3 4 5) (lambda(x) x))
+```
+
+One thing worth noting is that in all these constructions, the execution always proceeds from the outermost box first. In the `sum-n-cc` example, the outermost box started with 1, so the calculation proceeded as `1+2+...`. In the `double-cc` example, the outermost box is the last element, therefore doubling starts from the last; at any level of the recursion, we `cons` the current (doubled) value to everything after it (which has already been doubled).
+
+# Nested list operations
+
+Let's pick another example. This time, we will enhance the `double` function to also work on nested lists. Written in the normal return-version fashion, this is fairly straightforward.
+
+```racket
+(define double-nested
+    (λ(ls)
+        (cond
+            ((null? ls) '())
+            ((atom? (car ls)) (cons (car ls) (double-nested (cdr ls))))
+            (else (cons (double-nested (car ls)) (double-nested (cdr ls))))
+        )
+    )
+)
+```
+
+```racket
+(define double-nested-cc
+    (λ(ls next)
+        (cond
+            ((null? ls) (next '()))
+            ((atom? (car ls)) (double-nested-cc (cdr ls)
+                                (λ(cdr-dbl)
+                                    (next (cons (* 2 (car ls)) cdr-dbl))
+                                )
+                              )
+            )
+            (else (double-nested-cc (car ls)
+                    (λ(car-dbl)
+                        (double-nested-cc (cdr ls)
+                            (λ(cdr-dbl)
+                                (next (cons car-dbl cdr-dbl))
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    )
+)
+```
+
+Compare `double-nested` and `double-nested-cc`:
+
+- In `double-nested`, when the head is a list (not an atom), it is processed through `double-nested` independently, and the tail is also processed independently. The results are then `cons`ed together. These _could_ potentially be parallelised, because they do not depend upon each other.
+- In `double-nested-cc`, the head is processed completely independently, but it's `next` operation is the processing of the tail. This implies that the two operations are strictly serial in nature. Also note that `next` is only called once processing of both `car ls` and `cdr ls` have finished.
+
+If it helps you can think of the inner `double-nested-cc` call to be a new "kernel". The processing of `car ls` is its own independent computation: if it doesn't contain any lists itself, it proceeds like `double-cc`, and at the end calls the inner `cdr-dbl`-consuming boxes-within-boxes construction, which then triggers processing of the tail. Of course, if `car ls` itself contains lists, the third rule is again invoked recursively.
 
