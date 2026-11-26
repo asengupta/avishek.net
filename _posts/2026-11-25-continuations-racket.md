@@ -272,6 +272,54 @@ Having seen how the box unlocking works when constructed manually, we now have a
 )
 ```
 
+For thoroughness and comparison with the manual construction, let's trace `(sum-n-cc 3 I)` by hand, where I have noted the identity function by `I`.
+
+```racket
+(sum-n-cc 2
+    (λ(total-3) (I (+ 3 total-3)))
+)
+
+= (sum-n-cc 1
+    (λ(total-2)
+        ((λ(total-3) (I (+ 3 total-3)))
+            (+ 2 total-2)
+        )
+    )
+)
+
+= (sum-n-cc 0
+    (λ(total-1)
+        ((λ(total-2)
+            ((λ(total-3) (I (+ 3 total-3)))
+                (+ 2 total-2)
+            )) (+ 1 total-1)
+        )
+)
+
+= ((λ(total-1)
+    ((λ(total-2)
+        ((λ(total-3) (I (+ 3 total-3)))
+            (+ 2 total-2)
+        )) (+ 1 total-1)
+    )
+) 0)
+```
+
+Compare the above construction with the handmade construction we did earlier, reproduced below (I have replaced the identity with `I` and reformatted the code to better bring out the sameness):
+
+
+```racket
+((λ(rhs-1)
+    ((λ(rhs-2)
+        ((λ(rhs-3) (I (+ 3 rhs-3)))
+            (+ 2 rhs-2)
+        )) (+ 1 rhs-1)
+    )
+) 0)
+```
+
+As you can see, they are exactly the same. Thus, we can conclude that the recursive construction reproduces the handmade construction with more generality.
+
 Every call to `sum-n-cc` with a value `n` wraps the current `next` lambda into a new lambda (box, decorator, etc.), and recursively calls `sum-n-cc` with this new wrapping lambda and `n - 1`, until `n` reaches 0; at which point the current lambda is triggered with a 0.
 
 **Recognise that the unnamed lambda in `sum-n-cc` is the same as the innermost lambda in `add-n-cc`.** In the manual recursion example, the values for `lhs` and `next` came from the wiring we did by hand; here, they are both wired in by the parameters of the recursive function, `n` and `next`.
@@ -313,7 +361,61 @@ Its continuation-passing version follows the same recipe as `sum-n-cc`: instead 
 This works when you run, say:
 
 ```racket
-(double-cc '(1 2 3 4 5) (λ(x) x))
+(double-cc '(1 2 3) (λ(x) x))
+```
+
+Let's trace a few steps by hand, For convenience, I'll denote `(λ(x) x)` by `I` First, the construction:
+
+First iteration:
+
+```racket
+(double-cc '(2 3)
+    (λ(rest-1) (I (cons (* 2 1) rest-1)))
+)
+
+= (double-cc '(3)
+    (λ(rest-2) (
+        ((λ(rest-1) (I (cons (* 2 1) rest-1)))
+            (cons (* 2 2) rest-2))
+    ))
+)
+
+= (double-cc '()
+    (λ(rest-3)
+        ((λ(rest-2) (
+            ((λ(rest-1) (I (cons (* 2 1) rest-1)))
+                (cons (* 2 2) rest-2))
+        ))
+            (cons (* 2 3) rest-3))
+    )
+)
+```
+
+The last step is the base case, so the entire expression gets triggered with `'()`.
+
+```racket
+    ((λ(rest-3)
+        ((λ(rest-2) (
+            ((λ(rest-1) (I (cons (* 2 1) rest-1)))
+                (cons (* 2 2) rest-2))
+        ))
+            (cons (* 2 3) rest-3))
+    ) '())
+```
+
+If we now start resolving the above expression, we get the following trace:
+
+```racket
+        ((λ(rest-2) (
+            ((λ(rest-1) (I (cons (* 2 1) rest-1)))
+                (cons (* 2 2) rest-2))
+        )) '(6))
+=       ((λ(rest-1) (I (cons (* 2 1) rest-1)))
+            '(4 6))
+=       (I (cons (* 2 1) '(4 6)))
+=       (I (cons 2 '(4 6)))
+=       (I '(2 4 6))
+=       '(2 4 6)
 ```
 
 One thing worth noting is that in all these constructions, the execution always proceeds from the outermost box first. In the `sum-n-cc` example, the outermost box started with 1, so the calculation proceeded as `1+2+...`. In the `double-cc` example, the outermost box is the last element, therefore doubling starts from the last; at any level of the recursion, we `cons` the current (doubled) value to everything after it (which has already been doubled).
