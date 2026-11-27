@@ -127,7 +127,7 @@ fileignoreconfig:
 - filename: _posts/2026-11-10-automated-domain-object-extraction-matrix-factorisation.md
   checksum: 4c608e69fccbcad94a9b402cc6330cf064498b5cf1a5ab861a0bb0f9972f0404
 - filename: _posts/2026-11-15-lambda-calculus-y-combinator.md
-  checksum: 7c45439703fcbd2be144d1125b57bf72cbcf3838d889aeac54e91603a8431799
+  checksum: 853ab16d66b4a39bda5c42abb7ed62a29ebdf45b2988d943119a4f6df73a3e86
 - filename: _posts/2023-01-05-vim-tmux-commands-galore.md
   checksum: e6c44dd802456aca4313c996be0c4d209f831d19960972788163c6585be0b984
 - filename: _posts/2026-11-25-continuations-racket.md
